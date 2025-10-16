@@ -23,8 +23,6 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT NOT NULL UNIQUE,
   password TEXT NOT NULL,
   client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
-  job_title TEXT,
-  job_family TEXT,
   industry_id UUID REFERENCES industries(id) ON DELETE SET NULL,
   language_id UUID REFERENCES languages(id) ON DELETE SET NULL,
   last_login_at TIMESTAMP WITH TIME ZONE,

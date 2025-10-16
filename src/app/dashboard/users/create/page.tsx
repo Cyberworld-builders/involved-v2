@@ -12,10 +12,7 @@ interface UserFormData {
   email: string
   password: string
   client_id: string
-  job_title: string
-  job_family: string
   industry_id: string
-  language_id: string
 }
 
 export default function CreateUserPage() {
@@ -24,7 +21,6 @@ export default function CreateUserPage() {
   const [message, setMessage] = useState('')
   const [clients, setClients] = useState<Array<{ id: string; name: string }>>([])
   const [industries, setIndustries] = useState<Array<{ id: string; name: string }>>([])
-  const [languages, setLanguages] = useState<Array<{ id: string; name: string }>>([])
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClient()
@@ -34,20 +30,17 @@ export default function CreateUserPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch clients, industries, and languages in parallel
-        const [clientsResult, industriesResult, languagesResult] = await Promise.all([
+        // Fetch clients and industries in parallel
+        const [clientsResult, industriesResult] = await Promise.all([
           supabase.from('clients').select('id, name').order('name'),
-          supabase.from('industries').select('id, name').order('name'),
-          supabase.from('languages').select('id, name').order('name')
+          supabase.from('industries').select('id, name').order('name')
         ])
 
         if (clientsResult.error) throw clientsResult.error
         if (industriesResult.error) throw industriesResult.error
-        if (languagesResult.error) throw languagesResult.error
 
         setClients(clientsResult.data || [])
         setIndustries(industriesResult.data || [])
-        setLanguages(languagesResult.data || [])
       } catch (error) {
         setMessage(error instanceof Error ? error.message : 'Failed to load form data')
       } finally {
@@ -81,10 +74,8 @@ export default function CreateUserPage() {
           email: data.email,
           password: data.password, // Note: In production, this should be hashed
           client_id: data.client_id || null,
-          job_title: data.job_title || null,
-          job_family: data.job_family || null,
           industry_id: data.industry_id || null,
-          language_id: data.language_id || null,
+          language_id: null, // Default to English (null = English)
           completed_profile: false,
         })
 
@@ -144,7 +135,6 @@ export default function CreateUserPage() {
           submitText="Create User"
           clients={clients}
           industries={industries}
-          languages={languages}
         />
       </div>
     </DashboardLayout>

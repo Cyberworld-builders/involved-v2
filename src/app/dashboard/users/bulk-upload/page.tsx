@@ -12,8 +12,6 @@ interface UserData {
   email: string
   username: string
   industry: string
-  job_title?: string
-  job_family?: string
   client_name?: string
 }
 
@@ -28,10 +26,10 @@ export default function BulkUploadPage() {
 
   const downloadTemplate = () => {
     const csvContent = [
-      'Name,Email,Username,Industry,Job Title,Job Family,Client Name',
-      'John Doe,john.doe@example.com,johndoe,Technology,Software Engineer,Engineering,Acme Corp',
-      'Jane Smith,jane.smith@example.com,janesmith,Healthcare,Nurse,Healthcare,MedCorp',
-      'Bob Johnson,bob.johnson@example.com,bobjohnson,Finance,Analyst,Finance,FinanceCorp'
+      'Name,Email,Username,Industry,Client Name',
+      'John Doe,john.doe@example.com,johndoe,Technology,Acme Corp',
+      'Jane Smith,jane.smith@example.com,janesmith,Healthcare,MedCorp',
+      'Bob Johnson,bob.johnson@example.com,bobjohnson,Finance,FinanceCorp'
     ].join('\n')
 
     const blob = new Blob([csvContent], { type: 'text/csv' })
@@ -70,9 +68,7 @@ export default function BulkUploadPage() {
           email: values[1] || '',
           username: values[2] || '',
           industry: values[3] || '',
-          job_title: values[4] || '',
-          job_family: values[5] || '',
-          client_name: values[6] || ''
+          client_name: values[4] || ''
         }
         
         // Validate required fields
@@ -148,9 +144,8 @@ export default function BulkUploadPage() {
           email: user.email,
           password: 'temp123', // Default password - should be changed on first login
           client_id: client?.id || null,
-          job_title: user.job_title || null,
-          job_family: user.job_family || null,
           industry_id: industry?.id || null,
+          language_id: null, // Default to English
           completed_profile: false,
         }
       })
@@ -271,9 +266,6 @@ export default function BulkUploadPage() {
                           Industry
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Job Title
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Client
                         </th>
                       </tr>
@@ -292,9 +284,6 @@ export default function BulkUploadPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {user.industry}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {user.job_title || '-'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {user.client_name || '-'}

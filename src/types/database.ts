@@ -141,65 +141,59 @@ export interface Database {
           updated_at?: string
         }
       }
-      users: {
-        Row: {
-          id: string
-          username: string
-          name: string
-          email: string
-          password: string
-          client_id: string | null
-          job_title: string | null
-          job_family: string | null
-          industry_id: string | null
-          language_id: string | null
-          last_login_at: string | null
-          completed_profile: boolean
-          accepted_terms: boolean | null
-          accepted_at: string | null
-          accepted_signature: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          username: string
-          name: string
-          email: string
-          password: string
-          client_id?: string | null
-          job_title?: string | null
-          job_family?: string | null
-          industry_id?: string | null
-          language_id?: string | null
-          last_login_at?: string | null
-          completed_profile?: boolean
-          accepted_terms?: boolean | null
-          accepted_at?: string | null
-          accepted_signature?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          username?: string
-          name?: string
-          email?: string
-          password?: string
-          client_id?: string | null
-          job_title?: string | null
-          job_family?: string | null
-          industry_id?: string | null
-          language_id?: string | null
-          last_login_at?: string | null
-          completed_profile?: boolean
-          accepted_terms?: boolean | null
-          accepted_at?: string | null
-          accepted_signature?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-      }
+       users: {
+         Row: {
+           id: string
+           username: string
+           name: string
+           email: string
+           password: string
+           client_id: string | null
+           industry_id: string | null
+           language_id: string | null
+           last_login_at: string | null
+           completed_profile: boolean
+           accepted_terms: boolean | null
+           accepted_at: string | null
+           accepted_signature: string | null
+           created_at: string
+           updated_at: string
+         }
+         Insert: {
+           id?: string
+           username: string
+           name: string
+           email: string
+           password: string
+           client_id?: string | null
+           industry_id?: string | null
+           language_id?: string | null
+           last_login_at?: string | null
+           completed_profile?: boolean
+           accepted_terms?: boolean | null
+           accepted_at?: string | null
+           accepted_signature?: string | null
+           created_at?: string
+           updated_at?: string
+         }
+         Update: {
+           id?: string
+           username?: string
+           name?: string
+           email?: string
+           password?: string
+           client_id?: string | null
+           industry_id?: string | null
+           language_id?: string | null
+           last_login_at?: string | null
+           completed_profile?: boolean
+           accepted_terms?: boolean | null
+           accepted_at?: string | null
+           accepted_signature?: string | null
+           created_at?: string
+           updated_at?: string
+         }
+       }
       industries: {
         Row: {
           id: string

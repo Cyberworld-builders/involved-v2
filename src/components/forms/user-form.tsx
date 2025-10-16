@@ -10,10 +10,7 @@ interface UserFormData {
   email: string
   password: string
   client_id: string
-  job_title: string
-  job_family: string
   industry_id: string
-  language_id: string
 }
 
 interface UserFormProps {
@@ -23,7 +20,6 @@ interface UserFormProps {
   submitText?: string
   clients?: Array<{ id: string; name: string }>
   industries?: Array<{ id: string; name: string }>
-  languages?: Array<{ id: string; name: string }>
 }
 
 export default function UserForm({
@@ -32,8 +28,7 @@ export default function UserForm({
   isLoading = false,
   submitText = 'Add User',
   clients = [],
-  industries = [],
-  languages = []
+  industries = []
 }: UserFormProps) {
   const [formData, setFormData] = useState<UserFormData>({
     username: initialData?.username || '',
@@ -41,10 +36,7 @@ export default function UserForm({
     email: initialData?.email || '',
     password: initialData?.password || '',
     client_id: initialData?.client_id || '',
-    job_title: initialData?.job_title || '',
-    job_family: initialData?.job_family || '',
     industry_id: initialData?.industry_id || '',
-    language_id: initialData?.language_id || '',
   })
 
   const [showPassword, setShowPassword] = useState(false)
@@ -159,9 +151,9 @@ export default function UserForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>Organization & Role</CardTitle>
+          <CardTitle>Organization</CardTitle>
           <CardDescription>
-            Client association and job information
+            Client association and industry information
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -186,46 +178,6 @@ export default function UserForm({
             </select>
           </div>
 
-          {/* Job Title */}
-          <div>
-            <label htmlFor="job_title" className="block text-sm font-medium text-gray-900 mb-2">
-              Job Title
-            </label>
-            <p className="text-sm text-gray-500 mb-3">The user&apos;s current job title.</p>
-            <input
-              type="text"
-              id="job_title"
-              value={formData.job_title}
-              onChange={(e) => handleInputChange('job_title', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            />
-          </div>
-
-          {/* Job Family */}
-          <div>
-            <label htmlFor="job_family" className="block text-sm font-medium text-gray-900 mb-2">
-              Job Family
-            </label>
-            <p className="text-sm text-gray-500 mb-3">The user&apos;s job family or category.</p>
-            <input
-              type="text"
-              id="job_family"
-              value={formData.job_family}
-              onChange={(e) => handleInputChange('job_family', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Preferences</CardTitle>
-          <CardDescription>
-            Industry and language preferences
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
           {/* Industry */}
           <div>
             <label htmlFor="industry_id" className="block text-sm font-medium text-gray-900 mb-2">
@@ -246,29 +198,9 @@ export default function UserForm({
               ))}
             </select>
           </div>
-
-          {/* Language */}
-          <div>
-            <label htmlFor="language_id" className="block text-sm font-medium text-gray-900 mb-2">
-              Preferred Language
-            </label>
-            <p className="text-sm text-gray-500 mb-3">The user&apos;s preferred language for the interface.</p>
-            <select
-              id="language_id"
-              value={formData.language_id}
-              onChange={(e) => handleInputChange('language_id', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            >
-              <option value="">Select a language...</option>
-              {languages.map((language) => (
-                <option key={language.id} value={language.id}>
-                  {language.name}
-                </option>
-              ))}
-            </select>
-          </div>
         </CardContent>
       </Card>
+
 
       {/* Submit Button */}
       <div className="flex justify-end">
