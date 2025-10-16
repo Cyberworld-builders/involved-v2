@@ -56,11 +56,30 @@ export async function updateSession(request: NextRequest) {
       .eq('auth_user_id', user.id)
       .single()
 
-    // If no profile exists, redirect to profile setup (or allow access for now)
-    // For now, we'll allow access but this could redirect to a profile setup page
+    // If no profile exists, try to create one (fallback for trigger issues)
     if (!userProfile) {
-      console.log('User authenticated but no profile found:', user.id)
-      // You could redirect to a profile setup page here if needed
+      console.log('User authenticated but no profile found, creating fallback profile:', user.id)
+      
+      try {
+        const { error: createError } = await supabase
+          .from('users')
+          .insert({
+            auth_user_id: user.id,
+            username: user.email?.split('@')[0]?.toLowerCase().replace(/[^a-z0-9]/g, '') || `user${Date.now()}`,
+            name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+            email: user.email || '',
+            language_id: null, // Default to English
+            completed_profile: false,
+          })
+        
+        if (createError) {
+          console.error('Failed to create fallback user profile:', createError)
+        } else {
+          console.log('Fallback user profile created successfully')
+        }
+      } catch (error) {
+        console.error('Error in fallback profile creation:', error)
+      }
     }
   }
 

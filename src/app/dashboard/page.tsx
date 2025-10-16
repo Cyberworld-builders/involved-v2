@@ -5,6 +5,7 @@ import DashboardLayout from '@/components/layout/dashboard-layout'
 import SignOutButton from './sign-out-button'
 import AuthStatus from '@/components/auth-status'
 import Changelog from '@/components/changelog/changelog'
+import { ensureUserProfile } from '@/lib/user-profile-utils'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -16,6 +17,9 @@ export default async function DashboardPage() {
   if (!user) {
     redirect('/auth/login')
   }
+
+  // Ensure user profile exists in our users table
+  await ensureUserProfile(user.id, user.email, user.user_metadata)
 
   return (
     <DashboardLayout>

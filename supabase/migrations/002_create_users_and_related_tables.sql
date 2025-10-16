@@ -126,6 +126,7 @@ ON CONFLICT (code) DO NOTHING;
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
+  -- Use INSERT ... ON CONFLICT to handle both INSERT and UPDATE cases
   INSERT INTO public.users (auth_user_id, username, name, email, language_id, completed_profile)
   VALUES (
     NEW.id,
@@ -134,7 +135,11 @@ BEGIN
     NEW.email,
     NULL, -- Default to English
     false
-  );
+  )
+  ON CONFLICT (auth_user_id) DO UPDATE SET
+    username = EXCLUDED.username,
+    name = EXCLUDED.name,
+    email = EXCLUDED.email;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -142,4 +147,9 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- Create trigger to automatically create user profile when auth user is created
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Also create trigger for UPDATE to handle email confirmation
+CREATE TRIGGER on_auth_user_updated
+  AFTER UPDATE ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
