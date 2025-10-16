@@ -48,6 +48,22 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // If user is authenticated, check if they have a profile in our users table
+  if (user && !request.nextUrl.pathname.startsWith('/auth') && !request.nextUrl.pathname.startsWith('/api')) {
+    const { data: userProfile } = await supabase
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', user.id)
+      .single()
+
+    // If no profile exists, redirect to profile setup (or allow access for now)
+    // For now, we'll allow access but this could redirect to a profile setup page
+    if (!userProfile) {
+      console.log('User authenticated but no profile found:', user.id)
+      // You could redirect to a profile setup page here if needed
+    }
+  }
+
   // If user is authenticated and on auth pages, redirect to dashboard
   if (
     user &&
