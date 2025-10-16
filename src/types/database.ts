@@ -144,10 +144,10 @@ export interface Database {
        users: {
          Row: {
            id: string
+           auth_user_id: string | null
            username: string
            name: string
            email: string
-           password: string
            client_id: string | null
            industry_id: string | null
            language_id: string | null
@@ -161,10 +161,10 @@ export interface Database {
          }
          Insert: {
            id?: string
+           auth_user_id?: string | null
            username: string
            name: string
            email: string
-           password: string
            client_id?: string | null
            industry_id?: string | null
            language_id?: string | null
@@ -178,10 +178,10 @@ export interface Database {
          }
          Update: {
            id?: string
+           auth_user_id?: string | null
            username?: string
            name?: string
            email?: string
-           password?: string
            client_id?: string | null
            industry_id?: string | null
            language_id?: string | null

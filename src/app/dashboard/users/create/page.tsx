@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { createUserProfile } from '@/lib/auth-helpers'
 import DashboardLayout from '@/components/layout/dashboard-layout'
 import UserForm from '@/components/forms/user-form'
 
@@ -10,13 +11,13 @@ interface UserFormData {
   username: string
   name: string
   email: string
-  password: string
   client_id: string
   industry_id: string
 }
 
 export default function CreateUserPage() {
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true)
   const [isLoadingData, setIsLoadingData] = useState(true)
   const [message, setMessage] = useState('')
   const [clients, setClients] = useState<Array<{ id: string; name: string }>>([])
@@ -26,6 +27,19 @@ export default function CreateUserPage() {
   const supabase = createClient()
   
   const clientId = searchParams.get('client_id')
+
+  // Check authentication
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        router.push('/auth/login')
+        return
+      }
+      setIsLoadingAuth(false)
+    }
+    checkAuth()
+  }, [supabase, router])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -65,23 +79,30 @@ export default function CreateUserPage() {
         return
       }
 
-      // Create user record
-      const { error } = await supabase
-        .from('users')
-        .insert({
-          username: data.username,
-          name: data.name,
-          email: data.email,
-          password: data.password, // Note: In production, this should be hashed
-          client_id: data.client_id || null,
-          industry_id: data.industry_id || null,
-          language_id: null, // Default to English (null = English)
-          completed_profile: false,
-        })
+      // Create auth user first
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: data.email,
+        password: 'temp123', // Default password - user should change on first login
+        email_confirm: true, // Auto-confirm email
+        user_metadata: {
+          full_name: data.name,
+        }
+      })
 
-      if (error) {
-        throw new Error(`Failed to create user: ${error.message}`)
+      if (authError) {
+        throw new Error(`Failed to create auth user: ${authError.message}`)
       }
+
+      if (!authData.user) {
+        throw new Error('Failed to create auth user')
+      }
+
+      // Create user profile in our custom users table
+      await createUserProfile(authData.user, {
+        username: data.username,
+        client_id: data.client_id || undefined,
+        industry_id: data.industry_id || undefined,
+      })
 
       setMessage('User created successfully!')
       setTimeout(() => {
@@ -92,6 +113,19 @@ export default function CreateUserPage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (isLoadingAuth) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Checking authentication...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    )
   }
 
   if (isLoadingData) {

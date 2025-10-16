@@ -21,13 +21,15 @@ export default function SignupPage() {
     setMessage('')
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             first_name: firstName,
             last_name: lastName,
+            full_name: `${firstName} ${lastName}`,
+            username: `${firstName.toLowerCase()}${lastName.toLowerCase()}`.replace(/[^a-z0-9]/g, '')
           },
         },
       })
@@ -35,7 +37,7 @@ export default function SignupPage() {
       if (error) {
         setMessage(error.message)
       } else {
-        setMessage('Check your email for the confirmation link!')
+        setMessage('Account created successfully! Check your email for the confirmation link.')
       }
     } catch {
       setMessage('An unexpected error occurred')

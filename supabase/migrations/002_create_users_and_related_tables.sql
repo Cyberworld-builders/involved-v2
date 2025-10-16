@@ -18,10 +18,10 @@ CREATE TABLE IF NOT EXISTS languages (
 -- Create users table
 CREATE TABLE IF NOT EXISTS users (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  auth_user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
   username TEXT NOT NULL UNIQUE,
   name TEXT NOT NULL,
   email TEXT NOT NULL UNIQUE,
-  password TEXT NOT NULL,
   client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
   industry_id UUID REFERENCES industries(id) ON DELETE SET NULL,
   language_id UUID REFERENCES languages(id) ON DELETE SET NULL,
@@ -121,3 +121,25 @@ INSERT INTO languages (name, code) VALUES
   ('Korean', 'ko'),
   ('Arabic', 'ar')
 ON CONFLICT (code) DO NOTHING;
+
+-- Create function to handle new user profile creation
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.users (auth_user_id, username, name, email, language_id, completed_profile)
+  VALUES (
+    NEW.id,
+    COALESCE(NEW.raw_user_meta_data->>'username', LOWER(SPLIT_PART(NEW.email, '@', 1))),
+    COALESCE(NEW.raw_user_meta_data->>'full_name', SPLIT_PART(NEW.email, '@', 1)),
+    NEW.email,
+    NULL, -- Default to English
+    false
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create trigger to automatically create user profile when auth user is created
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();

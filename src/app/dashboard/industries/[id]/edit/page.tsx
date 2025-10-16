@@ -13,6 +13,7 @@ interface IndustryFormData {
 
 export default function EditIndustryPage() {
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true)
   const [isLoadingIndustry, setIsLoadingIndustry] = useState(true)
   const [message, setMessage] = useState('')
   const [industry, setIndustry] = useState<Database['public']['Tables']['industries']['Row'] | null>(null)
@@ -21,6 +22,19 @@ export default function EditIndustryPage() {
   const supabase = createClient()
 
   const industryId = params.id as string
+
+  // Check authentication
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        router.push('/auth/login')
+        return
+      }
+      setIsLoadingAuth(false)
+    }
+    checkAuth()
+  }, [supabase, router])
 
   useEffect(() => {
     const fetchIndustry = async () => {
@@ -83,6 +97,19 @@ export default function EditIndustryPage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (isLoadingAuth) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Checking authentication...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    )
   }
 
   if (isLoadingIndustry) {

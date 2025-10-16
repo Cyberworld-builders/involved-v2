@@ -8,7 +8,6 @@ interface UserFormData {
   username: string
   name: string
   email: string
-  password: string
   client_id: string
   industry_id: string
 }
@@ -34,12 +33,10 @@ export default function UserForm({
     username: initialData?.username || '',
     name: initialData?.name || '',
     email: initialData?.email || '',
-    password: initialData?.password || '',
     client_id: initialData?.client_id || '',
     industry_id: initialData?.industry_id || '',
   })
 
-  const [showPassword, setShowPassword] = useState(false)
 
   const handleInputChange = (field: keyof UserFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -119,33 +116,6 @@ export default function UserForm({
             />
           </div>
 
-          {/* Password */}
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-900 mb-2">
-              Password
-            </label>
-            <p className="text-sm text-gray-500 mb-3">The user&apos;s login password.</p>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                id="password"
-                value={formData.password}
-                onChange={(e) => handleInputChange('password', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 pr-10"
-                required
-                minLength={4}
-              />
-              <button
-                type="button"
-                className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                <span className="text-gray-400">
-                  {showPassword ? '🙈' : '👁️'}
-                </span>
-              </button>
-            </div>
-          </div>
         </CardContent>
       </Card>
 
