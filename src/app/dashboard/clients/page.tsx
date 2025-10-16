@@ -16,9 +16,15 @@ export default async function ClientsPage() {
     redirect('/auth/login')
   }
 
-  // TODO: Fetch clients from database
-  // For now, show empty state until Supabase is configured
-  const clients: any[] = []
+  // Fetch clients from database
+  const { data: clients, error } = await supabase
+    .from('clients')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching clients:', error)
+  }
 
   return (
     <DashboardLayout>
@@ -62,6 +68,25 @@ export default async function ClientsPage() {
           </div>
         )}
 
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <span className="text-red-400">⚠️</span>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">
+                  Error Loading Clients
+                </h3>
+                <div className="mt-2 text-sm text-red-700">
+                  <p>{error.message}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Clients List */}
         <Card>
           <CardHeader>
@@ -71,7 +96,7 @@ export default async function ClientsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {clients.length === 0 ? (
+            {!clients || clients.length === 0 ? (
               <div className="text-center py-12">
                 <div className="mx-auto h-12 w-12 text-gray-400 mb-4">
                   <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,8 +168,7 @@ export default async function ClientsPage() {
                           0
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {/* TODO: Format date */}
-                          {client.created_at}
+                          {new Date(client.created_at).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-2">
