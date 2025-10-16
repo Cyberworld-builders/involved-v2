@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import DashboardLayout from '@/components/layout/dashboard-layout'
@@ -106,9 +107,11 @@ export default async function ClientPage({ params }: ClientPageProps) {
                 <div>
                   <label className="text-sm font-medium text-gray-500">Logo</label>
                   <div className="mt-2">
-                    <img
+                    <Image
                       src={client.logo}
                       alt={`${client.name} logo`}
+                      width={64}
+                      height={64}
                       className="h-16 w-auto rounded"
                     />
                   </div>
@@ -118,9 +121,11 @@ export default async function ClientPage({ params }: ClientPageProps) {
                 <div>
                   <label className="text-sm font-medium text-gray-500">Background Image</label>
                   <div className="mt-2">
-                    <img
+                    <Image
                       src={client.background}
                       alt={`${client.name} background`}
+                      width={64}
+                      height={64}
                       className="h-16 w-auto rounded"
                     />
                   </div>

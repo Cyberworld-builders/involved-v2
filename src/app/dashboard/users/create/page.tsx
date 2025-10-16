@@ -73,7 +73,7 @@ export default function CreateUserPage() {
       }
 
       // Create user record
-      const { data: user, error } = await supabase
+      const { error } = await supabase
         .from('users')
         .insert({
           username: data.username,
@@ -87,8 +87,6 @@ export default function CreateUserPage() {
           language_id: data.language_id || null,
           completed_profile: false,
         })
-        .select()
-        .single()
 
       if (error) {
         throw new Error(`Failed to create user: ${error.message}`)

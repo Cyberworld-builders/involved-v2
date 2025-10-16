@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -44,7 +45,7 @@ export default function ClientForm({
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
   const [backgroundPreview, setBackgroundPreview] = useState<string | null>(null)
 
-  const handleInputChange = (field: keyof ClientFormData, value: any) => {
+  const handleInputChange = (field: keyof ClientFormData, value: string | boolean | File | null) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
@@ -136,7 +137,7 @@ export default function ClientForm({
             </p>
             {logoPreview && (
               <div className="mb-3">
-                <img src={logoPreview} alt="Logo preview" className="h-20 w-auto rounded" />
+                <Image src={logoPreview} alt="Logo preview" width={80} height={80} className="h-20 w-auto rounded" />
               </div>
             )}
             <input
@@ -158,7 +159,7 @@ export default function ClientForm({
             </p>
             {backgroundPreview && (
               <div className="mb-3">
-                <img src={backgroundPreview} alt="Background preview" className="h-20 w-auto rounded" />
+                <Image src={backgroundPreview} alt="Background preview" width={80} height={80} className="h-20 w-auto rounded" />
               </div>
             )}
             <input

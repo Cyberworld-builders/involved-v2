@@ -56,7 +56,7 @@ export default function CreateClientPage() {
         // Upload logo
         const logoExt = data.logo.name.split('.').pop()
         const logoFileName = `logo-${Date.now()}.${logoExt}`
-        const { data: logoData, error: logoError } = await supabase.storage
+        const { error: logoError } = await supabase.storage
           .from('client-assets')
           .upload(logoFileName, data.logo)
 
@@ -74,7 +74,7 @@ export default function CreateClientPage() {
         // Upload background
         const backgroundExt = data.background.name.split('.').pop()
         const backgroundFileName = `background-${Date.now()}.${backgroundExt}`
-        const { data: backgroundData, error: backgroundError } = await supabase.storage
+        const { error: backgroundError } = await supabase.storage
           .from('client-assets')
           .upload(backgroundFileName, data.background)
 
@@ -89,7 +89,7 @@ export default function CreateClientPage() {
       }
 
       // Create client record
-      const { data: client, error } = await supabase
+      const { error } = await supabase
         .from('clients')
         .insert({
           name: data.name,
@@ -102,8 +102,6 @@ export default function CreateClientPage() {
           require_research: data.require_research,
           whitelabel: data.whitelabel,
         })
-        .select()
-        .single()
 
       if (error) {
         throw new Error(`Failed to create client: ${error.message}`)

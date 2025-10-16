@@ -55,7 +55,6 @@ export default function BulkUploadPage() {
     try {
       const text = await file.text()
       const lines = text.split('\n')
-      const headers = lines[0].split(',').map(h => h.trim())
       
       const users: UserData[] = []
       
