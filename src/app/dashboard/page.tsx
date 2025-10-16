@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import SignOutButton from './sign-out-button'
+import AuthStatus from '@/components/auth-status'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -22,10 +24,9 @@ export default async function DashboardPage() {
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
               <p className="text-gray-600">Welcome back, {user.email}</p>
+              <AuthStatus />
             </div>
-            <Button variant="outline">
-              Sign Out
-            </Button>
+            <SignOutButton />
           </div>
         </div>
       </div>

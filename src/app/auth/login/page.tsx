@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -10,6 +11,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const router = useRouter()
 
   const supabase = createClient()
 
@@ -27,8 +29,9 @@ export default function LoginPage() {
       if (error) {
         setMessage(error.message)
       } else {
-        setMessage('Login successful!')
-        // Redirect will be handled by middleware
+        setMessage('Login successful! Redirecting...')
+        // Redirect to dashboard
+        router.push('/dashboard')
       }
     } catch (error) {
       setMessage('An unexpected error occurred')
