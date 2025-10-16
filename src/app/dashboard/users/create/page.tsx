@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { createUserProfile } from '@/lib/auth-helpers'
@@ -15,7 +15,7 @@ interface UserFormData {
   industry_id: string
 }
 
-export default function CreateUserPage() {
+function CreateUserContent() {
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingAuth, setIsLoadingAuth] = useState(true)
   const [isLoadingData, setIsLoadingData] = useState(true)
@@ -172,5 +172,24 @@ export default function CreateUserPage() {
         />
       </div>
     </DashboardLayout>
+  )
+}
+
+export default function CreateUserPage() {
+  return (
+    <Suspense fallback={
+      <DashboardLayout>
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold text-gray-900">Create New User</h1>
+          </div>
+          <div className="text-center py-12">
+            <p className="text-gray-500">Loading...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    }>
+      <CreateUserContent />
+    </Suspense>
   )
 }

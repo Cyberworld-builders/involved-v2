@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import DashboardLayout from '@/components/layout/dashboard-layout'
 import SignOutButton from './sign-out-button'
 import AuthStatus from '@/components/auth-status'
+import Changelog from '@/components/changelog/changelog'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -89,6 +90,11 @@ export default async function DashboardPage() {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Development Changelog */}
+        <div className="mt-8">
+          <Changelog />
         </div>
       </div>
     </DashboardLayout>
