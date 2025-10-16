@@ -97,6 +97,50 @@ export interface Database {
           updated_at?: string
         }
       }
+      clients: {
+        Row: {
+          id: string
+          name: string
+          address: string | null
+          logo: string | null
+          background: string | null
+          primary_color: string | null
+          accent_color: string | null
+          require_profile: boolean
+          require_research: boolean
+          whitelabel: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          address?: string | null
+          logo?: string | null
+          background?: string | null
+          primary_color?: string | null
+          accent_color?: string | null
+          require_profile?: boolean
+          require_research?: boolean
+          whitelabel?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          address?: string | null
+          logo?: string | null
+          background?: string | null
+          primary_color?: string | null
+          accent_color?: string | null
+          require_profile?: boolean
+          require_research?: boolean
+          whitelabel?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
