@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,7 +12,6 @@ export default function SignupPage() {
   const [lastName, setLastName] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
-  const router = useRouter()
 
   const supabase = createClient()
 
@@ -39,7 +37,7 @@ export default function SignupPage() {
       } else {
         setMessage('Check your email for the confirmation link!')
       }
-    } catch (error) {
+    } catch {
       setMessage('An unexpected error occurred')
     } finally {
       setLoading(false)

@@ -37,7 +37,7 @@ export interface AssessmentResponse {
   id: string
   assessment_id: string
   user_id: string
-  responses: Record<string, any>
+  responses: Record<string, unknown>
   completed_at?: string
   created_at: string
   updated_at: string

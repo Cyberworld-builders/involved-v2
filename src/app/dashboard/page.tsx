@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import SignOutButton from './sign-out-button'
 import AuthStatus from '@/components/auth-status'
 
@@ -63,7 +62,7 @@ export default async function DashboardPage() {
             <CardHeader>
               <CardTitle>Completed</CardTitle>
               <CardDescription>
-                Assessments you've completed
+                Assessments you&apos;ve completed
               </CardDescription>
             </CardHeader>
             <CardContent>
