@@ -1,36 +1,187 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Involved Talent v2
 
-## Getting Started
+A modern, fullstack talent assessment platform built with Next.js 14, TypeScript, Tailwind CSS, and Supabase.
 
-First, run the development server:
+## 🚀 Features
+
+- **Modern Tech Stack**: Next.js 14 with App Router, TypeScript, Tailwind CSS
+- **Authentication**: Supabase Auth with email/password and OAuth providers
+- **Database**: PostgreSQL via Supabase with real-time subscriptions
+- **Deployment**: Optimized for Vercel deployment
+- **UI Components**: Custom component library with shadcn/ui
+- **Type Safety**: Full TypeScript coverage with database types
+
+## 🛠️ Tech Stack
+
+- **Frontend**: Next.js 14, React 18, TypeScript
+- **Styling**: Tailwind CSS, CSS Modules
+- **Backend**: Supabase (PostgreSQL, Auth, Storage)
+- **Deployment**: Vercel
+- **Package Manager**: npm
+
+## 📋 Prerequisites
+
+- Node.js 18+ 
+- npm or yarn
+- Supabase account
+- Vercel account (for deployment)
+
+## 🚀 Getting Started
+
+### 1. Clone the repository
+
+```bash
+git clone git@github.com:Cyberworld-builders/involved-v2.git
+cd involved-v2
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+### 3. Set up Supabase
+
+1. Create a new project at [supabase.com](https://supabase.com)
+2. Get your project URL and anon key from the project settings
+3. Create a `.env.local` file in the root directory:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_APP_NAME="Involved Talent"
+```
+
+### 4. Set up the database
+
+Run the following SQL in your Supabase SQL editor to create the initial tables:
+
+```sql
+-- Create profiles table
+CREATE TABLE profiles (
+  id UUID REFERENCES auth.users(id) PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  first_name TEXT,
+  last_name TEXT,
+  role TEXT DEFAULT 'user' CHECK (role IN ('admin', 'client', 'user')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create assessments table
+CREATE TABLE assessments (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT,
+  type TEXT NOT NULL CHECK (type IN ('360', 'blockers', 'leader', 'custom')),
+  status TEXT DEFAULT 'draft' CHECK (status IN ('draft', 'active', 'completed', 'archived')),
+  created_by UUID REFERENCES profiles(id) NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create questions table
+CREATE TABLE questions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  assessment_id UUID REFERENCES assessments(id) ON DELETE CASCADE NOT NULL,
+  text TEXT NOT NULL,
+  type TEXT NOT NULL CHECK (type IN ('multiple_choice', 'rating', 'text', 'boolean')),
+  "order" INTEGER NOT NULL,
+  required BOOLEAN DEFAULT true,
+  options JSONB,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable Row Level Security
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE assessments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE questions ENABLE ROW LEVEL SECURITY;
+
+-- Create policies
+CREATE POLICY "Users can view own profile" ON profiles FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
+
+CREATE POLICY "Users can view assessments they created" ON assessments FOR SELECT USING (auth.uid() = created_by);
+CREATE POLICY "Users can create assessments" ON assessments FOR INSERT WITH CHECK (auth.uid() = created_by);
+CREATE POLICY "Users can update their assessments" ON assessments FOR UPDATE USING (auth.uid() = created_by);
+
+CREATE POLICY "Users can view questions for their assessments" ON questions FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM assessments 
+    WHERE assessments.id = questions.assessment_id 
+    AND assessments.created_by = auth.uid()
+  )
+);
+```
+
+### 5. Run the development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to see the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📁 Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/                    # Next.js App Router pages
+│   ├── api/               # API routes
+│   ├── auth/              # Authentication pages
+│   ├── dashboard/         # Dashboard pages
+│   └── ...
+├── components/            # Reusable UI components
+│   └── ui/               # Base UI components
+├── lib/                  # Utility libraries
+│   ├── supabase/         # Supabase client configuration
+│   └── utils.ts          # Utility functions
+├── types/                # TypeScript type definitions
+└── hooks/                # Custom React hooks
+```
 
-## Learn More
+## 🚀 Deployment
 
-To learn more about Next.js, take a look at the following resources:
+### Deploy to Vercel
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Push your code to GitHub
+2. Connect your repository to Vercel
+3. Add your environment variables in Vercel dashboard
+4. Deploy!
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The app will be automatically deployed on every push to the main branch.
 
-## Deploy on Vercel
+## 🔧 Development
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Available Scripts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+
+### Code Style
+
+- Use TypeScript for all new files
+- Follow the existing component patterns
+- Use Tailwind CSS for styling
+- Write meaningful commit messages
+
+## 📝 License
+
+This project is proprietary software owned by Cyberworld Builders.
+
+## 🤝 Contributing
+
+1. Create a feature branch
+2. Make your changes
+3. Test thoroughly
+4. Submit a pull request
+
+## 📞 Support
+
+For support, email support@cyberworldbuilders.com
