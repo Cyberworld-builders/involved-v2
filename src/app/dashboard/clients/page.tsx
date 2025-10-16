@@ -17,6 +17,7 @@ export default async function ClientsPage() {
   }
 
   // TODO: Fetch clients from database
+  // For now, show empty state until Supabase is configured
   const clients: any[] = []
 
   return (
@@ -35,6 +36,31 @@ export default async function ClientsPage() {
             </Button>
           </Link>
         </div>
+
+        {/* Supabase Setup Notice */}
+        {!process.env.NEXT_PUBLIC_SUPABASE_URL && (
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <span className="text-blue-400">ℹ️</span>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-blue-800">
+                  Supabase Not Configured
+                </h3>
+                <div className="mt-2 text-sm text-blue-700">
+                  <p>
+                    To save clients to the database, please set up Supabase by following the instructions in{' '}
+                    <code className="bg-blue-100 px-1 rounded">SUPABASE_SETUP.md</code>.
+                  </p>
+                  <p className="mt-1">
+                    The form will work in demo mode until Supabase is configured.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Clients List */}
         <Card>

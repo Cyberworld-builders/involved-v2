@@ -29,6 +29,25 @@ export default function CreateClientPage() {
     setMessage('')
 
     try {
+      // Check if Supabase is configured
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+      if (!supabaseUrl || !supabaseKey) {
+        // Supabase not configured - show demo mode
+        console.log('Demo mode - Client data:', data)
+        setMessage('Demo mode: Client data logged to console. Set up Supabase to save to database.')
+        
+        // Simulate success after a delay
+        setTimeout(() => {
+          setMessage('Demo mode: Client would be created successfully!')
+          setTimeout(() => {
+            router.push('/dashboard/clients')
+          }, 2000)
+        }, 1000)
+        return
+      }
+
       // TODO: Upload images to Supabase storage if provided
       let logoUrl = null
       let backgroundUrl = null
