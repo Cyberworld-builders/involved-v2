@@ -21,9 +21,9 @@ export default async function UsersPage() {
     .from('users')
     .select(`
       *,
-      clients:client_id(name),
-      industries:industry_id(name),
-      languages:language_id(name)
+      clients!client_id(name),
+      industries!industry_id(name),
+      languages!language_id(name)
     `)
     .order('created_at', { ascending: false })
 
@@ -56,6 +56,31 @@ export default async function UsersPage() {
           </div>
         </div>
 
+        {/* Supabase Setup Notice */}
+        {!process.env.NEXT_PUBLIC_SUPABASE_URL && (
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <span className="text-blue-400">ℹ️</span>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-blue-800">
+                  Supabase Not Configured
+                </h3>
+                <div className="mt-2 text-sm text-blue-700">
+                  <p>
+                    To save users to the database, please set up Supabase by following the instructions in{' '}
+                    <code className="bg-blue-100 px-1 rounded">SUPABASE_SETUP.md</code>.
+                  </p>
+                  <p className="mt-1">
+                    The form will work in demo mode until Supabase is configured.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Error Message */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-md p-4">
@@ -81,6 +106,11 @@ export default async function UsersPage() {
             <CardTitle>All Users</CardTitle>
             <CardDescription>
               Manage users and their client associations
+              {users && users.length > 0 && (
+                <span className="ml-2 text-sm text-gray-500">
+                  ({users.length} user{users.length !== 1 ? 's' : ''})
+                </span>
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -121,6 +151,9 @@ export default async function UsersPage() {
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Last Login
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Created
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Settings
@@ -167,6 +200,9 @@ export default async function UsersPage() {
                             ? new Date(user.last_login_at).toLocaleDateString()
                             : 'Never'
                           }
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(user.created_at).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-2">
