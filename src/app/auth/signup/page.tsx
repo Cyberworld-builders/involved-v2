@@ -48,8 +48,8 @@ export default function SignupPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl text-center">Create your account</CardTitle>
-          <CardDescription className="text-center">
+          <CardTitle className="text-2xl text-center text-gray-900">Create your account</CardTitle>
+          <CardDescription className="text-center text-gray-600">
             Join Involved Talent to get started with assessments
           </CardDescription>
         </CardHeader>
@@ -57,7 +57,7 @@ export default function SignupPage() {
           <form onSubmit={handleSignup} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-900">
                   First name
                 </label>
                 <input
@@ -74,7 +74,7 @@ export default function SignupPage() {
               </div>
 
               <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-900">
                   Last name
                 </label>
                 <input
@@ -92,7 +92,7 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-900">
                 Email address
               </label>
               <input
@@ -109,7 +109,7 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-900">
                 Password
               </label>
               <input

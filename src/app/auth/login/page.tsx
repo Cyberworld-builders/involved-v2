@@ -61,15 +61,15 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl text-center">Sign in to Involved Talent</CardTitle>
-          <CardDescription className="text-center">
+          <CardTitle className="text-2xl text-center text-gray-900">Sign in to Involved Talent</CardTitle>
+          <CardDescription className="text-center text-gray-600">
             Enter your credentials to access your account
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-900">
                 Email address
               </label>
               <input
@@ -86,7 +86,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-900">
                 Password
               </label>
               <input
@@ -123,7 +123,7 @@ export default function LoginPage() {
                 <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                <span className="px-2 bg-white text-gray-700">Or continue with</span>
               </div>
             </div>
 
