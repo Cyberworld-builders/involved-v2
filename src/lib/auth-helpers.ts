@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/client'
  * Creates a user profile in our custom users table linked to Supabase Auth
  * Note: This is mainly for admin-created users. Regular signups are handled by database trigger.
  */
-export async function createUserProfile(authUser: any, additionalData?: {
+export async function createUserProfile(authUser: { id: string; email: string; user_metadata?: { full_name?: string } }, additionalData?: {
   client_id?: string
   industry_id?: string
   username?: string

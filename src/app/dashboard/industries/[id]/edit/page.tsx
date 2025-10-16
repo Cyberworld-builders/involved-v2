@@ -130,7 +130,7 @@ export default function EditIndustryPage() {
       <DashboardLayout>
         <div className="text-center py-12">
           <h3 className="text-lg font-medium text-gray-900 mb-2">Industry not found</h3>
-          <p className="text-gray-500 mb-4">The industry you're looking for doesn't exist.</p>
+          <p className="text-gray-500 mb-4">The industry you&apos;re looking for doesn&apos;t exist.</p>
           <button
             onClick={() => router.push('/dashboard/industries')}
             className="text-indigo-600 hover:text-indigo-500"
