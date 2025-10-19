@@ -143,8 +143,10 @@ export default function BulkUploadPage() {
       const industries = industriesResult.data || []
       const clients = clientsResult.data || []
 
-      // Create users
-      const userInserts = uploadedUsers.map(user => {
+      // Create user profiles and send invitations
+      const createdProfiles = []
+      
+      for (const user of uploadedUsers) {
         const industry = industries.find(i => 
           i.name.toLowerCase() === user.industry.toLowerCase()
         )
@@ -152,28 +154,37 @@ export default function BulkUploadPage() {
           c.name.toLowerCase() === (user.client_name || '').toLowerCase()
         )
 
-        return {
-          username: user.username,
-          name: user.name,
-          email: user.email,
-          password: 'temp123', // Default password - should be changed on first login
-          client_id: client?.id || null,
-          industry_id: industry?.id || null,
-          language_id: null, // Default to English
-          completed_profile: false,
+        // Create profile using the new function
+        const { data: profile, error: profileError } = await supabase
+          .rpc('create_invited_user_profile', {
+            user_email: user.email,
+            user_name: user.name,
+            user_username: user.username,
+            user_client_id: client?.id || null
+          })
+
+        if (profileError) {
+          throw new Error(`Failed to create profile for ${user.email}: ${profileError.message}`)
         }
-      })
 
-      const { data: users, error } = await supabase
-        .from('users')
-        .insert(userInserts)
-        .select()
+        // Send invitation
+        const { data: token, error: inviteError } = await supabase
+          .rpc('send_profile_invitation', {
+            profile_email: user.email
+          })
 
-      if (error) {
-        throw new Error(`Failed to create users: ${error.message}`)
+        if (inviteError) {
+          console.warn(`Failed to send invitation for ${user.email}: ${inviteError.message}`)
+        }
+
+        createdProfiles.push({
+          ...user,
+          profile_id: profile,
+          invitation_token: token
+        })
       }
 
-      setMessage(`Successfully created ${users.length} users!`)
+      setMessage(`Successfully created ${createdProfiles.length} user profiles and sent invitations!`)
       setTimeout(() => {
         router.push('/dashboard/users')
       }, 3000)

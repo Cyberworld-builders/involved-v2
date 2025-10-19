@@ -17,7 +17,7 @@ export async function createUserProfile(authUser: { id: string; email?: string; 
     'user' + Date.now()
 
   const { data, error } = await supabase
-    .from('users')
+    .from('profiles')
     .insert({
       auth_user_id: authUser.id,
       username: username,
@@ -46,7 +46,7 @@ export async function getUserProfile(authUserId: string) {
   const supabase = createClient()
 
   const { data, error } = await supabase
-    .from('users')
+    .from('profiles')
     .select('*')
     .eq('auth_user_id', authUserId)
     .single()

@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { GetStartedButton } from '@/components/get-started-button'
 
 export default function Home() {
   return (
@@ -59,9 +60,7 @@ export default function Home() {
         </div>
 
         <div className="text-center">
-          <Button size="lg" className="mr-4">
-            Get Started
-          </Button>
+          <GetStartedButton />
           <Button variant="outline" size="lg">
             Learn More
           </Button>

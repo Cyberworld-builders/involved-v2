@@ -51,7 +51,7 @@ export async function updateSession(request: NextRequest) {
   // If user is authenticated, check if they have a profile in our users table
   if (user && !request.nextUrl.pathname.startsWith('/auth') && !request.nextUrl.pathname.startsWith('/api')) {
     const { data: userProfile } = await supabase
-      .from('users')
+      .from('profiles')
       .select('id')
       .eq('auth_user_id', user.id)
       .single()
@@ -62,7 +62,7 @@ export async function updateSession(request: NextRequest) {
       
       try {
         const { error: createError } = await supabase
-          .from('users')
+          .from('profiles')
           .insert({
             auth_user_id: user.id,
             username: user.email?.split('@')[0]?.toLowerCase().replace(/[^a-z0-9]/g, '') || `user${Date.now()}`,

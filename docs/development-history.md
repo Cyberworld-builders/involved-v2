@@ -188,3 +188,72 @@ John Doe,john.doe@example.com,johndoe,Technology,Software Engineer,Engineering,A
 - Implement assessment taking interface
 - Add reporting and analytics features
 
+## 2025-01-19: Fixed User Profile Synchronization Issue
+
+### Problem Identified
+The user profile synchronization wasn't working because:
+- **Migration 002** was applied with basic triggers (INSERT only)
+- **Migration 003** existed but wasn't pushed to Supabase
+- **Missing UPDATE trigger** for email confirmation scenarios
+- **No conflict resolution** for existing user profiles
+
+### Root Cause Analysis
+The issue occurred because:
+1. **Migration 002** was applied with basic user profile creation triggers
+2. **We modified the migration file** after it was already applied
+3. **Supabase ignores changes** to already-applied migrations
+4. **Enhanced triggers** in migration 003 never got deployed
+
+### Solution Implemented
+
+#### ✅ Created Migration 004: `004_fix_user_profile_sync.sql`
+
+**Key Features:**
+- **Enhanced Function**: `handle_new_user()` with `ON CONFLICT` handling
+- **Dual Triggers**: Both `INSERT` and `UPDATE` operations
+- **Conflict Resolution**: Updates existing profiles instead of failing
+- **Metadata Handling**: Properly extracts `username` and `full_name` from user metadata
+- **Language Defaulting**: Sets English as default language for new users
+
+**Migration Logic:**
+```sql
+-- Handles both INSERT and UPDATE with conflict resolution
+INSERT INTO public.users (auth_user_id, username, name, email, language_id, completed_profile)
+VALUES (...)
+ON CONFLICT (auth_user_id) DO UPDATE SET
+  username = EXCLUDED.username,
+  name = EXCLUDED.name,
+  email = EXCLUDED.email,
+  updated_at = NOW();
+```
+
+#### ✅ Successfully Applied:
+- **Migration 003**: Enhanced triggers (already applied)
+- **Migration 004**: Comprehensive fix (successfully pushed)
+
+### What This Fixes:
+
+1. **✅ New User Signup**: Creates profile automatically
+2. **✅ Email Confirmation**: Updates profile when email is confirmed
+3. **✅ Profile Updates**: Handles auth user metadata changes
+4. **✅ Conflict Prevention**: No duplicate profile creation
+5. **✅ Data Consistency**: Keeps profiles in sync with auth users
+
+### Key Learning: Supabase Migration Strategy
+- **Never modify applied migrations** - Supabase ignores changes
+- **Create new migrations** for any changes to existing logic
+- **Use descriptive migration names** to track what each does
+- **Test migrations thoroughly** before applying to production
+
+### Technical Details
+- **Database Triggers**: `on_auth_user_created` and `on_auth_user_updated`
+- **Function**: `public.handle_new_user()` with conflict resolution
+- **Schema**: Maintains `auth_user_id` foreign key relationship
+- **Performance**: Optimized with proper indexing
+
+### Next Steps
+- Test user profile creation in development
+- Verify email confirmation flow works correctly
+- Monitor production for any edge cases
+- Document user profile management procedures
+

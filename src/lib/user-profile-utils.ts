@@ -9,7 +9,7 @@ export async function ensureUserProfile(authUserId: string, userEmail?: string, 
 
   // Check if profile already exists
   const { data: existingProfile } = await supabase
-    .from('users')
+    .from('profiles')
     .select('id')
     .eq('auth_user_id', authUserId)
     .single()
@@ -22,7 +22,7 @@ export async function ensureUserProfile(authUserId: string, userEmail?: string, 
   console.log('Creating user profile for:', authUserId)
   
   const { data: newProfile, error } = await supabase
-    .from('users')
+    .from('profiles')
     .insert({
       auth_user_id: authUserId,
       username: userEmail?.split('@')[0]?.toLowerCase().replace(/[^a-z0-9]/g, '') || `user${Date.now()}`,

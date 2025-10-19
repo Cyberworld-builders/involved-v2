@@ -1,0 +1,130 @@
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Plus, FileText, Users, BarChart3 } from 'lucide-react'
+import Link from 'next/link'
+import DashboardLayout from '@/components/layout/dashboard-layout'
+
+export default function AssessmentsPage() {
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Assessments</h1>
+          <p className="text-gray-600 mt-2">
+            Create and manage talent assessments for your organization
+          </p>
+        </div>
+        <Button asChild>
+          <Link href="/dashboard/assessments/create">
+            <Plus className="w-4 h-4 mr-2" />
+            Create Assessment
+          </Link>
+        </Button>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Assessments</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">0</div>
+            <p className="text-xs text-muted-foreground">
+              No assessments created yet
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Assessments</CardTitle>
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">0</div>
+            <p className="text-xs text-muted-foreground">
+              Currently running
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Participants</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">0</div>
+            <p className="text-xs text-muted-foreground">
+              Total participants
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Coming Soon */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Assessment Management</CardTitle>
+          <CardDescription>
+            Create comprehensive talent assessments to evaluate and develop your team
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-12">
+            <FileText className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-4 text-lg font-semibold text-gray-900">Assessment Management Coming Soon</h3>
+            <p className="mt-2 text-gray-600 max-w-md mx-auto">
+              Create 360-degree assessments, leadership evaluations, and custom assessment tools 
+              to measure and develop talent across your organization.
+            </p>
+            <div className="mt-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left max-w-2xl mx-auto">
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span className="text-blue-600 text-sm font-medium">1</span>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-900">360° Assessments</h4>
+                    <p className="text-sm text-gray-600">Multi-rater feedback from peers, managers, and direct reports</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span className="text-blue-600 text-sm font-medium">2</span>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-900">Leadership Evaluations</h4>
+                    <p className="text-sm text-gray-600">Assess leadership capabilities and potential</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span className="text-blue-600 text-sm font-medium">3</span>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-900">Custom Assessments</h4>
+                    <p className="text-sm text-gray-600">Build tailored assessments for your specific needs</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span className="text-blue-600 text-sm font-medium">4</span>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-900">Progress Tracking</h4>
+                    <p className="text-sm text-gray-600">Monitor development progress over time</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      </div>
+    </DashboardLayout>
+  )
+}

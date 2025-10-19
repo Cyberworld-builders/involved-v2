@@ -18,7 +18,7 @@ export default async function UsersPage() {
 
   // Fetch users from database with client and industry information
   const { data: users, error } = await supabase
-    .from('users')
+    .from('profiles')
     .select(`
       *,
       clients!client_id(name),
