@@ -48,10 +48,10 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // If user is authenticated, check if they have a profile in our users table
+  // If user is authenticated, check if they have a profile in our profiles table
   if (user && !request.nextUrl.pathname.startsWith('/auth') && !request.nextUrl.pathname.startsWith('/api')) {
     const { data: userProfile } = await supabase
-      .from('users')
+      .from('profiles')
       .select('id')
       .eq('auth_user_id', user.id)
       .single()

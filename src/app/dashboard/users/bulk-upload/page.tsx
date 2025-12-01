@@ -165,7 +165,7 @@ export default function BulkUploadPage() {
       })
 
       const { data: users, error } = await supabase
-        .from('users')
+        .from('profiles')
         .insert(userInserts)
         .select()
 

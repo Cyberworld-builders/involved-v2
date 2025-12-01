@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/client'
 
 /**
- * Creates a user profile in our custom users table linked to Supabase Auth
+ * Creates a user profile in our custom profiles table linked to Supabase Auth
  * Note: This is mainly for admin-created users. Regular signups are handled by database trigger.
  */
 export async function createUserProfile(authUser: { id: string; email?: string; user_metadata?: { full_name?: string } }, additionalData?: {
@@ -17,7 +17,7 @@ export async function createUserProfile(authUser: { id: string; email?: string; 
     'user' + Date.now()
 
   const { data, error } = await supabase
-    .from('users')
+    .from('profiles')
     .insert({
       auth_user_id: authUser.id,
       username: username,
@@ -46,7 +46,7 @@ export async function getUserProfile(authUserId: string) {
   const supabase = createClient()
 
   const { data, error } = await supabase
-    .from('users')
+    .from('profiles')
     .select('*')
     .eq('auth_user_id', authUserId)
     .single()
@@ -60,7 +60,7 @@ export async function getUserProfile(authUserId: string) {
 }
 
 /**
- * Checks if a user has a profile in our custom users table
+ * Checks if a user has a profile in our custom profiles table
  */
 export async function hasUserProfile(authUserId: string): Promise<boolean> {
   const profile = await getUserProfile(authUserId)

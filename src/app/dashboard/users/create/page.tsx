@@ -97,7 +97,7 @@ function CreateUserContent() {
         throw new Error('Failed to create auth user')
       }
 
-      // Create user profile in our custom users table
+      // Create user profile in our custom profiles table
       await createUserProfile(authData.user, {
         username: data.username,
         client_id: data.client_id || undefined,

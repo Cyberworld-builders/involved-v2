@@ -141,7 +141,7 @@ export interface Database {
           updated_at?: string
         }
       }
-       users: {
+      profiles: {
          Row: {
            id: string
            auth_user_id: string | null

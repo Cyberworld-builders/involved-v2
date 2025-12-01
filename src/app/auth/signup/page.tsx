@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -48,13 +49,22 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl text-center text-gray-900">Create your account</CardTitle>
-          <CardDescription className="text-center text-gray-600">
-            Join Involved Talent to get started with assessments
-          </CardDescription>
-        </CardHeader>
+      <div className="w-full max-w-md">
+        <div className="mb-4">
+          <Link href="/" className="text-sm text-indigo-600 hover:text-indigo-500 flex items-center">
+            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to home
+          </Link>
+        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl text-center text-gray-900">Create your account</CardTitle>
+            <CardDescription className="text-center text-gray-600">
+              Join Involved Talent to get started with assessments
+            </CardDescription>
+          </CardHeader>
         <CardContent>
           <form onSubmit={handleSignup} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -151,7 +161,8 @@ export default function SignupPage() {
             </a>
           </div>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   )
 }

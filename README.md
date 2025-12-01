@@ -43,9 +43,39 @@ npm install
 
 ### 3. Set up Supabase
 
-1. Create a new project at [supabase.com](https://supabase.com)
+**Option A: Local Development (Recommended)**
+
+The project includes a pre-configured `.env.local` for local Supabase:
+
+```bash
+# Local Supabase is already configured!
+# Just make sure it's running:
+npx supabase start
+npm run dev
+```
+
+**Option B: Staging Supabase**
+
+1. Create a staging project at [supabase.com](https://supabase.com)
 2. Get your project URL and anon key from the project settings
-3. Create a `.env.local` file in the root directory:
+3. Update `.env.staging` with your credentials, then switch to it:
+
+```bash
+# Edit .env.staging with your staging credentials
+./switch-env.sh staging
+# or manually: cp .env.staging .env.local
+```
+
+**Environment Files:**
+- `.env.local` - Active config (local by default)
+- `.env.staging` - Template for staging Supabase
+- `.env.production` - Production config (coming after staging validation)
+- `.env.example` - Example/template for reference
+
+See [ENV_SETUP.md](./ENV_SETUP.md) for detailed environment configuration.
+
+<details>
+<summary>Manual .env.local setup</summary>
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
@@ -54,6 +84,8 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 NEXT_PUBLIC_APP_NAME="Involved Talent"
 ```
+
+</details>
 
 ### 4. Set up the database
 

@@ -15,8 +15,8 @@ CREATE TABLE IF NOT EXISTS languages (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create users table
-CREATE TABLE IF NOT EXISTS users (
+-- Create profiles table (for additional user data beyond auth.users)
+CREATE TABLE IF NOT EXISTS profiles (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   auth_user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
   username TEXT NOT NULL UNIQUE,
@@ -45,15 +45,15 @@ CREATE TRIGGER update_languages_updated_at
   FOR EACH ROW 
   EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_users_updated_at 
-  BEFORE UPDATE ON users 
+CREATE TRIGGER update_profiles_updated_at 
+  BEFORE UPDATE ON profiles 
   FOR EACH ROW 
   EXECUTE FUNCTION update_updated_at_column();
 
 -- Set up RLS (Row Level Security) policies
 ALTER TABLE industries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE languages ENABLE ROW LEVEL SECURITY;
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
 -- Industries policies
 CREATE POLICY "Allow authenticated users to read industries" ON industries
@@ -81,17 +81,17 @@ CREATE POLICY "Allow authenticated users to update languages" ON languages
 CREATE POLICY "Allow authenticated users to delete languages" ON languages
   FOR DELETE USING (auth.role() = 'authenticated');
 
--- Users policies
-CREATE POLICY "Allow authenticated users to read users" ON users
+-- Profiles policies
+CREATE POLICY "Allow authenticated users to read profiles" ON profiles
   FOR SELECT USING (auth.role() = 'authenticated');
 
-CREATE POLICY "Allow authenticated users to insert users" ON users
+CREATE POLICY "Allow authenticated users to insert profiles" ON profiles
   FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 
-CREATE POLICY "Allow authenticated users to update users" ON users
+CREATE POLICY "Allow authenticated users to update profiles" ON profiles
   FOR UPDATE USING (auth.role() = 'authenticated');
 
-CREATE POLICY "Allow authenticated users to delete users" ON users
+CREATE POLICY "Allow authenticated users to delete profiles" ON profiles
   FOR DELETE USING (auth.role() = 'authenticated');
 
 -- Insert default industries
@@ -126,13 +126,13 @@ ON CONFLICT (code) DO NOTHING;
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.users (auth_user_id, username, name, email, language_id, completed_profile)
+  INSERT INTO public.profiles (auth_user_id, username, name, email, language_id, completed_profile)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'username', LOWER(SPLIT_PART(NEW.email, '@', 1))),
     COALESCE(NEW.raw_user_meta_data->>'full_name', SPLIT_PART(NEW.email, '@', 1)),
     NEW.email,
-    NULL, -- Default to English
+    NULL, -- Default language
     false
   );
   RETURN NEW;

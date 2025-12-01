@@ -122,7 +122,7 @@
 **Commits:** Current session
 
 #### Database Schema & Types
-- **Complete users table** with all fields from original Laravel app
+- **Complete profiles table** with all fields from original Laravel app (linked to auth.users)
 - **Industries and languages tables** for dropdown selections
 - **Foreign key relationships** to clients, industries, and languages
 - **TypeScript types** for full type safety

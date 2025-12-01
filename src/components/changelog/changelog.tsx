@@ -23,7 +23,7 @@ const changelogData: ChangelogEntry[] = [
       'Created comprehensive industry management system',
       'Fixed authentication checks on all client-side pages',
       'Implemented database trigger for automatic user profile creation',
-      'Linked Supabase Auth to custom users table'
+      'Linked Supabase Auth to custom profiles table'
     ],
     technical: [
       'Database trigger automatically creates user profiles on signup',
