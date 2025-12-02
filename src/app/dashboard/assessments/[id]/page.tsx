@@ -144,9 +144,6 @@ export default async function AssessmentPage({ params }: AssessmentPageProps) {
                 <Button variant="outline" className="w-full justify-start">
                   📤 Duplicate Assessment
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  👥 Assign to Users
-                </Button>
                 <Button variant="outline" className="w-full justify-start text-red-600 hover:text-red-700">
                   🗑️ Delete Assessment
                 </Button>

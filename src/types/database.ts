@@ -386,6 +386,56 @@ export interface Database {
           updated_at?: string
         }
       }
+      assignments: {
+        Row: {
+          id: string
+          user_id: string
+          assessment_id: string
+          target_id: string | null
+          custom_fields: Record<string, unknown> | null
+          expires: string
+          whitelabel: boolean
+          job_id: string | null
+          url: string | null
+          completed: boolean
+          started_at: string | null
+          completed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          assessment_id: string
+          target_id?: string | null
+          custom_fields?: Record<string, unknown> | null
+          expires: string
+          whitelabel?: boolean
+          job_id?: string | null
+          url?: string | null
+          completed?: boolean
+          started_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          assessment_id?: string
+          target_id?: string | null
+          custom_fields?: Record<string, unknown> | null
+          expires?: string
+          whitelabel?: boolean
+          job_id?: string | null
+          url?: string | null
+          completed?: boolean
+          started_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never

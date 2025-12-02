@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -35,12 +35,24 @@ export default function ClientUsers({ clientId }: ClientUsersProps) {
     created_at: string
   }>>([])
   const [isLoadingUsers, setIsLoadingUsers] = useState(true)
+  const [showSearchModal, setShowSearchModal] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<Array<{
+    id: string
+    name: string
+    email: string
+    username: string
+    industries?: { name: string } | null
+  }>>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
     loadUsers()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientId])
 
   const loadUsers = async () => {
@@ -166,6 +178,90 @@ export default function ClientUsers({ clientId }: ClientUsersProps) {
     }
   }
 
+  const searchUnassociatedUsers = useCallback(async () => {
+    if (!searchQuery.trim()) {
+      setSearchResults([])
+      return
+    }
+
+    setIsSearching(true)
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          name,
+          email,
+          username,
+          industries!industry_id(name)
+        `)
+        .or(`name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,username.ilike.%${searchQuery}%`)
+        .is('client_id', null)
+        .limit(20)
+
+      if (error) {
+        console.error('Error searching users:', error)
+        setSearchResults([])
+      } else {
+        setSearchResults(data || [])
+      }
+    } catch (error) {
+      console.error('Error searching users:', error)
+      setSearchResults([])
+    } finally {
+      setIsSearching(false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery])
+
+  // Debounced search effect
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([])
+      return
+    }
+
+    const timeoutId = setTimeout(() => {
+      searchUnassociatedUsers()
+    }, 300)
+
+    return () => clearTimeout(timeoutId)
+  }, [searchQuery, searchUnassociatedUsers])
+
+  const handleAddSelectedUsers = async () => {
+    if (selectedUserIds.length === 0) return
+
+    setIsLoading(true)
+    setMessage('')
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ client_id: clientId })
+        .in('id', selectedUserIds)
+
+      if (error) {
+        throw new Error(`Failed to associate users: ${error.message}`)
+      }
+
+      setMessage(`Successfully associated ${selectedUserIds.length} user(s) with this client!`)
+      setSelectedUserIds([])
+      setSearchQuery('')
+      setSearchResults([])
+      setShowSearchModal(false)
+      
+      setTimeout(() => {
+        loadUsers()
+        router.refresh()
+        setMessage('')
+      }, 2000)
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Failed to associate users')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const createUsers = async () => {
     if (uploadedUsers.length === 0) return
 
@@ -246,6 +342,12 @@ export default function ClientUsers({ clientId }: ClientUsersProps) {
           <p className="text-sm text-gray-600">Manage users for this client</p>
         </div>
         <div className="flex space-x-2">
+          <Button
+            variant="outline"
+            onClick={() => setShowSearchModal(true)}
+          >
+            🔍 Search Existing Users
+          </Button>
           <Link href={`/dashboard/users/create?client_id=${clientId}`}>
             <Button>Add Single User</Button>
           </Link>
@@ -452,6 +554,157 @@ export default function ClientUsers({ clientId }: ClientUsersProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* Search Existing Users Modal */}
+      {showSearchModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-3xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-gray-900">Search Unassociated Users</h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSearchModal(false)
+                  setSearchQuery('')
+                  setSearchResults([])
+                  setSelectedUserIds([])
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Search Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Search by Name, Email, or Username
+                </label>
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value)
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        searchUnassociatedUsers()
+                      }
+                    }}
+                    placeholder="Type to search..."
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                  <Button
+                    type="button"
+                    onClick={searchUnassociatedUsers}
+                    disabled={isSearching || !searchQuery.trim()}
+                  >
+                    {isSearching ? 'Searching...' : 'Search'}
+                  </Button>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Search for users in the system that are not yet associated with any client
+                </p>
+              </div>
+
+              {/* Search Results */}
+              {searchResults.length > 0 && (
+                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                  <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                    <p className="text-sm font-medium text-gray-700">
+                      Found {searchResults.length} user(s)
+                    </p>
+                  </div>
+                  <div className="max-h-96 overflow-y-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <input
+                              type="checkbox"
+                              checked={selectedUserIds.length === searchResults.length && searchResults.length > 0}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedUserIds(searchResults.map(u => u.id))
+                                } else {
+                                  setSelectedUserIds([])
+                                }
+                              }}
+                              className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            />
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Username</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Industry</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {searchResults.map((user) => (
+                          <tr key={user.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3">
+                              <input
+                                type="checkbox"
+                                checked={selectedUserIds.includes(user.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedUserIds([...selectedUserIds, user.id])
+                                  } else {
+                                    setSelectedUserIds(selectedUserIds.filter(id => id !== user.id))
+                                  }
+                                }}
+                                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                              />
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{user.name}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{user.email}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">@{user.username}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">
+                              {user.industries?.name || '-'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {searchQuery && searchResults.length === 0 && !isSearching && (
+                <div className="text-center py-8 text-gray-500">
+                  <p>No unassociated users found matching "{searchQuery}"</p>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-2 pt-4 border-t border-gray-200">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowSearchModal(false)
+                    setSearchQuery('')
+                    setSearchResults([])
+                    setSelectedUserIds([])
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleAddSelectedUsers}
+                  disabled={isLoading || selectedUserIds.length === 0}
+                >
+                  {isLoading ? 'Adding...' : `Add ${selectedUserIds.length} User(s)`}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
