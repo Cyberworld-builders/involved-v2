@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -25,9 +25,52 @@ export default function ClientUsers({ clientId }: ClientUsersProps) {
   const [message, setMessage] = useState('')
   const [uploadedUsers, setUploadedUsers] = useState<UserData[]>([])
   const [errorDetails, setErrorDetails] = useState<Array<{user: string, error: string}>>([])
+  const [existingUsers, setExistingUsers] = useState<Array<{
+    id: string
+    name: string
+    email: string
+    username: string
+    industries?: { name: string } | null
+    last_login_at: string | null
+    created_at: string
+  }>>([])
+  const [isLoadingUsers, setIsLoadingUsers] = useState(true)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
   const supabase = createClient()
+
+  useEffect(() => {
+    loadUsers()
+  }, [clientId])
+
+  const loadUsers = async () => {
+    setIsLoadingUsers(true)
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          name,
+          email,
+          username,
+          last_login_at,
+          created_at,
+          industries!industry_id(name)
+        `)
+        .eq('client_id', clientId)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Error loading users:', error)
+      } else {
+        setExistingUsers(data || [])
+      }
+    } catch (error) {
+      console.error('Error loading users:', error)
+    } finally {
+      setIsLoadingUsers(false)
+    }
+  }
 
   const downloadTemplate = () => {
     const csvContent = [
@@ -184,6 +227,7 @@ export default function ClientUsers({ clientId }: ClientUsersProps) {
         setMessage(`Successfully created ${data.created} users!`)
         setUploadedUsers([])
         setTimeout(() => {
+          loadUsers()
           router.refresh()
         }, 2000)
       }
@@ -308,6 +352,102 @@ export default function ClientUsers({ clientId }: ClientUsersProps) {
                   </p>
                 )}
               </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Existing Users List */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Existing Users ({existingUsers.length})</CardTitle>
+          <CardDescription>
+            Users associated with this client
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoadingUsers ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+              <p className="mt-2 text-gray-600">Loading users...</p>
+            </div>
+          ) : existingUsers.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500">No users found for this client.</p>
+              <p className="text-sm text-gray-400 mt-2">Use the bulk upload above or add a single user to get started.</p>
+            </div>
+          ) : (
+            <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+              <table className="min-w-full divide-y divide-gray-300">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      User
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Industry
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Last Login
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Created
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {existingUsers.map((user) => (
+                    <tr key={user.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="h-10 w-10 flex-shrink-0">
+                            <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                              <span className="text-sm font-medium text-gray-700">
+                                {user.name.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">
+                              <Link
+                                href={`/dashboard/users/${user.id}`}
+                                className="hover:text-indigo-600"
+                              >
+                                {user.name}
+                              </Link>
+                            </div>
+                            <div className="text-sm text-gray-500">{user.email}</div>
+                            <div className="text-xs text-gray-400">@{user.username}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {user.industries?.name || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {user.last_login_at 
+                          ? new Date(user.last_login_at).toLocaleDateString()
+                          : 'Never'
+                        }
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(user.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <Link
+                          href={`/dashboard/users/${user.id}/edit`}
+                          className="text-indigo-600 hover:text-indigo-900"
+                        >
+                          Edit
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </CardContent>

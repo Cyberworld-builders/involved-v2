@@ -8,15 +8,18 @@ import DashboardLayout from '@/components/layout/dashboard-layout'
 import ClientTabs from './client-tabs'
 
 interface ClientPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
-  searchParams: {
+  }>
+  searchParams: Promise<{
     tab?: string
-  }
+  }>
 }
 
 export default async function ClientPage({ params, searchParams }: ClientPageProps) {
+  const { id } = await params
+  const { tab } = await searchParams
+  
   const supabase = await createClient()
 
   const {
@@ -31,7 +34,7 @@ export default async function ClientPage({ params, searchParams }: ClientPagePro
   const { data: client, error } = await supabase
     .from('clients')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (error || !client) {
@@ -48,7 +51,7 @@ export default async function ClientPage({ params, searchParams }: ClientPagePro
     )
   }
 
-  const activeTab = searchParams.tab || 'details'
+  const activeTab = tab || 'details'
 
   return (
     <DashboardLayout>
