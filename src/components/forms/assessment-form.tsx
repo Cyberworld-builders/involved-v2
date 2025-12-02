@@ -146,6 +146,135 @@ export default function AssessmentForm({
     }))
   }
 
+  const handleDownloadDimensionsTemplate = () => {
+    // Create CSV template
+    const headers = ['Dimension Name', 'Dimension Code']
+    const rows = formData.dimensions.length > 0 
+      ? formData.dimensions.map(dim => [dim.name, dim.code])
+      : [['Leadership', 'LEAD'], ['Communication', 'COMM'], ['Teamwork', 'TEAM']]
+    const csv = [headers, ...rows].map(row => row.join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'dimensions-template.csv'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    window.URL.revokeObjectURL(url)
+  }
+
+  const handleUploadDimensionsCSV = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const text = e.target?.result as string
+        if (!text) {
+          alert('Error: File appears to be empty')
+          return
+        }
+
+        // Handle different line endings
+        const lines = text.split(/\r?\n/).filter(line => line.trim())
+        if (lines.length < 2) {
+          alert('Error: CSV file must have at least a header row and one data row')
+          return
+        }
+
+        // Parse headers
+        const parseCSVLine = (line: string): string[] => {
+          const result: string[] = []
+          let current = ''
+          let inQuotes = false
+          
+          for (let i = 0; i < line.length; i++) {
+            const char = line[i]
+            if (char === '"') {
+              inQuotes = !inQuotes
+            } else if (char === ',' && !inQuotes) {
+              result.push(current.trim())
+              current = ''
+            } else {
+              current += char
+            }
+          }
+          result.push(current.trim())
+          return result
+        }
+
+        const headers = parseCSVLine(lines[0]).map(h => h.replace(/^"|"$/g, '').trim())
+
+        // Find column indices
+        const nameIndex = headers.findIndex(h => 
+          h.toLowerCase().includes('dimension') && h.toLowerCase().includes('name')
+        )
+        const codeIndex = headers.findIndex(h => 
+          h.toLowerCase().includes('dimension') && h.toLowerCase().includes('code')
+        )
+
+        if (nameIndex === -1 || codeIndex === -1) {
+          alert(`Invalid CSV format. Expected columns: Dimension Name, Dimension Code. Found: ${headers.join(', ')}`)
+          return
+        }
+
+        // Parse CSV and add dimensions
+        const newDimensions: Dimension[] = []
+        for (let i = 1; i < lines.length; i++) {
+          const values = parseCSVLine(lines[i]).map(v => v.replace(/^"|"$/g, '').trim())
+          
+          if (values.length < Math.max(nameIndex, codeIndex) + 1) {
+            continue
+          }
+
+          const dimensionName = values[nameIndex]?.trim()
+          const dimensionCode = values[codeIndex]?.trim()
+
+          if (!dimensionName || !dimensionCode) {
+            continue
+          }
+
+          // Check if dimension already exists (by name or code)
+          const exists = formData.dimensions.some(
+            d => d.name.toLowerCase() === dimensionName.toLowerCase() ||
+                 d.code.toLowerCase() === dimensionCode.toLowerCase()
+          )
+
+          if (!exists) {
+            newDimensions.push({
+              id: `dim-${Date.now()}-${i}`,
+              name: dimensionName,
+              code: dimensionCode,
+              parent_id: null,
+            })
+          }
+        }
+
+        if (newDimensions.length > 0) {
+          setFormData(prev => ({
+            ...prev,
+            dimensions: [...prev.dimensions, ...newDimensions],
+          }))
+          alert(`Successfully loaded ${newDimensions.length} dimension(s) from CSV`)
+        } else {
+          alert('No new dimensions found in CSV. All dimensions may already exist.')
+        }
+      } catch (error) {
+        console.error('Error parsing CSV:', error)
+        alert(`Error parsing CSV file: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      }
+    }
+    reader.onerror = () => {
+      alert('Error reading file')
+    }
+    reader.readAsText(file)
+    
+    // Reset the input so the same file can be uploaded again
+    event.target.value = ''
+  }
+
   const handleAddField = (type: 'rich_text' | 'multiple_choice' | 'slider') => {
     const newField: Field = {
       id: `field-${Date.now()}`,
@@ -547,7 +676,24 @@ export default function AssessmentForm({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex justify-end">
+            <div className="flex justify-between items-center">
+              <div className="flex space-x-2">
+                <Button variant="outline" type="button" onClick={handleDownloadDimensionsTemplate}>
+                  📥 Download Template
+                </Button>
+                <label className="cursor-pointer">
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={handleUploadDimensionsCSV}
+                    className="hidden"
+                    id="dimensions-csv-upload-input"
+                  />
+                  <Button variant="outline" type="button" onClick={() => document.getElementById('dimensions-csv-upload-input')?.click()}>
+                    📤 Upload CSV
+                  </Button>
+                </label>
+              </div>
               <Button type="button" onClick={handleAddDimension}>
                 + Add Dimension
               </Button>

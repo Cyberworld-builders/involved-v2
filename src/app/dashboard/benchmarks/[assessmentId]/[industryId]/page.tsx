@@ -192,48 +192,120 @@ export default function BenchmarksManagePage({ params }: BenchmarksManagePagePro
 
     const reader = new FileReader()
     reader.onload = async (e) => {
-      const text = e.target?.result as string
-      const lines = text.split('\n').filter(line => line.trim())
-      const headers = lines[0].split(',').map(h => h.trim())
+      try {
+        const text = e.target?.result as string
+        if (!text) {
+          setMessage('Error: File appears to be empty')
+          return
+        }
 
-      // Find column indices
-      const nameIndex = headers.findIndex(h => h.toLowerCase().includes('dimension') && h.toLowerCase().includes('name'))
-      const codeIndex = headers.findIndex(h => h.toLowerCase().includes('dimension') && h.toLowerCase().includes('code'))
-      const valueIndex = headers.findIndex(h => h.toLowerCase() === 'value')
+        // Handle different line endings
+        const lines = text.split(/\r?\n/).filter(line => line.trim())
+        if (lines.length < 2) {
+          setMessage('Error: CSV file must have at least a header row and one data row')
+          return
+        }
 
-      if (nameIndex === -1 || codeIndex === -1 || valueIndex === -1) {
-        setMessage('Invalid CSV format. Please use the template.')
-        return
-      }
+        // Parse headers - handle quoted values
+        const parseCSVLine = (line: string): string[] => {
+          const result: string[] = []
+          let current = ''
+          let inQuotes = false
+          
+          for (let i = 0; i < line.length; i++) {
+            const char = line[i]
+            if (char === '"') {
+              inQuotes = !inQuotes
+            } else if (char === ',' && !inQuotes) {
+              result.push(current.trim())
+              current = ''
+            } else {
+              current += char
+            }
+          }
+          result.push(current.trim())
+          return result
+        }
 
-      // Parse CSV and update benchmarks
-      const updatedBenchmarks = { ...benchmarks }
-      for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',').map(v => v.trim())
-        const dimensionName = values[nameIndex]
-        const dimensionCode = values[codeIndex]
-        const value = parseFloat(values[valueIndex])
+        const headers = parseCSVLine(lines[0]).map(h => h.replace(/^"|"$/g, '').trim())
 
-        if (isNaN(value)) continue
-
-        // Find dimension by name or code
-        const dimension = dimensions.find(
-          d => d.name.toLowerCase() === dimensionName.toLowerCase() ||
-               d.code.toLowerCase() === dimensionCode.toLowerCase()
+        // Find column indices (more flexible matching)
+        const nameIndex = headers.findIndex(h => 
+          h.toLowerCase().includes('dimension') && h.toLowerCase().includes('name')
+        )
+        const codeIndex = headers.findIndex(h => 
+          h.toLowerCase().includes('dimension') && h.toLowerCase().includes('code')
+        )
+        const valueIndex = headers.findIndex(h => 
+          h.toLowerCase() === 'value'
         )
 
-        if (dimension) {
-          updatedBenchmarks[dimension.id] = {
-            dimension_id: dimension.id,
-            value: value,
+        if (nameIndex === -1 || codeIndex === -1 || valueIndex === -1) {
+          setMessage(`Invalid CSV format. Expected columns: Dimension Name, Dimension Code, Value. Found: ${headers.join(', ')}`)
+          console.error('CSV Headers:', headers)
+          return
+        }
+
+        // Parse CSV and update benchmarks
+        const updatedBenchmarks = { ...benchmarks }
+        let loadedCount = 0
+        let skippedCount = 0
+
+        for (let i = 1; i < lines.length; i++) {
+          const values = parseCSVLine(lines[i]).map(v => v.replace(/^"|"$/g, '').trim())
+          
+          if (values.length < Math.max(nameIndex, codeIndex, valueIndex) + 1) {
+            skippedCount++
+            continue
+          }
+
+          const dimensionName = values[nameIndex]
+          const dimensionCode = values[codeIndex]
+          const valueStr = values[valueIndex]
+
+          if (!dimensionName && !dimensionCode) {
+            skippedCount++
+            continue
+          }
+
+          const value = parseFloat(valueStr)
+          if (isNaN(value) || valueStr === '') {
+            skippedCount++
+            continue
+          }
+
+          // Find dimension by name or code (case-insensitive, trimmed)
+          const dimension = dimensions.find(
+            d => (dimensionName && d.name.toLowerCase().trim() === dimensionName.toLowerCase().trim()) ||
+                 (dimensionCode && d.code.toLowerCase().trim() === dimensionCode.toLowerCase().trim())
+          )
+
+          if (dimension) {
+            updatedBenchmarks[dimension.id] = {
+              dimension_id: dimension.id,
+              value: value,
+            }
+            loadedCount++
+          } else {
+            skippedCount++
+            console.warn(`Dimension not found: ${dimensionName || dimensionCode}`)
           }
         }
-      }
 
-      setBenchmarks(updatedBenchmarks)
-      setMessage('CSV loaded successfully. Click Save to apply changes.')
+        setBenchmarks(updatedBenchmarks)
+        setMessage(`CSV loaded successfully! ${loadedCount} values loaded, ${skippedCount} rows skipped. Click Save to apply changes.`)
+      } catch (error) {
+        console.error('Error parsing CSV:', error)
+        setMessage(`Error parsing CSV file: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      }
+    }
+    reader.onerror = () => {
+      setMessage('Error reading file')
     }
     reader.readAsText(file)
+    
+    // Reset the input so the same file can be uploaded again
+    event.target.value = ''
   }
 
   if (isLoading) {
@@ -274,15 +346,16 @@ export default function BenchmarksManagePage({ params }: BenchmarksManagePagePro
               📥 Download Template
             </Button>
             <label className="cursor-pointer">
-              <Button variant="outline" as="span">
-                📤 Upload CSV
-              </Button>
               <input
                 type="file"
                 accept=".csv,.xlsx,.xls"
                 onChange={handleFileUpload}
                 className="hidden"
+                id="csv-upload-input"
               />
+              <Button variant="outline" type="button" onClick={() => document.getElementById('csv-upload-input')?.click()}>
+                📤 Upload CSV
+              </Button>
             </label>
           </div>
         </div>
