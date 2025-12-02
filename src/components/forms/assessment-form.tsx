@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import RichTextEditor from '@/components/rich-text-editor'
 
 export interface Dimension {
   id: string
@@ -419,13 +420,11 @@ export default function AssessmentForm({
                 <label htmlFor="description" className="block text-sm font-medium text-gray-900 mb-2">
                   Description
                 </label>
-                <p className="text-sm text-gray-500 mb-3">A brief description of the assessment.</p>
-                <textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
-                  rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                <p className="text-sm text-gray-500 mb-3">A brief description of the assessment. Supports rich text formatting.</p>
+                <RichTextEditor
+                  content={formData.description}
+                  onChange={(content) => handleInputChange('description', content)}
+                  placeholder="Enter assessment description..."
                 />
               </div>
             </CardContent>
@@ -823,13 +822,21 @@ export default function AssessmentForm({
                       <label className="block text-sm font-medium text-gray-900 mb-2">
                         Content
                       </label>
-                      <textarea
-                        value={field.content}
-                        onChange={(e) => handleUpdateField(field.id, 'content', e.target.value)}
-                        rows={3}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        placeholder="Enter field content or question text..."
-                      />
+                      {field.type === 'rich_text' ? (
+                        <RichTextEditor
+                          content={field.content}
+                          onChange={(content) => handleUpdateField(field.id, 'content', content)}
+                          placeholder="Enter rich text content..."
+                        />
+                      ) : (
+                        <textarea
+                          value={field.content}
+                          onChange={(e) => handleUpdateField(field.id, 'content', e.target.value)}
+                          rows={3}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                          placeholder="Enter field content or question text..."
+                        />
+                      )}
                     </div>
 
                     {/* Anchors for Multiple Choice and Slider */}

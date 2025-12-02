@@ -5,12 +5,17 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import DashboardLayout from '@/components/layout/dashboard-layout'
+import AssessmentPublishButton from '@/components/assessment-publish-button'
 
 interface AssessmentPageProps {
   params: Promise<{
     id: string
   }>
 }
+
+// Force dynamic rendering to prevent caching
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export default async function AssessmentPage({ params }: AssessmentPageProps) {
   const { id } = await params
@@ -78,7 +83,10 @@ export default async function AssessmentPage({ params }: AssessmentPageProps) {
               {assessment.description && (
                 <div>
                   <label className="text-sm font-medium text-gray-500">Description</label>
-                  <p className="text-gray-900">{assessment.description}</p>
+                  <div 
+                    className="text-gray-900 prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: assessment.description }}
+                  />
                 </div>
               )}
               <div>
@@ -112,24 +120,37 @@ export default async function AssessmentPage({ params }: AssessmentPageProps) {
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <Link href={`/dashboard/assessments/${assessment.id}/edit`} className="block">
+            <CardContent className="space-y-4">
+              {/* Publish/Unpublish Section */}
+              <div className="pb-4 border-b border-gray-200">
+                <AssessmentPublishButton 
+                  assessmentId={assessment.id} 
+                  currentStatus={assessment.status}
+                />
+              </div>
+
+              {/* Other Actions */}
+              <div className="space-y-2">
+                <Link href={`/dashboard/assessments/${assessment.id}/edit`} className="block">
+                  <Button variant="outline" className="w-full justify-start">
+                    ✏️ Edit Assessment
+                  </Button>
+                </Link>
+              <Link href={`/dashboard/assessments/${assessment.id}/preview`} className="block">
                 <Button variant="outline" className="w-full justify-start">
-                  ✏️ Edit Assessment
+                  👁️ Preview Assessment
                 </Button>
               </Link>
-              <Button variant="outline" className="w-full justify-start">
-                👁️ Preview Assessment
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                📤 Duplicate Assessment
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                👥 Assign to Users
-              </Button>
-              <Button variant="outline" className="w-full justify-start text-red-600 hover:text-red-700">
-                🗑️ Delete Assessment
-              </Button>
+                <Button variant="outline" className="w-full justify-start">
+                  📤 Duplicate Assessment
+                </Button>
+                <Button variant="outline" className="w-full justify-start">
+                  👥 Assign to Users
+                </Button>
+                <Button variant="outline" className="w-full justify-start text-red-600 hover:text-red-700">
+                  🗑️ Delete Assessment
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>

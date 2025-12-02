@@ -116,9 +116,16 @@ export default async function AssessmentsPage() {
                                 </Link>
                               </div>
                               {assessment.description && (
-                                <div className="text-sm text-gray-500 truncate max-w-md">
-                                  {assessment.description}
-                                </div>
+                                <div 
+                                  className="text-sm text-gray-500 max-w-md line-clamp-2 overflow-hidden"
+                                  style={{
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: 'vertical',
+                                    overflow: 'hidden',
+                                  }}
+                                  dangerouslySetInnerHTML={{ __html: assessment.description }}
+                                />
                               )}
                             </div>
                           </div>
