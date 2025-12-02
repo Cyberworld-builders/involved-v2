@@ -293,7 +293,7 @@ function FieldPreview({ field, fieldNumber }: { field: any; fieldNumber: number 
                   type="range"
                   min={anchors[0]?.value || 1}
                   max={anchors[anchors.length - 1]?.value || anchors.length}
-                  defaultValue={Math.floor((anchors[0]?.value || 1 + anchors[anchors.length - 1]?.value || anchors.length) / 2)}
+                  defaultValue={Math.floor(((anchors[0]?.value || 1) + (anchors[anchors.length - 1]?.value || anchors.length)) / 2)}
                   className="flex-1"
                   disabled
                 />
