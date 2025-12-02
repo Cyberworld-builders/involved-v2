@@ -360,6 +360,32 @@ export interface Database {
           created_at?: string
         }
       }
+      benchmarks: {
+        Row: {
+          id: string
+          dimension_id: string
+          industry_id: string
+          value: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          dimension_id: string
+          industry_id: string
+          value: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          dimension_id?: string
+          industry_id?: string
+          value?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never

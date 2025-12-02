@@ -7,12 +7,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import DashboardLayout from '@/components/layout/dashboard-layout'
 
 interface AssessmentPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default async function AssessmentPage({ params }: AssessmentPageProps) {
+  const { id } = await params
   const supabase = await createClient()
 
   const {
@@ -27,7 +28,7 @@ export default async function AssessmentPage({ params }: AssessmentPageProps) {
   const { data: assessment, error } = await supabase
     .from('assessments')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (error || !assessment) {

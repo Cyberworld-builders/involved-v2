@@ -5,7 +5,14 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import DashboardLayout from '@/components/layout/dashboard-layout'
 
-export default async function BenchmarksPage() {
+interface BenchmarksIndustryPageProps {
+  params: Promise<{
+    assessmentId: string
+  }>
+}
+
+export default async function BenchmarksIndustryPage({ params }: BenchmarksIndustryPageProps) {
+  const { assessmentId } = await params
   const supabase = await createClient()
 
   const {
@@ -16,14 +23,35 @@ export default async function BenchmarksPage() {
     redirect('/auth/login')
   }
 
-  // Fetch assessments from database
-  const { data: assessments, error } = await supabase
+  // Fetch assessment
+  const { data: assessment, error: assessmentError } = await supabase
     .from('assessments')
     .select('*')
-    .order('title', { ascending: true })
+    .eq('id', assessmentId)
+    .single()
 
-  if (error) {
-    console.error('Error fetching assessments:', error)
+  if (assessmentError || !assessment) {
+    return (
+      <DashboardLayout>
+        <div className="text-center py-12">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Assessment Not Found</h1>
+          <p className="text-gray-600 mb-4">The assessment you&apos;re looking for doesn&apos;t exist.</p>
+          <Link href="/dashboard/benchmarks">
+            <Button>Back to Benchmarks</Button>
+          </Link>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
+  // Fetch industries
+  const { data: industries, error: industriesError } = await supabase
+    .from('industries')
+    .select('*')
+    .order('name', { ascending: true })
+
+  if (industriesError) {
+    console.error('Error fetching industries:', industriesError)
   }
 
   return (
@@ -44,46 +72,46 @@ export default async function BenchmarksPage() {
               </Link>
             </li>
             <li className="text-gray-400">/</li>
-            <li className="text-gray-900 font-medium">Select Assessment</li>
+            <li>
+              <Link href={`/dashboard/benchmarks/${assessment.id}`} className="text-gray-500 hover:text-gray-700">
+                {assessment.title}
+              </Link>
+            </li>
+            <li className="text-gray-400">/</li>
+            <li className="text-gray-900 font-medium">Select Industry</li>
           </ol>
         </nav>
 
-        {/* Assessments List */}
+        {/* Industries List */}
         <Card>
           <CardHeader>
-            <CardTitle>Select Assessment</CardTitle>
+            <CardTitle>Select Industry</CardTitle>
             <CardDescription>
-              Choose an assessment to manage benchmarks for its dimensions
+              Choose an industry to manage benchmarks for &quot;{assessment.title}&quot;
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {!assessments || assessments.length === 0 ? (
+            {!industries || industries.length === 0 ? (
               <div className="text-center py-12">
                 <div className="mx-auto h-12 w-12 text-gray-400 mb-4">
                   <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No assessments yet</h3>
-                <p className="text-gray-500 mb-4">Create an assessment first to manage benchmarks.</p>
-                <Link href="/dashboard/assessments/create">
-                  <Button>Create Assessment</Button>
-                </Link>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No industries yet</h3>
+                <p className="text-gray-500 mb-4">Industries need to be created first.</p>
               </div>
             ) : (
               <div className="space-y-2">
-                {assessments.map((assessment) => (
+                {industries.map((industry) => (
                   <Link
-                    key={assessment.id}
-                    href={`/dashboard/benchmarks/${assessment.id}`}
+                    key={industry.id}
+                    href={`/dashboard/benchmarks/${assessment.id}/${industry.id}`}
                     className="block p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-indigo-300 transition-colors"
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="text-sm font-medium text-gray-900">{assessment.title}</h3>
-                        {assessment.description && (
-                          <p className="text-sm text-gray-500 mt-1">{assessment.description}</p>
-                        )}
+                        <h3 className="text-sm font-medium text-gray-900">{industry.name}</h3>
                       </div>
                       <div className="text-gray-400">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,3 +129,4 @@ export default async function BenchmarksPage() {
     </DashboardLayout>
   )
 }
+

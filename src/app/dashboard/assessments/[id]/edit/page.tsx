@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import DashboardLayout from '@/components/layout/dashboard-layout'
@@ -9,12 +9,13 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 
 interface EditAssessmentPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default function EditAssessmentPage({ params }: EditAssessmentPageProps) {
+  const { id } = use(params)
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingData, setIsLoadingData] = useState(true)
   const [message, setMessage] = useState('')
@@ -31,7 +32,7 @@ export default function EditAssessmentPage({ params }: EditAssessmentPageProps) 
         const { data: assessment, error: assessmentError } = await supabase
           .from('assessments')
           .select('*')
-          .eq('id', params.id)
+          .eq('id', id)
           .single()
 
         if (assessmentError || !assessment) {
@@ -42,7 +43,7 @@ export default function EditAssessmentPage({ params }: EditAssessmentPageProps) 
         const { data: dimensions, error: dimensionsError } = await supabase
           .from('dimensions')
           .select('*')
-          .eq('assessment_id', params.id)
+          .eq('assessment_id', id)
           .order('created_at', { ascending: true })
 
         if (dimensionsError) {
@@ -53,7 +54,7 @@ export default function EditAssessmentPage({ params }: EditAssessmentPageProps) 
         const { data: fields, error: fieldsError } = await supabase
           .from('fields')
           .select('*')
-          .eq('assessment_id', params.id)
+          .eq('assessment_id', id)
           .order('order', { ascending: true })
 
         if (fieldsError) {
@@ -106,7 +107,7 @@ export default function EditAssessmentPage({ params }: EditAssessmentPageProps) 
     }
 
     loadAssessment()
-  }, [params.id, supabase])
+  }, [id, supabase])
 
   const handleSubmit = async (data: AssessmentFormData) => {
     setIsLoading(true)
@@ -180,7 +181,7 @@ export default function EditAssessmentPage({ params }: EditAssessmentPageProps) 
           type: data.is_360 ? '360' : 'custom',
           updated_at: new Date().toISOString(),
         })
-        .eq('id', params.id)
+        .eq('id', id)
 
       if (assessmentError) {
         throw new Error(`Failed to update assessment: ${assessmentError.message}`)
@@ -188,15 +189,15 @@ export default function EditAssessmentPage({ params }: EditAssessmentPageProps) 
 
       // Delete existing dimensions and fields, then recreate
       // (Simpler than trying to match and update individual items)
-      await supabase.from('dimensions').delete().eq('assessment_id', params.id)
-      await supabase.from('fields').delete().eq('assessment_id', params.id)
+      await supabase.from('dimensions').delete().eq('assessment_id', id)
+      await supabase.from('fields').delete().eq('assessment_id', id)
 
       // Create dimensions
       if (data.dimensions.length > 0) {
         const dimensionsToInsert = data.dimensions
           .filter(dim => dim.name && dim.code)
           .map(dim => ({
-            assessment_id: params.id,
+            assessment_id: id,
             name: dim.name,
             code: dim.code,
             parent_id: dim.parent_id || null,
@@ -219,7 +220,7 @@ export default function EditAssessmentPage({ params }: EditAssessmentPageProps) 
         const { data: dimensions } = await supabase
           .from('dimensions')
           .select('id, code')
-          .eq('assessment_id', params.id)
+          .eq('assessment_id', id)
 
         const dimensionMap = new Map(
           dimensions?.map(d => [d.code, d.id]) || []
@@ -237,7 +238,7 @@ export default function EditAssessmentPage({ params }: EditAssessmentPageProps) 
             }
 
             return {
-              assessment_id: params.id,
+              assessment_id: id,
               dimension_id: dimensionId,
               type: field.type,
               content: field.content,
