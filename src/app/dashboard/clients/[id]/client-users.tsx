@@ -1,0 +1,318 @@
+'use client'
+
+import { useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import Link from 'next/link'
+
+interface UserData {
+  Name: string
+  Email: string
+  Username: string
+  Industry: string
+  Role: string
+}
+
+interface ClientUsersProps {
+  clientId: string
+}
+
+export default function ClientUsers({ clientId }: ClientUsersProps) {
+  const [isLoading, setIsLoading] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [message, setMessage] = useState('')
+  const [uploadedUsers, setUploadedUsers] = useState<UserData[]>([])
+  const [errorDetails, setErrorDetails] = useState<Array<{user: string, error: string}>>([])
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const router = useRouter()
+  const supabase = createClient()
+
+  const downloadTemplate = () => {
+    const csvContent = [
+      'Name,Email,Username,Industry,Role',
+      'John Doe,john.doe@example.com,johndoe,Technology,User',
+      'Jane Smith,jane.smith@example.com,janesmith,Healthcare,User'
+    ].join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'users_upload_template.csv'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    window.URL.revokeObjectURL(url)
+  }
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setIsProcessing(true)
+    setMessage('')
+
+    try {
+      const text = await file.text()
+      const lines = text.split('\n')
+      
+      const users: UserData[] = []
+      
+      // Parse CSV - handle quoted values
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim()
+        if (!line) continue
+        
+        // Simple CSV parser that handles quoted values
+        const values: string[] = []
+        let current = ''
+        let inQuotes = false
+        
+        for (let j = 0; j < line.length; j++) {
+          const char = line[j]
+          if (char === '"') {
+            inQuotes = !inQuotes
+          } else if (char === ',' && !inQuotes) {
+            values.push(current.trim())
+            current = ''
+          } else {
+            current += char
+          }
+        }
+        values.push(current.trim()) // Push last value
+        
+        if (values.length < 5) continue // Skip incomplete rows
+        
+        const user: UserData = {
+          Name: values[0]?.replace(/^"|"$/g, '') || '',
+          Email: values[1]?.replace(/^"|"$/g, '') || '',
+          Username: values[2]?.replace(/^"|"$/g, '') || '',
+          Industry: values[3]?.replace(/^"|"$/g, '') || '',
+          Role: values[4]?.replace(/^"|"$/g, '') || 'User'
+        }
+        
+        // Validate required fields
+        if (!user.Name || !user.Email) {
+          throw new Error(`Row ${i + 1}: Name and Email are required`)
+        }
+        
+        // Validate email format
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.Email)) {
+          throw new Error(`Row ${i + 1}: Invalid email format for '${user.Email}'`)
+        }
+        
+        // Generate username if not provided
+        if (!user.Username && user.Name) {
+          user.Username = user.Name
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, '')
+            .substring(0, 20)
+        }
+        
+        users.push(user)
+      }
+      
+      setUploadedUsers(users)
+      setMessage(`Successfully parsed ${users.length} users from CSV file. Review and click "Create Users" to proceed.`)
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Failed to parse CSV file')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const createUsers = async () => {
+    if (uploadedUsers.length === 0) return
+
+    setIsLoading(true)
+    setMessage('')
+
+    try {
+      const response = await fetch(`/api/clients/${clientId}/users/bulk`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ users: uploadedUsers }),
+      })
+
+      const data = await response.json()
+
+      // Debug: Log the full response
+      console.log('API Response:', data)
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create users')
+      }
+
+      if (data.failed > 0) {
+        const failedUsers = data.results.filter((r: any) => !r.success)
+        
+        // Extract error details for display
+        const errors = failedUsers.map((failed: any) => ({
+          user: failed.user || failed.email || 'Unknown',
+          error: failed.error || failed.message || 'Unknown error'
+        }))
+        setErrorDetails(errors)
+        
+        // Debug: Log failed users structure
+        console.log('Failed users array:', failedUsers)
+        if (failedUsers.length > 0) {
+          console.log('First failed user example:', JSON.stringify(failedUsers[0], null, 2))
+        }
+        
+        setMessage(`Created ${data.created} users. ${data.failed} failed. See error details below.`)
+        
+        console.group('❌ Failed User Creation')
+        console.error(`Total failed: ${data.failed}`)
+        console.error('Failed users and errors:')
+        
+        failedUsers.slice(0, 20).forEach((failed: any, index: number) => {
+          const email = failed.user || failed.email || `User ${index + 1}`
+          const error = failed.error || failed.message || 'Unknown error'
+          console.error(`${index + 1}. ${email}: ${error}`)
+        })
+        
+        if (failedUsers.length > 20) {
+          console.error(`... and ${failedUsers.length - 20} more`)
+        }
+        console.groupEnd()
+      } else {
+        setErrorDetails([])
+        setMessage(`Successfully created ${data.created} users!`)
+        setUploadedUsers([])
+        setTimeout(() => {
+          router.refresh()
+        }, 2000)
+      }
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'An unexpected error occurred')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900">Users</h2>
+          <p className="text-sm text-gray-600">Manage users for this client</p>
+        </div>
+        <div className="flex space-x-2">
+          <Link href={`/dashboard/users/create?client_id=${clientId}`}>
+            <Button>Add Single User</Button>
+          </Link>
+          <Button variant="outline" onClick={downloadTemplate}>
+            Download Template
+          </Button>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Bulk Upload Users</CardTitle>
+          <CardDescription>
+            Upload a CSV file to create multiple users at once. Format: Name,Email,Username,Industry,Role
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isProcessing}
+              variant="outline"
+            >
+              {isProcessing ? 'Processing...' : 'Upload CSV File'}
+            </Button>
+          </div>
+
+          {message && (
+            <div className={`p-4 rounded-md ${
+              message.includes('Successfully') || message.includes('Created') && errorDetails.length === 0
+                ? 'bg-green-50 text-green-800'
+                : 'bg-red-50 text-red-800'
+            }`}>
+              {message}
+            </div>
+          )}
+
+          {errorDetails.length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-md p-4 max-h-96 overflow-y-auto">
+              <h3 className="text-sm font-semibold text-red-900 mb-2">
+                Error Details ({errorDetails.length} failures):
+              </h3>
+              <div className="space-y-2">
+                {errorDetails.slice(0, 50).map((err, index) => (
+                  <div key={index} className="text-sm text-red-800 border-b border-red-200 pb-1">
+                    <span className="font-medium">{err.user}:</span> {err.error}
+                  </div>
+                ))}
+                {errorDetails.length > 50 && (
+                  <div className="text-sm text-red-600 italic">
+                    ... and {errorDetails.length - 50} more errors
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {uploadedUsers.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <p className="text-sm font-medium text-gray-700">
+                  Preview ({uploadedUsers.length} users)
+                </p>
+                <Button
+                  onClick={createUsers}
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Creating...' : `Create ${uploadedUsers.length} Users`}
+                </Button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Username</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Industry</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {uploadedUsers.slice(0, 10).map((user, index) => (
+                      <tr key={index}>
+                        <td className="px-4 py-3 text-sm text-gray-900">{user.Name}</td>
+                        <td className="px-4 py-3 text-sm text-gray-900">{user.Email}</td>
+                        <td className="px-4 py-3 text-sm text-gray-900">{user.Username}</td>
+                        <td className="px-4 py-3 text-sm text-gray-900">{user.Industry}</td>
+                        <td className="px-4 py-3 text-sm text-gray-900">{user.Role}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {uploadedUsers.length > 10 && (
+                  <p className="mt-2 text-sm text-gray-500 text-center">
+                    ... and {uploadedUsers.length - 10} more
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+

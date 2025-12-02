@@ -39,6 +39,16 @@ npm run dev
 
 This will automatically use the local Supabase instance running at `http://127.0.0.1:54321`.
 
+### For Staging Development
+
+To run the dev server with staging environment:
+
+```bash
+npm run dev:staging
+```
+
+This will load `.env.staging` and start the dev server. **Note**: Next.js will still load `.env.local` if it exists, but the staging env vars will take precedence. Your `.env.local` file remains unchanged.
+
 ### For Staging Environment
 
 1. **Get your Supabase credentials:**

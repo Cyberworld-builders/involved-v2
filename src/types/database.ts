@@ -237,6 +237,55 @@ export interface Database {
           updated_at?: string
         }
       }
+      groups: {
+        Row: {
+          id: string
+          client_id: string
+          name: string
+          description: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          client_id: string
+          name: string
+          description?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          client_id?: string
+          name?: string
+          description?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      group_members: {
+        Row: {
+          id: string
+          group_id: string
+          profile_id: string
+          role: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          group_id: string
+          profile_id: string
+          role?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          group_id?: string
+          profile_id?: string
+          role?: string
+          created_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
