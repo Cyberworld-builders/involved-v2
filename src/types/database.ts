@@ -35,6 +35,16 @@ export interface Database {
           id: string
           title: string
           description: string | null
+          logo: string | null
+          background: string | null
+          primary_color: string
+          accent_color: string
+          split_questions: boolean
+          questions_per_page: number
+          timed: boolean
+          time_limit: number | null
+          target: string | null
+          is_360: boolean
           type: '360' | 'blockers' | 'leader' | 'custom'
           status: 'draft' | 'active' | 'completed' | 'archived'
           created_by: string
@@ -45,7 +55,17 @@ export interface Database {
           id?: string
           title: string
           description?: string | null
-          type: '360' | 'blockers' | 'leader' | 'custom'
+          logo?: string | null
+          background?: string | null
+          primary_color?: string
+          accent_color?: string
+          split_questions?: boolean
+          questions_per_page?: number
+          timed?: boolean
+          time_limit?: number | null
+          target?: string | null
+          is_360?: boolean
+          type?: '360' | 'blockers' | 'leader' | 'custom'
           status?: 'draft' | 'active' | 'completed' | 'archived'
           created_by: string
           created_at?: string
@@ -55,6 +75,16 @@ export interface Database {
           id?: string
           title?: string
           description?: string | null
+          logo?: string | null
+          background?: string | null
+          primary_color?: string
+          accent_color?: string
+          split_questions?: boolean
+          questions_per_page?: number
+          timed?: boolean
+          time_limit?: number | null
+          target?: string | null
+          is_360?: boolean
           type?: '360' | 'blockers' | 'leader' | 'custom'
           status?: 'draft' | 'active' | 'completed' | 'archived'
           created_by?: string
@@ -62,37 +92,81 @@ export interface Database {
           updated_at?: string
         }
       }
-      questions: {
+      dimensions: {
         Row: {
           id: string
           assessment_id: string
-          text: string
-          type: 'multiple_choice' | 'rating' | 'text' | 'boolean'
-          order: number
-          required: boolean
-          options: string[] | null
+          name: string
+          code: string
+          parent_id: string | null
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
           assessment_id: string
-          text: string
-          type: 'multiple_choice' | 'rating' | 'text' | 'boolean'
-          order: number
-          required?: boolean
-          options?: string[] | null
+          name: string
+          code: string
+          parent_id?: string | null
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
           assessment_id?: string
-          text?: string
-          type?: 'multiple_choice' | 'rating' | 'text' | 'boolean'
+          name?: string
+          code?: string
+          parent_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      fields: {
+        Row: {
+          id: string
+          assessment_id: string
+          dimension_id: string | null
+          type: 'rich_text' | 'multiple_choice' | 'slider'
+          content: string
+          order: number
+          anchors: Array<{
+            id: string
+            name: string
+            value: number
+            practice: boolean
+          }>
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          assessment_id: string
+          dimension_id?: string | null
+          type: 'rich_text' | 'multiple_choice' | 'slider'
+          content: string
+          order: number
+          anchors?: Array<{
+            id: string
+            name: string
+            value: number
+            practice: boolean
+          }>
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          assessment_id?: string
+          dimension_id?: string | null
+          type?: 'rich_text' | 'multiple_choice' | 'slider'
+          content?: string
           order?: number
-          required?: boolean
-          options?: string[] | null
+          anchors?: Array<{
+            id: string
+            name: string
+            value: number
+            practice: boolean
+          }>
           created_at?: string
           updated_at?: string
         }
