@@ -195,6 +195,10 @@ The app will be automatically deployed on every push to the main branch.
 - `npm run build` - Build for production
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
+- `npm test` - Run unit and integration tests
+- `npm run test:watch` - Run tests in watch mode
+- `npm run test:coverage` - Generate test coverage report
+- `npm run test:e2e` - Run end-to-end tests
 
 ### Code Style
 
@@ -202,6 +206,34 @@ The app will be automatically deployed on every push to the main branch.
 - Follow the existing component patterns
 - Use Tailwind CSS for styling
 - Write meaningful commit messages
+
+## 🧪 Testing
+
+This project uses a comprehensive testing setup:
+
+- **Vitest**: Unit and integration tests
+- **Playwright**: End-to-end (E2E) tests
+- **React Testing Library**: Component tests
+
+### Running Tests
+
+```bash
+# Run all unit/integration tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Generate coverage report
+npm run test:coverage
+
+# Run E2E tests
+npm run test:e2e
+```
+
+For detailed testing guidelines and best practices, see [docs/TESTING.md](./docs/TESTING.md).
+
+For the complete test plan, see [docs/PHASE_1_TEST_PLAN.md](./docs/PHASE_1_TEST_PLAN.md).
 
 ## 📝 License
 
