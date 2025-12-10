@@ -1,16 +1,15 @@
 /**
- * Supabase Connection Test Utilities
+ * Supabase Connection Test Utilities (Client-side)
  * 
- * This module provides functions to test and verify Supabase connectivity.
+ * This module provides functions to test and verify Supabase connectivity from the browser.
  */
 
 import { createClient as createBrowserClient } from './client';
-import { createClient as createServerClient } from './server';
 
 export type ConnectionTestResult = {
   success: boolean;
   message: string;
-  details?: any;
+  details?: Record<string, unknown>;
   timestamp: Date;
 };
 
@@ -37,7 +36,7 @@ export async function testBrowserConnection(): Promise<ConnectionTestResult> {
     }
 
     // Try a simple query to verify database connection
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('clients')
       .select('id')
       .limit(1);
@@ -75,67 +74,7 @@ export async function testBrowserConnection(): Promise<ConnectionTestResult> {
 }
 
 /**
- * Test the Supabase connection from the server
- * @returns Promise with test result
- */
-export async function testServerConnection(): Promise<ConnectionTestResult> {
-  const timestamp = new Date();
-  
-  try {
-    const supabase = await createServerClient();
-    
-    // Try to get the current session
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError) {
-      return {
-        success: false,
-        message: 'Failed to connect to Supabase (server)',
-        details: { error: sessionError.message },
-        timestamp
-      };
-    }
-
-    // Try a simple query to verify database connection
-    const { data, error } = await supabase
-      .from('clients')
-      .select('id')
-      .limit(1);
-    
-    if (error) {
-      return {
-        success: false,
-        message: 'Connected to Supabase but failed to query database',
-        details: { 
-          error: error.message,
-          hasSession: !!sessionData.session 
-        },
-        timestamp
-      };
-    }
-
-    return {
-      success: true,
-      message: 'Successfully connected to Supabase (server)',
-      details: {
-        hasSession: !!sessionData.session,
-        user: sessionData.session?.user?.email || 'Not authenticated',
-        canQueryDatabase: true
-      },
-      timestamp
-    };
-  } catch (error) {
-    return {
-      success: false,
-      message: 'Unexpected error testing Supabase connection',
-      details: { error: error instanceof Error ? error.message : String(error) },
-      timestamp
-    };
-  }
-}
-
-/**
- * Test environment variables are properly configured
+ * Test environment variables are properly configured (client-side check)
  * @returns Object indicating which env vars are set
  */
 export function testEnvironmentVariables(): {
@@ -154,7 +93,7 @@ export function testEnvironmentVariables(): {
 }
 
 /**
- * Get a comprehensive status report of Supabase configuration
+ * Get a comprehensive status report of Supabase configuration (client-side)
  */
 export async function getSupabaseStatus(): Promise<{
   environment: ReturnType<typeof testEnvironmentVariables>;
@@ -174,17 +113,9 @@ export async function getSupabaseStatus(): Promise<{
     };
   }
 
-  // Only test connection if we're in a browser context
-  if (typeof window !== 'undefined') {
-    const connectionTest = await testBrowserConnection();
-    return {
-      environment,
-      connectionTest
-    };
-  }
-
+  const connectionTest = await testBrowserConnection();
   return {
-    environment
+    environment,
+    connectionTest
   };
 }
-

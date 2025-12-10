@@ -7,12 +7,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import DashboardLayout from '@/components/layout/dashboard-layout'
 
 interface ClientPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default async function ClientPage({ params }: ClientPageProps) {
+  const { id } = await params
   const supabase = await createClient()
 
   const {
@@ -27,7 +28,7 @@ export default async function ClientPage({ params }: ClientPageProps) {
   const { data: client, error } = await supabase
     .from('clients')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (error || !client) {

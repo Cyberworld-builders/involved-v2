@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { testServerConnection, testEnvironmentVariables } from '@/lib/supabase/test-connection';
+import { testServerConnection, testEnvironmentVariables } from '@/lib/supabase/test-connection-server';
 
 /**
  * API Route: Test Supabase Connection
