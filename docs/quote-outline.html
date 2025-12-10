@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>quote-outline</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css" />
+</head>
+<body>
+<h1 id="fixed-price-development-proposal">Fixed-Price Development
+Proposal</h1>
+<p><strong>Project:</strong> Involved Talent v2 – Full Web
+Application<br />
+<strong>Client:</strong> Craig Wallace / Involved Talent<br />
+<strong>Developer:</strong> Jay Long<br />
+<strong>Date:</strong> December 8, 2025</p>
+<h3 id="project-overview-total-fixed-price">1. Project Overview &amp;
+Total Fixed Price</h3>
+<p>We will build the complete Involved Talent v2 platform as defined in
+the finalized scope document dated December 5–8, 2025.<br />
+The entire project is offered on a <strong>fixed-price basis</strong>
+for **$8,000 USD (four milestones of $2,000 each).</p>
+<h3 id="payment-schedule-milestones-fixed-2000-each">2. Payment Schedule
+&amp; Milestones (Fixed $2,000 each)</h3>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 54%" />
+<col style="width: 20%" />
+<col style="width: 15%" />
+</colgroup>
+<thead>
+<tr>
+<th>Milestone</th>
+<th>Description (Summary)</th>
+<th>Approximate Duration</th>
+<th>Payment Trigger</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Environment Setup + Identity/Client/User/Group Management</td>
+<td>1–2 weeks</td>
+<td>When all Phase 1 deliverables are deployed to the staging
+environment and are reasonably functional and testable</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Assessment Management, Assignment, Preview, Publishing &amp;
+Emails</td>
+<td>1–2 weeks</td>
+<td>When all Phase 2 deliverables are deployed and testable</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Feedback Library + Report Generation (PDF/Excel/CSV + bulk download)
++ Basic Report Templates</td>
+<td>1–2 weeks</td>
+<td>When all Phase 3 deliverables are deployed and reports can be
+generated and downloaded</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Final revisions, edge-case fixes, preferential polish, and
+production deployment</td>
+<td>1–2 weeks</td>
+<td>Upon final client sign-off and production launch</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Important note on early milestone release:</strong><br />
+If a milestone’s requirements are fully met ahead of schedule, the
+milestone can be demonstrated, approved, and invoiced/released early.
+This keeps cash flow smooth and rewards fast progress.</p>
+<h3 id="detailed-requirements-by-phase">3. Detailed Requirements by
+Phase</h3>
+<h4
+id="phase-1-environment-setup-and-identityclientusergroup-management">Phase
+1: Environment Setup and Identity/Client/User/Group Management</h4>
+<p><strong>Environment Setup</strong> - Environment setup with Vercel
+deployments and a Supabase backend. Developer will have the ability to
+make changes locally and deploy to an environment in the cloud that the
+client can access and test.</p>
+<p><strong>Authentication and Identity Management</strong> - Users will
+be able to sign up, sign in, and sign out. - Users will be able to reset
+their password if they forget it. - Users will be able to verify their
+email address if they need to.</p>
+<p><strong>Navigation and Page Layout</strong> - The navigation and page
+layout will be consistent and easy to use. - The layout will be
+responsive and work on all devices.</p>
+<p><strong>User Profile Management</strong> - Users will be able to
+update their profile information. - Users will be able to update their
+password.</p>
+<p><strong>Client CRUD</strong> - Admins will be able to create, read,
+update, and delete clients. - Client details include: - Name - Address -
+Logo - Background Image - Primary Color - Accent Color</p>
+<p><strong>User CRUD</strong> - Admins and managers will be able to
+create, read, update, and delete users. - User details include: - Name -
+Email - Password - Role - Status - Client - Industry - Admins and
+managers can bulk upload users with groups from a spreadsheet. - The
+spreadsheet should have the following columns: - Name - Email - Username
+(Note: System will auto-generate usernames if not provided) -
+Industry</p>
+<p><strong>Group CRUD</strong> - Admins and managers will be able to
+create, read, update, and delete groups. - Group details include: - Name
+- Description - Client - Users - Managers - Admins and managers can bulk
+upload groups from a spreadsheet. - The spreadsheet should have the
+following columns: - Group Name - Target Name - Target Email - Name -
+Email - Role</p>
+<p><strong>User Invites</strong> - Users will receive an email with a
+link to claim their account. - The email will have a link to the login
+page. - The link will contain a token that will be used to claim the
+account. - The token will expire after 7 days. - The token will be used
+to claim the account. - The account will be claimed and the user will be
+redirected to the dashboard. - The user will be able to login with their
+email and password. - The user will be able to update their profile
+information. - The user will be able to update their password. - The
+user will be able to request a password reset link.</p>
+<p><strong>Industries</strong> - Admins will be able to create, read,
+update, and delete industries and assign users to them.</p>
+<p><strong>Benchmarks</strong> - Admins will be able to create, read,
+update, and delete benchmarks for assessment dimensions by industry. -
+Benchmarks will have the following details: - Assessment - Industry -
+Dimension - Value - Admins can bulk upload benchmarks from a
+spreadsheet. - The spreadsheet should have the following columns: -
+Assessment - Industry - Dimension - Value</p>
+<h4 id="phase-2-assessment-management-and-assignment">Phase 2:
+Assessment Management and Assignment</h4>
+<p><strong>Assessment Management</strong> - Admins will be able to
+create, read, update, and delete assessments. - Assessments will have
+the following details: - Title - Description - Logo - Background Image -
+Primary Color - Accent Color - Split Questions into Pages - Number of
+Questions per Page - Timed (not critical at this juncture) - Time Limit
+(not critical at this juncture) - Target - 360 Assessment (boolean) -
+Rich Text fields will have a WYSIWYG editor and will render with
+formatting on the assessment page. - Admins can add dimensions and
+fields to the assessment. - Multiple Choice and Slider fields will have
+the ability to add anchors and edit values. - Need to be able to pull
+anchors from template. See Digital Ocean legacy anchors. - Need to make
+sure I can add anchors when needed and these new ones can be saved as
+templates. - Support for free text fields will be available. - Anchor
+values can be reversed by clicking a button. - Assessments will pull
+questions evenly across dimensions and otherwise be randomized. -
+Non-randomized assessments (360) will use all questions and present them
+in their static order. - Admins can preview the assessment before
+publishing. - Admins can publish the assessment to be assigned to users.
+- Admins can duplicate an assessment.</p>
+<p><strong>Assessment Assignment</strong> - Admins and managers will be
+able to assign assessments to users and groups. - Assessments can be
+assigned to users individually or to groups. - Users will receive an
+email with a link to the assessment. - The email will have a link to the
+assessment page. - The link will contain a token that will be used to
+access the assessment. - The token will expire after 7 days. - The token
+will be used to access the assessment. - The assessment will be
+presented to the user. - The user will be able to take the assessment. -
+The user will be able to submit the assessment. - The user can use their
+login credentials to access the assessment. - The admin or manager can
+configure email reminders for assessment assignments. - Admin or manager
+can view the progress of the users’ assessments.</p>
+<h4 id="phase-3-feedback-management-and-reporting">Phase 3: Feedback
+Management and Reporting</h4>
+<p><strong>Report Management</strong> - Admins will be able to generate
+reports for surveys. - Reports will be generated for each survey. -
+Managers can view reports for their surveys on a web page. - Reports can
+be exported to PDF, Excel, and CSV. - Need bulk downloads - zipped file
+or something like that. - For <strong>the 360</strong>, each dimension,
+the report will show an overall score broken down by Peer, Direct
+Report, Supervisor, Self, and Other as well as the industry benchmark
+and GEOnorm for their group. - <strong>For the Involved-Leader and
+Involved-Blocker</strong>, the reports will resemble the one from the
+Digital Ocean Legacy reports, which are also located in the Slack
+Channel for this platform - need to make sure these details are captured
+here; This will include the person’s overall scores (means for all
+dimensions) and then for each dimension, the target’s score for a given
+dimension compared to the GEONorm and the Industry Benchmark. This will
+also include feedback as described below. - Indicators for suggested
+improvement areas will be shown in each dimension breakdown.</p>
+<p><strong>Feedback Management</strong> - Admins will be able to create,
+read, update, and delete feedback. - Feedback will have the following
+details: - Assessment - Dimension - Type - Feedback - Created At -
+Updated At - Admins can bulk upload feedback libraries from a
+spreadsheet. - The spreadsheet should have the following columns: -
+Assessment - Dimension - Type (Overall/Specific) - Feedback - Non-360
+assessments will have feedback for each dimension. - All users get
+overall feedback. - The reports will pull <strong>ONE</strong> specific
+feedback entry randomly for each dimension. - 360 assessments will use
+text inputs from user assessments rather than feedback from the feedback
+library.</p>
+<p><strong>Report Templates</strong> - Admins will be able to create,
+read, update, and delete report templates for each assessment. - These
+templates will be used to generate custom reports for each survey. -
+They will override the default report template for the assessment. -
+Clients will have the ability to toggle different report components on
+and off. - Clients will have the ability to customize the wording of
+labels and headings in the report. - One digital delivery method for
+completed reports (either automated email or secure in-app retrieval –
+whichever proves most efficient during development).</p>
+<h3 id="milestone-acceptance-criteria-phases-13">4. Milestone Acceptance
+Criteria (Phases 1–3)</h3>
+<p>A milestone is considered complete and payable when:</p>
+<ul>
+<li>All listed features in that phase are implemented and deployed to
+the shared staging environment (Vercel + Supabase).<br />
+</li>
+<li>The functionality is reasonably viable and usable for its intended
+purpose (i.e., a reasonable person would consider the feature “built and
+working”).<br />
+</li>
+<li>The vast majority of normal-use test cases function correctly.</li>
+</ul>
+<p>This does <strong>not</strong> require 100 % bug-free perfection or
+final visual polish. Minor bugs, rare edge cases, and preferential
+styling/UI adjustments are expected and will be addressed in Phase 4
+without delaying milestone payment.</p>
+<p>The experience working on the v1 re-launch combined with many years
+of building similar platforms gives me deep insight into your exact
+needs, so the core functionality delivered in Phases 1-3 will already be
+very close to the final desired state.</p>
+<h3 id="phase-4---revisions-edge-case-fixes-enhancements">5. Phase 4 -
+Revisions, Edge-Case Fixes &amp; Enhancements</h3>
+<p>Phase 4 is reserved for:</p>
+<ul>
+<li>Fixing any remaining bugs or edge cases discovered during real
+use<br />
+</li>
+<li>Preferential revisions (layout tweaks, wording changes, small UX
+improvements, etc.)<br />
+</li>
+<li>Final polish before production launch</li>
+</ul>
+<p>Priorities will be agreed together after a full demo/review of Phases
+1-3.</p>
+<p><strong>Scope protection for Phase 4:</strong><br />
+This phase is capped at approximately <strong>20 hours</strong> of work
+included in the fixed price. If requested revisions clearly exceed the
+original agreed specifications (e.g., major new features), we will
+discuss and quote those separately.</p>
+<p>The only currently anticipated area that could potentially generate
+open-ended customization is advanced report template
+design/customization. While the base report templates and export
+functionality will be complete in Phase 3, highly bespoke or iteratively
+evolving report layouts can become open-ended. Should this occur, we
+will either (a) complete a reasonable level of customization within the
+20-hour cap, or (b) table further enhancements for a future phase at an
+additional fixed price. All other features in the system are standard,
+well-understood web-application patterns that I have built many times
+and can deliver with high confidence.</p>
+<h3 id="what-is-included-in-the-fixed-price">6. What Is Included in the
+Fixed Price</h3>
+<ul>
+<li>All functionality as described in the scope document (Phases
+1–4)<br />
+</li>
+<li>Staging environment accessible to you at all times<br />
+</li>
+<li>Responsive, professional Tailwind-based UI (minimalist but clean and
+branded where specified)<br />
+</li>
+<li>PDF, Excel, and CSV report export with bulk-download
+capability<br />
+</li>
+<li>One digital delivery method for completed reports (either automated
+email or secure in-app retrieval – whichever proves most efficient
+during development)<br />
+</li>
+<li>Full production deployment and post-launch knowledge transfer<br />
+</li>
+<li>Up to 20 hours of Phase 4 revisions/fixes as described above</li>
+</ul>
+<h3
+id="what-is-explicitly-excluded-available-as-future-phases-if-desired">7.
+What Is Explicitly Excluded (available as future phases if desired)</h3>
+<ul>
+<li>Highly complex or open-ended report template customization beyond
+the base system delivered in Phase 3<br />
+</li>
+<li>Advanced AI features and integrations. (This is not a priority for
+the initial release, but could be added in a future phase if
+desired.)</li>
+<li>Ongoing maintenance or hosting fees (Vercel and Supabase costs are
+paid directly by you)<br />
+</li>
+<li>Third-party paid services (e.g., premium email delivery, advanced AI
+features, etc.)</li>
+</ul>
+<h3 id="timeline-estimate">8. Timeline Estimate</h3>
+<p>Assuming prompt feedback and approval at each milestone:<br />
+Start → Finish in approximately <strong>6–8 weeks</strong> (mid-February
+2026 target production launch).</p>
+<h3 id="acceptance">9. Acceptance</h3>
+<p>Let me know when you want to move forward or if you need adjustments
+to the scope or timeline.</p>
+<p>Thank you for the trust — I’m excited to deliver Involved Talent v2
+quickly, on budget, and to a standard you’ll be proud of.</p>
+<p>Best regards,<br />
+Jay Long<br />
+Full-Stack Developer<br />
+jay@cyberworldbuilders.com</p>
+</body>
+</html>
