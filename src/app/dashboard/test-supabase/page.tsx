@@ -1,13 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { testBrowserConnection, ConnectionTestResult } from '@/lib/supabase/test-connection';
+import { testBrowserConnection, ConnectionTestResult } from '@/lib/supabase/test-connection-client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
 export default function TestSupabasePage() {
   const [browserTest, setBrowserTest] = useState<ConnectionTestResult | null>(null);
-  const [serverTest, setServerTest] = useState<any | null>(null);
+  const [serverTest, setServerTest] = useState<{
+    success: boolean;
+    message: string;
+    environment?: { hasUrl: boolean; hasAnonKey: boolean; allConfigured: boolean };
+    details?: Record<string, unknown>;
+    timestamp: string;
+    error?: string;
+  } | null>(null);
   const [loading, setLoading] = useState(false);
 
   const runBrowserTest = async () => {
@@ -118,7 +125,7 @@ export default function TestSupabasePage() {
               </div>
             </div>
           ) : (
-            <p className="text-gray-500">Click "Test Browser Connection" to run the test.</p>
+            <p className="text-gray-500">Click &quot;Test Browser Connection&quot; to run the test.</p>
           )}
         </Card>
 
@@ -176,7 +183,7 @@ export default function TestSupabasePage() {
               </div>
             </div>
           ) : (
-            <p className="text-gray-500">Click "Test Server Connection" to run the test.</p>
+            <p className="text-gray-500">Click &quot;Test Server Connection&quot; to run the test.</p>
           )}
         </Card>
       </div>

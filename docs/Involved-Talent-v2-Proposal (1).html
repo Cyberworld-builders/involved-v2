@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Involved Talent v2 - Fixed-Price Development Proposal</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 8.5in; margin: 40px auto; padding: 40px; background: white; }
+        .header { border-bottom: 3px solid #2563eb; padding-bottom: 20px; margin-bottom: 30px; }
+        h1 { color: #1e40af; font-size: 28px; margin-bottom: 20px; font-weight: 700; }
+        .meta-info { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 14px; margin-top: 15px; }
+        .meta-label { font-weight: 600; color: #4b5563; }
+        h2 { color: #1e40af; font-size: 20px; margin-top: 35px; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; font-weight: 600; }
+        h3 { color: #374151; font-size: 16px; margin-top: 25px; margin-bottom: 12px; font-weight: 600; }
+        h4 { color: #4b5563; font-size: 14px; margin-top: 20px; margin-bottom: 10px; font-weight: 600; }
+        p { margin-bottom: 12px; text-align: justify; }
+        .highlight-box { background: #eff6ff; border-left: 4px solid #2563eb; padding: 15px 20px; margin: 20px 0; border-radius: 4px; }
+        .highlight-box strong { color: #1e40af; font-size: 18px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px; }
+        th { background: #1e40af; color: white; padding: 12px; text-align: left; font-weight: 600; }
+        td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; }
+        tr:nth-child(even) { background: #f9fafb; }
+        ul { margin: 10px 0; padding-left: 25px; }
+        li { margin-bottom: 8px; line-height: 1.5; }
+        .nested-list { margin-top: 5px; }
+        .note-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; margin: 15px 0; border-radius: 4px; font-size: 13px; }
+        .signature { margin-top: 40px; text-align: left; }
+        .signature p { margin: 5px 0; text-align: left; }
+        strong { color: #1f2937; font-weight: 600; }
+        @media print { body { margin: 0.75in; } }
+    </style>
+</head>
+<body>
+
+        <div class="header">
+            <h1>Fixed-Price Development Proposal</h1>
+            <div class="meta-info">
+                <span class="meta-label">Project:</span>
+                <span>Involved Talent v2 – Full Web Application</span>
+                <span class="meta-label">Client:</span>
+                <span>Craig Wallace / Involved Talent</span>
+                <span class="meta-label">Developer:</span>
+                <span>Jay Long</span>
+                <span class="meta-label">Date:</span>
+                <span>December 8, 2025</span>
+            </div>
+        </div>
+
+        <h2>1. Project Overview &amp; Total Fixed Price</h2>
+        <p>We will build the complete Involved Talent v2 platform as defined in the finalized scope document dated December 5–8, 2025.</p>
+        
+        <div class="highlight-box">
+            <strong>Total Fixed Price: $8,000 USD</strong><br>
+            (Four milestones of $2,000 each)
+        </div>
+
+        <!-- page break here -->
+
+        <h2>2. Payment Schedule &amp; Milestones (Fixed $2,000 each)</h2>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Milestone</th>
+                    <th>Description (Summary)</th>
+                    <th>Approximate Duration</th>
+                    <th>Payment Trigger</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>1</strong></td>
+                    <td>Environment Setup + Identity/Client/User/Group Management</td>
+                    <td>1–2 weeks</td>
+                    <td>When all Phase 1 deliverables are deployed to the staging environment and are reasonably functional and testable</td>
+                </tr>
+                <tr>
+                    <td><strong>2</strong></td>
+                    <td>Assessment Management, Assignment, Preview, Publishing &amp; Emails</td>
+                    <td>1–2 weeks</td>
+                    <td>When all Phase 2 deliverables are deployed and testable</td>
+                </tr>
+                <tr>
+                    <td><strong>3</strong></td>
+                    <td>Feedback Library + Report Generation (PDF/Excel/CSV + bulk download) + Basic Report Templates</td>
+                    <td>1–2 weeks</td>
+                    <td>When all Phase 3 deliverables are deployed and reports can be generated and downloaded</td>
+                </tr>
+                <tr>
+                    <td><strong>4</strong></td>
+                    <td>Final revisions, edge-case fixes, preferential polish, and production deployment</td>
+                    <td>1–2 weeks</td>
+                    <td>Upon final client sign-off and production launch</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="note-box">
+            <strong>Important note on early milestone release:</strong> If a milestone's requirements are fully met ahead of schedule, the milestone can be demonstrated, approved, and invoiced/released early. This keeps cash flow smooth and rewards fast progress.
+        </div>
+
+        <h2>3. Detailed Requirements by Phase</h2>
+
+        <h3 class="page-break">Phase 1: Environment Setup and Identity/Client/User/Group Management</h3>
+
+        <h4>Environment Setup</h4>
+        <ul>
+            <li>Environment setup with Vercel deployments and a Supabase backend. Developer will have the ability to make changes locally and deploy to an environment in the cloud that the client can access and test.</li>
+        </ul>
+
+        <h4>Authentication and Identity Management</h4>
+        <ul>
+            <li>Users will be able to sign up, sign in, and sign out.</li>
+            <li>Users will be able to reset their password if they forget it.</li>
+            <li>Users will be able to verify their email address if they need to.</li>
+        </ul>
+
+        <h4>Navigation and Page Layout</h4>
+        <ul>
+            <li>The navigation and page layout will be consistent and easy to use.</li>
+            <li>The layout will be responsive and work on all devices.</li>
+        </ul>
+
+        <h4>User Profile Management</h4>
+        <ul>
+            <li>Users will be able to update their profile information.</li>
+            <li>Users will be able to update their password.</li>
+        </ul>
+
+        <h4>Client CRUD</h4>
+        <ul>
+            <li>Admins will be able to create, read, update, and delete clients.</li>
+            <li>Client details include:
+                <ul class="nested-list">
+                    <li>Name</li>
+                    <li>Address</li>
+                    <li>Logo</li>
+                    <li>Background Image</li>
+                    <li>Primary Color</li>
+                    <li>Accent Color</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h4>User CRUD</h4>
+        <ul>
+            <li>Admins and managers will be able to create, read, update, and delete users.</li>
+            <li>User details include:
+                <ul class="nested-list">
+                    <li>Name</li>
+                    <li>Email</li>
+                    <li>Password</li>
+                    <li>Role</li>
+                    <li>Status</li>
+                    <li>Client</li>
+                    <li>Industry</li>
+                </ul>
+            </li>
+            <li>Admins and managers can bulk upload users with groups from a spreadsheet.
+                <ul class="nested-list">
+                    <li>The spreadsheet should have the following columns: Name, Email, Username (Note: System will auto-generate usernames if not provided), Industry</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h4>Group CRUD</h4>
+        <ul>
+            <li>Admins and managers will be able to create, read, update, and delete groups.</li>
+            <li>Group details include:
+                <ul class="nested-list">
+                    <li>Name</li>
+                    <li>Description</li>
+                    <li>Client</li>
+                    <li>Users</li>
+                    <li>Managers</li>
+                </ul>
+            </li>
+            <li>Admins and managers can bulk upload groups from a spreadsheet.
+                <ul class="nested-list">
+                    <li>The spreadsheet should have the following columns: Group Name, Target Name, Target Email, Name, Email, Role</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h4>User Invites</h4>
+        <ul>
+            <li>Users will receive an email with a link to claim their account.</li>
+            <li>The email will have a link to the login page.</li>
+            <li>The link will contain a token that will be used to claim the account.</li>
+            <li>The token will expire after 7 days.</li>
+            <li>The token will be used to claim the account.</li>
+            <li>The account will be claimed and the user will be redirected to the dashboard.</li>
+            <li>The user will be able to login with their email and password.</li>
+            <li>The user will be able to update their profile information.</li>
+            <li>The user will be able to update their password.</li>
+            <li>The user will be able to request a password reset link.</li>
+        </ul>
+
+        <h4>Industries</h4>
+        <ul>
+            <li>Admins will be able to create, read, update, and delete industries and assign users to them.</li>
+        </ul>
+
+        <h4>Benchmarks</h4>
+        <ul>
+            <li>Admins will be able to create, read, update, and delete benchmarks for assessment dimensions by industry.</li>
+            <li>Benchmarks will have the following details:
+                <ul class="nested-list">
+                    <li>Assessment</li>
+                    <li>Industry</li>
+                    <li>Dimension</li>
+                    <li>Value</li>
+                </ul>
+            </li>
+            <li>Admins can bulk upload benchmarks from a spreadsheet.
+                <ul class="nested-list">
+                    <li>The spreadsheet should have the following columns: Assessment, Industry, Dimension, Value</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h3 class="page-break">Phase 2: Assessment Management and Assignment</h3>
+
+        <h4>Assessment Management</h4>
+        <ul>
+            <li>Admins will be able to create, read, update, and delete assessments.</li>
+            <li>Assessments will have the following details:
+                <ul class="nested-list">
+                    <li>Title</li>
+                    <li>Description</li>
+                    <li>Logo</li>
+                    <li>Background Image</li>
+                    <li>Primary Color</li>
+                    <li>Accent Color</li>
+                    <li>Split Questions into Pages</li>
+                    <li>Number of Questions per Page</li>
+                    <li>Timed (not critical at this juncture)</li>
+                    <li>Time Limit (not critical at this juncture)</li>
+                    <li>Target</li>
+                    <li>360 Assessment (boolean)</li>
+                </ul>
+            </li>
+            <li>Rich Text fields will have a WYSIWYG editor and will render with formatting on the assessment page.</li>
+            <li>Admins can add dimensions and fields to the assessment.</li>
+            <li>Multiple Choice and Slider fields will have the ability to add anchors and edit values.
+                <ul class="nested-list">
+                    <li>Need to be able to pull anchors from template. See Digital Ocean legacy anchors.</li>
+                    <li>Need to make sure I can add anchors when needed and these new ones can be saved as templates.</li>
+                </ul>
+            </li>
+            <li>Support for free text fields will be available.</li>
+            <li>Anchor values can be reversed by clicking a button.</li>
+            <li>Assessments will pull questions evenly across dimensions and otherwise be randomized.</li>
+            <li>Non-randomized assessments (360) will use all questions and present them in their static order.</li>
+            <li>Admins can preview the assessment before publishing.</li>
+            <li>Admins can publish the assessment to be assigned to users.</li>
+            <li>Admins can duplicate an assessment.</li>
+        </ul>
+
+        <h4>Assessment Assignment</h4>
+        <ul>
+            <li>Admins and managers will be able to assign assessments to users and groups.</li>
+            <li>Assessments can be assigned to users individually or to groups.</li>
+            <li>Users will receive an email with a link to the assessment.</li>
+            <li>The email will have a link to the assessment page.</li>
+            <li>The link will contain a token that will be used to access the assessment.</li>
+            <li>The token will expire after 7 days.</li>
+            <li>The token will be used to access the assessment.</li>
+            <li>The assessment will be presented to the user.</li>
+            <li>The user will be able to take the assessment.</li>
+            <li>The user will be able to submit the assessment.</li>
+            <li>The user can use their login credentials to access the assessment.</li>
+            <li>The admin or manager can configure email reminders for assessment assignments.</li>
+            <li>Admin or manager can view the progress of the users' assessments.</li>
+        </ul>
+
+        <h3 class="page-break">Phase 3: Feedback Management and Reporting</h3>
+
+        <h4>Report Management</h4>
+        <ul>
+            <li>Admins will be able to generate reports for surveys.</li>
+            <li>Reports will be generated for each survey.</li>
+            <li>Managers can view reports for their surveys on a web page.</li>
+            <li>Reports can be exported to PDF, Excel, and CSV.
+                <ul class="nested-list">
+                    <li>Need bulk downloads - zipped file or something like that.</li>
+                </ul>
+            </li>
+            <li>For <strong>the 360</strong>, each dimension, the report will show an overall score broken down by Peer, Direct Report, Supervisor, Self, and Other as well as the industry benchmark and GEOnorm for their group.</li>
+            <li><strong>For the Involved-Leader and Involved-Blocker</strong>, the reports will resemble the one from the Digital Ocean Legacy reports, which are also located in the Slack Channel for this platform - need to make sure these details are captured here; This will include the person's overall scores (means for all dimensions) and then for each dimension, the target's score for a given dimension compared to the GEONorm and the Industry Benchmark. This will also include feedback as described below.</li>
+            <li>Indicators for suggested improvement areas will be shown in each dimension breakdown.</li>
+        </ul>
+
+        <h4>Feedback Management</h4>
+        <ul>
+            <li>Admins will be able to create, read, update, and delete feedback.</li>
+            <li>Feedback will have the following details:
+                <ul class="nested-list">
+                    <li>Assessment</li>
+                    <li>Dimension</li>
+                    <li>Type</li>
+                    <li>Feedback</li>
+                    <li>Created At</li>
+                    <li>Updated At</li>
+                </ul>
+            </li>
+            <li>Admins can bulk upload feedback libraries from a spreadsheet.
+                <ul class="nested-list">
+                    <li>The spreadsheet should have the following columns: Assessment, Dimension, Type (Overall/Specific), Feedback</li>
+                </ul>
+            </li>
+            <li>Non-360 assessments will have feedback for each dimension.</li>
+            <li>All users get overall feedback.</li>
+            <li>The reports will pull <strong>ONE</strong> specific feedback entry randomly for each dimension.</li>
+            <li>360 assessments will use text inputs from user assessments rather than feedback from the feedback library.</li>
+        </ul>
+
+        <h4>Report Templates</h4>
+        <ul>
+            <li>Admins will be able to create, read, update, and delete report templates for each assessment.</li>
+            <li>These templates will be used to generate custom reports for each survey.</li>
+            <li>They will override the default report template for the assessment.</li>
+            <li>Clients will have the ability to toggle different report components on and off.</li>
+            <li>Clients will have the ability to customize the wording of labels and headings in the report.</li>
+            <li>One digital delivery method for completed reports (either automated email or secure in-app retrieval – whichever proves most efficient during development).</li>
+        </ul>
+
+        <h2 class="page-break">4. Milestone Acceptance Criteria (Phases 1–3)</h2>
+        <p>A milestone is considered complete and payable when:</p>
+        <ul>
+            <li>All listed features in that phase are implemented and deployed to the shared staging environment (Vercel + Supabase).</li>
+            <li>The functionality is reasonably viable and usable for its intended purpose (i.e., a reasonable person would consider the feature "built and working").</li>
+            <li>The vast majority of normal-use test cases function correctly.</li>
+        </ul>
+        <p>This does <strong>not</strong> require 100% bug-free perfection or final visual polish. Minor bugs, rare edge cases, and preferential styling/UI adjustments are expected and will be addressed in Phase 4 without delaying milestone payment.</p>
+        <p>The experience working on the v1 re-launch combined with many years of building similar platforms gives me deep insight into your exact needs, so the core functionality delivered in Phases 1-3 will already be very close to the final desired state.</p>
+
+        <h2>5. Phase 4 - Revisions, Edge-Case Fixes &amp; Enhancements</h2>
+        <p>Phase 4 is reserved for:</p>
+        <ul>
+            <li>Fixing any remaining bugs or edge cases discovered during real use</li>
+            <li>Preferential revisions (layout tweaks, wording changes, small UX improvements, etc.)</li>
+            <li>Final polish before production launch</li>
+        </ul>
+        <p>Priorities will be agreed together after a full demo/review of Phases 1-3.</p>
+        
+        <div class="note-box">
+            <strong>Scope protection for Phase 4:</strong> This phase is capped at approximately <strong>20 hours</strong> of work included in the fixed price. If requested revisions clearly exceed the original agreed specifications (e.g., major new features), we will discuss and quote those separately.
+        </div>
+        
+        <p>The only currently anticipated area that could potentially generate open-ended customization is advanced report template design/customization. While the base report templates and export functionality will be complete in Phase 3, highly bespoke or iteratively evolving report layouts can become open-ended. Should this occur, we will either (a) complete a reasonable level of customization within the 20-hour cap, or (b) table further enhancements for a future phase at an additional fixed price. All other features in the system are standard, well-understood web-application patterns that I have built many times and can deliver with high confidence.</p>
+
+        <h2>6. What Is Included in the Fixed Price</h2>
+        <ul>
+            <li>All functionality as described in the scope document (Phases 1–4)</li>
+            <li>Staging environment accessible to you at all times</li>
+            <li>Responsive, professional Tailwind-based UI (minimalist but clean and branded where specified)</li>
+            <li>PDF, Excel, and CSV report export with bulk-download capability</li>
+            <li>One digital delivery method for completed reports (either automated email or secure in-app retrieval – whichever proves most efficient during development)</li>
+            <li>Full production deployment and post-launch knowledge transfer</li>
+            <li>Up to 20 hours of Phase 4 revisions/fixes as described above</li>
+        </ul>
+
+        <h2>7. What Is Explicitly Excluded (available as future phases if desired)</h2>
+        <ul>
+            <li>Highly complex or open-ended report template customization beyond the base system delivered in Phase 3</li>
+            <li>Advanced AI features and integrations. (This is not a priority for the initial release, but could be added in a future phase if desired.)</li>
+            <li>Ongoing maintenance or hosting fees (Vercel and Supabase costs are paid directly by you)</li>
+            <li>Third-party paid services (e.g., premium email delivery, advanced AI features, etc.)</li>
+        </ul>
+
+        <h2>8. Timeline Estimate</h2>
+        <p>Assuming prompt feedback and approval at each milestone:<br>
+        Start → Finish in approximately <strong>6–8 weeks</strong> (mid-February 2026 target production launch).</p>
+
+        <h2>9. Acceptance</h2>
+        <p>Let me know when you want to move forward or if you need adjustments to the scope or timeline.</p>
+        <p>Thank you for the trust – I'm excited to deliver Involved Talent v2 quickly, on budget, and to a standard you'll be proud of.</p>
+
+        <div class="signature">
+            <p><strong>Best regards,</strong></p>
+            <p><strong>Jay Long</strong><br>
+            Full-Stack Developer<br>
+            jay@cyberworldbuilders.com</p>
+        </div>
+    
+</body>
+</html>

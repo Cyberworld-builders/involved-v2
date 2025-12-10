@@ -1,35 +1,6 @@
 export interface Database {
   public: {
     Tables: {
-      profiles: {
-        Row: {
-          id: string
-          email: string
-          first_name: string | null
-          last_name: string | null
-          role: 'admin' | 'client' | 'user'
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id: string
-          email: string
-          first_name?: string | null
-          last_name?: string | null
-          role?: 'admin' | 'client' | 'user'
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          email?: string
-          first_name?: string | null
-          last_name?: string | null
-          role?: 'admin' | 'client' | 'user'
-          created_at?: string
-          updated_at?: string
-        }
-      }
       assessments: {
         Row: {
           id: string
