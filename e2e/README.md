@@ -100,7 +100,7 @@ If you prefer to create the test user manually:
 
 1. **Via Supabase Dashboard**: Create a user with email `e2e-test-admin@involved-talent.test` and password `TestPassword123!`
 2. **Via SQL** (see SQL example below)
-3. **Via Application**: Sign up through the app and assign admin role
+3. **Via Application**: Sign up through the app (the profile will be created automatically)
 
 The global setup will authenticate using the credentials you provide.
 
@@ -111,28 +111,22 @@ The global setup will authenticate using the credentials you provide.
 If using local Supabase, create a test admin user:
 
 ```sql
--- Insert test admin user
-INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at)
-VALUES (
-  gen_random_uuid(),
-  'admin@test.com',
-  crypt('testpassword123', gen_salt('bf')),
-  NOW()
-);
+-- Note: This is a simplified example. In practice, use Supabase Admin API
+-- or let the application handle user creation through the signup flow.
 
--- Create profile for test user
-INSERT INTO profiles (id, email, role, first_name, last_name)
-SELECT id, email, 'admin', 'Test', 'Admin'
-FROM auth.users
-WHERE email = 'admin@test.com';
+-- The profiles table has these fields (no role field):
+-- id, auth_user_id, username, name, email, client_id, industry_id, 
+-- language_id, last_login_at, completed_profile, accepted_terms, 
+-- accepted_at, accepted_signature, created_at, updated_at
 ```
 
 ### Staging/Production
 
 For staging or production environments:
 1. Create a dedicated test user through the application
-2. Assign admin role
-3. Use the credentials in your test environment
+2. Use the credentials in your test environment
+
+Note: The profiles table does not have a role field. User permissions are managed through application logic.
 
 **Important**: Never use production credentials in tests!
 
@@ -233,7 +227,7 @@ test('Admin can create new feature', async ({ page }) => {
 
 - Verify test credentials are correct
 - Check if test user exists in the database
-- Ensure user has admin role
+- Ensure the user's profile exists (created automatically on signup)
 - Tests will skip gracefully if credentials are not provided
 
 ### File upload tests failing
