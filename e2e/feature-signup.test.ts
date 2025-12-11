@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { getAdminClient } from './helpers/database'
+import { shouldSkipAuthTests } from './helpers/auth'
 
 /**
  * E2E Tests for User Sign Up Flow
@@ -37,6 +38,10 @@ test.describe('User Sign Up Flow', () => {
   }
 
   test.beforeEach(async ({ page }) => {
+    if (shouldSkipAuthTests()) {
+      test.skip(true, 'Auth tests are disabled (SKIP_AUTH_TESTS=true)')
+      return
+    }
     // Start from home page
     await page.goto('/')
   })
@@ -63,7 +68,7 @@ test.describe('User Sign Up Flow', () => {
 
     // Verify link to login page is present
     await expect(
-      page.locator('a[href="/auth/login"], text=/already have an account/i')
+      page.getByRole('link', { name: /already have an account/i })
     ).toBeVisible()
   })
 
