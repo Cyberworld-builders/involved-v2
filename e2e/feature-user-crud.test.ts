@@ -312,8 +312,17 @@ test.describe('User CRUD Operations', () => {
     // Check if username field is auto-populated
     const usernameField = page.locator('input[id="username"]')
     
-    // Wait a moment for auto-generation to trigger
-    await page.waitForTimeout(500)
+    // Wait for username to be auto-generated (should be triggered by name input)
+    // Wait for the input value to be non-empty
+    await usernameField.waitFor({ state: 'attached' })
+    await page.waitForFunction(
+      (selector) => {
+        const input = document.querySelector(selector) as HTMLInputElement
+        return input && input.value && input.value.length > 0
+      },
+      'input[id="username"]',
+      { timeout: 5000 }
+    )
     
     // Verify username was auto-generated (should not be empty)
     const generatedUsername = await usernameField.inputValue()
