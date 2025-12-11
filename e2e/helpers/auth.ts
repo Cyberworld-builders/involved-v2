@@ -57,7 +57,7 @@ export async function isAuthenticated(page: Page): Promise<boolean> {
  * Wait for authentication to be established after login
  * 
  * This is a more comprehensive check that:
- * 1. Waits for URL redirect to dashboard
+ * 1. Waits for URL redirect to dashboard (handles client-side navigation)
  * 2. Waits for auth cookies to be set
  * 3. Verifies we're actually authenticated
  * 
@@ -66,15 +66,40 @@ export async function isAuthenticated(page: Page): Promise<boolean> {
  */
 export async function waitForAuthentication(page: Page, timeout = 15000): Promise<boolean> {
   try {
-    // Wait for redirect to dashboard
-    await page.waitForURL('**/dashboard**', { timeout })
+    // Wait for navigation to dashboard (client-side router.push)
+    // Use a more flexible URL pattern that matches /dashboard or /dashboard/*
+    await page.waitForURL(
+      (url) => url.pathname.startsWith('/dashboard'),
+      { timeout, waitUntil: 'networkidle' }
+    )
     
-    // Wait for auth cookies
-    await waitForAuthCookies(page, timeout)
+    // Give a moment for cookies to be set after navigation
+    await page.waitForTimeout(1000)
     
-    // Verify authentication
-    return await isAuthenticated(page)
-  } catch {
+    // Wait for auth cookies to be present
+    await waitForAuthCookies(page, Math.min(timeout, 10000))
+    
+    // Double-check we're on dashboard and not redirected back to auth
+    const currentUrl = page.url()
+    const isOnDashboard = currentUrl.includes('/dashboard') && !currentUrl.includes('/auth')
+    
+    if (!isOnDashboard) {
+      console.log(`   ⚠️  Not on dashboard after login. Current URL: ${currentUrl}`)
+      return false
+    }
+    
+    // Verify authentication by checking cookies directly
+    const hasCookie = await hasSupabaseAuthCookie(page)
+    if (!hasCookie) {
+      console.log(`   ⚠️  Supabase auth cookie not found after login`)
+      return false
+    }
+    
+    return true
+  } catch (error) {
+    const currentUrl = page.url()
+    console.log(`   ⚠️  Authentication wait failed. Current URL: ${currentUrl}`)
+    console.log(`   Error: ${error instanceof Error ? error.message : 'Unknown'}`)
     return false
   }
 }

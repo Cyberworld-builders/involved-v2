@@ -84,19 +84,56 @@ async function globalSetup(config: FullConfig) {
     // Submit form
     await page.click('button[type="submit"]')
     
+    // Wait for either success message or error message
+    try {
+      await page.waitForSelector('text=/Login successful|error|Error/', { timeout: 5000 })
+      const messageText = await page.textContent('body')
+      if (messageText?.includes('error') || messageText?.includes('Error')) {
+        const errorMsg = await page.textContent('body') || 'Unknown error'
+        throw new Error(`Login failed: ${errorMsg.substring(0, 200)}`)
+      }
+    } catch (error) {
+      // If we don't see a message, continue - navigation might have happened
+      if (error instanceof Error && error.message.includes('Login failed')) {
+        throw error
+      }
+    }
+    
+    // Wait for navigation to dashboard (client-side router.push)
+    console.log(`   Waiting for navigation to dashboard...`)
+    try {
+      await page.waitForURL(
+        (url) => url.pathname.startsWith('/dashboard'),
+        { timeout: 15000, waitUntil: 'networkidle' }
+      )
+      console.log(`   ✅ Navigated to: ${page.url()}`)
+    } catch (error) {
+      console.log(`   ⚠️  Navigation timeout. Current URL: ${page.url()}`)
+      // Continue anyway - might still be authenticating
+    }
+    
+    // Give a moment for client-side navigation and cookie setting
+    await page.waitForTimeout(1000)
+    
     console.log(`   Waiting for authentication...`)
     // Wait for authentication to be established (URL redirect + cookies)
     const authenticated = await waitForAuthentication(page, 20000)
     
     if (!authenticated) {
       // Take screenshot for debugging
-      await page.screenshot({ path: 'e2e/.auth/login-failed.png' })
+      const screenshotPath = 'e2e/.auth/login-failed.png'
+      await page.screenshot({ path: screenshotPath, fullPage: true })
+      console.error(`   Screenshot saved to: ${screenshotPath}`)
+      
+      // Log page content for debugging
+      const pageContent = await page.content()
+      const hasError = pageContent.includes('error') || pageContent.includes('Error')
+      const hasSuccess = pageContent.includes('successful') || pageContent.includes('Login successful')
+      console.error(`   Page contains error message: ${hasError}`)
+      console.error(`   Page contains success message: ${hasSuccess}`)
+      
       throw new Error('Authentication verification failed - not redirected to dashboard')
     }
-    
-    console.log(`   Waiting for auth cookies...`)
-    // Wait for auth cookies to ensure they're set (important for SSR)
-    await waitForAuthCookies(page, 10000)
     
     console.log(`   Saving authentication state...`)
     // Save authentication state (includes cookies and localStorage)
