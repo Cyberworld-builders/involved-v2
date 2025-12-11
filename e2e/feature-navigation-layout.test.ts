@@ -13,7 +13,8 @@ import { test, expect, devices } from '@playwright/test'
  */
 
 // Constants
-const VIEWPORT_TOLERANCE_PX = 10 // Tolerance for horizontal scroll detection
+// Tolerance for horizontal scroll detection (in pixels)
+const VIEWPORT_TOLERANCE_PX = 10
 
 // Helper function to check if we're on an authenticated page
 async function isAuthenticated(page: { url: () => string }): Promise<boolean> {
@@ -87,7 +88,6 @@ test.describe('Navigation Component Consistency', () => {
       await expect(header).toBeVisible()
       
       // Verify header has notification and settings buttons
-      // Note: These use emoji as temporary selectors. Consider adding data-testid attributes.
       const headerButtons = page.locator('header button')
       const buttonCount = await headerButtons.count()
       expect(buttonCount).toBeGreaterThanOrEqual(2)
@@ -113,7 +113,7 @@ test.describe('Responsive Layout - Mobile', () => {
       // Verify page doesn't have horizontal scroll issues
       const bodyWidth = await page.evaluate(() => document.body.scrollWidth)
       const viewportWidth = page.viewportSize()?.width || 0
-      expect(bodyWidth).toBeLessThanOrEqual(viewportWidth + VIEWPORT_TOLERANCE_PX) // Allow 10px tolerance
+      expect(bodyWidth).toBeLessThanOrEqual(viewportWidth + VIEWPORT_TOLERANCE_PX)
       
       // Verify layout structure exists
       const container = page.locator('.flex.h-screen')
