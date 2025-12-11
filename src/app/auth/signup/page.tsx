@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { generateUsernameFromFirstLast } from '@/lib/utils/username-generation'
 
 export default function SignupPage() {
   const [email, setEmail] = useState('')
@@ -30,7 +31,7 @@ export default function SignupPage() {
             first_name: firstName,
             last_name: lastName,
             full_name: `${firstName} ${lastName}`,
-            username: `${firstName.toLowerCase()}${lastName.toLowerCase()}`.replace(/[^a-z0-9]/g, '')
+            username: generateUsernameFromFirstLast(firstName, lastName)
           },
         },
       })

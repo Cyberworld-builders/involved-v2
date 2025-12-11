@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextRequest, NextResponse } from 'next/server'
+import { generateUsernameFromName, generateUniqueUsername } from '@/lib/utils/username-generation'
 
 export async function POST(
   request: NextRequest,
@@ -57,12 +58,6 @@ export async function POST(
         userData.Industry === 'N/A'
       )
 
-      // Generate username if not provided
-      const username = userData.Username || userData.Name
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, '')
-        .substring(0, 20)
-
       // Check if profile already exists by email
       const { data: existingProfileByEmail } = await supabase
         .from('profiles')
@@ -79,36 +74,20 @@ export async function POST(
         continue
       }
 
-      // Check if username already exists and generate unique one if needed
-      let finalUsername = username
-      const { data: existingProfileByUsername } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('username', username)
-        .single()
+      // Generate username if not provided
+      const baseUsername = userData.Username || generateUsernameFromName(userData.Name)
 
-      if (existingProfileByUsername) {
-        // Generate unique username by appending a number
-        let counter = 1
-        let found = true
-        while (found && counter < 1000) {
-          finalUsername = `${username}${counter}`
-          const { data: check } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('username', finalUsername)
-            .single()
-          if (!check) {
-            found = false
-          } else {
-            counter++
-          }
-        }
-        if (found) {
-          // Fallback to timestamp if we can't find a unique username
-          finalUsername = `${username}${Date.now()}`
-        }
+      // Generate unique username, checking for duplicates
+      const checkUsernameExists = async (username: string): Promise<boolean> => {
+        const { data } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('username', username)
+          .single()
+        return !!data
       }
+
+      const finalUsername = await generateUniqueUsername(baseUsername, checkUsernameExists)
 
       try {
         // Create auth user using admin client
