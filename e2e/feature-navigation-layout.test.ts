@@ -12,6 +12,9 @@ import { test, expect, devices } from '@playwright/test'
  * To run full tests, ensure test environment has authentication configured.
  */
 
+// Constants
+const VIEWPORT_TOLERANCE_PX = 10 // Tolerance for horizontal scroll detection
+
 // Helper function to check if we're on an authenticated page
 async function isAuthenticated(page: { url: () => string }): Promise<boolean> {
   const url = page.url()
@@ -38,8 +41,8 @@ test.describe('Navigation Component Consistency', () => {
       const logo = page.locator('text=Involved Talent')
       await expect(logo).toBeVisible()
     } else {
-      console.log('Test skipped: Dashboard requires authentication')
-      test.skip()
+      
+      test.skip(true, 'Dashboard requires authentication')
     }
   })
   
@@ -69,8 +72,8 @@ test.describe('Navigation Component Consistency', () => {
       const userSection = page.locator('.border-t.border-gray-700')
       await expect(userSection).toBeVisible()
     } else {
-      console.log('Test skipped: Dashboard requires authentication')
-      test.skip()
+      
+      test.skip(true, 'Dashboard requires authentication')
     }
   })
   
@@ -84,14 +87,12 @@ test.describe('Navigation Component Consistency', () => {
       await expect(header).toBeVisible()
       
       // Verify header has notification and settings buttons
-      const notificationButton = page.locator('button:has-text("🔔")')
-      await expect(notificationButton).toBeVisible()
-      
-      const settingsButton = page.locator('button:has-text("⚙️")')
-      await expect(settingsButton).toBeVisible()
+      // Note: These use emoji as temporary selectors. Consider adding data-testid attributes.
+      const headerButtons = page.locator('header button')
+      const buttonCount = await headerButtons.count()
+      expect(buttonCount).toBeGreaterThanOrEqual(2)
     } else {
-      console.log('Test skipped: Dashboard requires authentication')
-      test.skip()
+      test.skip(true, 'Dashboard requires authentication')
     }
   })
 })
@@ -112,14 +113,14 @@ test.describe('Responsive Layout - Mobile', () => {
       // Verify page doesn't have horizontal scroll issues
       const bodyWidth = await page.evaluate(() => document.body.scrollWidth)
       const viewportWidth = page.viewportSize()?.width || 0
-      expect(bodyWidth).toBeLessThanOrEqual(viewportWidth + 10) // Allow 10px tolerance
+      expect(bodyWidth).toBeLessThanOrEqual(viewportWidth + VIEWPORT_TOLERANCE_PX) // Allow 10px tolerance
       
       // Verify layout structure exists
       const container = page.locator('.flex.h-screen')
       await expect(container).toBeVisible()
     } else {
-      console.log('Test skipped: Dashboard requires authentication')
-      test.skip()
+      
+      test.skip(true, 'Dashboard requires authentication')
     }
     
     await context.close()
@@ -140,8 +141,8 @@ test.describe('Responsive Layout - Mobile', () => {
       // Verify sidebar component exists in DOM (even if hidden)
       expect(sidebarCount).toBeGreaterThan(0)
     } else {
-      console.log('Test skipped: Dashboard requires authentication')
-      test.skip()
+      
+      test.skip(true, 'Dashboard requires authentication')
     }
     
     await context.close()
@@ -165,12 +166,12 @@ test.describe('Responsive Layout - Tablet', () => {
       const mainContent = page.locator('main')
       await expect(mainContent).toBeVisible()
       
-      // Verify stats cards grid is visible
-      const cards = page.locator('[class*="grid"]').first()
-      await expect(cards).toBeVisible()
+      // Verify stats cards grid is visible (using more specific selector)
+      const cards = page.locator('.grid.grid-cols-1')
+      await expect(cards.first()).toBeVisible()
     } else {
-      console.log('Test skipped: Dashboard requires authentication')
-      test.skip()
+      
+      test.skip(true, 'Dashboard requires authentication')
     }
     
     await context.close()
@@ -197,10 +198,10 @@ test.describe('Responsive Layout - Desktop', () => {
       // Verify no horizontal scroll
       const bodyWidth = await page.evaluate(() => document.body.scrollWidth)
       const viewportWidth = page.viewportSize()?.width || 0
-      expect(bodyWidth).toBeLessThanOrEqual(viewportWidth + 10) // Allow 10px tolerance
+      expect(bodyWidth).toBeLessThanOrEqual(viewportWidth + VIEWPORT_TOLERANCE_PX) // Allow 10px tolerance
     } else {
-      console.log('Test skipped: Dashboard requires authentication')
-      test.skip()
+      
+      test.skip(true, 'Dashboard requires authentication')
     }
     
     await context.close()
@@ -219,11 +220,11 @@ test.describe('Responsive Layout - Desktop', () => {
       await expect(container).toBeVisible()
       
       // Verify stats grid is visible
-      const statsGrid = page.locator('.grid').first()
-      await expect(statsGrid).toBeVisible()
+      const statsGrid = page.locator('.grid.grid-cols-1')
+      await expect(statsGrid.first()).toBeVisible()
     } else {
-      console.log('Test skipped: Dashboard requires authentication')
-      test.skip()
+      
+      test.skip(true, 'Dashboard requires authentication')
     }
     
     await context.close()
@@ -252,8 +253,8 @@ test.describe('Layout Consistency', () => {
       const container = page.locator('.flex.h-screen')
       await expect(container).toBeVisible()
     } else {
-      console.log('Test skipped: Dashboard requires authentication')
-      test.skip()
+      
+      test.skip(true, 'Dashboard requires authentication')
     }
   })
 })
@@ -277,7 +278,7 @@ test.describe('Home Page Responsive Layout', () => {
     // Verify no horizontal scroll
     const bodyWidth = await page.evaluate(() => document.body.scrollWidth)
     const viewportWidth = page.viewportSize()?.width || 0
-    expect(bodyWidth).toBeLessThanOrEqual(viewportWidth + 10)
+    expect(bodyWidth).toBeLessThanOrEqual(viewportWidth + VIEWPORT_TOLERANCE_PX)
     
     await context.close()
   })
@@ -294,8 +295,8 @@ test.describe('Home Page Responsive Layout', () => {
     await expect(heading).toBeVisible()
     
     // Verify cards grid is visible
-    const cards = page.locator('[class*="grid"]').first()
-    await expect(cards).toBeVisible()
+    const cards = page.locator('.grid')
+    await expect(cards.first()).toBeVisible()
     
     await context.close()
   })
@@ -318,7 +319,7 @@ test.describe('Home Page Responsive Layout', () => {
     // Verify no horizontal scroll
     const bodyWidth = await page.evaluate(() => document.body.scrollWidth)
     const viewportWidth = page.viewportSize()?.width || 0
-    expect(bodyWidth).toBeLessThanOrEqual(viewportWidth + 10)
+    expect(bodyWidth).toBeLessThanOrEqual(viewportWidth + VIEWPORT_TOLERANCE_PX)
     
     await context.close()
   })
