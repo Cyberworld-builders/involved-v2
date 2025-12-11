@@ -84,19 +84,39 @@ async function globalSetup(config: FullConfig) {
     // Submit form
     await page.click('button[type="submit"]')
     
-    // Wait for either success message or error message
+    // Wait for form submission to complete and check for error messages
     try {
-      await page.waitForSelector('text=/Login successful|error|Error/', { timeout: 5000 })
-      const messageText = await page.textContent('body')
-      if (messageText?.includes('error') || messageText?.includes('Error')) {
-        const errorMsg = await page.textContent('body') || 'Unknown error'
-        throw new Error(`Login failed: ${errorMsg.substring(0, 200)}`)
+      // Wait for either navigation or error message to appear
+      await Promise.race([
+        page.waitForURL((url) => url.pathname.startsWith('/dashboard'), { timeout: 5000 }).catch(() => null),
+        page.waitForSelector('div.text-red-600, div:has-text(/error|Error|Invalid|incorrect|failed/i)', { timeout: 5000 }).catch(() => null)
+      ])
+      
+      // Check if we're still on login page (login might have failed)
+      const currentUrl = page.url()
+      if (currentUrl.includes('/auth/login')) {
+        // Check for error message
+        const errorMessage = await page.locator('div.text-red-600').first().textContent({ timeout: 2000 }).catch(() => null)
+        if (errorMessage) {
+          console.error(`   ❌ Login error: ${errorMessage.trim()}`)
+          throw new Error(`Login failed: ${errorMessage.trim()}`)
+        }
+        
+        // Also check for any error text in the page
+        const pageText = await page.textContent('body').catch(() => '')
+        if (pageText.includes('Invalid login credentials') || pageText.includes('Invalid email or password')) {
+          throw new Error('Login failed: Invalid email or password. Check that test user exists in Supabase.')
+        }
+      } else {
+        // We navigated away from login, likely successful
+        console.log(`   ✅ Navigated away from login page`)
       }
     } catch (error) {
-      // If we don't see a message, continue - navigation might have happened
+      // If we got a login failed error, throw it
       if (error instanceof Error && error.message.includes('Login failed')) {
         throw error
       }
+      // Otherwise, continue - navigation might have happened
     }
     
     // Wait for navigation to dashboard (client-side router.push)
@@ -125,12 +145,31 @@ async function globalSetup(config: FullConfig) {
       await page.screenshot({ path: screenshotPath, fullPage: true })
       console.error(`   Screenshot saved to: ${screenshotPath}`)
       
+      // Try to extract the actual error message from the page
+      try {
+        const errorMessage = await page.locator('div:has-text(/error|Error|Invalid|incorrect|failed/i)').first().textContent({ timeout: 2000 })
+        if (errorMessage) {
+          console.error(`   Error message from page: ${errorMessage.trim()}`)
+        }
+      } catch {
+        // Error message not found in expected location
+      }
+      
       // Log page content for debugging
       const pageContent = await page.content()
       const hasError = pageContent.includes('error') || pageContent.includes('Error')
       const hasSuccess = pageContent.includes('successful') || pageContent.includes('Login successful')
       console.error(`   Page contains error message: ${hasError}`)
       console.error(`   Page contains success message: ${hasSuccess}`)
+      
+      // Get current URL to see where we are
+      const currentUrl = page.url()
+      console.error(`   Current URL: ${currentUrl}`)
+      
+      // Check if we're still on login page (indicates login failed)
+      if (currentUrl.includes('/auth/login')) {
+        throw new Error('Authentication failed - still on login page. Check credentials and test user exists in Supabase.')
+      }
       
       throw new Error('Authentication verification failed - not redirected to dashboard')
     }
