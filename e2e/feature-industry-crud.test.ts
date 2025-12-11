@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { shouldSkipAuthTests } from './helpers/auth'
 
 /**
  * Feature Tests: Industry CRUD Flow
@@ -32,6 +33,14 @@ const testUser = {
 }
 
 test.describe('Industry CRUD Flow', () => {
+  test.beforeEach(async () => {
+    // Skip all tests if SKIP_AUTH_TESTS is set
+    if (shouldSkipAuthTests()) {
+      test.skip(true, 'Auth tests are disabled (SKIP_AUTH_TESTS=true)')
+      return
+    }
+  })
+  
   // Before all tests, ensure we're on the industries page
   test.beforeEach(async ({ page }) => {
     // Navigate to the industries page

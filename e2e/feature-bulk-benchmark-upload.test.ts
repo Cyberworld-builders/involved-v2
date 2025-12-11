@@ -368,16 +368,21 @@ test.describe('Bulk Benchmark Upload UI Elements (No Auth)', () => {
     // This is a unit test that would be better in a separate test file
     // but included here for completeness
     
+    // Note: This test is marked as skipped since it requires authentication
+    test.skip(true, 'Skipping: Requires authentication setup')
+    
     // Create a CSV with quoted values
     const csvWithQuotes = `"Dimension Name","Dimension Code","Value"
 "Business, Mindset","BM","3.79"
 "Communication (Verbal)","COM","3.90"`
     
+    // Ensure directory exists before writing
+    if (!fs.existsSync(TEST_CSV_DIR)) {
+      fs.mkdirSync(TEST_CSV_DIR, { recursive: true })
+    }
+    
     const quotedCsvPath = path.join(TEST_CSV_DIR, 'quoted-benchmarks.csv')
     fs.writeFileSync(quotedCsvPath, csvWithQuotes)
-    
-    // Note: This test is marked as skipped since it requires authentication
-    test.skip(true, 'Skipping: Requires authentication setup')
     
     // Cleanup
     if (fs.existsSync(quotedCsvPath)) fs.unlinkSync(quotedCsvPath)
