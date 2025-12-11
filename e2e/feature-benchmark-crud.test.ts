@@ -20,22 +20,23 @@ import { test, expect } from '@playwright/test'
 const TEST_BENCHMARK_VALUE = '75.50'
 const UPDATED_BENCHMARK_VALUE = '85.75'
 
+// Helper function to check if an element is not visible
+async function isNotVisible(locator: any): Promise<boolean> {
+  return locator.isVisible().then((visible: boolean) => !visible)
+}
+
 test.describe('Benchmark CRUD Flow', () => {
   
   test.beforeEach(async ({ page }) => {
-    // Navigate to the application
-    await page.goto('/')
+    // Navigate to benchmarks page directly
+    await page.goto('/dashboard/benchmarks')
     
     // Wait for page to be ready
     await page.waitForLoadState('networkidle')
   })
 
   test('Admin can view benchmarks list page', async ({ page }) => {
-    // Navigate to benchmarks page
-    await page.goto('/dashboard/benchmarks')
-    
-    // Wait for page to load
-    await page.waitForLoadState('networkidle')
+    // Page is already on benchmarks page from beforeEach
     
     // Verify page title is present
     await expect(page.locator('h1')).toContainText('Benchmarks')
@@ -51,13 +52,9 @@ test.describe('Benchmark CRUD Flow', () => {
   })
 
   test('Benchmarks can be filtered by assessment', async ({ page }) => {
-    // Navigate to benchmarks page
-    await page.goto('/dashboard/benchmarks')
-    await page.waitForLoadState('networkidle')
-    
     // Check if there are assessments available
     const noAssessmentsMessage = page.locator('text=No assessments yet')
-    const hasAssessments = await noAssessmentsMessage.isVisible().then(visible => !visible)
+    const hasAssessments = await isNotVisible(noAssessmentsMessage)
     
     if (hasAssessments) {
       // Get first assessment link and click it
@@ -82,13 +79,9 @@ test.describe('Benchmark CRUD Flow', () => {
   })
 
   test('Benchmarks can be filtered by industry', async ({ page }) => {
-    // Navigate to benchmarks page
-    await page.goto('/dashboard/benchmarks')
-    await page.waitForLoadState('networkidle')
-    
     // Check if there are assessments available
     const noAssessmentsMessage = page.locator('text=No assessments yet')
-    const hasAssessments = await noAssessmentsMessage.isVisible().then(visible => !visible)
+    const hasAssessments = await isNotVisible(noAssessmentsMessage)
     
     if (hasAssessments) {
       // Click first assessment
@@ -99,11 +92,11 @@ test.describe('Benchmark CRUD Flow', () => {
       
       // Check if there are industries available
       const noIndustriesMessage = page.locator('text=No industries yet')
-      const hasIndustries = await noIndustriesMessage.isVisible().then(visible => !visible)
+      const hasIndustries = await isNotVisible(noIndustriesMessage)
       
       if (hasIndustries) {
-        // Click first industry
-        const firstIndustryLink = page.locator('a[href*="/dashboard/benchmarks/"][href*="/"]').first()
+        // Click first industry - use data-testid or more specific selector
+        const firstIndustryLink = page.locator('a').filter({ hasText: /^(?!.*\/)/ }).first()
         const industryName = await firstIndustryLink.locator('h3').textContent()
         await firstIndustryLink.click()
         
@@ -125,13 +118,9 @@ test.describe('Benchmark CRUD Flow', () => {
   })
 
   test('Admin can view single benchmark details (dimension-specific)', async ({ page }) => {
-    // Navigate to benchmarks page
-    await page.goto('/dashboard/benchmarks')
-    await page.waitForLoadState('networkidle')
-    
     // Navigate through assessment and industry to reach benchmark management
     const noAssessmentsMessage = page.locator('text=No assessments yet')
-    const hasAssessments = await noAssessmentsMessage.isVisible().then(visible => !visible)
+    const hasAssessments = await isNotVisible(noAssessmentsMessage)
     
     if (hasAssessments) {
       // Click first assessment
@@ -140,16 +129,16 @@ test.describe('Benchmark CRUD Flow', () => {
       
       // Check if there are industries
       const noIndustriesMessage = page.locator('text=No industries yet')
-      const hasIndustries = await noIndustriesMessage.isVisible().then(visible => !visible)
+      const hasIndustries = await isNotVisible(noIndustriesMessage)
       
       if (hasIndustries) {
         // Click first industry
-        await page.locator('a[href*="/dashboard/benchmarks/"][href*="/"]').first().click()
+        await page.locator('a').filter({ hasText: /^(?!.*\/)/ }).first().click()
         await page.waitForLoadState('networkidle')
         
         // Check if there are dimensions
         const noDimensionsMessage = page.locator('text=No dimensions found')
-        const hasDimensions = await noDimensionsMessage.isVisible().then(visible => !visible)
+        const hasDimensions = await isNotVisible(noDimensionsMessage)
         
         if (hasDimensions) {
           // Verify table structure exists
@@ -180,27 +169,23 @@ test.describe('Benchmark CRUD Flow', () => {
   })
 
   test('Admin can create new benchmark', async ({ page }) => {
-    // Navigate to benchmarks page
-    await page.goto('/dashboard/benchmarks')
-    await page.waitForLoadState('networkidle')
-    
     // Navigate through assessment and industry
     const noAssessmentsMessage = page.locator('text=No assessments yet')
-    const hasAssessments = await noAssessmentsMessage.isVisible().then(visible => !visible)
+    const hasAssessments = await isNotVisible(noAssessmentsMessage)
     
     if (hasAssessments) {
       await page.locator('a[href*="/dashboard/benchmarks/"]').first().click()
       await page.waitForLoadState('networkidle')
       
       const noIndustriesMessage = page.locator('text=No industries yet')
-      const hasIndustries = await noIndustriesMessage.isVisible().then(visible => !visible)
+      const hasIndustries = await isNotVisible(noIndustriesMessage)
       
       if (hasIndustries) {
-        await page.locator('a[href*="/dashboard/benchmarks/"][href*="/"]').first().click()
+        await page.locator('a').filter({ hasText: /^(?!.*\/)/ }).first().click()
         await page.waitForLoadState('networkidle')
         
         const noDimensionsMessage = page.locator('text=No dimensions found')
-        const hasDimensions = await noDimensionsMessage.isVisible().then(visible => !visible)
+        const hasDimensions = await isNotVisible(noDimensionsMessage)
         
         if (hasDimensions) {
           // Find first dimension input that doesn't have a value
@@ -229,27 +214,23 @@ test.describe('Benchmark CRUD Flow', () => {
   })
 
   test('Admin can update benchmark information', async ({ page }) => {
-    // Navigate to benchmarks page
-    await page.goto('/dashboard/benchmarks')
-    await page.waitForLoadState('networkidle')
-    
     // Navigate through assessment and industry
     const noAssessmentsMessage = page.locator('text=No assessments yet')
-    const hasAssessments = await noAssessmentsMessage.isVisible().then(visible => !visible)
+    const hasAssessments = await isNotVisible(noAssessmentsMessage)
     
     if (hasAssessments) {
       await page.locator('a[href*="/dashboard/benchmarks/"]').first().click()
       await page.waitForLoadState('networkidle')
       
       const noIndustriesMessage = page.locator('text=No industries yet')
-      const hasIndustries = await noIndustriesMessage.isVisible().then(visible => !visible)
+      const hasIndustries = await isNotVisible(noIndustriesMessage)
       
       if (hasIndustries) {
-        await page.locator('a[href*="/dashboard/benchmarks/"][href*="/"]').first().click()
+        await page.locator('a').filter({ hasText: /^(?!.*\/)/ }).first().click()
         await page.waitForLoadState('networkidle')
         
         const noDimensionsMessage = page.locator('text=No dimensions found')
-        const hasDimensions = await noDimensionsMessage.isVisible().then(visible => !visible)
+        const hasDimensions = await isNotVisible(noDimensionsMessage)
         
         if (hasDimensions) {
           // Get first benchmark input
@@ -261,8 +242,8 @@ test.describe('Benchmark CRUD Flow', () => {
             await firstInput.fill(TEST_BENCHMARK_VALUE)
             await page.locator('button:has-text("Save Benchmarks")').click()
             await expect(page.locator('text=Benchmarks saved successfully')).toBeVisible({ timeout: 10000 })
-            // Wait for message to disappear
-            await page.waitForTimeout(3500)
+            // Wait for success message to disappear before continuing
+            await page.locator('text=Benchmarks saved successfully').waitFor({ state: 'hidden', timeout: 5000 })
           }
           
           // Now update the value
@@ -294,27 +275,23 @@ test.describe('Benchmark CRUD Flow', () => {
   })
 
   test('Admin can delete benchmark', async ({ page }) => {
-    // Navigate to benchmarks page
-    await page.goto('/dashboard/benchmarks')
-    await page.waitForLoadState('networkidle')
-    
     // Navigate through assessment and industry
     const noAssessmentsMessage = page.locator('text=No assessments yet')
-    const hasAssessments = await noAssessmentsMessage.isVisible().then(visible => !visible)
+    const hasAssessments = await isNotVisible(noAssessmentsMessage)
     
     if (hasAssessments) {
       await page.locator('a[href*="/dashboard/benchmarks/"]').first().click()
       await page.waitForLoadState('networkidle')
       
       const noIndustriesMessage = page.locator('text=No industries yet')
-      const hasIndustries = await noIndustriesMessage.isVisible().then(visible => !visible)
+      const hasIndustries = await isNotVisible(noIndustriesMessage)
       
       if (hasIndustries) {
-        await page.locator('a[href*="/dashboard/benchmarks/"][href*="/"]').first().click()
+        await page.locator('a').filter({ hasText: /^(?!.*\/)/ }).first().click()
         await page.waitForLoadState('networkidle')
         
         const noDimensionsMessage = page.locator('text=No dimensions found')
-        const hasDimensions = await noDimensionsMessage.isVisible().then(visible => !visible)
+        const hasDimensions = await isNotVisible(noDimensionsMessage)
         
         if (hasDimensions) {
           // Get first benchmark input
@@ -326,8 +303,8 @@ test.describe('Benchmark CRUD Flow', () => {
             await firstInput.fill(TEST_BENCHMARK_VALUE)
             await page.locator('button:has-text("Save Benchmarks")').click()
             await expect(page.locator('text=Benchmarks saved successfully')).toBeVisible({ timeout: 10000 })
-            // Wait for message to disappear
-            await page.waitForTimeout(3500)
+            // Wait for success message to disappear before continuing
+            await page.locator('text=Benchmarks saved successfully').waitFor({ state: 'hidden', timeout: 5000 })
           }
           
           // Delete the benchmark by clearing the input
@@ -355,27 +332,23 @@ test.describe('Benchmark CRUD Flow', () => {
   })
 
   test('Benchmark CSV upload and download functionality', async ({ page }) => {
-    // Navigate to benchmarks page
-    await page.goto('/dashboard/benchmarks')
-    await page.waitForLoadState('networkidle')
-    
     // Navigate through assessment and industry
     const noAssessmentsMessage = page.locator('text=No assessments yet')
-    const hasAssessments = await noAssessmentsMessage.isVisible().then(visible => !visible)
+    const hasAssessments = await isNotVisible(noAssessmentsMessage)
     
     if (hasAssessments) {
       await page.locator('a[href*="/dashboard/benchmarks/"]').first().click()
       await page.waitForLoadState('networkidle')
       
       const noIndustriesMessage = page.locator('text=No industries yet')
-      const hasIndustries = await noIndustriesMessage.isVisible().then(visible => !visible)
+      const hasIndustries = await isNotVisible(noIndustriesMessage)
       
       if (hasIndustries) {
-        await page.locator('a[href*="/dashboard/benchmarks/"][href*="/"]').first().click()
+        await page.locator('a').filter({ hasText: /^(?!.*\/)/ }).first().click()
         await page.waitForLoadState('networkidle')
         
         const noDimensionsMessage = page.locator('text=No dimensions found')
-        const hasDimensions = await noDimensionsMessage.isVisible().then(visible => !visible)
+        const hasDimensions = await isNotVisible(noDimensionsMessage)
         
         if (hasDimensions) {
           // Verify Download Template button exists
@@ -395,10 +368,6 @@ test.describe('Benchmark CRUD Flow', () => {
   })
 
   test('Benchmarks page has proper navigation and breadcrumbs', async ({ page }) => {
-    // Navigate to benchmarks page
-    await page.goto('/dashboard/benchmarks')
-    await page.waitForLoadState('networkidle')
-    
     // Verify breadcrumb at root level
     let breadcrumb = page.locator('nav[aria-label="Breadcrumb"]')
     await expect(breadcrumb).toContainText('Benchmarks')
@@ -406,7 +375,7 @@ test.describe('Benchmark CRUD Flow', () => {
     
     // Navigate to assessment level
     const noAssessmentsMessage = page.locator('text=No assessments yet')
-    const hasAssessments = await noAssessmentsMessage.isVisible().then(visible => !visible)
+    const hasAssessments = await isNotVisible(noAssessmentsMessage)
     
     if (hasAssessments) {
       const assessmentName = await page.locator('a[href*="/dashboard/benchmarks/"]').first().locator('h3').textContent()
@@ -427,26 +396,22 @@ test.describe('Benchmark CRUD Flow', () => {
   })
 
   test('Benchmark values are validated as numbers', async ({ page }) => {
-    // Navigate to benchmarks management page
-    await page.goto('/dashboard/benchmarks')
-    await page.waitForLoadState('networkidle')
-    
     const noAssessmentsMessage = page.locator('text=No assessments yet')
-    const hasAssessments = await noAssessmentsMessage.isVisible().then(visible => !visible)
+    const hasAssessments = await isNotVisible(noAssessmentsMessage)
     
     if (hasAssessments) {
       await page.locator('a[href*="/dashboard/benchmarks/"]').first().click()
       await page.waitForLoadState('networkidle')
       
       const noIndustriesMessage = page.locator('text=No industries yet')
-      const hasIndustries = await noIndustriesMessage.isVisible().then(visible => !visible)
+      const hasIndustries = await isNotVisible(noIndustriesMessage)
       
       if (hasIndustries) {
-        await page.locator('a[href*="/dashboard/benchmarks/"][href*="/"]').first().click()
+        await page.locator('a').filter({ hasText: /^(?!.*\/)/ }).first().click()
         await page.waitForLoadState('networkidle')
         
         const noDimensionsMessage = page.locator('text=No dimensions found')
-        const hasDimensions = await noDimensionsMessage.isVisible().then(visible => !visible)
+        const hasDimensions = await isNotVisible(noDimensionsMessage)
         
         if (hasDimensions) {
           // Get first input
