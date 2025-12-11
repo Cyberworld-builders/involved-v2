@@ -234,10 +234,17 @@ test.describe('Profile Update Flow', () => {
       // Restore original name
       await updatedNameInput.clear()
       await updatedNameInput.fill(originalName)
-      await saveButton.click()
       
-      // Wait for restoration to complete
-      await page.waitForTimeout(1000)
+      // Re-locate save button for restoring
+      const restoreSaveButton = page.locator(
+        'button[type="submit"]:has-text("Save"), button:has-text("Update"), button:has-text("Save Changes")'
+      ).first()
+      await restoreSaveButton.click()
+      
+      // Wait for restoration to complete by checking for success message
+      await expect(
+        page.locator('text=/success|updated|saved/i, div.text-green, div[class*="success"]')
+      ).toBeVisible({ timeout: 10000 })
     })
 
     test('Profile validation - required fields', async ({ page }) => {
@@ -272,6 +279,17 @@ test.describe('Profile Update Flow', () => {
       
       // Restore original value
       await nameInput.fill(originalName)
+      
+      // Re-locate and click save button to restore original value
+      const restoreSaveButton = page.locator(
+        'button[type="submit"]:has-text("Save"), button:has-text("Update"), button:has-text("Save Changes")'
+      ).first()
+      await restoreSaveButton.click()
+      
+      // Wait for restoration to complete
+      await expect(
+        page.locator('text=/success|updated|saved/i, div.text-green, div[class*="success"]')
+      ).toBeVisible({ timeout: 5000 })
     })
   })
 
@@ -403,8 +421,15 @@ test.describe('Profile Update Flow', () => {
         page.locator('text=/password.*updated|password.*changed|success/i, div.text-green, div[class*="success"]')
       ).toBeVisible({ timeout: 10000 })
       
-      // Change password back to original
-      await page.waitForTimeout(2000) // Wait for UI to reset
+      // Wait for success message to disappear or form to reset
+      await page.waitForFunction(
+        () => {
+          const successMessages = document.querySelectorAll('[class*="success"], .text-green')
+          return successMessages.length === 0 || 
+                 Array.from(successMessages).every(el => !el.textContent?.match(/password.*updated|password.*changed|success/i))
+        },
+        { timeout: 5000 }
+      ).catch(() => {}) // Ignore timeout, continue anyway
       
       // Re-fill the form with original password
       await currentPasswordField.fill(NEW_PASSWORD)
@@ -416,8 +441,10 @@ test.describe('Profile Update Flow', () => {
       
       await savePasswordButton.click()
       
-      // Wait for password to be restored
-      await page.waitForTimeout(1000)
+      // Wait for password restoration to complete
+      await expect(
+        page.locator('text=/password.*updated|password.*changed|success/i, div.text-green, div[class*="success"]')
+      ).toBeVisible({ timeout: 10000 })
     })
 
     test('Password update fails with incorrect current password', async ({ page }) => {
