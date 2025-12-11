@@ -27,15 +27,15 @@ const INVITED_USER_EMAIL = 'invited.user@involved.test'
 const INVITED_USER_NAME = 'Invited User'
 const INVITED_USER_PASSWORD = 'InvitedPassword123!'
 
-// Helper to check if a page exists
-async function pageExists(page: any, url: string): Promise<boolean> {
-  try {
-    const response = await page.goto(url)
-    return response?.status() !== 404
-  } catch {
-    return false
-  }
-}
+// Helper to check if a page exists (unused but kept for future use)
+// async function pageExists(page: Page, url: string): Promise<boolean> {
+//   try {
+//     const response = await page.goto(url)
+//     return response?.status() !== 404
+//   } catch {
+//     return false
+//   }
+// }
 
 test.describe('User Invitation & Claim Flow', () => {
   // Check if claim page exists before running tests
@@ -47,7 +47,7 @@ test.describe('User Invitation & Claim Flow', () => {
     try {
       const response = await page.goto(`/auth/claim?token=${mockToken}`)
       claimPageExists = response?.status() !== 404
-    } catch (error) {
+    } catch {
       claimPageExists = false
     } finally {
       await page.close()
@@ -99,7 +99,7 @@ test.describe('User Invitation & Claim Flow', () => {
       ).toBeVisible({ timeout: 10000 })
     })
 
-    test('Invite email is sent with token link', async ({ page }) => {
+    test('Invite email is sent with token link', async () => {
       // This test would require access to email testing infrastructure
       // In a real implementation, this could use:
       // - A test email service like Ethereal or MailHog
@@ -455,7 +455,7 @@ test.describe('User Invitation & Claim Flow', () => {
 })
 
 test.describe('Integration Tests', () => {
-  test('Complete invitation flow from admin invite to user login', async ({ page, context }) => {
+  test('Complete invitation flow from admin invite to user login', async () => {
     // This is a comprehensive integration test that tests the entire flow
     test.skip(true, 'Requires full implementation and email testing infrastructure')
     
@@ -472,7 +472,7 @@ test.describe('Integration Tests', () => {
     // 10. User can access all features
   })
 
-  test('Multiple users can be invited and claim accounts independently', async ({ page }) => {
+  test('Multiple users can be invited and claim accounts independently', async () => {
     test.skip(true, 'Requires full implementation')
     
     // Expected flow:
@@ -484,7 +484,7 @@ test.describe('Integration Tests', () => {
     // 6. Both users have separate profiles
   })
 
-  test('Token cannot be reused after successful claim', async ({ page }) => {
+  test('Token cannot be reused after successful claim', async () => {
     test.skip(true, 'Requires full implementation')
     
     // Expected flow:
