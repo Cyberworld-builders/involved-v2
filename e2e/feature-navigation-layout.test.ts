@@ -1,4 +1,4 @@
-import { test, expect, devices } from '@playwright/test'
+import { test, expect, devices, Browser } from '@playwright/test'
 
 /**
  * E2E tests for Navigation & Responsive Layout
@@ -15,6 +15,24 @@ import { test, expect, devices } from '@playwright/test'
 // Constants
 // Tolerance for horizontal scroll detection (in pixels)
 const VIEWPORT_TOLERANCE_PX = 10
+
+// Helper function to create mobile context that works with all browsers
+// Firefox doesn't support isMobile option, so we use viewport-only approach
+async function createMobileContext(browser: Browser) {
+  const browserName = browser.browserType().name()
+  const device = devices['iPhone 12']
+  
+  if (browserName === 'firefox') {
+    // Firefox doesn't support isMobile, so just use viewport
+    return await browser.newContext({
+      viewport: device.viewport,
+      userAgent: device.userAgent,
+    })
+  } else {
+    // Other browsers support isMobile
+    return await browser.newContext({ ...device })
+  }
+}
 
 // Helper function to check if we're on an authenticated page
 async function isAuthenticated(page: { url: () => string }): Promise<boolean> {
@@ -97,7 +115,7 @@ test.describe('Navigation Component Consistency', () => {
 
 test.describe('Responsive Layout - Mobile', () => {
   test('dashboard layout renders on mobile viewport', async ({ browser }) => {
-    const context = await browser.newContext({ ...devices['iPhone 12'] })
+    const context = await createMobileContext(browser)
     const page = await context.newPage()
     
     await page.goto('/dashboard', { timeout: 30000 })
@@ -124,7 +142,7 @@ test.describe('Responsive Layout - Mobile', () => {
   })
   
   test('navigation is accessible on mobile viewport', async ({ browser }) => {
-    const context = await browser.newContext({ ...devices['iPhone 12'] })
+    const context = await createMobileContext(browser)
     const page = await context.newPage()
     
     await page.goto('/dashboard', { timeout: 30000 })
@@ -253,7 +271,7 @@ test.describe('Layout Consistency', () => {
 
 test.describe('Home Page Responsive Layout', () => {
   test('home page renders properly on mobile viewport', async ({ browser }) => {
-    const context = await browser.newContext({ ...devices['iPhone 12'] })
+    const context = await createMobileContext(browser)
     const page = await context.newPage()
     
     await page.goto('/', { timeout: 30000 })
