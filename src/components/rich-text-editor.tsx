@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useEditor, EditorContent } from '@tiptap/react'
+import { useEditor, EditorContent, Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import { TableKit } from '@tiptap/extension-table'
@@ -19,7 +19,7 @@ export default function RichTextEditor({ content, onChange, placeholder = 'Enter
   const [tableHasBorders, setTableHasBorders] = useState(false)
   
   // Helper function to check if cursor is in a table
-  const checkIfInTable = (editor: any) => {
+  const checkIfInTable = (editor: Editor | null) => {
     if (!editor) return false
     const { selection } = editor.state
     const { $anchor } = selection
@@ -35,7 +35,7 @@ export default function RichTextEditor({ content, onChange, placeholder = 'Enter
   }
 
   // Helper function to check if table has borders
-  const checkTableBorders = (editor: any) => {
+  const checkTableBorders = (editor: Editor | null) => {
     if (!editor) return false
     const { selection } = editor.state
     const { $anchor } = selection
@@ -120,12 +120,7 @@ export default function RichTextEditor({ content, onChange, placeholder = 'Enter
       Placeholder.configure({
         placeholder,
       }),
-      TableKit.configure({
-        resizable: true,
-        HTMLAttributes: {
-          class: null,
-        },
-      }),
+      TableKit,
     ],
     content,
     immediatelyRender: false,
@@ -156,7 +151,7 @@ export default function RichTextEditor({ content, onChange, placeholder = 'Enter
     if (content !== codeContent) {
       setCodeContent(content)
     }
-  }, [content, editor])
+  }, [content, codeContent, editor])
 
   // Initialize table state when editor is ready
   useEffect(() => {

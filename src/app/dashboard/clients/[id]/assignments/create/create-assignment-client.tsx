@@ -469,7 +469,7 @@ Thank you.`)
                 {assignmentUsers.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <p>No users added yet.</p>
-                    <p className="text-sm mt-2">Click "Add Users" to select users to assign to.</p>
+                    <p className="text-sm mt-2">Click &quot;Add Users&quot; to select users to assign to.</p>
                   </div>
                 ) : (
                   <div className="space-y-4">

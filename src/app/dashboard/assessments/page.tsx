@@ -18,7 +18,7 @@ export default async function AssessmentsPage() {
   }
 
   // Fetch assessments from database
-  const { data: assessments, error } = await supabase
+  const { data: assessments } = await supabase
     .from('assessments')
     .select('*')
     .order('created_at', { ascending: false })

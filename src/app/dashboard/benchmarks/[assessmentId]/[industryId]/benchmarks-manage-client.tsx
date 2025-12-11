@@ -1,12 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import DashboardLayout from '@/components/layout/dashboard-layout'
+import { Database } from '@/types/database'
+
+type Assessment = Database['public']['Tables']['assessments']['Row']
+type Industry = Database['public']['Tables']['industries']['Row']
 
 interface BenchmarksManageClientProps {
   assessmentId: string
@@ -26,13 +29,12 @@ interface Benchmark {
 }
 
 export default function BenchmarksManageClient({ assessmentId, industryId }: BenchmarksManageClientProps) {
-  const router = useRouter()
   const supabase = createClient()
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [message, setMessage] = useState('')
-  const [assessment, setAssessment] = useState<any>(null)
-  const [industry, setIndustry] = useState<any>(null)
+  const [assessment, setAssessment] = useState<Assessment | null>(null)
+  const [industry, setIndustry] = useState<Industry | null>(null)
   const [dimensions, setDimensions] = useState<Dimension[]>([])
   const [benchmarks, setBenchmarks] = useState<Record<string, Benchmark>>({})
 
