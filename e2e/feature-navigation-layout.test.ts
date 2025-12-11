@@ -1,4 +1,5 @@
 import { test, expect, devices, Browser } from '@playwright/test'
+import { shouldSkipAuthTests } from './helpers/auth'
 
 /**
  * E2E tests for Navigation & Responsive Layout
@@ -41,6 +42,14 @@ async function isAuthenticated(page: { url: () => string }): Promise<boolean> {
 }
 
 test.describe('Navigation Component Consistency', () => {
+  test.beforeEach(async () => {
+    // Skip all tests if SKIP_AUTH_TESTS is set
+    if (shouldSkipAuthTests()) {
+      test.skip(true, 'Auth tests are disabled (SKIP_AUTH_TESTS=true)')
+      return
+    }
+  })
+  
   test('sidebar navigation is present on dashboard page', async ({ page }) => {
     // Navigate to dashboard
     await page.goto('/dashboard', { timeout: 30000 })
@@ -114,6 +123,13 @@ test.describe('Navigation Component Consistency', () => {
 })
 
 test.describe('Responsive Layout - Mobile', () => {
+  test.beforeEach(async () => {
+    if (shouldSkipAuthTests()) {
+      test.skip(true, 'Auth tests are disabled (SKIP_AUTH_TESTS=true)')
+      return
+    }
+  })
+  
   test('dashboard layout renders on mobile viewport', async ({ browser }) => {
     const context = await createMobileContext(browser)
     const page = await context.newPage()

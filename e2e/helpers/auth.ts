@@ -8,6 +8,15 @@ import { Page } from '@playwright/test'
  */
 
 /**
+ * Check if auth tests should be skipped
+ * 
+ * @returns true if SKIP_AUTH_TESTS is set to 'true' or '1'
+ */
+export function shouldSkipAuthTests(): boolean {
+  return process.env.SKIP_AUTH_TESTS === 'true' || process.env.SKIP_AUTH_TESTS === '1'
+}
+
+/**
  * Wait for Supabase authentication cookies to be set
  * 
  * Supabase stores auth tokens in cookies with the pattern: sb-<project-ref>-auth-token

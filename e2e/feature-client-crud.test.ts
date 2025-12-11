@@ -1,6 +1,6 @@
 import { test, expect, Page } from '@playwright/test'
 import * as path from 'path'
-import { isAuthenticated } from './helpers/auth'
+import { isAuthenticated, shouldSkipAuthTests } from './helpers/auth'
 
 /**
  * Feature Tests: Client CRUD Flow
@@ -38,6 +38,11 @@ const updatedClient = {
  * Note: In a real test environment, you would use proper test credentials
  */
 async function loginAsAdmin(page: Page): Promise<boolean> {
+  // Check if auth tests should be skipped
+  if (shouldSkipAuthTests()) {
+    return false
+  }
+  
   // Check if we're already logged in
   if (await isAuthenticated(page)) {
     return true
@@ -49,7 +54,6 @@ async function loginAsAdmin(page: Page): Promise<boolean> {
   
   // If credentials not provided, authentication is not available
   if (!testEmail || !testPassword) {
-    console.log('Authentication credentials not provided. Set PLAYWRIGHT_TEST_EMAIL and PLAYWRIGHT_TEST_PASSWORD environment variables.')
     return false
   }
   
@@ -85,6 +89,12 @@ function getUniqueClientName(baseName: string): string {
 
 test.describe('Client CRUD Operations', () => {
   test.beforeEach(async ({ page }) => {
+    // Skip all tests if SKIP_AUTH_TESTS is set
+    if (shouldSkipAuthTests()) {
+      test.skip(true, 'Auth tests are disabled (SKIP_AUTH_TESTS=true)')
+      return
+    }
+    
     // Check if we're authenticated (auth state should be loaded from global setup)
     const isAuth = await isAuthenticated(page)
     if (!isAuth) {
