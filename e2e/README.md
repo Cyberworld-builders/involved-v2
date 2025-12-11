@@ -33,6 +33,7 @@ npm run test:e2e:debug
 
 # Run specific test file
 npx playwright test e2e/feature-client-crud.test.ts
+npx playwright test e2e/feature-group-crud.test.ts
 npx playwright test e2e/feature-navigation-layout.test.ts
 npx playwright test e2e/feature-user-invitation.test.ts
 
@@ -54,6 +55,7 @@ npx playwright test -g "Admin can create new industry"
 
 - `example.spec.ts` - Example test demonstrating Playwright usage
 - `feature-client-crud.test.ts` - Complete client CRUD flow tests
+- `feature-group-crud.test.ts` - Complete group CRUD flow tests (issues #37-43)
 - `feature-navigation-layout.test.ts` - Navigation and responsive layout tests
 - `feature-user-invitation.test.ts` - User invitation and account claim flow tests
 - `feature-bulk-benchmark-upload.test.ts` - Bulk benchmark upload tests
