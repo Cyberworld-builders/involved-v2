@@ -365,11 +365,11 @@ test.describe('Bulk Benchmark Upload UI Elements (No Auth)', () => {
   })
 
   test('CSV parsing logic handles quoted values correctly', async () => {
-    // This is a unit test that would be better in a separate test file
-    // but included here for completeness
-    
     // Note: This test is marked as skipped since it requires authentication
     test.skip(true, 'Skipping: Requires authentication setup')
+    
+    // This is a unit test that would be better in a separate test file
+    // but included here for completeness
     
     // Create a CSV with quoted values
     const csvWithQuotes = `"Dimension Name","Dimension Code","Value"
