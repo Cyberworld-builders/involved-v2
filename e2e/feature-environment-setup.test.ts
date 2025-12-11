@@ -52,14 +52,12 @@ test.describe('Environment Setup Verification', () => {
     })
 
     test('should serve static assets correctly', async ({ page }) => {
-      await page.goto('/')
-      
-      // Wait for the page to fully load
-      await page.waitForLoadState('load')
-      
       // Check that the page responds with OK status
       const response = await page.goto('/')
       expect(response?.status()).toBe(200)
+      
+      // Wait for the page to fully load
+      await page.waitForLoadState('load')
     })
   })
 
@@ -103,21 +101,17 @@ test.describe('Environment Setup Verification', () => {
 
   test.describe('Deployment Pipeline Configuration', () => {
     test('should have valid deployment environment setup', async ({ page }) => {
-      // This test verifies that the app can run in a deployment-like environment
-      await page.goto('/')
-      
-      // Wait for the application to fully load
-      await page.waitForLoadState('load')
-      
       // Verify no deployment configuration errors
       const pageErrors: string[] = []
       page.on('pageerror', error => {
         pageErrors.push(error.message)
       })
       
-      // Navigate and check for errors
+      // This test verifies that the app can run in a deployment-like environment
       await page.goto('/')
-      await page.waitForTimeout(1000)
+      
+      // Wait for the application to fully load
+      await page.waitForLoadState('networkidle')
       
       // Filter out known non-critical errors
       const criticalErrors = pageErrors.filter(error => 
@@ -178,8 +172,6 @@ test.describe('Environment Setup Verification', () => {
 
     test('should be compatible with Vercel deployment', async ({ page }) => {
       // Test features that are critical for Vercel deployment
-      await page.goto('/')
-      
       // Verify the app uses proper routing (Next.js App Router)
       const response = await page.goto('/')
       expect(response?.status()).toBe(200)
@@ -208,9 +200,6 @@ test.describe('Environment Setup Verification', () => {
     })
 
     test('should handle navigation without errors', async ({ page }) => {
-      await page.goto('/')
-      await page.waitForLoadState('networkidle')
-      
       // Track console errors
       const errors: string[] = []
       page.on('console', msg => {
@@ -219,8 +208,8 @@ test.describe('Environment Setup Verification', () => {
         }
       })
       
-      // Wait a bit to catch any async errors
-      await page.waitForTimeout(1000)
+      await page.goto('/')
+      await page.waitForLoadState('networkidle')
       
       // Filter out known non-critical warnings
       const criticalErrors = errors.filter(error => 
@@ -228,8 +217,8 @@ test.describe('Environment Setup Verification', () => {
         !error.includes('404')
       )
       
-      // We expect minimal critical errors in a properly configured environment
-      expect(criticalErrors.length).toBeLessThanOrEqual(2)
+      // We expect no critical errors in a properly configured environment
+      expect(criticalErrors.length).toBe(0)
     })
   })
 })
