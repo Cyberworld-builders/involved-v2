@@ -254,9 +254,12 @@ describe('Sidebar Component', () => {
       
       render(<Sidebar />)
       
-      // Get all navigation links (inside the nav element)
+      // Get all navigation links (inside the nav element, not including logo)
       const nav = screen.getByRole('navigation')
       const navLinks = Array.from(nav.querySelectorAll('a'))
+      
+      // Should have 7 navigation links
+      expect(navLinks).toHaveLength(7)
       
       navLinks.forEach((link) => {
         expect(link).not.toHaveClass('bg-indigo-600')
@@ -269,8 +272,8 @@ describe('Sidebar Component', () => {
     it('should have correct number of navigation items', () => {
       render(<Sidebar />)
       const nav = screen.getByRole('navigation')
-      const links = nav.querySelectorAll('a[href^="/dashboard"]')
-      // 7 navigation items (excluding the logo link which is outside the nav)
+      const links = nav.querySelectorAll('a')
+      // 7 navigation items inside the nav element (logo is outside in a separate div)
       expect(links.length).toBe(7)
     })
 
@@ -288,6 +291,9 @@ describe('Sidebar Component', () => {
         'Benchmarks',
         'Feedback',
       ]
+      
+      // Verify we have the expected number of links
+      expect(links).toHaveLength(expectedOrder.length)
       
       expectedOrder.forEach((text, index) => {
         expect(links[index]).toHaveTextContent(text)
