@@ -1,5 +1,3 @@
-import { config } from '@/lib/config'
-
 /**
  * Supported image types for logo and background uploads
  */
