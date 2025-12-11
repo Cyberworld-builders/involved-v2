@@ -26,9 +26,16 @@ const ORIGINAL_PASSWORD = process.env.PLAYWRIGHT_PASSWORD_RESET_ORIGINAL_PASSWOR
 const NEW_PASSWORD = 'NewPassword456!'
 const INVALID_EMAIL = 'nonexistent@involved.test'
 
+// Test timeouts and constants
+const DEFAULT_TIMEOUT = 5000 // Default timeout for element visibility
+const MOCK_TOKEN_LENGTH = 50 // Supabase-like token length for testing
+const MAX_RATE_LIMIT_REQUESTS = 5 // Number of requests for rate limit test
+const RATE_LIMIT_REQUEST_DELAY_MS = 500 // Delay between rate limit test requests
+
 // Helper function to generate mock tokens
+// Generates a token similar to Supabase password reset tokens
 function generateMockToken(suffix: string): string {
-  return 'mock-reset-token-' + suffix.repeat(50)
+  return 'mock-reset-token-' + suffix.repeat(MOCK_TOKEN_LENGTH)
 }
 
 test.describe('Password Reset Flow', () => {
@@ -79,7 +86,7 @@ test.describe('Password Reset Flow', () => {
         'a:has-text("Forgot password"), a:has-text("Forgot your password"), a:has-text("Reset password")'
       ).first()
       
-      const linkExists = await forgotPasswordLink.isVisible({ timeout: 5000 }).catch(() => false)
+      const linkExists = await forgotPasswordLink.isVisible({ timeout: DEFAULT_TIMEOUT }).catch(() => false)
       
       if (linkExists) {
         // Click the link if it exists
@@ -97,7 +104,7 @@ test.describe('Password Reset Flow', () => {
       // Verify the page has loaded
       await expect(
         page.locator('h1, h2').filter({ hasText: /forgot.*password|reset.*password/i })
-      ).toBeVisible({ timeout: 5000 })
+      ).toBeVisible({ timeout: DEFAULT_TIMEOUT })
     })
 
     test('User can request password reset with valid email', async ({ page }) => {
@@ -109,7 +116,7 @@ test.describe('Password Reset Flow', () => {
       
       // Verify email input is present
       const emailInput = page.locator('input[type="email"]').first()
-      await expect(emailInput).toBeVisible({ timeout: 5000 })
+      await expect(emailInput).toBeVisible({ timeout: DEFAULT_TIMEOUT })
       
       // Fill in email
       await emailInput.fill(TEST_USER_EMAIL)
@@ -154,8 +161,8 @@ test.describe('Password Reset Flow', () => {
       )
       
       // Either success message (security best practice) or error should appear
-      const successVisible = await successMessage.isVisible({ timeout: 5000 }).catch(() => false)
-      const errorVisible = await errorMessage.isVisible({ timeout: 5000 }).catch(() => false)
+      const successVisible = await successMessage.isVisible({ timeout: DEFAULT_TIMEOUT }).catch(() => false)
+      const errorVisible = await errorMessage.isVisible({ timeout: DEFAULT_TIMEOUT }).catch(() => false)
       
       expect(successVisible || errorVisible).toBeTruthy()
     })
@@ -181,7 +188,7 @@ test.describe('Password Reset Flow', () => {
       
       const customError = await page.locator(
         'text=/invalid.*email/i, text=/valid.*email/i'
-      ).isVisible({ timeout: 2000 }).catch(() => false)
+      ).isVisible({ timeout: 2000 }).catch(() => false) // Shorter timeout for validation
       
       // Either HTML5 validation or custom error should prevent submission
       expect(hasValidationError || customError).toBeTruthy()
@@ -231,7 +238,7 @@ test.describe('Password Reset Flow', () => {
       // Verify reset password page loads
       await expect(
         page.locator('h1, h2').filter({ hasText: /reset.*password|new.*password/i })
-      ).toBeVisible({ timeout: 5000 })
+      ).toBeVisible({ timeout: DEFAULT_TIMEOUT })
       
       // Verify password input fields are present
       const passwordInputs = page.locator('input[type="password"]')
@@ -256,7 +263,7 @@ test.describe('Password Reset Flow', () => {
       const errorMessage = page.locator(
         'text=/invalid.*link/i, text=/invalid.*token/i, text=/expired.*link/i'
       )
-      const isErrorVisible = await errorMessage.isVisible({ timeout: 5000 }).catch(() => false)
+      const isErrorVisible = await errorMessage.isVisible({ timeout: DEFAULT_TIMEOUT }).catch(() => false)
       
       if (isErrorVisible) {
         await expect(errorMessage).toBeVisible()
@@ -279,7 +286,7 @@ test.describe('Password Reset Flow', () => {
       const errorMessage = page.locator(
         'text=/missing.*token/i, text=/invalid.*link/i, text=/token.*required/i'
       )
-      const isErrorVisible = await errorMessage.isVisible({ timeout: 5000 }).catch(() => false)
+      const isErrorVisible = await errorMessage.isVisible({ timeout: DEFAULT_TIMEOUT }).catch(() => false)
       
       if (!isErrorVisible) {
         // If no error message, might redirect to forgot password page
@@ -369,7 +376,7 @@ test.describe('Password Reset Flow', () => {
         'text=/password.*too.*short/i, text=/password.*weak/i, text=/password.*requirements/i, text=/at least.*characters/i'
       )
       
-      const hasError = await validationError.isVisible({ timeout: 5000 }).catch(() => false)
+      const hasError = await validationError.isVisible({ timeout: DEFAULT_TIMEOUT }).catch(() => false)
       expect(hasError).toBeTruthy()
     })
 
@@ -400,7 +407,7 @@ test.describe('Password Reset Flow', () => {
           'text=/password.*not.*match/i, text=/password.*must.*match/i, text=/passwords.*different/i'
         )
         
-        const hasError = await validationError.isVisible({ timeout: 5000 }).catch(() => false)
+        const hasError = await validationError.isVisible({ timeout: DEFAULT_TIMEOUT }).catch(() => false)
         expect(hasError).toBeTruthy()
       } else {
         // Skip this test if there's only one password field
@@ -437,7 +444,7 @@ test.describe('Password Reset Flow', () => {
       
       // Verify we can access protected content
       const dashboardContent = page.locator('h1, h2').first()
-      await expect(dashboardContent).toBeVisible({ timeout: 5000 })
+      await expect(dashboardContent).toBeVisible({ timeout: DEFAULT_TIMEOUT })
     })
 
     test('Old password no longer works after reset', async ({ page }) => {
@@ -483,7 +490,7 @@ test.describe('Password Reset Flow', () => {
       // Verify error message is displayed
       await expect(
         page.locator('text=/expired/i, text=/invalid.*link/i, text=/no longer valid/i')
-      ).toBeVisible({ timeout: 5000 })
+      ).toBeVisible({ timeout: DEFAULT_TIMEOUT })
       
       // Verify form is disabled or shows error
       const submitButton = page.locator('button[type="submit"]')
@@ -513,7 +520,7 @@ test.describe('Password Reset Flow', () => {
       const errorMessage = page.locator(
         'text=/already.*used/i, text=/invalid.*link/i, text=/token.*used/i'
       )
-      const hasError = await errorMessage.isVisible({ timeout: 5000 }).catch(() => false)
+      const hasError = await errorMessage.isVisible({ timeout: DEFAULT_TIMEOUT }).catch(() => false)
       
       if (!hasError) {
         // If no explicit error, form should be disabled
@@ -534,10 +541,10 @@ test.describe('Password Reset Flow', () => {
       const emailInput = page.locator('input[type="email"]').first()
       const submitButton = page.locator('button[type="submit"]').first()
       
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < MAX_RATE_LIMIT_REQUESTS; i++) {
         await emailInput.fill(TEST_USER_EMAIL)
         await submitButton.click()
-        await page.waitForTimeout(500)
+        await page.waitForTimeout(RATE_LIMIT_REQUEST_DELAY_MS)
       }
       
       // After multiple rapid requests, should see rate limit message
@@ -548,7 +555,7 @@ test.describe('Password Reset Flow', () => {
       
       // Rate limiting might not be implemented, so we don't assert
       // Just check if it exists
-      const hasRateLimit = await rateLimitMessage.isVisible({ timeout: 2000 }).catch(() => false)
+      const hasRateLimit = await rateLimitMessage.isVisible({ timeout: 2000 }).catch(() => false) // Shorter timeout for rate limit check
       
       // Log the result for documentation purposes
       if (hasRateLimit) {
