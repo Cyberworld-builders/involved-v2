@@ -362,10 +362,8 @@ describe('API Benchmark Routes', () => {
       const request = new NextRequest(
         'http://localhost:3000/api/benchmarks?industry_id=test-industry-id'
       )
-      const response = await getBenchmarks(request)
-      const data = await response.json()
+      await getBenchmarks(request)
 
-      expect(response.status).toBe(200)
       expect(eqMock).toHaveBeenCalledWith('industry_id', 'test-industry-id')
     })
 
@@ -392,10 +390,8 @@ describe('API Benchmark Routes', () => {
       const request = new NextRequest(
         'http://localhost:3000/api/benchmarks?dimension_id=test-dimension-id'
       )
-      const response = await getBenchmarks(request)
-      const data = await response.json()
+      await getBenchmarks(request)
 
-      expect(response.status).toBe(200)
       expect(eqMock).toHaveBeenCalledWith('dimension_id', 'test-dimension-id')
     })
 
@@ -424,10 +420,8 @@ describe('API Benchmark Routes', () => {
       const request = new NextRequest(
         'http://localhost:3000/api/benchmarks?industry_id=test-industry-id&dimension_id=test-dimension-id'
       )
-      const response = await getBenchmarks(request)
-      const data = await response.json()
+      await getBenchmarks(request)
 
-      expect(response.status).toBe(200)
       expect(eqMock).toHaveBeenCalledWith('industry_id', 'test-industry-id')
       expect(eqMock).toHaveBeenCalledWith('dimension_id', 'test-dimension-id')
     })

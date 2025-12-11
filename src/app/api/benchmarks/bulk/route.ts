@@ -45,8 +45,8 @@ export async function POST(request: NextRequest) {
     const validatedBenchmarks: BenchmarkInsert[] = []
     const errors: string[] = []
 
-    benchmarks.forEach((benchmark: any, index: number) => {
-      const { dimension_id, industry_id, value } = benchmark
+    benchmarks.forEach((benchmark: unknown, index: number) => {
+      const { dimension_id, industry_id, value } = benchmark as Record<string, unknown>
 
       // Validate required fields
       if (!dimension_id || typeof dimension_id !== 'string') {
