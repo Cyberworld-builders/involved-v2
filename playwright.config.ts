@@ -1,10 +1,18 @@
 import { defineConfig, devices } from '@playwright/test'
+import * as fs from 'fs'
+import * as path from 'path'
 
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
  */
 // require('dotenv').config();
+
+/**
+ * Check if auth state file exists
+ */
+const authStatePath = path.join(__dirname, 'e2e', '.auth', 'user.json')
+const hasAuthState = fs.existsSync(authStatePath)
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -33,25 +41,33 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     /* Video on failure */
     video: 'retain-on-failure',
-    /* Use saved authentication state if available */
-    storageState: 'e2e/.auth/user.json',
   },
 
   /* Configure projects for major browsers */
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: { 
+        ...devices['Desktop Chrome'],
+        /* Load auth state if it exists (created by global setup) */
+        ...(hasAuthState && { storageState: authStatePath }),
+      },
     },
 
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      use: { 
+        ...devices['Desktop Firefox'],
+        ...(hasAuthState && { storageState: authStatePath }),
+      },
     },
 
     {
       name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      use: { 
+        ...devices['Desktop Safari'],
+        ...(hasAuthState && { storageState: authStatePath }),
+      },
     },
 
     /* Test against mobile viewports. */
@@ -71,5 +87,7 @@ export default defineConfig({
     url: 'http://localhost:3000',
     reuseExistingServer: true,
     timeout: 120 * 1000,
+    /* Give server more time to start */
+    startupTimeout: 120 * 1000,
   },
 })
