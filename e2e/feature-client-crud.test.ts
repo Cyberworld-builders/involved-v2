@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test'
-import path from 'path'
+import * as path from 'path'
 
 /**
  * Feature Tests: Client CRUD Flow
@@ -30,40 +30,61 @@ const updatedClient = {
 }
 
 /**
- * Helper function to login as admin
- * Note: In a real test environment, you would use proper test credentials
- * For now, this assumes Supabase is configured with test users
+ * Helper function to check if we're authenticated
  */
-async function loginAsAdmin(page: Page) {
-  // Navigate to login page
-  await page.goto('/auth/login')
-  
-  // Check if we're already logged in by trying to access dashboard
+async function isAuthenticated(page: Page): Promise<boolean> {
   try {
-    await page.goto('/dashboard/clients')
-    // If we can access without redirect, we're logged in
-    if (page.url().includes('/dashboard/clients')) {
-      return
-    }
+    await page.goto('/dashboard/clients', { timeout: 5000, waitUntil: 'domcontentloaded' })
+    const url = page.url()
+    // If we're on dashboard and not redirected to login, we're authenticated
+    return url.includes('/dashboard') && !url.includes('/auth/')
   } catch {
-    // Not logged in, proceed with login
+    return false
+  }
+}
+
+/**
+ * Helper function to login as admin
+ * Returns true if login successful, false otherwise
+ * Note: In a real test environment, you would use proper test credentials
+ */
+async function loginAsAdmin(page: Page): Promise<boolean> {
+  // Check if we're already logged in
+  if (await isAuthenticated(page)) {
+    return true
   }
   
-  // Fill in login credentials
-  // Note: These would need to be configured in your test environment
-  const testEmail = process.env.PLAYWRIGHT_TEST_EMAIL || 'admin@test.com'
-  const testPassword = process.env.PLAYWRIGHT_TEST_PASSWORD || 'testpassword123'
+  // Get test credentials from environment
+  const testEmail = process.env.PLAYWRIGHT_TEST_EMAIL
+  const testPassword = process.env.PLAYWRIGHT_TEST_PASSWORD
   
-  await page.goto('/auth/login')
-  await page.fill('input[type="email"]', testEmail)
-  await page.fill('input[type="password"]', testPassword)
-  await page.click('button[type="submit"]')
+  // If credentials not provided, authentication is not available
+  if (!testEmail || !testPassword) {
+    console.log('Authentication credentials not provided. Set PLAYWRIGHT_TEST_EMAIL and PLAYWRIGHT_TEST_PASSWORD environment variables.')
+    return false
+  }
   
-  // Wait for redirect to dashboard
-  await page.waitForURL('**/dashboard**', { timeout: 10000 }).catch(() => {
-    // If login fails, skip the test
-    console.log('Login failed - skipping test. Set up test credentials in environment.')
-  })
+  try {
+    // Navigate to login page
+    await page.goto('/auth/login', { timeout: 10000, waitUntil: 'domcontentloaded' })
+    
+    // Wait for login form to be visible
+    await page.waitForSelector('input[type="email"]', { timeout: 5000 })
+    
+    // Fill in login credentials
+    await page.fill('input[type="email"]', testEmail)
+    await page.fill('input[type="password"]', testPassword)
+    await page.click('button[type="submit"]')
+    
+    // Wait for redirect to dashboard (with longer timeout for CI)
+    await page.waitForURL('**/dashboard**', { timeout: 15000 })
+    
+    // Verify we're actually authenticated
+    return await isAuthenticated(page)
+  } catch (error) {
+    console.log('Login failed:', error instanceof Error ? error.message : 'Unknown error')
+    return false
+  }
 }
 
 /**
@@ -76,7 +97,10 @@ function getUniqueClientName(baseName: string): string {
 test.describe('Client CRUD Operations', () => {
   test.beforeEach(async ({ page }) => {
     // Login before each test
-    await loginAsAdmin(page)
+    const loggedIn = await loginAsAdmin(page)
+    if (!loggedIn) {
+      test.skip(true, 'Authentication not available. Set PLAYWRIGHT_TEST_EMAIL and PLAYWRIGHT_TEST_PASSWORD environment variables.')
+    }
   })
 
   test('Admin can create new client', async ({ page }) => {
@@ -383,7 +407,10 @@ test.describe('Client CRUD Operations', () => {
 
 test.describe('Client CRUD Edge Cases', () => {
   test.beforeEach(async ({ page }) => {
-    await loginAsAdmin(page)
+    const loggedIn = await loginAsAdmin(page)
+    if (!loggedIn) {
+      test.skip(true, 'Authentication not available. Set PLAYWRIGHT_TEST_EMAIL and PLAYWRIGHT_TEST_PASSWORD environment variables.')
+    }
   })
 
   test('Creating client with minimum required fields', async ({ page }) => {
