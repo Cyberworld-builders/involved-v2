@@ -5,6 +5,9 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
+import { Database } from '@/types/database'
+
+type AssignmentRow = Database['public']['Tables']['assignments']['Row']
 
 interface ClientAssignmentsProps {
   clientId: string
@@ -102,10 +105,10 @@ export default function ClientAssignments({ clientId }: ClientAssignmentsProps) 
 
         // Load related data separately (more reliable than joins)
         const allUserIds = [...new Set([
-          ...assignmentsOnly.map((a: any) => a.user_id),
-          ...assignmentsOnly.filter((a: any) => a.target_id).map((a: any) => a.target_id)
+          ...assignmentsOnly.map((a: AssignmentRow) => a.user_id),
+          ...assignmentsOnly.filter((a: AssignmentRow) => a.target_id).map((a: AssignmentRow) => a.target_id)
         ])].filter(Boolean) // Remove any null/undefined values
-        const assessmentIds = [...new Set(assignmentsOnly.map((a: any) => a.assessment_id))].filter(Boolean)
+        const assessmentIds = [...new Set(assignmentsOnly.map((a: AssignmentRow) => a.assessment_id))].filter(Boolean)
 
         // Only fetch if we have IDs to query
         const [usersResult, assessmentsResult] = await Promise.all([
@@ -131,11 +134,14 @@ export default function ClientAssignments({ clientId }: ClientAssignmentsProps) 
         }
 
         // Combine the data
-        const assignmentsData = assignmentsOnly.map((assignment: any) => ({
+        type UserResult = { id: string; name: string; email: string; username: string }
+        type AssessmentResult = { id: string; title: string }
+        
+        const assignmentsData = assignmentsOnly.map((assignment: AssignmentRow) => ({
           ...assignment,
-          user: usersResult.data?.find((u: any) => u.id === assignment.user_id) || null,
-          assessment: assessmentsResult.data?.find((a: any) => a.id === assignment.assessment_id) || null,
-          target: usersResult.data?.find((u: any) => u.id === assignment.target_id) || null,
+          user: usersResult.data?.find((u: UserResult) => u.id === assignment.user_id) || null,
+          assessment: assessmentsResult.data?.find((a: AssessmentResult) => a.id === assignment.assessment_id) || null,
+          target: usersResult.data?.find((u: UserResult) => u.id === assignment.target_id) || null,
         }))
 
         setAssignments(assignmentsData)
@@ -148,7 +154,7 @@ export default function ClientAssignments({ clientId }: ClientAssignmentsProps) 
           errorMessage = error.message
         } else if (error && typeof error === 'object') {
           // Handle Supabase error objects
-          const supabaseError = error as any
+          const supabaseError = error as { message?: string; error?: string; code?: string }
           if (supabaseError.message) {
             errorMessage = supabaseError.message
           } else if (supabaseError.error) {

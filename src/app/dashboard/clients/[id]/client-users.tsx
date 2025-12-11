@@ -25,25 +25,27 @@ export default function ClientUsers({ clientId }: ClientUsersProps) {
   const [message, setMessage] = useState('')
   const [uploadedUsers, setUploadedUsers] = useState<UserData[]>([])
   const [errorDetails, setErrorDetails] = useState<Array<{user: string, error: string}>>([])
-  const [existingUsers, setExistingUsers] = useState<Array<{
+  type UserWithIndustry = {
     id: string
     name: string
     email: string
     username: string
-    industries?: { name: string } | null
+    industries: { name: string } | null
     last_login_at: string | null
     created_at: string
-  }>>([])
+  }
+  const [existingUsers, setExistingUsers] = useState<UserWithIndustry[]>([])
   const [isLoadingUsers, setIsLoadingUsers] = useState(true)
   const [showSearchModal, setShowSearchModal] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState<Array<{
+  type SearchResult = {
     id: string
     name: string
     email: string
     username: string
-    industries?: { name: string } | null
-  }>>([])
+    industries: { name: string } | null
+  }
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -67,7 +69,7 @@ export default function ClientUsers({ clientId }: ClientUsersProps) {
           username,
           last_login_at,
           created_at,
-          industries!industry_id(name)
+          industries(name)
         `)
         .eq('client_id', clientId)
         .order('created_at', { ascending: false })
@@ -75,7 +77,20 @@ export default function ClientUsers({ clientId }: ClientUsersProps) {
       if (error) {
         console.error('Error loading users:', error)
       } else {
-        setExistingUsers(data || [])
+        // Transform data to handle industries as single object
+        const transformedData = (data || []).map((user: {
+          id: string
+          name: string
+          email: string
+          username: string
+          last_login_at: string | null
+          created_at: string
+          industries: Array<{ name: string }> | { name: string } | null
+        }) => ({
+          ...user,
+          industries: Array.isArray(user.industries) ? user.industries[0] || null : user.industries
+        })) as UserWithIndustry[]
+        setExistingUsers(transformedData)
       }
     } catch (error) {
       console.error('Error loading users:', error)
@@ -203,7 +218,18 @@ export default function ClientUsers({ clientId }: ClientUsersProps) {
         console.error('Error searching users:', error)
         setSearchResults([])
       } else {
-        setSearchResults(data || [])
+        // Transform data to handle industries as single object
+        const transformedSearchData = (data || []).map((user: {
+          id: string
+          name: string
+          email: string
+          username: string
+          industries: Array<{ name: string }> | { name: string } | null
+        }) => ({
+          ...user,
+          industries: Array.isArray(user.industries) ? user.industries[0] || null : user.industries
+        })) as SearchResult[]
+        setSearchResults(transformedSearchData)
       }
     } catch (error) {
       console.error('Error searching users:', error)
@@ -287,10 +313,18 @@ export default function ClientUsers({ clientId }: ClientUsersProps) {
       }
 
       if (data.failed > 0) {
-        const failedUsers = data.results.filter((r: any) => !r.success)
+        interface BulkUploadResult {
+          success: boolean
+          user?: string
+          email?: string
+          error?: string
+          message?: string
+        }
+        
+        const failedUsers = data.results.filter((r: BulkUploadResult) => !r.success)
         
         // Extract error details for display
-        const errors = failedUsers.map((failed: any) => ({
+        const errors = failedUsers.map((failed: BulkUploadResult) => ({
           user: failed.user || failed.email || 'Unknown',
           error: failed.error || failed.message || 'Unknown error'
         }))
@@ -308,7 +342,7 @@ export default function ClientUsers({ clientId }: ClientUsersProps) {
         console.error(`Total failed: ${data.failed}`)
         console.error('Failed users and errors:')
         
-        failedUsers.slice(0, 20).forEach((failed: any, index: number) => {
+        failedUsers.slice(0, 20).forEach((failed: BulkUploadResult, index: number) => {
           const email = failed.user || failed.email || `User ${index + 1}`
           const error = failed.error || failed.message || 'Unknown error'
           console.error(`${index + 1}. ${email}: ${error}`)
@@ -675,7 +709,7 @@ export default function ClientUsers({ clientId }: ClientUsersProps) {
 
               {searchQuery && searchResults.length === 0 && !isSearching && (
                 <div className="text-center py-8 text-gray-500">
-                  <p>No unassociated users found matching "{searchQuery}"</p>
+                  <p>No unassociated users found matching &quot;{searchQuery}&quot;</p>
                 </div>
               )}
 

@@ -5,8 +5,9 @@ import { generateUsernameFromName, generateUniqueUsername } from '@/lib/utils/us
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
     const supabase = await createClient()
     
@@ -120,7 +121,7 @@ export async function POST(
             username: finalUsername,
             name: userData.Name,
             email: userData.Email,
-            client_id: params.id,
+            client_id: id,
             industry_id: industry?.id || null,
             completed_profile: false,
           })
@@ -174,7 +175,7 @@ export async function POST(
         user: r.user,
         success: r.success,
         error: r.error || null,
-        profileId: r.profileId || null
+        profileId: 'profileId' in r ? r.profileId || null : null
       }))
     })
   } catch (error) {
