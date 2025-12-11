@@ -15,6 +15,13 @@ const authStatePath = path.join(__dirname, 'e2e', '.auth', 'user.json')
 const hasAuthState = fs.existsSync(authStatePath)
 
 /**
+ * When auth tests are skipped, we can run Chromium-only to speed up CI.
+ * (Most suites are either skipped or primarily validated in one engine.)
+ */
+const skipAuthTests =
+  process.env.SKIP_AUTH_TESTS === 'true' || process.env.SKIP_AUTH_TESTS === '1'
+
+/**
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
@@ -47,28 +54,32 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { 
+      use: {
         ...devices['Desktop Chrome'],
         /* Load auth state if it exists (created by global setup) */
         ...(hasAuthState && { storageState: authStatePath }),
       },
     },
 
-    {
-      name: 'firefox',
-      use: { 
-        ...devices['Desktop Firefox'],
-        ...(hasAuthState && { storageState: authStatePath }),
-      },
-    },
+    ...(skipAuthTests
+      ? []
+      : [
+          {
+            name: 'firefox',
+            use: {
+              ...devices['Desktop Firefox'],
+              ...(hasAuthState && { storageState: authStatePath }),
+            },
+          },
 
-    {
-      name: 'webkit',
-      use: { 
-        ...devices['Desktop Safari'],
-        ...(hasAuthState && { storageState: authStatePath }),
-      },
-    },
+          {
+            name: 'webkit',
+            use: {
+              ...devices['Desktop Safari'],
+              ...(hasAuthState && { storageState: authStatePath }),
+            },
+          },
+        ]),
 
     /* Test against mobile viewports. */
     // {
