@@ -29,7 +29,7 @@ async function globalSetup(config: FullConfig) {
     const result = await createTestUser(
       testEmail,
       testPassword,
-      'admin',
+      undefined, // role parameter (not used - profiles table doesn't have a role field)
       'E2E',
       'Test Admin'
     )

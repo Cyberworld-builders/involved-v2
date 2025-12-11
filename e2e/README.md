@@ -87,8 +87,10 @@ PLAYWRIGHT_TEST_BASE_URL=http://localhost:3000
 
 If you provide `SUPABASE_SERVICE_ROLE_KEY`, the global setup will:
 - Automatically create the test user if it doesn't exist
-- Create the user's profile with admin role
+- Create the user's profile (name: "E2E Test Admin")
 - Update the password if the user already exists
+
+Note: The `profiles` table does not have a `role` field. User roles/permissions are managed through application logic or group memberships if needed.
 
 This is ideal for CI/CD environments where you want fully automated test setup.
 
@@ -96,7 +98,7 @@ This is ideal for CI/CD environments where you want fully automated test setup.
 
 If you prefer to create the test user manually:
 
-1. **Via Supabase Dashboard**: Create a user with admin role
+1. **Via Supabase Dashboard**: Create a user with email `e2e-test-admin@involved-talent.test` and password `TestPassword123!`
 2. **Via SQL** (see SQL example below)
 3. **Via Application**: Sign up through the app and assign admin role
 

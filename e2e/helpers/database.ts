@@ -43,9 +43,12 @@ export function getAdminClient() {
  * Creates both the auth user and the corresponding profile record.
  * This is a common pattern in Supabase applications.
  * 
+ * Note: The profiles table does not have a role field. Roles are managed
+ * through group_members if needed, or through application-level logic.
+ * 
  * @param email - User email
  * @param password - User password
- * @param role - User role (optional, not stored in profiles table currently)
+ * @param role - User role (optional, currently unused - profiles table has no role field)
  * @param firstName - First name (default: 'Test')
  * @param lastName - Last name (default: 'User')
  * @returns Created user data or null if failed
@@ -53,7 +56,7 @@ export function getAdminClient() {
 export async function createTestUser(
   email: string,
   password: string,
-  role?: string, // Not currently used, reserved for future role implementation
+  role?: string, // Currently unused - profiles table has no role field
   firstName: string = 'Test',
   lastName: string = 'User'
 ) {
