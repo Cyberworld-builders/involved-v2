@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, Page } from '@playwright/test'
 import path from 'path'
 
 /**
@@ -22,7 +22,7 @@ const INVALID_CSV = path.join(__dirname, 'fixtures', 'invalid-users.csv')
 const INCOMPLETE_CSV = path.join(__dirname, 'fixtures', 'incomplete-row-users.csv')
 
 // Helper function to check if user is authenticated
-async function isAuthenticated(page: any): Promise<boolean> {
+async function isAuthenticated(page: Page): Promise<boolean> {
   const url = page.url()
   return !url.includes('/auth/login')
 }
@@ -361,11 +361,13 @@ test.describe('Bulk User Upload Flow', () => {
     const createButton = page.locator('button:has-text("Create")')
     await createButton.click()
     
-    // Wait for potential redirect or error message
-    await page.waitForTimeout(4000)
+    // Wait for either redirect or error message to appear
+    await Promise.race([
+      page.waitForURL(/\/dashboard\/users(?:\/|$)/, { timeout: 5000 }).catch(() => {}),
+      page.locator('text=/error|not configured/i').waitFor({ state: 'visible', timeout: 5000 }).catch(() => {})
+    ])
     
-    // If successful, should redirect to users page
-    // If not configured, will show error message
+    // Check the result
     const url = page.url()
     const hasError = await page.locator('text=/error|not configured/i').isVisible()
     
