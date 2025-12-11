@@ -13,6 +13,17 @@ import * as navigation from 'next/navigation'
  * - Responsive behavior
  */
 
+// Expected navigation items - update this if navigation items change
+const EXPECTED_NAVIGATION_ITEMS = [
+  'Home',
+  'Assessments',
+  'Clients',
+  'Users',
+  'Industries',
+  'Benchmarks',
+  'Feedback',
+]
+
 describe('Sidebar Component', () => {
   beforeEach(() => {
     // Reset mocks before each test
@@ -45,17 +56,7 @@ describe('Sidebar Component', () => {
     it('should render all navigation links', () => {
       render(<Sidebar />)
       
-      const expectedLinks = [
-        'Home',
-        'Assessments',
-        'Clients',
-        'Users',
-        'Industries',
-        'Benchmarks',
-        'Feedback',
-      ]
-
-      expectedLinks.forEach((linkText) => {
+      EXPECTED_NAVIGATION_ITEMS.forEach((linkText) => {
         expect(screen.getByText(linkText)).toBeInTheDocument()
       })
     })
@@ -226,7 +227,8 @@ describe('Sidebar Component', () => {
     })
 
     it('should render when pathname is null', () => {
-      vi.mocked(navigation.usePathname).mockReturnValue(null as unknown as string)
+      // @ts-expect-error - Testing edge case with null pathname
+      vi.mocked(navigation.usePathname).mockReturnValue(null)
       
       const { container } = render(<Sidebar />)
       expect(container.firstChild).toBeInTheDocument()
@@ -258,8 +260,8 @@ describe('Sidebar Component', () => {
       const nav = screen.getByRole('navigation')
       const navLinks = Array.from(nav.querySelectorAll('a'))
       
-      // Should have 7 navigation links
-      expect(navLinks).toHaveLength(7)
+      // Should have expected number of navigation links
+      expect(navLinks).toHaveLength(EXPECTED_NAVIGATION_ITEMS.length)
       
       navLinks.forEach((link) => {
         expect(link).not.toHaveClass('bg-indigo-600')
@@ -273,8 +275,8 @@ describe('Sidebar Component', () => {
       render(<Sidebar />)
       const nav = screen.getByRole('navigation')
       const links = nav.querySelectorAll('a')
-      // 7 navigation items inside the nav element (logo is outside in a separate div)
-      expect(links.length).toBe(7)
+      // Navigation items inside the nav element (logo is outside in a separate div)
+      expect(links.length).toBe(EXPECTED_NAVIGATION_ITEMS.length)
     })
 
     it('should render navigation items in correct order', () => {
@@ -282,20 +284,10 @@ describe('Sidebar Component', () => {
       const nav = screen.getByRole('navigation')
       const links = Array.from(nav.querySelectorAll('a'))
       
-      const expectedOrder = [
-        'Home',
-        'Assessments',
-        'Clients',
-        'Users',
-        'Industries',
-        'Benchmarks',
-        'Feedback',
-      ]
-      
       // Verify we have the expected number of links
-      expect(links).toHaveLength(expectedOrder.length)
+      expect(links).toHaveLength(EXPECTED_NAVIGATION_ITEMS.length)
       
-      expectedOrder.forEach((text, index) => {
+      EXPECTED_NAVIGATION_ITEMS.forEach((text, index) => {
         expect(links[index]).toHaveTextContent(text)
       })
     })
