@@ -260,9 +260,9 @@ describe('isTokenExpired', () => {
     
     // Created exactly 24 hours ago
     const createdAt = new Date('2024-01-01T12:00:00Z')
-    // After exactly 86400000ms (24 hours), token is expired
+    // At exactly 86400000ms (24 hours), elapsedMs equals expirationMs
+    // The function checks if elapsedMs > expirationMs, so it's NOT expired at the exact boundary
     const result = isTokenExpired(createdAt)
-    // At the exact boundary, elapsedMs equals expirationMs, so it's not expired
     expect(result).toBe(false)
     
     // But 1ms later it is expired

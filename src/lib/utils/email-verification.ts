@@ -8,10 +8,15 @@
 /**
  * Generate a secure verification token
  * - Generates a random alphanumeric token
+ * - Uses crypto.getRandomValues() for cryptographically secure randomness
+ * - Falls back to Math.random() only in environments without crypto (e.g., older browsers or test environments)
  * - Default length is 32 characters
  * 
  * @param length - The length of the token (default: 32)
  * @returns Generated verification token
+ * 
+ * @security The fallback to Math.random() is less secure and should only be used in non-production
+ * environments. Modern browsers and Node.js provide crypto.getRandomValues().
  */
 export function generateVerificationToken(length: number = 32): string {
   if (length <= 0 || !Number.isInteger(length)) {
@@ -21,7 +26,7 @@ export function generateVerificationToken(length: number = 32): string {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
   let token = ''
   
-  // Use crypto.getRandomValues for secure random generation if available
+  // Use crypto.getRandomValues for cryptographically secure random generation
   if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
     const randomValues = new Uint32Array(length)
     crypto.getRandomValues(randomValues)
@@ -30,7 +35,8 @@ export function generateVerificationToken(length: number = 32): string {
       token += characters.charAt(randomValues[i] % characters.length)
     }
   } else {
-    // Fallback to Math.random (less secure, mainly for testing)
+    // Fallback to Math.random (less secure, mainly for testing/legacy environments)
+    // WARNING: This should not be used in production for security-critical tokens
     for (let i = 0; i < length; i++) {
       token += characters.charAt(Math.floor(Math.random() * characters.length))
     }
