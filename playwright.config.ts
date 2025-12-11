@@ -1,4 +1,6 @@
 import { defineConfig, devices } from '@playwright/test'
+import * as fs from 'fs'
+import * as path from 'path'
 
 /**
  * Read environment variables from file.
@@ -7,10 +9,18 @@ import { defineConfig, devices } from '@playwright/test'
 // require('dotenv').config();
 
 /**
+ * Check if auth state file exists
+ */
+const authStatePath = path.join(__dirname, 'e2e', '.auth', 'user.json')
+const hasAuthState = fs.existsSync(authStatePath)
+
+/**
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
   testDir: './e2e',
+  /* Global setup runs before all tests */
+  globalSetup: require.resolve('./e2e/global-setup.ts'),
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -37,17 +47,27 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: { 
+        ...devices['Desktop Chrome'],
+        /* Load auth state if it exists (created by global setup) */
+        ...(hasAuthState && { storageState: authStatePath }),
+      },
     },
 
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      use: { 
+        ...devices['Desktop Firefox'],
+        ...(hasAuthState && { storageState: authStatePath }),
+      },
     },
 
     {
       name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      use: { 
+        ...devices['Desktop Safari'],
+        ...(hasAuthState && { storageState: authStatePath }),
+      },
     },
 
     /* Test against mobile viewports. */
@@ -65,7 +85,7 @@ export default defineConfig({
   webServer: {
     command: 'npm run dev',
     url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
     timeout: 120 * 1000,
   },
 })
