@@ -265,12 +265,13 @@ describe('validateNumber', () => {
 
   it('should reject non-numeric strings', () => {
     expect(validateNumber('abc')).toBe(false)
+    expect(validateNumber('12abc')).toBe(false)
     expect(validateNumber('abc12')).toBe(false)
   })
 
-  it('should handle partial numeric strings', () => {
-    // parseFloat will parse the numeric part
-    expect(validateNumber('12abc')).toBe(true) // parseFloat('12abc') = 12
+  it('should handle strings with trailing/leading non-numerics', () => {
+    expect(validateNumber(' 12 ')).toBe(true) // spaces are trimmed
+    expect(validateNumber('12.5')).toBe(true)
   })
 
   it('should reject NaN', () => {
@@ -363,6 +364,13 @@ Bob Johnson,bob@example.com,bobjohnson,Finance`
     const result = parseUserSpreadsheet(csv)
     expect(result.errors).toEqual([])
     expect(result.data[0].client_name).toBeUndefined()
+  })
+
+  it('should use provided username without modification', () => {
+    const csv = 'Name,Email,Username,Industry\nJohn Doe,john@example.com,Custom-User_123,Technology'
+    const result = parseUserSpreadsheet(csv)
+    expect(result.errors).toEqual([])
+    expect(result.data[0].username).toBe('Custom-User_123')
   })
 
   it('should skip empty rows', () => {

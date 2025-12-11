@@ -121,14 +121,20 @@ export function validateEmail(email: string): boolean {
 
 /**
  * Validate that a value is a valid number
+ * Rejects strings with non-numeric trailing characters
  */
 export function validateNumber(value: string | number): boolean {
   if (typeof value === 'number') {
     return !isNaN(value) && isFinite(value)
   }
   if (typeof value === 'string') {
-    const num = parseFloat(value.trim())
-    return !isNaN(num) && isFinite(num)
+    const trimmed = value.trim()
+    if (trimmed === '') return false
+    const num = parseFloat(trimmed)
+    if (isNaN(num) || !isFinite(num)) return false
+    // Allow if Number() succeeds and doesn't change the value significantly
+    const numFromNumber = Number(trimmed)
+    return !isNaN(numFromNumber) && isFinite(numFromNumber)
   }
   return false
 }
@@ -198,11 +204,15 @@ export function parseUserSpreadsheet(csvContent: string): ParseResult<UserRow> {
       continue
     }
     
-    // Generate username if not provided
-    const finalUsername = username || name
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, '')
-      .substring(0, 20)
+    // Use provided username or generate from name
+    let finalUsername = username
+    if (!finalUsername) {
+      // Only apply transformations if generating from name
+      finalUsername = name
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '')
+        .substring(0, 20)
+    }
     
     data.push({
       name,
