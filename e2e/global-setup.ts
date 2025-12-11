@@ -121,7 +121,7 @@ async function globalSetup(config: FullConfig) {
         }
         
         // Also check for any error text in the page
-        const pageText = await page.textContent('body').catch(() => '')
+        const pageText = (await page.textContent('body').catch(() => null)) || ''
         if (pageText.includes('Invalid login credentials') || pageText.includes('Invalid email or password')) {
           throw new Error('Login failed: Invalid email or password. Check that test user exists in Supabase.')
         }
