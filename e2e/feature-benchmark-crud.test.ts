@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { shouldSkipAuthTests } from './helpers/auth'
 
 /**
  * E2E Tests for Benchmark CRUD Flow
@@ -26,6 +27,13 @@ async function isNotVisible(locator: any): Promise<boolean> {
 }
 
 test.describe('Benchmark CRUD Flow', () => {
+  test.beforeEach(async () => {
+    // Skip all tests if SKIP_AUTH_TESTS is set
+    if (shouldSkipAuthTests()) {
+      test.skip(true, 'Auth tests are disabled (SKIP_AUTH_TESTS=true)')
+      return
+    }
+  })
   
   test.beforeEach(async ({ page }) => {
     // Navigate to benchmarks page directly
