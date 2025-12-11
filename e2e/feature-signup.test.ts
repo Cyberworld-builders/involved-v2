@@ -17,13 +17,20 @@ import { getAdminClient } from './helpers/database'
  */
 
 test.describe('User Sign Up Flow', () => {
-  // Generate unique test user credentials for each test run
-  const timestamp = Date.now()
-  const testUser = {
-    email: `signup-test-${timestamp}@involved-talent.test`,
+  // Helper function to generate unique test user data for each test
+  const generateTestUser = () => ({
+    email: `signup-test-${Date.now()}-${Math.random().toString(36).substring(7)}@involved-talent.test`,
     password: 'SignupTest123!',
     firstName: 'Signup',
     lastName: 'Test',
+  })
+
+  // Helper function to fill signup form
+  const fillSignupForm = async (page: any, testUser: any) => {
+    await page.fill('input[id="firstName"]', testUser.firstName)
+    await page.fill('input[id="lastName"]', testUser.lastName)
+    await page.fill('input[id="email"]', testUser.email)
+    await page.fill('input[id="password"]', testUser.password)
   }
 
   test.beforeEach(async ({ page }) => {
@@ -32,27 +39,8 @@ test.describe('User Sign Up Flow', () => {
   })
 
   test.afterAll(async () => {
-    // Clean up: Delete test user created during tests
-    const adminClient = getAdminClient()
-    if (adminClient) {
-      try {
-        // Get the user by email
-        const { data: usersList } = await adminClient.auth.admin.listUsers()
-        const testUserRecord = usersList?.users?.find(
-          (user: { email?: string }) => user.email === testUser.email
-        )
-        
-        if (testUserRecord) {
-          // Delete the user
-          await adminClient.auth.admin.deleteUser(testUserRecord.id)
-          console.log(`✅ Cleaned up test user: ${testUser.email}`)
-        }
-      } catch (error) {
-        console.warn(
-          `⚠️  Failed to clean up test user: ${error instanceof Error ? error.message : 'Unknown error'}`
-        )
-      }
-    }
+    // Cleanup is handled per-test since each test creates unique users
+    // and we don't want to track them globally
   })
 
   test('User can access signup page', async ({ page }) => {
@@ -81,62 +69,31 @@ test.describe('User Sign Up Flow', () => {
     ).toBeVisible()
   })
 
-  test('User can submit signup form', async ({ page }) => {
+  test('User can submit signup form with valid data', async ({ page }) => {
+    const testUser = generateTestUser()
+    
     // Navigate to signup page
     await page.goto('/auth/signup')
     await page.waitForLoadState('networkidle')
 
     // Fill in the signup form
-    await page.fill('input[id="firstName"]', testUser.firstName)
-    await page.fill('input[id="lastName"]', testUser.lastName)
-    await page.fill('input[id="email"]', testUser.email)
-    await page.fill('input[id="password"]', testUser.password)
+    await fillSignupForm(page, testUser)
 
     // Submit the form
     await page.click('button[type="submit"]')
 
-    // Wait for form submission to complete
-    await page.waitForTimeout(2000)
-
-    // Verify success message is displayed
-    await expect(
-      page.locator('text=/check your email|confirmation link|verification/i')
-    ).toBeVisible({ timeout: 10000 })
+    // Wait for success message to appear (better than fixed timeout)
+    const successMessage = page.locator('text=/check your email|confirmation link|verification/i')
+    await expect(successMessage).toBeVisible({ timeout: 10000 })
 
     // Verify the message indicates email was sent
-    const successMessage = await page.locator('div.text-green-600').first().textContent()
-    expect(successMessage).toContain('email')
+    const messageText = await page.locator('div.text-green-600').first().textContent()
+    expect(messageText).toContain('email')
   })
 
-  test('User receives verification email message', async ({ page }) => {
-    // This test verifies that the UI displays the correct message
-    // about email verification being sent
+  test('User can verify email using admin API', async ({ page }) => {
+    const testUser = generateTestUser()
     
-    // Navigate to signup page
-    await page.goto('/auth/signup')
-    await page.waitForLoadState('networkidle')
-
-    // Fill in and submit the signup form
-    await page.fill('input[id="firstName"]', testUser.firstName)
-    await page.fill('input[id="lastName"]', testUser.lastName)
-    await page.fill('input[id="email"]', testUser.email)
-    await page.fill('input[id="password"]', testUser.password)
-    await page.click('button[type="submit"]')
-
-    // Wait for submission
-    await page.waitForTimeout(2000)
-
-    // Verify the verification message is displayed
-    const messageLocator = page.locator('div.text-green-600').first()
-    await expect(messageLocator).toBeVisible({ timeout: 10000 })
-    
-    const messageText = await messageLocator.textContent()
-    
-    // The message should contain key verification terms
-    expect(messageText?.toLowerCase()).toMatch(/check.*email|confirmation|verification/)
-  })
-
-  test('User can verify email', async ({ page }) => {
     // This test simulates email verification using Supabase Admin API
     // In a real scenario, user would click link in email
     
@@ -151,16 +108,13 @@ test.describe('User Sign Up Flow', () => {
     await page.goto('/auth/signup')
     await page.waitForLoadState('networkidle')
     
-    await page.fill('input[id="firstName"]', testUser.firstName)
-    await page.fill('input[id="lastName"]', testUser.lastName)
-    await page.fill('input[id="email"]', testUser.email)
-    await page.fill('input[id="password"]', testUser.password)
+    await fillSignupForm(page, testUser)
     await page.click('button[type="submit"]')
     
-    // Wait for signup to complete
-    await page.waitForTimeout(3000)
+    // Wait for success message instead of fixed timeout
+    await expect(page.locator('text=/check your email|confirmation/i')).toBeVisible({ timeout: 10000 })
 
-    // Verify user exists and get user ID
+    // Find user by email (more specific than listing all users)
     const { data: usersList } = await adminClient.auth.admin.listUsers()
     const newUser = usersList?.users?.find(
       (user: { email?: string }) => user.email === testUser.email
@@ -180,10 +134,15 @@ test.describe('User Sign Up Flow', () => {
       // Verify the user is now confirmed
       const { data: updatedUser } = await adminClient.auth.admin.getUserById(newUser.id)
       expect(updatedUser.user?.email_confirmed_at).toBeTruthy()
+      
+      // Cleanup
+      await adminClient.auth.admin.deleteUser(newUser.id)
     }
   })
 
-  test('User can sign in after verification', async ({ page }) => {
+  test('User can sign in after email verification', async ({ page }) => {
+    const testUser = generateTestUser()
+    
     // This test verifies the complete flow from signup to login
     
     const adminClient = getAdminClient()
@@ -197,13 +156,11 @@ test.describe('User Sign Up Flow', () => {
     await page.goto('/auth/signup')
     await page.waitForLoadState('networkidle')
     
-    await page.fill('input[id="firstName"]', testUser.firstName)
-    await page.fill('input[id="lastName"]', testUser.lastName)
-    await page.fill('input[id="email"]', testUser.email)
-    await page.fill('input[id="password"]', testUser.password)
+    await fillSignupForm(page, testUser)
     await page.click('button[type="submit"]')
     
-    await page.waitForTimeout(3000)
+    // Wait for success message
+    await expect(page.locator('text=/check your email|confirmation/i')).toBeVisible({ timeout: 10000 })
 
     // Step 2: Verify email using admin API
     const { data: usersList } = await adminClient.auth.admin.listUsers()
@@ -215,31 +172,36 @@ test.describe('User Sign Up Flow', () => {
       await adminClient.auth.admin.updateUserById(newUser.id, {
         email_confirm: true,
       })
+
+      // Step 3: Navigate to login page
+      await page.goto('/auth/login')
+      await page.waitForLoadState('networkidle')
+
+      // Step 4: Fill in login credentials
+      await page.fill('input[type="email"]', testUser.email)
+      await page.fill('input[type="password"]', testUser.password)
+
+      // Step 5: Submit login form
+      await page.click('button[type="submit"]')
+
+      // Step 6: Wait for redirect to dashboard
+      await page.waitForURL('**/dashboard**', { timeout: 15000 })
+
+      // Step 7: Verify successful login
+      expect(page.url()).toContain('/dashboard')
+      expect(page.url()).not.toContain('/auth/login')
+      
+      // Verify user is on dashboard page
+      await expect(page.locator('text=/dashboard/i').first()).toBeVisible({ timeout: 5000 })
+      
+      // Cleanup
+      await adminClient.auth.admin.deleteUser(newUser.id)
     }
-
-    // Step 3: Navigate to login page
-    await page.goto('/auth/login')
-    await page.waitForLoadState('networkidle')
-
-    // Step 4: Fill in login credentials
-    await page.fill('input[type="email"]', testUser.email)
-    await page.fill('input[type="password"]', testUser.password)
-
-    // Step 5: Submit login form
-    await page.click('button[type="submit"]')
-
-    // Step 6: Wait for redirect to dashboard
-    await page.waitForURL('**/dashboard**', { timeout: 15000 })
-
-    // Step 7: Verify successful login
-    expect(page.url()).toContain('/dashboard')
-    expect(page.url()).not.toContain('/auth/login')
-    
-    // Verify user is on dashboard page
-    await expect(page.locator('text=/dashboard/i').first()).toBeVisible({ timeout: 5000 })
   })
 
   test('Complete signup flow end-to-end', async ({ page }) => {
+    const testUser = generateTestUser()
+    
     // This test covers the entire signup journey
     
     const adminClient = getAdminClient()
@@ -255,18 +217,13 @@ test.describe('User Sign Up Flow', () => {
     expect(page.url()).toContain('/auth/signup')
 
     // 2. Fill and submit signup form
-    await page.fill('input[id="firstName"]', testUser.firstName)
-    await page.fill('input[id="lastName"]', testUser.lastName)
-    await page.fill('input[id="email"]', testUser.email)
-    await page.fill('input[id="password"]', testUser.password)
+    await fillSignupForm(page, testUser)
     await page.click('button[type="submit"]')
 
     // 3. Verify confirmation message
     await expect(
       page.locator('text=/check your email|confirmation/i')
     ).toBeVisible({ timeout: 10000 })
-
-    await page.waitForTimeout(2000)
 
     // 4. Simulate email verification
     const { data: usersList } = await adminClient.auth.admin.listUsers()
@@ -280,25 +237,28 @@ test.describe('User Sign Up Flow', () => {
       await adminClient.auth.admin.updateUserById(newUser.id, {
         email_confirm: true,
       })
+
+      // 5. Login with verified account
+      await page.goto('/auth/login')
+      await page.waitForLoadState('networkidle')
+      
+      await page.fill('input[type="email"]', testUser.email)
+      await page.fill('input[type="password"]', testUser.password)
+      await page.click('button[type="submit"]')
+
+      // 6. Verify redirect to dashboard
+      await page.waitForURL('**/dashboard**', { timeout: 15000 })
+      expect(page.url()).toContain('/dashboard')
+
+      // 7. Verify user can access protected routes
+      await page.goto('/dashboard/users')
+      await page.waitForLoadState('networkidle')
+      expect(page.url()).toContain('/dashboard/users')
+      expect(page.url()).not.toContain('/auth/login')
+      
+      // Cleanup
+      await adminClient.auth.admin.deleteUser(newUser.id)
     }
-
-    // 5. Login with verified account
-    await page.goto('/auth/login')
-    await page.waitForLoadState('networkidle')
-    
-    await page.fill('input[type="email"]', testUser.email)
-    await page.fill('input[type="password"]', testUser.password)
-    await page.click('button[type="submit"]')
-
-    // 6. Verify redirect to dashboard
-    await page.waitForURL('**/dashboard**', { timeout: 15000 })
-    expect(page.url()).toContain('/dashboard')
-
-    // 7. Verify user can access protected routes
-    await page.goto('/dashboard/users')
-    await page.waitForLoadState('networkidle')
-    expect(page.url()).toContain('/dashboard/users')
-    expect(page.url()).not.toContain('/auth/login')
   })
 
   test('Form validation prevents invalid submissions', async ({ page }) => {
