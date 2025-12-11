@@ -1,5 +1,6 @@
 import { test, expect, Page } from '@playwright/test'
 import * as path from 'path'
+import { isAuthenticated } from './helpers/auth'
 
 /**
  * Feature Tests: Client CRUD Flow
@@ -29,19 +30,7 @@ const updatedClient = {
   accentColor: '#FF3357',
 }
 
-/**
- * Helper function to check if we're authenticated
- */
-async function isAuthenticated(page: Page): Promise<boolean> {
-  try {
-    await page.goto('/dashboard/clients', { timeout: 5000, waitUntil: 'domcontentloaded' })
-    const url = page.url()
-    // If we're on dashboard and not redirected to login, we're authenticated
-    return url.includes('/dashboard') && !url.includes('/auth/')
-  } catch {
-    return false
-  }
-}
+// isAuthenticated helper is now imported from helpers/auth
 
 /**
  * Helper function to login as admin

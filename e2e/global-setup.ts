@@ -1,5 +1,6 @@
 import { chromium, FullConfig } from '@playwright/test'
-import { createClient } from '@supabase/supabase-js'
+import { createTestUser } from './helpers/database'
+import { waitForAuthCookies, waitForAuthentication } from './helpers/auth'
 
 /**
  * Global setup for E2E tests
@@ -24,60 +25,30 @@ async function globalSetup(config: FullConfig) {
   
   // If we have a service key, we can create the user programmatically
   if (supabaseServiceKey && supabaseUrl) {
-    try {
-      const adminClient = createClient(supabaseUrl, supabaseServiceKey, {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      })
-      
-      // List users and check if test user exists
-      const { data: usersList } = await adminClient.auth.admin.listUsers()
-      const existingUser = usersList?.users?.find((user: { email?: string }) => user.email === testEmail)
-      
-      if (!existingUser) {
-        console.log(`Creating test user: ${testEmail}`)
-        // Create user via admin API
-        const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
-          email: testEmail,
-          password: testPassword,
-          email_confirm: true, // Auto-confirm email
-        })
-        
-        if (createError) {
-          console.warn(`Failed to create test user: ${createError.message}`)
-        } else {
-          console.log(`Test user created: ${newUser.user?.id}`)
-          
-          // Create profile for the user
-          if (newUser.user) {
-            const { error: profileError } = await adminClient
-              .from('profiles')
-              .upsert({
-                id: newUser.user.id,
-                email: testEmail,
-                role: 'admin',
-                first_name: 'E2E',
-                last_name: 'Test Admin',
-              })
-            
-            if (profileError) {
-              console.warn(`Failed to create profile: ${profileError.message}`)
-            }
-          }
-        }
+    console.log('Using Supabase Admin API for test user management...')
+    const result = await createTestUser(
+      testEmail,
+      testPassword,
+      'admin',
+      'E2E',
+      'Test Admin'
+    )
+    
+    if (result) {
+      if (result.created) {
+        console.log(`✅ Test user created: ${testEmail}`)
       } else {
-        console.log(`Test user already exists: ${existingUser.id}`)
-        // Update password in case it changed
-        await adminClient.auth.admin.updateUserById(existingUser.id, {
-          password: testPassword,
-        })
+        console.log(`ℹ️  Test user already exists: ${testEmail}`)
       }
-    } catch (error) {
-      console.warn('Could not create test user via admin API:', error instanceof Error ? error.message : 'Unknown error')
-      console.warn('Falling back to browser-based authentication...')
+    } else {
+      console.warn('⚠️  Could not create test user via Admin API')
+      console.warn('   Falling back to browser-based authentication...')
+      console.warn('   Make sure test user exists manually if authentication fails')
     }
+  } else {
+    console.log('ℹ️  SUPABASE_SERVICE_ROLE_KEY not provided')
+    console.log('   Test user must exist manually in Supabase')
+    console.log('   Set SUPABASE_SERVICE_ROLE_KEY to enable automatic user creation')
   }
   
   // Authenticate via browser and save state
@@ -89,6 +60,9 @@ async function globalSetup(config: FullConfig) {
     // Navigate to login page
     await page.goto(`${baseURL}/auth/login`, { waitUntil: 'networkidle' })
     
+    // Wait for login form to be visible
+    await page.waitForSelector('input[type="email"]', { timeout: 5000 })
+    
     // Fill in credentials
     await page.fill('input[type="email"]', testEmail)
     await page.fill('input[type="password"]', testPassword)
@@ -96,13 +70,22 @@ async function globalSetup(config: FullConfig) {
     // Submit form
     await page.click('button[type="submit"]')
     
-    // Wait for redirect to dashboard (indicates successful login)
-    await page.waitForURL('**/dashboard**', { timeout: 15000 })
+    // Wait for authentication to be established (URL redirect + cookies)
+    const authenticated = await waitForAuthentication(page, 15000)
     
-    // Save authentication state
+    if (!authenticated) {
+      throw new Error('Authentication verification failed - not redirected to dashboard')
+    }
+    
+    // Wait for auth cookies to ensure they're set (important for SSR)
+    await waitForAuthCookies(page, 5000)
+    
+    // Save authentication state (includes cookies and localStorage)
     await context.storageState({ path: 'e2e/.auth/user.json' })
     
     console.log('✅ Authentication state saved successfully')
+    console.log(`   User: ${testEmail}`)
+    console.log(`   Auth state: e2e/.auth/user.json`)
   } catch (error) {
     console.error('❌ Failed to authenticate:', error instanceof Error ? error.message : 'Unknown error')
     console.error('Tests requiring authentication will be skipped.')
