@@ -470,7 +470,7 @@ describe('User CRUD Operations', () => {
     })
 
     it('should handle error when inserting user', async () => {
-      const userData = { name: 'New User', email: 'new@test.com' }
+      const userData = { name: 'New User', email: 'new@test.com', username: 'newuser' }
       const mockError = { message: 'Duplicate email' }
       mockSupabase.single.mockResolvedValue({ data: null, error: mockError })
 

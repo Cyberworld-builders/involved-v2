@@ -154,7 +154,7 @@ export async function updateClient(
   updates: ClientUpdate
 ): Promise<QueryResult<ClientRow>> {
   try {
-    const updateData = {
+    const updateData: ClientUpdate = {
       ...updates,
       updated_at: new Date().toISOString(),
     }
@@ -223,22 +223,28 @@ export async function selectUsers(
         const operator = filter.operator || 'eq'
         switch (operator) {
           case 'eq':
-            query = query.eq(filter.column, filter.value)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            query = query.eq(filter.column, filter.value as any)
             break
           case 'neq':
-            query = query.neq(filter.column, filter.value)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            query = query.neq(filter.column, filter.value as any)
             break
           case 'gt':
-            query = query.gt(filter.column, filter.value)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            query = query.gt(filter.column, filter.value as any)
             break
           case 'gte':
-            query = query.gte(filter.column, filter.value)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            query = query.gte(filter.column, filter.value as any)
             break
           case 'lt':
-            query = query.lt(filter.column, filter.value)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            query = query.lt(filter.column, filter.value as any)
             break
           case 'lte':
-            query = query.lte(filter.column, filter.value)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            query = query.lte(filter.column, filter.value as any)
             break
           case 'like':
             query = query.like(filter.column, filter.value as string)
@@ -362,7 +368,7 @@ export async function updateUser(
   updates: ProfileUpdate
 ): Promise<QueryResult<ProfileRow>> {
   try {
-    const updateData = {
+    const updateData: ProfileUpdate = {
       ...updates,
       updated_at: new Date().toISOString(),
     }
@@ -431,22 +437,28 @@ export async function selectGroups(
         const operator = filter.operator || 'eq'
         switch (operator) {
           case 'eq':
-            query = query.eq(filter.column, filter.value)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            query = query.eq(filter.column, filter.value as any)
             break
           case 'neq':
-            query = query.neq(filter.column, filter.value)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            query = query.neq(filter.column, filter.value as any)
             break
           case 'gt':
-            query = query.gt(filter.column, filter.value)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            query = query.gt(filter.column, filter.value as any)
             break
           case 'gte':
-            query = query.gte(filter.column, filter.value)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            query = query.gte(filter.column, filter.value as any)
             break
           case 'lt':
-            query = query.lt(filter.column, filter.value)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            query = query.lt(filter.column, filter.value as any)
             break
           case 'lte':
-            query = query.lte(filter.column, filter.value)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            query = query.lte(filter.column, filter.value as any)
             break
           case 'like':
             query = query.like(filter.column, filter.value as string)
@@ -543,7 +555,7 @@ export async function updateGroup(
   updates: GroupUpdate
 ): Promise<QueryResult<GroupRow>> {
   try {
-    const updateData = {
+    const updateData: GroupUpdate = {
       ...updates,
       updated_at: new Date().toISOString(),
     }
@@ -689,7 +701,7 @@ export async function updateIndustry(
   updates: IndustryUpdate
 ): Promise<QueryResult<IndustryRow>> {
   try {
-    const updateData = {
+    const updateData: IndustryUpdate = {
       ...updates,
       updated_at: new Date().toISOString(),
     }
@@ -758,22 +770,28 @@ export async function selectBenchmarks(
         const operator = filter.operator || 'eq'
         switch (operator) {
           case 'eq':
-            query = query.eq(filter.column, filter.value)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            query = query.eq(filter.column, filter.value as any)
             break
           case 'neq':
-            query = query.neq(filter.column, filter.value)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            query = query.neq(filter.column, filter.value as any)
             break
           case 'gt':
-            query = query.gt(filter.column, filter.value)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            query = query.gt(filter.column, filter.value as any)
             break
           case 'gte':
-            query = query.gte(filter.column, filter.value)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            query = query.gte(filter.column, filter.value as any)
             break
           case 'lt':
-            query = query.lt(filter.column, filter.value)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            query = query.lt(filter.column, filter.value as any)
             break
           case 'lte':
-            query = query.lte(filter.column, filter.value)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            query = query.lte(filter.column, filter.value as any)
             break
           case 'like':
             query = query.like(filter.column, filter.value as string)
@@ -870,7 +888,7 @@ export async function updateBenchmark(
   updates: BenchmarkUpdate
 ): Promise<QueryResult<BenchmarkRow>> {
   try {
-    const updateData = {
+    const updateData: BenchmarkUpdate = {
       ...updates,
       updated_at: new Date().toISOString(),
     }
