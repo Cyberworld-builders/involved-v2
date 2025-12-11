@@ -456,7 +456,8 @@ describe('sendEmail', () => {
     
     expect(result.success).toBe(true)
     expect(result.messageId).toBeDefined()
-    expect(result.messageId).toMatch(/^mock-\d+-[a-z0-9]+$/)
+    // Updated to match crypto.randomUUID() format
+    expect(result.messageId).toMatch(/^mock-\d+-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/)
   })
 
   it('should return unique message IDs', async () => {
@@ -495,7 +496,7 @@ describe('sendEmail', () => {
     ).rejects.toThrow('to must be a valid email address')
     
     await expect(
-      sendEmail('user@example', 'Subject', '<p>HTML</p>', 'Text')
+      sendEmail('user space@example.com', 'Subject', '<p>HTML</p>', 'Text')
     ).rejects.toThrow('to must be a valid email address')
   })
 

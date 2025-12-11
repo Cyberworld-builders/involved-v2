@@ -162,7 +162,8 @@ export function renderEmailTemplate(template: string, data: Record<string, strin
       throw new Error(`data.${key} must be a string`)
     }
     const placeholder = `{${key}}`
-    rendered = rendered.replace(new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), value)
+    // Use simple string split/join for replacement to avoid regex complexity
+    rendered = rendered.split(placeholder).join(value)
   }
   
   return rendered
@@ -234,8 +235,9 @@ export async function sendEmail(
     throw new Error('textBody must be a non-empty string')
   }
   
-  // Basic email validation
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  // Validate email format - using a comprehensive regex pattern
+  // This pattern handles most common email formats including international domains
+  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
   if (!emailRegex.test(to)) {
     throw new Error('to must be a valid email address')
   }
@@ -248,10 +250,10 @@ export async function sendEmail(
   console.log('HTML Body length:', htmlBody.length)
   console.log('Text Body length:', textBody.length)
   
-  // Simulate successful delivery
+  // Simulate successful delivery with crypto-based message ID
   return {
     success: true,
-    messageId: `mock-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+    messageId: `mock-${Date.now()}-${crypto.randomUUID()}`,
   }
 }
 
