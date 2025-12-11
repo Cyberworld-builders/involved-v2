@@ -13,7 +13,7 @@ import { shouldSkipAuthTests, waitForAuthentication } from './helpers/auth'
  * Related: Cyberworld-builders/involved-v2#9
  */
 
-// Test credentials from environment or defaults
+// Test credentials from environment - defaults only for SKIP_AUTH_TESTS mode
 const TEST_EMAIL = process.env.PLAYWRIGHT_TEST_EMAIL || 'e2e-test-admin@involved-talent.test'
 const TEST_PASSWORD = process.env.PLAYWRIGHT_TEST_PASSWORD || 'TestPassword123!'
 
@@ -118,10 +118,7 @@ test.describe('User Sign In Flow', () => {
     // Submit the form
     await page.click('button[type="submit"]')
     
-    // Wait a moment for the error message to appear
-    await page.waitForTimeout(2000)
-    
-    // Verify error message is displayed
+    // Wait for error message to appear (more deterministic than timeout)
     const errorMessage = page.locator('div.text-red-600')
     await expect(errorMessage).toBeVisible({ timeout: 10000 })
     
@@ -143,8 +140,9 @@ test.describe('User Sign In Flow', () => {
     // Try to submit the form (should be prevented by HTML5 validation)
     await page.click('button[type="submit"]')
     
-    // Verify we're still on login page
-    await page.waitForTimeout(1000)
+    // Verify we're still on login page (HTML5 validation prevents submission)
+    // Wait for any potential navigation attempt
+    await page.waitForLoadState('domcontentloaded')
     expect(page.url()).toContain('/auth/login')
   })
   
@@ -159,8 +157,9 @@ test.describe('User Sign In Flow', () => {
     // Try to submit the form (should be prevented by HTML5 validation)
     await page.click('button[type="submit"]')
     
-    // Verify we're still on login page
-    await page.waitForTimeout(1000)
+    // Verify we're still on login page (HTML5 validation prevents submission)
+    // Wait for any potential navigation attempt
+    await page.waitForLoadState('domcontentloaded')
     expect(page.url()).toContain('/auth/login')
   })
   
