@@ -54,7 +54,14 @@ test.afterAll(() => {
   if (fs.existsSync(VALID_CSV_PATH)) fs.unlinkSync(VALID_CSV_PATH)
   if (fs.existsSync(INVALID_CSV_PATH)) fs.unlinkSync(INVALID_CSV_PATH)
   if (fs.existsSync(EMPTY_CSV_PATH)) fs.unlinkSync(EMPTY_CSV_PATH)
-  if (fs.existsSync(TEST_CSV_DIR)) fs.rmdirSync(TEST_CSV_DIR)
+  // Use recursive removal to handle non-empty directories
+  if (fs.existsSync(TEST_CSV_DIR)) {
+    try {
+      fs.rmSync(TEST_CSV_DIR, { recursive: true, force: true })
+    } catch {
+      // Ignore errors during cleanup
+    }
+  }
 })
 
 /**

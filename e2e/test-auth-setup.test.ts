@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { isAuthenticated, hasSupabaseAuthCookie } from './helpers/auth'
+import { isAuthenticated, hasSupabaseAuthCookie, shouldSkipAuthTests } from './helpers/auth'
 
 /**
  * Test to verify authentication setup is working
@@ -12,6 +12,14 @@ import { isAuthenticated, hasSupabaseAuthCookie } from './helpers/auth'
  */
 
 test.describe('Authentication Setup Verification', () => {
+  test.beforeEach(async () => {
+    // Skip all tests if SKIP_AUTH_TESTS is set
+    if (shouldSkipAuthTests()) {
+      test.skip(true, 'Auth tests are disabled (SKIP_AUTH_TESTS=true)')
+      return
+    }
+  })
+  
   test('should be authenticated from global setup', async ({ page }) => {
     // Navigate to dashboard (protected route)
     await page.goto('/dashboard')
