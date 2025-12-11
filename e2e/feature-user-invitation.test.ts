@@ -17,7 +17,7 @@ import { test, expect } from '@playwright/test'
  * - /api/users/invite endpoint must exist
  * - User invitation and claim functionality must be implemented
  * - Email service must be configured for invite emails
- * - Database must have invite_tokens table
+ * - Database must have invitation tokens table
  */
 
 // Test data
@@ -26,16 +26,6 @@ const ADMIN_PASSWORD = 'AdminPassword123!'
 const INVITED_USER_EMAIL = 'invited.user@involved.test'
 const INVITED_USER_NAME = 'Invited User'
 const INVITED_USER_PASSWORD = 'InvitedPassword123!'
-
-// Helper to check if a page exists (unused but kept for future use)
-// async function pageExists(page: Page, url: string): Promise<boolean> {
-//   try {
-//     const response = await page.goto(url)
-//     return response?.status() !== 404
-//   } catch {
-//     return false
-//   }
-// }
 
 test.describe('User Invitation & Claim Flow', () => {
   // Check if claim page exists before running tests
@@ -103,7 +93,7 @@ test.describe('User Invitation & Claim Flow', () => {
       // This test would require access to email testing infrastructure
       // In a real implementation, this could use:
       // - A test email service like Ethereal or MailHog
-      // - Direct database queries to verify invite_tokens table
+      // - Direct database queries to verify invitation tokens table
       // - API calls to check email queue
       
       test.skip(true, 'Email testing infrastructure not yet configured')
@@ -139,8 +129,8 @@ test.describe('User Invitation & Claim Flow', () => {
   })
 
   test.describe('Account Claim Flow', () => {
-    // Mock token for testing - in real implementation this would come from database
-    const MOCK_VALID_TOKEN = 'a'.repeat(64) // Valid format from invite-token-generation.ts
+    // Mock token for testing - 64 hexadecimal characters format
+    const MOCK_VALID_TOKEN = 'a'.repeat(64)
     
     test('User can access account claim page with valid token', async ({ page }) => {
       test.skip(!claimPageExists, 'Claim page not yet implemented')
