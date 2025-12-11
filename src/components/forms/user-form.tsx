@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { generateUsernameFromName } from '@/lib/utils/username-generation'
 
 interface UserFormData {
   username: string
@@ -50,10 +51,7 @@ export default function UserForm({
   // Generate username from name if not provided
   useEffect(() => {
     if (!formData.username && formData.name) {
-      const generatedUsername = formData.name
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, '')
-        .substring(0, 20)
+      const generatedUsername = generateUsernameFromName(formData.name)
       setFormData(prev => ({ ...prev, username: generatedUsername }))
     }
   }, [formData.name, formData.username])
