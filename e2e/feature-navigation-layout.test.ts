@@ -13,7 +13,7 @@ import { test, expect, devices } from '@playwright/test'
  */
 
 // Helper function to check if we're on an authenticated page
-async function isAuthenticated(page: any): Promise<boolean> {
+async function isAuthenticated(page: { url: () => string }): Promise<boolean> {
   const url = page.url()
   return url.includes('/dashboard') && !url.includes('/auth/')
 }
