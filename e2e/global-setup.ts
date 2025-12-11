@@ -32,10 +32,11 @@ async function globalSetup(config: FullConfig) {
         },
       })
       
-      // Check if user exists
-      const { data: existingUser } = await adminClient.auth.admin.getUserByEmail(testEmail)
+      // List users and check if test user exists
+      const { data: usersList } = await adminClient.auth.admin.listUsers()
+      const existingUser = usersList?.users?.find((user: { email?: string }) => user.email === testEmail)
       
-      if (!existingUser.user) {
+      if (!existingUser) {
         console.log(`Creating test user: ${testEmail}`)
         // Create user via admin API
         const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
@@ -67,9 +68,9 @@ async function globalSetup(config: FullConfig) {
           }
         }
       } else {
-        console.log(`Test user already exists: ${existingUser.user.id}`)
+        console.log(`Test user already exists: ${existingUser.id}`)
         // Update password in case it changed
-        await adminClient.auth.admin.updateUserById(existingUser.user.id, {
+        await adminClient.auth.admin.updateUserById(existingUser.id, {
           password: testPassword,
         })
       }
