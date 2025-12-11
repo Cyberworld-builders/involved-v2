@@ -126,8 +126,8 @@ test.describe('Bulk Group Upload Flow', () => {
     // Verify modal is visible
     await expect(page.locator('text=Upload a CSV file of groups')).toBeVisible()
     
-    // Click X button to close
-    const closeButton = page.locator('button:has-text("✕")').last()
+    // Click X button to close (use more robust selector)
+    const closeButton = page.locator('button').filter({ hasText: '✕' }).last()
     await closeButton.click()
     
     // Verify modal is closed
@@ -190,11 +190,9 @@ test.describe('Bulk Group Upload Flow', () => {
       const fileInput = page.locator('input[type="file"][accept=".csv"]')
       await fileInput.setInputFiles(path.join(FIXTURES_PATH, 'valid-groups.csv'))
       
-      // Wait for processing
-      await page.waitForTimeout(2000)
-      
-      // Check for success message
-      await expect(page.locator('text=Successfully created')).toBeVisible()
+      // Wait for success message to appear
+      const successMessage = page.locator('text=Successfully created')
+      await expect(successMessage).toBeVisible({ timeout: 10000 })
       
       // Verify groups appear in the table
       await expect(page.locator('text=Engineering Team')).toBeVisible()
@@ -212,12 +210,9 @@ test.describe('Bulk Group Upload Flow', () => {
       const fileInput = page.locator('input[type="file"][accept=".csv"]')
       await fileInput.setInputFiles(path.join(FIXTURES_PATH, 'invalid-headers.csv'))
       
-      // Wait for processing
-      await page.waitForTimeout(1000)
-      
-      // Check for error message
-      const errorMessage = page.locator('.bg-red-50, [class*="error"]')
-      await expect(errorMessage).toBeVisible()
+      // Wait for error message to appear
+      const errorMessage = page.getByRole('alert').or(page.locator('div').filter({ hasText: /error|failed/i })).first()
+      await expect(errorMessage).toBeVisible({ timeout: 10000 })
     })
 
     test.skip('should handle CSV with invalid data gracefully', async ({ page }) => {
@@ -231,15 +226,12 @@ test.describe('Bulk Group Upload Flow', () => {
       const fileInput = page.locator('input[type="file"][accept=".csv"]')
       await fileInput.setInputFiles(path.join(FIXTURES_PATH, 'invalid-data.csv'))
       
-      // Wait for processing
-      await page.waitForTimeout(1000)
+      // Should either show error or success (skipping invalid rows)
+      // Wait for either error or success message with timeout
+      const errorMessage = page.getByRole('alert').or(page.locator('div').filter({ hasText: /error|failed/i }))
+      const successMessage = page.locator('div').filter({ hasText: /successfully|created/i })
       
-      // Should either show error or skip invalid rows
-      const hasError = await page.locator('.bg-red-50, [class*="error"]').count() > 0
-      const hasSuccess = await page.locator('.bg-green-50, text=Successfully').count() > 0
-      
-      // At least one should be true
-      expect(hasError || hasSuccess).toBeTruthy()
+      await expect(errorMessage.or(successMessage).first()).toBeVisible({ timeout: 10000 })
     })
 
     test.skip('should assign users and targets correctly from CSV', async ({ page }) => {
@@ -251,8 +243,8 @@ test.describe('Bulk Group Upload Flow', () => {
       const fileInput = page.locator('input[type="file"][accept=".csv"]')
       await fileInput.setInputFiles(path.join(FIXTURES_PATH, 'valid-groups.csv'))
       
-      // Wait for groups to be created
-      await page.waitForTimeout(2000)
+      // Wait for success message
+      await expect(page.locator('text=Successfully created')).toBeVisible({ timeout: 10000 })
       
       // Check that targets are assigned
       await expect(page.locator('text=John Doe')).toBeVisible()
@@ -274,8 +266,8 @@ test.describe('Bulk Group Upload Flow', () => {
       const fileInput = page.locator('input[type="file"][accept=".csv"]')
       await fileInput.setInputFiles(path.join(FIXTURES_PATH, 'valid-groups.csv'))
       
-      // Wait for groups to be created
-      await page.waitForTimeout(2000)
+      // Wait for success message
+      await expect(page.locator('text=Successfully created')).toBeVisible({ timeout: 10000 })
       
       // Verify roles are displayed
       await expect(page.locator('text=Developer')).toBeVisible()
@@ -288,20 +280,21 @@ test.describe('Bulk Group Upload Flow', () => {
       await page.goto(`/dashboard/clients/${TEST_CLIENT_ID}?tab=groups`)
       await page.waitForLoadState('networkidle')
       
-      // Upload CSV twice to create duplicates
+      // Upload CSV first time
       await page.locator('button:has-text("Import Groups")').click()
       const fileInput = page.locator('input[type="file"][accept=".csv"]')
       await fileInput.setInputFiles(path.join(FIXTURES_PATH, 'valid-groups.csv'))
       
-      // Wait for first upload
-      await page.waitForTimeout(2000)
+      // Wait for first upload to complete
+      await expect(page.locator('text=Successfully created')).toBeVisible({ timeout: 10000 })
       
       // Try to upload again
       await page.locator('button:has-text("Import Groups")').click()
       await fileInput.setInputFiles(path.join(FIXTURES_PATH, 'valid-groups.csv'))
       
       // Should show error about duplicate group names
-      await expect(page.locator('text=already exists, text=duplicate')).toBeVisible()
+      const duplicateError = page.locator('text=already exists').or(page.locator('text=duplicate'))
+      await expect(duplicateError).toBeVisible({ timeout: 10000 })
     })
 
     test.skip('should show processing state during upload', async ({ page }) => {
@@ -316,7 +309,8 @@ test.describe('Bulk Group Upload Flow', () => {
       await fileInput.setInputFiles(path.join(FIXTURES_PATH, 'valid-groups.csv'))
       
       // Should show processing state
-      await expect(page.locator('button:has-text("Processing")')).toBeVisible()
+      const processingButton = page.locator('button:has-text("Processing")')
+      await expect(processingButton).toBeVisible({ timeout: 5000 })
     })
   })
 
@@ -371,8 +365,8 @@ test.describe('Bulk Group Upload Flow', () => {
       await page.goto(`/dashboard/clients/${TEST_CLIENT_ID}`)
       await page.waitForLoadState('networkidle')
       
-      // Look for Groups tab
-      const groupsTab = page.locator('a:has-text("Groups"), button:has-text("Groups")')
+      // Look for Groups tab - using more robust selector
+      const groupsTab = page.getByRole('link', { name: /groups/i }).or(page.getByRole('button', { name: /groups/i }))
       
       if (await groupsTab.count() > 0) {
         await expect(groupsTab.first()).toBeVisible()
