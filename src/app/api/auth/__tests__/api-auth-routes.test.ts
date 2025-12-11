@@ -7,7 +7,6 @@ import {
   mockResetPasswordData,
   mockVerifyEmailData,
   mockAuthSession,
-  mockVerificationToken,
 } from '@/__tests__/fixtures/auth'
 
 // Mock Supabase client
@@ -24,7 +23,7 @@ const mockSupabaseClient = {
 }
 
 vi.mock('@/lib/supabase/server', () => ({
-  createClient: vi.fn(() => Promise.resolve(mockSupabaseClient)),
+  createClient: vi.fn(() => mockSupabaseClient),
 }))
 
 // Mock the username generation utility
@@ -70,7 +69,7 @@ describe('API Auth Routes', () => {
         )
       }
 
-      const supabase = await mockSupabaseClient
+      const supabase = mockSupabaseClient
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -290,7 +289,7 @@ describe('API Auth Routes', () => {
         )
       }
 
-      const supabase = await mockSupabaseClient
+      const supabase = mockSupabaseClient
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -416,7 +415,7 @@ describe('API Auth Routes', () => {
   describe('POST /api/auth/signout', () => {
     // Mock implementation for signout route
     const mockSignout = async (request: NextRequest) => {
-      const supabase = await mockSupabaseClient
+      const supabase = mockSupabaseClient
       
       // Check if user is authenticated
       const { data: userData, error: userError } = await supabase.auth.getUser()
@@ -528,7 +527,7 @@ describe('API Auth Routes', () => {
         )
       }
 
-      const supabase = await mockSupabaseClient
+      const supabase = mockSupabaseClient
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${new URL(request.url).origin}/auth/reset-password`,
       })
@@ -665,7 +664,7 @@ describe('API Auth Routes', () => {
         )
       }
 
-      const supabase = await mockSupabaseClient
+      const supabase = mockSupabaseClient
       const { data, error } = await supabase.auth.verifyOtp({
         email,
         token,
