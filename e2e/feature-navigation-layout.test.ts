@@ -193,7 +193,7 @@ test.describe('Responsive Layout - Desktop', () => {
       // Verify no horizontal scroll
       const bodyWidth = await page.evaluate(() => document.body.scrollWidth)
       const viewportWidth = page.viewportSize()?.width || 0
-      expect(bodyWidth).toBeLessThanOrEqual(viewportWidth + VIEWPORT_TOLERANCE_PX) // Allow 10px tolerance
+      expect(bodyWidth).toBeLessThanOrEqual(viewportWidth + VIEWPORT_TOLERANCE_PX)
     } else {
       test.skip(true, 'Dashboard requires authentication')
     }
