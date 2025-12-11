@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
-import path from 'path'
+import * as path from 'path'
+import { shouldSkipAuthTests } from './helpers/auth'
 
 /**
  * Feature Tests: Bulk Group Upload Flow
@@ -19,6 +20,10 @@ const FIXTURES_PATH = path.join(__dirname, 'fixtures')
 
 test.describe('Bulk Group Upload Flow', () => {
   test.beforeEach(async () => {
+    if (shouldSkipAuthTests()) {
+      test.skip(true, 'Auth tests are disabled (SKIP_AUTH_TESTS=true)')
+      return
+    }
     // Note: In a real scenario, you would need to:
     // 1. Setup authentication (login as admin/manager)
     // 2. Create a test client and users in the database
@@ -378,7 +383,9 @@ test.describe('Bulk Group Upload Flow', () => {
       await page.waitForLoadState('networkidle')
       
       // Verify we're on groups tab by checking for groups-specific content
-      const groupsContent = page.locator('h2:has-text("Groups"), text=Import Groups')
+      const groupsHeading = page.getByRole('heading', { name: /^groups$/i })
+      const importGroupsButton = page.getByRole('button', { name: /import groups/i })
+      const groupsContent = groupsHeading.or(importGroupsButton)
       await expect(groupsContent.first()).toBeVisible()
       
       // Check URL contains tab parameter
