@@ -1209,7 +1209,7 @@ describe('API Group Routes', () => {
       await bulkCreateGroups(request)
 
       expect(insertMock).toHaveBeenCalledWith([
-        { name: 'Group 1', client_id: 'client-1', description: '  Description 1  ' },
+        { name: 'Group 1', client_id: 'client-1', description: 'Description 1' },
         { name: 'Group 2', client_id: 'client-2', description: null },
       ])
     })

@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     const groupData: GroupInsert = {
       name: name.trim(),
       client_id: client_id.trim(),
-      description: description || null,
+      description: description && description.trim() !== '' ? description.trim() : null,
     }
 
     // Insert group into database

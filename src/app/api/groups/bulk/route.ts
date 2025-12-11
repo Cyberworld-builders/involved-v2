@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
         validGroups.push({
           name: group.name.trim(),
           client_id: group.client_id.trim(),
-          description: group.description || null,
+          description: group.description && group.description.trim() !== '' ? group.description.trim() : null,
         })
       }
     })

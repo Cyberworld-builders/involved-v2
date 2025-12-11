@@ -100,7 +100,9 @@ export async function PATCH(
     const updateData: GroupUpdate = {}
     if (name !== undefined) updateData.name = name.trim()
     if (client_id !== undefined) updateData.client_id = client_id.trim()
-    if (description !== undefined) updateData.description = description || null
+    if (description !== undefined) {
+      updateData.description = description && description.trim() !== '' ? description.trim() : null
+    }
 
     // Check if there are any fields to update
     if (Object.keys(updateData).length === 0) {
