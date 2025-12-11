@@ -195,9 +195,6 @@ test.describe('Industry CRUD Flow', () => {
       await page.waitForLoadState('networkidle')
     }
     
-    // Get the name of the first industry before deletion
-    const firstIndustryName = await page.locator('table tbody tr').first().locator('td').first().textContent()
-    
     // Set up dialog handler for confirmation (if any)
     page.on('dialog', async dialog => {
       expect(dialog.type()).toBe('confirm')
