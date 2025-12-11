@@ -5,6 +5,9 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import DashboardLayout from '@/components/layout/dashboard-layout'
+import { Database } from '@/types/database'
+
+type Field = Database['public']['Tables']['fields']['Row']
 
 interface AssessmentPreviewPageProps {
   params: Promise<{
@@ -64,8 +67,8 @@ export default async function AssessmentPreviewPage({ params }: AssessmentPrevie
     .order('order', { ascending: true })
 
   // Group fields by dimension
-  const fieldsByDimension = new Map<string, any[]>()
-  const fieldsWithoutDimension: any[] = []
+  const fieldsByDimension = new Map<string, Field[]>()
+  const fieldsWithoutDimension: Field[] = []
 
   fields?.forEach(field => {
     if (field.dimension_id) {
@@ -225,7 +228,7 @@ export default async function AssessmentPreviewPage({ params }: AssessmentPrevie
 }
 
 // Field Preview Component
-function FieldPreview({ field, fieldNumber }: { field: any; fieldNumber: number }) {
+function FieldPreview({ field, fieldNumber }: { field: Field; fieldNumber: number }) {
   const anchors = (field.anchors || []) as Array<{
     id: string
     name: string

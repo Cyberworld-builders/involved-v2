@@ -91,8 +91,8 @@ export default function AssessmentForm({
   const [logoPreview, setLogoPreview] = useState<string | null>(existingLogoUrl || null)
   const [backgroundPreview, setBackgroundPreview] = useState<string | null>(existingBackgroundUrl || null)
 
-  const handleInputChange = (field: keyof AssessmentFormData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+  const handleInputChange = (field: keyof AssessmentFormData, value: string | number | boolean | File | null) => {
+    setFormData(prev => ({ ...prev, [field]: value as never }))
   }
 
   const handleFileChange = (field: 'logo' | 'background', file: File | null) => {
@@ -130,7 +130,7 @@ export default function AssessmentForm({
     }))
   }
 
-  const handleUpdateDimension = (id: string, field: keyof Dimension, value: any) => {
+  const handleUpdateDimension = (id: string, field: keyof Dimension, value: string | null) => {
     setFormData(prev => ({
       ...prev,
       dimensions: prev.dimensions.map(dim =>
@@ -294,7 +294,7 @@ export default function AssessmentForm({
     }))
   }
 
-  const handleUpdateField = (id: string, field: keyof Field, value: any) => {
+  const handleUpdateField = (id: string, field: keyof Field, value: string | 'rich_text' | 'multiple_choice' | 'slider' | Anchor[] | number | null) => {
     setFormData(prev => ({
       ...prev,
       fields: prev.fields.map(f =>
@@ -323,7 +323,7 @@ export default function AssessmentForm({
     handleUpdateField(fieldId, 'anchors', [...fieldItem.anchors, newAnchor])
   }
 
-  const handleUpdateAnchor = (fieldId: string, anchorId: string, fieldKey: keyof Anchor, value: any) => {
+  const handleUpdateAnchor = (fieldId: string, anchorId: string, fieldKey: keyof Anchor, value: string | number | boolean) => {
     const fieldItem = formData.fields.find(f => f.id === fieldId)
     if (!fieldItem) return
 

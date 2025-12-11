@@ -2,10 +2,16 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Database } from '@/types/database'
+
+type GroupRow = Database['public']['Tables']['groups']['Row']
+type GroupMemberRow = Database['public']['Tables']['group_members']['Row']
+type Profile = Database['public']['Tables']['profiles']['Row']
+type GroupInsert = Database['public']['Tables']['groups']['Insert']
+type GroupUpdate = Database['public']['Tables']['groups']['Update']
 
 interface GroupMember {
   id?: string
@@ -46,7 +52,8 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
   const [existingGroups, setExistingGroups] = useState<Group[]>([])
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [editingGroup, setEditingGroup] = useState<Group | null>(null)
-  const [availableUsers, setAvailableUsers] = useState<Array<{ id: string; name: string; email: string; username?: string }>>([])
+  type UserOption = { id: string; name: string; email: string; username?: string }
+  const [availableUsers, setAvailableUsers] = useState<UserOption[]>([])
   const [formData, setFormData] = useState({ 
     name: '', 
     description: '',
@@ -63,6 +70,7 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
   useEffect(() => {
     loadGroups()
     loadUsers()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientId])
 
   const loadUsers = async () => {
@@ -73,7 +81,7 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
       .order('name')
 
     if (!error && data) {
-      setAvailableUsers(data)
+      setAvailableUsers((data || []) as UserOption[])
     }
   }
 
@@ -95,8 +103,9 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
 
     if (!error && data) {
       // Load targets separately if target_id exists
-      const targetIds = data.filter(g => g.target_id).map(g => g.target_id)
-      let targets: Record<string, any> = {}
+      const targetIds = data.filter((g: GroupRow & { target_id?: string | null }) => g.target_id).map((g: GroupRow & { target_id?: string | null }) => g.target_id)
+      type TargetProfile = { id: string; name: string; email: string }
+      let targets: Record<string, TargetProfile> = {}
       
       if (targetIds.length > 0) {
         const { data: targetData } = await supabase
@@ -108,18 +117,18 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
           targets = targetData.reduce((acc, t) => {
             acc[t.id] = t
             return acc
-          }, {} as Record<string, any>)
+          }, {} as Record<string, TargetProfile>)
         }
       }
 
-      const transformed = data.map((group: any) => ({
+      const transformed = data.map((group: GroupRow & { target_id?: string | null; group_members?: Array<GroupMemberRow & { profiles?: Profile }> }) => ({
         ...group,
         target: group.target_id ? (targets[group.target_id] || null) : null,
-        members: group.group_members?.map((gm: any) => ({
+        members: group.group_members?.map((gm: GroupMemberRow & { profiles?: Profile }) => ({
           id: gm.id,
           profile_id: gm.profile_id,
-          position: gm.position || '',
-          leader: gm.leader || false,
+          position: gm.role || '',
+          leader: false, // This field doesn't exist in the database schema
           profile: gm.profiles
         })) || []
       }))
@@ -140,7 +149,7 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
 
     try {
       // Create group - only include target_id if it's set
-      const groupData: any = {
+      const groupData: GroupInsert & { target_id?: string } = {
         client_id: clientId,
         name: formData.name.trim(),
         description: formData.description.trim() || null,
@@ -207,7 +216,7 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
 
     try {
       // Update group - only include target_id if it's set
-      const updateData: any = {
+      const updateData: GroupUpdate & { target_id?: string | null } = {
         name: formData.name.trim(),
         description: formData.description.trim() || null,
         updated_at: new Date().toISOString(),

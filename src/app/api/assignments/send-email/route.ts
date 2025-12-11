@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
 
 interface SendEmailRequest {
   to: string
@@ -77,10 +76,8 @@ export async function POST(request: NextRequest) {
       formattedExpiration
     )
 
-    // Convert newlines to HTML breaks for email
-    const htmlBody = processedBody
-      .replace(/\n/g, '<br>')
-      .replace(/\r/g, '')
+    // Note: processedBody is used directly in email (HTML conversion would happen in email service)
+    // The body is already processed with template replacements above
 
     // TODO: Integrate with email service (Resend, SendGrid, AWS SES, etc.)
     // For now, we'll log the email and return success
