@@ -80,12 +80,14 @@ test.describe('Industry CRUD Flow', () => {
     // Check that the "Add Industry" button exists
     await expect(page.locator('text=Add Industry')).toBeVisible()
     
-    // Check for the industries table or empty state
-    const hasTable = await page.locator('table').count() > 0
+    // Check if table or empty state is displayed appropriately
+    const hasTable = await page.locator('table tbody tr').count() > 0
     const hasEmptyState = await page.locator('text=/No industries found/i').count() > 0
     
     // Either a table should exist or we should see the empty state
-    expect(hasTable || hasEmptyState).toBe(true)
+    if (!hasTable && !hasEmptyState) {
+      throw new Error('Expected either table with data or empty state message')
+    }
     
     // If table exists, verify it has the expected columns
     if (hasTable) {
@@ -168,13 +170,9 @@ test.describe('Industry CRUD Flow', () => {
     await page.goto('/dashboard/industries')
     await page.waitForLoadState('networkidle')
     
-    // Check if the new name appears in the table
-    const updatedRow = page.locator(`table tbody tr:has-text("${newName}")`)
-    await expect(updatedRow).toBeVisible({ timeout: 3000 }).catch(() => {
-      // If not visible immediately, it might be due to caching or timing
-      // Log for debugging but don't fail the test
-      console.log('Updated name not immediately visible in list')
-    })
+    // The new name should appear in the table
+    const tableText = await page.locator('table').textContent()
+    expect(tableText).toContain(newName)
   })
 
   test('Admin can delete industry', async ({ page }) => {
@@ -205,8 +203,8 @@ test.describe('Industry CRUD Flow', () => {
     const deleteButton = page.locator('table tbody tr').first().locator('button:has-text("Delete")')
     await deleteButton.click()
     
-    // Wait a moment for any potential deletion to process
-    await page.waitForTimeout(1000)
+    // Wait for deletion to process
+    await page.waitForLoadState('networkidle')
     
     // Note: The actual delete functionality might not be fully implemented
     // This test documents the expected behavior
@@ -260,11 +258,11 @@ test.describe('Industry CRUD Flow', () => {
       const selectedValue = await industryDropdown.inputValue()
       expect(selectedValue).toBeTruthy()
       
-      // Note: We're not submitting the form to avoid actually creating the user
+      // Note: Not submitting the form to avoid actually creating the user
       // This test verifies that the industry can be assigned in the UI
-      console.log('Industry assignment field verified in user form')
     } else {
-      console.log('Industry dropdown not found on user form')
+      // If the dropdown doesn't exist, skip this part of the test
+      test.skip()
     }
   })
 

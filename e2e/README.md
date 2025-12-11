@@ -19,7 +19,7 @@ Comprehensive test suite for Industry CRUD operations covering:
 - ✅ **Data Display**: Verifies correct data display and empty states
 
 #### Related Issues
-- [#53-57](https://github.com/Cyberworld-builders/involved-v2/issues/53): Industry CRUD operations
+- Industry CRUD operations (Issues #53-#57)
 - [#58](https://github.com/Cyberworld-builders/involved-v2/issues/58): User-industry assignment
 
 ## Prerequisites
