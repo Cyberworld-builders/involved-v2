@@ -21,26 +21,29 @@ const VALID_CSV = path.join(__dirname, 'fixtures', 'valid-users.csv')
 const INVALID_CSV = path.join(__dirname, 'fixtures', 'invalid-users.csv')
 const INCOMPLETE_CSV = path.join(__dirname, 'fixtures', 'incomplete-row-users.csv')
 
+// Helper function to check if user is authenticated
+async function isAuthenticated(page: any): Promise<boolean> {
+  const url = page.url()
+  return !url.includes('/auth/login')
+}
+
+// Helper to check if Supabase is configured
+function isSupabaseConfigured(): boolean {
+  return !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+}
+
 test.describe('Bulk User Upload Flow', () => {
   test.beforeEach(async ({ page }) => {
-    // Note: In a real scenario, we would need to authenticate first
-    // For now, we'll navigate directly to the bulk upload page
-    // and handle auth redirects if they occur
+    // Navigate to bulk upload page before each test
+    await page.goto('/dashboard/users/bulk-upload')
+    await page.waitForLoadState('networkidle')
   })
 
   test('should access bulk upload page', async ({ page }) => {
-    // Navigate to bulk upload page
-    await page.goto('/dashboard/users/bulk-upload')
-    
-    // Wait for page to load - either the bulk upload page or auth redirect
-    await page.waitForLoadState('networkidle')
-    
     // Check if we're on the bulk upload page or redirected to login
-    const url = page.url()
-    
-    if (url.includes('/auth/login')) {
+    if (!(await isAuthenticated(page))) {
       // If redirected to login, that's expected behavior for unauthenticated users
-      expect(url).toContain('/auth/login')
+      expect(page.url()).toContain('/auth/login')
       console.log('✓ Correctly redirected to login for unauthenticated user')
     } else {
       // If we're on the bulk upload page, verify page elements
@@ -51,11 +54,8 @@ test.describe('Bulk User Upload Flow', () => {
   })
 
   test('should display download template button', async ({ page }) => {
-    await page.goto('/dashboard/users/bulk-upload')
-    await page.waitForLoadState('networkidle')
-    
     // Skip if redirected to auth
-    if (page.url().includes('/auth/login')) {
+    if (!(await isAuthenticated(page))) {
       test.skip()
       return
     }
@@ -70,11 +70,8 @@ test.describe('Bulk User Upload Flow', () => {
   })
 
   test('should download template file', async ({ page }) => {
-    await page.goto('/dashboard/users/bulk-upload')
-    await page.waitForLoadState('networkidle')
-    
     // Skip if redirected to auth
-    if (page.url().includes('/auth/login')) {
+    if (!(await isAuthenticated(page))) {
       test.skip()
       return
     }
@@ -95,11 +92,8 @@ test.describe('Bulk User Upload Flow', () => {
   })
 
   test('should have file upload input', async ({ page }) => {
-    await page.goto('/dashboard/users/bulk-upload')
-    await page.waitForLoadState('networkidle')
-    
     // Skip if redirected to auth
-    if (page.url().includes('/auth/login')) {
+    if (!(await isAuthenticated(page))) {
       test.skip()
       return
     }
@@ -114,11 +108,8 @@ test.describe('Bulk User Upload Flow', () => {
   })
 
   test('should upload and parse valid CSV file', async ({ page }) => {
-    await page.goto('/dashboard/users/bulk-upload')
-    await page.waitForLoadState('networkidle')
-    
     // Skip if redirected to auth
-    if (page.url().includes('/auth/login')) {
+    if (!(await isAuthenticated(page))) {
       test.skip()
       return
     }
@@ -127,23 +118,17 @@ test.describe('Bulk User Upload Flow', () => {
     const fileInput = page.locator('input[type="file"][accept=".csv"]')
     await fileInput.setInputFiles(VALID_CSV)
     
-    // Wait for parsing to complete
-    await page.waitForTimeout(1000)
-    
-    // Check for success message
-    const successMessage = page.locator('text=/Successfully parsed.*users/')
-    await expect(successMessage).toBeVisible({ timeout: 5000 })
+    // Wait for success message with better selector
+    const successMessage = page.locator('[class*="green"], [class*="success"]').filter({ hasText: 'Successfully parsed' })
+    await expect(successMessage).toBeVisible({ timeout: 10000 })
     
     // Verify preview section is displayed
     await expect(page.locator('text=Preview Users')).toBeVisible()
   })
 
   test('should display parsed users in preview table', async ({ page }) => {
-    await page.goto('/dashboard/users/bulk-upload')
-    await page.waitForLoadState('networkidle')
-    
     // Skip if redirected to auth
-    if (page.url().includes('/auth/login')) {
+    if (!(await isAuthenticated(page))) {
       test.skip()
       return
     }
@@ -152,8 +137,8 @@ test.describe('Bulk User Upload Flow', () => {
     const fileInput = page.locator('input[type="file"][accept=".csv"]')
     await fileInput.setInputFiles(VALID_CSV)
     
-    // Wait for parsing
-    await page.waitForTimeout(1000)
+    // Wait for preview table to appear
+    await expect(page.locator('text=Preview Users')).toBeVisible({ timeout: 10000 })
     
     // Verify table headers are present
     await expect(page.locator('th:has-text("Name")')).toBeVisible()
@@ -170,15 +155,12 @@ test.describe('Bulk User Upload Flow', () => {
     await expect(page.locator('td:has-text("Bob Johnson")')).toBeVisible()
     
     // Verify user count
-    await expect(page.locator('text=/Preview Users.*3/')).toBeVisible()
+    await expect(page.locator('text=Preview Users').locator('text=/3/')).toBeVisible()
   })
 
   test('should show create users button after parsing', async ({ page }) => {
-    await page.goto('/dashboard/users/bulk-upload')
-    await page.waitForLoadState('networkidle')
-    
     // Skip if redirected to auth
-    if (page.url().includes('/auth/login')) {
+    if (!(await isAuthenticated(page))) {
       test.skip()
       return
     }
@@ -187,8 +169,8 @@ test.describe('Bulk User Upload Flow', () => {
     const fileInput = page.locator('input[type="file"][accept=".csv"]')
     await fileInput.setInputFiles(VALID_CSV)
     
-    // Wait for parsing
-    await page.waitForTimeout(1000)
+    // Wait for preview to appear
+    await expect(page.locator('text=Preview Users')).toBeVisible({ timeout: 10000 })
     
     // Verify create button exists and shows correct count
     const createButton = page.locator('button:has-text("Create 3 Users")')
@@ -197,11 +179,8 @@ test.describe('Bulk User Upload Flow', () => {
   })
 
   test('should show clear button after parsing', async ({ page }) => {
-    await page.goto('/dashboard/users/bulk-upload')
-    await page.waitForLoadState('networkidle')
-    
     // Skip if redirected to auth
-    if (page.url().includes('/auth/login')) {
+    if (!(await isAuthenticated(page))) {
       test.skip()
       return
     }
@@ -210,8 +189,8 @@ test.describe('Bulk User Upload Flow', () => {
     const fileInput = page.locator('input[type="file"][accept=".csv"]')
     await fileInput.setInputFiles(VALID_CSV)
     
-    // Wait for parsing
-    await page.waitForTimeout(1000)
+    // Wait for preview to appear
+    await expect(page.locator('text=Preview Users')).toBeVisible({ timeout: 10000 })
     
     // Verify clear button exists
     const clearButton = page.locator('button:has-text("Clear")')
@@ -223,11 +202,8 @@ test.describe('Bulk User Upload Flow', () => {
   })
 
   test('should handle CSV with invalid email format', async ({ page }) => {
-    await page.goto('/dashboard/users/bulk-upload')
-    await page.waitForLoadState('networkidle')
-    
     // Skip if redirected to auth
-    if (page.url().includes('/auth/login')) {
+    if (!(await isAuthenticated(page))) {
       test.skip()
       return
     }
@@ -236,20 +212,14 @@ test.describe('Bulk User Upload Flow', () => {
     const fileInput = page.locator('input[type="file"][accept=".csv"]')
     await fileInput.setInputFiles(INVALID_CSV)
     
-    // Wait for parsing
-    await page.waitForTimeout(1000)
-    
-    // Check for error message about invalid email
-    const errorMessage = page.locator('text=/Invalid email format/')
-    await expect(errorMessage).toBeVisible({ timeout: 5000 })
+    // Wait for error message to appear
+    const errorMessage = page.locator('[class*="red"], [class*="error"]').filter({ hasText: 'Invalid email format' })
+    await expect(errorMessage).toBeVisible({ timeout: 10000 })
   })
 
   test('should handle CSV with missing required fields', async ({ page }) => {
-    await page.goto('/dashboard/users/bulk-upload')
-    await page.waitForLoadState('networkidle')
-    
     // Skip if redirected to auth
-    if (page.url().includes('/auth/login')) {
+    if (!(await isAuthenticated(page))) {
       test.skip()
       return
     }
@@ -258,26 +228,22 @@ test.describe('Bulk User Upload Flow', () => {
     const fileInput = page.locator('input[type="file"][accept=".csv"]')
     await fileInput.setInputFiles(INCOMPLETE_CSV)
     
-    // Wait for parsing
-    await page.waitForTimeout(1000)
+    // Wait for either error or partial success
+    const errorOrSuccess = page.locator('[class*="green"], [class*="red"], [class*="success"], [class*="error"]')
+    await expect(errorOrSuccess.first()).toBeVisible({ timeout: 10000 })
     
     // The page should either show:
     // 1. An error for missing required fields, OR
     // 2. Only parse valid rows and skip incomplete ones
-    
-    // Check if there's an error message or successful partial parse
     const hasError = await page.locator('text=/required/i').isVisible()
-    const hasSuccess = await page.locator('text=/Successfully parsed.*users/').isVisible()
+    const hasSuccess = await page.locator('text=Successfully parsed').isVisible()
     
     expect(hasError || hasSuccess).toBeTruthy()
   })
 
   test('should generate username when not provided', async ({ page }) => {
-    await page.goto('/dashboard/users/bulk-upload')
-    await page.waitForLoadState('networkidle')
-    
     // Skip if redirected to auth
-    if (page.url().includes('/auth/login')) {
+    if (!(await isAuthenticated(page))) {
       test.skip()
       return
     }
@@ -286,8 +252,8 @@ test.describe('Bulk User Upload Flow', () => {
     const fileInput = page.locator('input[type="file"][accept=".csv"]')
     await fileInput.setInputFiles(VALID_CSV)
     
-    // Wait for parsing
-    await page.waitForTimeout(1000)
+    // Wait for preview to appear
+    await expect(page.locator('text=Preview Users')).toBeVisible({ timeout: 10000 })
     
     // Verify that usernames are present in the preview
     // The CSV has usernames, but the code should handle generation if they're missing
@@ -296,42 +262,24 @@ test.describe('Bulk User Upload Flow', () => {
   })
 
   test('should display processing indicator during file upload', async ({ page }) => {
-    await page.goto('/dashboard/users/bulk-upload')
-    await page.waitForLoadState('networkidle')
-    
     // Skip if redirected to auth
-    if (page.url().includes('/auth/login')) {
+    if (!(await isAuthenticated(page))) {
       test.skip()
       return
     }
     
-    // Upload a file and quickly check for processing indicator
+    // Upload a file and check for result
     const fileInput = page.locator('input[type="file"][accept=".csv"]')
-    
-    // Start upload
     await fileInput.setInputFiles(VALID_CSV)
     
-    // The processing indicator should appear briefly
-    // Note: This might be too fast to catch reliably, so we just verify
-    // the page handles the upload without crashing
-    await page.waitForTimeout(500)
-    
-    // Verify we get a result (success or error)
-    const hasResult = await Promise.race([
-      page.locator('text=/Successfully parsed/').isVisible(),
-      page.locator('text=/Failed to parse/').isVisible(),
-      page.locator('text=/Error/').isVisible()
-    ])
-    
-    expect(hasResult).toBeTruthy()
+    // Verify we get a result (success or error) without relying on timing
+    const result = page.locator('[class*="green"], [class*="red"], [class*="success"], [class*="error"]')
+    await expect(result.first()).toBeVisible({ timeout: 10000 })
   })
 
   test('should have instructions for CSV format', async ({ page }) => {
-    await page.goto('/dashboard/users/bulk-upload')
-    await page.waitForLoadState('networkidle')
-    
     // Skip if redirected to auth
-    if (page.url().includes('/auth/login')) {
+    if (!(await isAuthenticated(page))) {
       test.skip()
       return
     }
@@ -342,11 +290,8 @@ test.describe('Bulk User Upload Flow', () => {
   })
 
   test('should disable create button during user creation', async ({ page }) => {
-    await page.goto('/dashboard/users/bulk-upload')
-    await page.waitForLoadState('networkidle')
-    
     // Skip if redirected to auth
-    if (page.url().includes('/auth/login')) {
+    if (!(await isAuthenticated(page))) {
       test.skip()
       return
     }
@@ -354,51 +299,43 @@ test.describe('Bulk User Upload Flow', () => {
     // Upload valid CSV
     const fileInput = page.locator('input[type="file"][accept=".csv"]')
     await fileInput.setInputFiles(VALID_CSV)
-    await page.waitForTimeout(1000)
+    await expect(page.locator('text=Preview Users')).toBeVisible({ timeout: 10000 })
     
     // Get the create button
     const createButton = page.locator('button:has-text("Create")')
     
-    // If Supabase is not configured, we should see a specific message
-    // Otherwise, clicking should show loading state
-    const isConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    
-    if (!isConfigured) {
-      // Just verify the button is present and can be interacted with
-      await expect(createButton).toBeVisible()
-    } else {
+    // If Supabase is configured, test the loading state
+    if (isSupabaseConfigured()) {
       // Click and verify loading state
       await createButton.click()
       
       // Button should show loading state
       await expect(page.locator('button:has-text("Creating Users")')).toBeVisible({ timeout: 2000 })
+    } else {
+      // Just verify the button is present and can be interacted with
+      await expect(createButton).toBeVisible()
     }
   })
 
   test('should show appropriate message when Supabase is not configured', async ({ page }) => {
-    await page.goto('/dashboard/users/bulk-upload')
-    await page.waitForLoadState('networkidle')
-    
     // Skip if redirected to auth
-    if (page.url().includes('/auth/login')) {
+    if (!(await isAuthenticated(page))) {
       test.skip()
       return
     }
     
-    // Check if there's a Supabase setup notice on the page or parent pages
-    // This test verifies the app handles missing configuration gracefully
-    
     // Upload valid CSV
     const fileInput = page.locator('input[type="file"][accept=".csv"]')
     await fileInput.setInputFiles(VALID_CSV)
-    await page.waitForTimeout(1000)
+    await expect(page.locator('text=Preview Users')).toBeVisible({ timeout: 10000 })
     
     // Try to create users
     const createButton = page.locator('button:has-text("Create")')
     await createButton.click()
     
-    // Wait a bit for response
-    await page.waitForTimeout(2000)
+    // Wait for response message
+    const resultMessage = page.locator('[class*="green"], [class*="red"], [class*="success"], [class*="error"]')
+    await expect(resultMessage.first()).toBeVisible({ timeout: 5000 })
     
     // Should either succeed or show appropriate error
     const hasSuccess = await page.locator('text=/Successfully created/').isVisible()
@@ -409,11 +346,8 @@ test.describe('Bulk User Upload Flow', () => {
   })
 
   test('should redirect to users page after successful creation', async ({ page }) => {
-    await page.goto('/dashboard/users/bulk-upload')
-    await page.waitForLoadState('networkidle')
-    
     // Skip if redirected to auth
-    if (page.url().includes('/auth/login')) {
+    if (!(await isAuthenticated(page))) {
       test.skip()
       return
     }
@@ -421,13 +355,13 @@ test.describe('Bulk User Upload Flow', () => {
     // Upload valid CSV
     const fileInput = page.locator('input[type="file"][accept=".csv"]')
     await fileInput.setInputFiles(VALID_CSV)
-    await page.waitForTimeout(1000)
+    await expect(page.locator('text=Preview Users')).toBeVisible({ timeout: 10000 })
     
     // Create users (only if Supabase is configured)
     const createButton = page.locator('button:has-text("Create")')
     await createButton.click()
     
-    // Wait for potential redirect
+    // Wait for potential redirect or error message
     await page.waitForTimeout(4000)
     
     // If successful, should redirect to users page
@@ -446,12 +380,14 @@ test.describe('Bulk User Upload Flow', () => {
 })
 
 test.describe('Bulk User Upload - Edge Cases', () => {
-  test('should handle empty CSV file gracefully', async ({ page }) => {
+  test.beforeEach(async ({ page }) => {
     await page.goto('/dashboard/users/bulk-upload')
     await page.waitForLoadState('networkidle')
-    
+  })
+
+  test('should handle empty CSV file gracefully', async ({ page }) => {
     // Skip if redirected to auth
-    if (page.url().includes('/auth/login')) {
+    if (!(await isAuthenticated(page))) {
       test.skip()
       return
     }
@@ -468,7 +404,9 @@ test.describe('Bulk User Upload - Edge Cases', () => {
       buffer: buffer
     })
     
-    await page.waitForTimeout(1000)
+    // Wait for result message
+    const resultMessage = page.locator('[class*="green"], [class*="red"], [class*="success"], [class*="error"]')
+    await expect(resultMessage.first()).toBeVisible({ timeout: 10000 })
     
     // Should either show 0 users or an appropriate message
     const hasZeroUsers = await page.locator('text=/parsed 0 users/i').isVisible()
@@ -478,11 +416,8 @@ test.describe('Bulk User Upload - Edge Cases', () => {
   })
 
   test('should accept CSV files only', async ({ page }) => {
-    await page.goto('/dashboard/users/bulk-upload')
-    await page.waitForLoadState('networkidle')
-    
     // Skip if redirected to auth
-    if (page.url().includes('/auth/login')) {
+    if (!(await isAuthenticated(page))) {
       test.skip()
       return
     }
