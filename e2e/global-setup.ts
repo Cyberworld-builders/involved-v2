@@ -12,6 +12,24 @@ import { waitForAuthCookies, waitForAuthentication } from './helpers/auth'
  */
 
 async function globalSetup(config: FullConfig) {
+  // Check if auth tests should be skipped
+  const skipAuth = process.env.SKIP_AUTH_TESTS === 'true' || process.env.SKIP_AUTH_TESTS === '1'
+  
+  if (skipAuth) {
+    console.log('⚠️  SKIP_AUTH_TESTS is set - skipping authentication setup')
+    console.log('   Auth-related tests will be skipped')
+    // Create empty auth state file
+    const fs = await import('fs')
+    const path = await import('path')
+    const authDir = path.join(process.cwd(), 'e2e', '.auth')
+    await fs.promises.mkdir(authDir, { recursive: true })
+    await fs.promises.writeFile(
+      path.join(authDir, 'user.json'),
+      JSON.stringify({ cookies: [], origins: [] }, null, 2)
+    )
+    return
+  }
+  
   const baseURL = config.projects[0].use.baseURL || 'http://localhost:3000'
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY

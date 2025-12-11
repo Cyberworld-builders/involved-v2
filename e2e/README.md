@@ -60,11 +60,24 @@ The `fixtures/` directory contains test assets used in E2E tests:
 
 ## Authentication Setup
 
+> **Note**: Auth tests are currently skipped by default. See `SKIP_AUTH_TESTS.md` for details.
+
 The E2E tests use **Playwright's global setup** to automatically authenticate before running tests. This means:
 
 1. **Authentication happens once** before all tests run (via `e2e/global-setup.ts`)
 2. **Auth state is saved** and reused across all tests
 3. **No need to login in each test** - tests start already authenticated
+
+### Temporarily Skipping Auth Tests
+
+To skip all authentication-related tests (useful during development):
+
+```bash
+export SKIP_AUTH_TESTS=true
+npm run test:e2e
+```
+
+See `e2e/SKIP_AUTH_TESTS.md` for more details.
 
 ### Required Environment Variables
 
