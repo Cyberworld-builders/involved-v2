@@ -60,7 +60,14 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+        run: |
+          if [ "${SKIP_AUTH_TESTS}" = "true" ] || [ "${SKIP_AUTH_TESTS}" = "1" ]; then
+            echo "SKIP_AUTH_TESTS is set - installing chromium only"
+            npx playwright install --with-deps chromium
+          else
+            echo "Installing all browsers"
+            npx playwright install --with-deps
+          fi
 
       - name: Run E2E tests
         run: npm run test:e2e
