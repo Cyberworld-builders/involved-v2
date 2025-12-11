@@ -24,11 +24,17 @@ export interface ValidationResult {
 }
 
 /**
- * Validates a logo file for type and size
+ * Generic file validation function
  * @param file - The file to validate
+ * @param maxSize - Maximum file size in bytes
+ * @param sizeLabel - Human-readable size label (e.g., "2MB")
  * @returns ValidationResult indicating if the file is valid
  */
-export function validateLogoFile(file: File | null | undefined): ValidationResult {
+function validateImageFile(
+  file: File | null | undefined,
+  maxSize: number,
+  sizeLabel: string
+): ValidationResult {
   if (!file) {
     return {
       isValid: false,
@@ -45,10 +51,10 @@ export function validateLogoFile(file: File | null | undefined): ValidationResul
   }
 
   // Validate file size
-  if (file.size > MAX_LOGO_SIZE) {
+  if (file.size > maxSize) {
     return {
       isValid: false,
-      error: `File size exceeds maximum allowed size of ${MAX_LOGO_SIZE / (1024 * 1024)}MB`,
+      error: `File size exceeds maximum allowed size of ${sizeLabel}`,
     }
   }
 
@@ -58,37 +64,57 @@ export function validateLogoFile(file: File | null | undefined): ValidationResul
 }
 
 /**
+ * Validates a logo file for type and size
+ * @param file - The file to validate
+ * @returns ValidationResult indicating if the file is valid
+ */
+export function validateLogoFile(file: File | null | undefined): ValidationResult {
+  return validateImageFile(file, MAX_LOGO_SIZE, '2MB')
+}
+
+/**
  * Validates a background image file for type and size
  * @param file - The file to validate
  * @returns ValidationResult indicating if the file is valid
  */
 export function validateBackgroundImage(file: File | null | undefined): ValidationResult {
-  if (!file) {
-    return {
-      isValid: false,
-      error: 'No file provided',
-    }
+  return validateImageFile(file, MAX_BACKGROUND_SIZE, '5MB')
+}
+
+/**
+ * Generic storage path generator
+ * @param clientId - The client ID
+ * @param fileName - The original file name
+ * @param subDirectory - The subdirectory name (logos or backgrounds)
+ * @returns The storage path for the file
+ */
+function generateClientStoragePath(
+  clientId: string,
+  fileName: string,
+  subDirectory: string
+): string {
+  if (!clientId || typeof clientId !== 'string' || clientId.trim() === '') {
+    throw new Error('Client ID is required and must be a non-empty string')
   }
 
-  // Validate file type
-  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-    return {
-      isValid: false,
-      error: `Invalid file type. Allowed types: ${ALLOWED_IMAGE_TYPES.join(', ')}`,
-    }
+  if (!fileName || typeof fileName !== 'string' || fileName.trim() === '') {
+    throw new Error('File name is required and must be a non-empty string')
   }
 
-  // Validate file size
-  if (file.size > MAX_BACKGROUND_SIZE) {
-    return {
-      isValid: false,
-      error: `File size exceeds maximum allowed size of ${MAX_BACKGROUND_SIZE / (1024 * 1024)}MB`,
-    }
-  }
+  // Trim the clientId
+  const trimmedClientId = clientId.trim()
 
-  return {
-    isValid: true,
-  }
+  // Sanitize filename by removing special characters and spaces
+  const sanitizedFileName = fileName
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9.-]/g, '_')
+
+  const timestamp = Date.now()
+  const extension = sanitizedFileName.split('.').pop()
+  const nameWithoutExtension = sanitizedFileName.replace(/\.[^/.]+$/, '').replace(/\./g, '_')
+
+  return `clients/${trimmedClientId}/${subDirectory}/${nameWithoutExtension}_${timestamp}.${extension}`
 }
 
 /**
@@ -98,28 +124,7 @@ export function validateBackgroundImage(file: File | null | undefined): Validati
  * @returns The storage path for the logo file
  */
 export function generateLogoStoragePath(clientId: string, fileName: string): string {
-  if (!clientId || typeof clientId !== 'string' || clientId.trim() === '') {
-    throw new Error('Client ID is required and must be a non-empty string')
-  }
-
-  if (!fileName || typeof fileName !== 'string' || fileName.trim() === '') {
-    throw new Error('File name is required and must be a non-empty string')
-  }
-
-  // Trim the clientId
-  const trimmedClientId = clientId.trim()
-
-  // Sanitize filename by removing special characters and spaces
-  const sanitizedFileName = fileName
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9.-]/g, '_')
-
-  const timestamp = Date.now()
-  const extension = sanitizedFileName.split('.').pop()
-  const nameWithoutExtension = sanitizedFileName.replace(/\.[^/.]+$/, '').replace(/\./g, '_')
-
-  return `clients/${trimmedClientId}/logos/${nameWithoutExtension}_${timestamp}.${extension}`
+  return generateClientStoragePath(clientId, fileName, 'logos')
 }
 
 /**
@@ -129,28 +134,7 @@ export function generateLogoStoragePath(clientId: string, fileName: string): str
  * @returns The storage path for the background image file
  */
 export function generateBackgroundStoragePath(clientId: string, fileName: string): string {
-  if (!clientId || typeof clientId !== 'string' || clientId.trim() === '') {
-    throw new Error('Client ID is required and must be a non-empty string')
-  }
-
-  if (!fileName || typeof fileName !== 'string' || fileName.trim() === '') {
-    throw new Error('File name is required and must be a non-empty string')
-  }
-
-  // Trim the clientId
-  const trimmedClientId = clientId.trim()
-
-  // Sanitize filename by removing special characters and spaces
-  const sanitizedFileName = fileName
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9.-]/g, '_')
-
-  const timestamp = Date.now()
-  const extension = sanitizedFileName.split('.').pop()
-  const nameWithoutExtension = sanitizedFileName.replace(/\.[^/.]+$/, '').replace(/\./g, '_')
-
-  return `clients/${trimmedClientId}/backgrounds/${nameWithoutExtension}_${timestamp}.${extension}`
+  return generateClientStoragePath(clientId, fileName, 'backgrounds')
 }
 
 /**
