@@ -20,11 +20,16 @@ import { test, expect } from '@playwright/test'
  * - Supabase auth must support password reset flow
  */
 
-// Test data
-const TEST_USER_EMAIL = 'password-reset-test@involved.test'
-const ORIGINAL_PASSWORD = 'OriginalPassword123!'
+// Test data - using environment variables with fallbacks
+const TEST_USER_EMAIL = process.env.PLAYWRIGHT_PASSWORD_RESET_TEST_EMAIL || 'password-reset-test@involved.test'
+const ORIGINAL_PASSWORD = process.env.PLAYWRIGHT_PASSWORD_RESET_ORIGINAL_PASSWORD || 'OriginalPassword123!'
 const NEW_PASSWORD = 'NewPassword456!'
 const INVALID_EMAIL = 'nonexistent@involved.test'
+
+// Helper function to generate mock tokens
+function generateMockToken(suffix: string): string {
+  return 'mock-reset-token-' + suffix.repeat(50)
+}
 
 test.describe('Password Reset Flow', () => {
   // Check if reset pages exist before running tests
@@ -38,7 +43,8 @@ test.describe('Password Reset Flow', () => {
     try {
       const forgotResponse = await page.goto('/auth/forgot-password')
       forgotPasswordPageExists = forgotResponse?.status() !== 404
-    } catch {
+    } catch (error) {
+      console.log('Error checking forgot password page:', error instanceof Error ? error.message : 'Unknown error')
       forgotPasswordPageExists = false
     }
     
@@ -46,7 +52,8 @@ test.describe('Password Reset Flow', () => {
     try {
       const resetResponse = await page.goto('/auth/reset-password')
       resetPasswordPageExists = resetResponse?.status() !== 404
-    } catch {
+    } catch (error) {
+      console.log('Error checking reset password page:', error instanceof Error ? error.message : 'Unknown error')
       resetPasswordPageExists = false
     }
     
@@ -215,7 +222,7 @@ test.describe('Password Reset Flow', () => {
       test.skip(!resetPasswordPageExists, 'Reset password page not yet implemented')
       
       // Mock token for testing - Supabase uses base64 encoded tokens
-      const mockToken = 'mock-reset-token-' + 'a'.repeat(50)
+      const mockToken = generateMockToken('a')
       
       // Navigate to reset password page with token
       await page.goto(`/auth/reset-password?token=${mockToken}`)
@@ -297,7 +304,7 @@ test.describe('Password Reset Flow', () => {
       test.skip(!resetPasswordPageExists, 'Reset password page not yet implemented')
       
       // Mock token for testing
-      const mockToken = 'mock-reset-token-' + 'b'.repeat(50)
+      const mockToken = generateMockToken('b')
       
       // Navigate to reset password page with token
       await page.goto(`/auth/reset-password?token=${mockToken}`)
@@ -339,7 +346,7 @@ test.describe('Password Reset Flow', () => {
       test.skip(!resetPasswordPageExists, 'Reset password page not yet implemented')
       
       // Mock token for testing
-      const mockToken = 'mock-reset-token-' + 'c'.repeat(50)
+      const mockToken = generateMockToken('c')
       
       // Navigate to reset password page
       await page.goto(`/auth/reset-password?token=${mockToken}`)
@@ -370,7 +377,7 @@ test.describe('Password Reset Flow', () => {
       test.skip(!resetPasswordPageExists, 'Reset password page not yet implemented')
       
       // Mock token for testing
-      const mockToken = 'mock-reset-token-' + 'd'.repeat(50)
+      const mockToken = generateMockToken('d')
       
       // Navigate to reset password page
       await page.goto(`/auth/reset-password?token=${mockToken}`)
@@ -467,7 +474,7 @@ test.describe('Password Reset Flow', () => {
       test.skip(!resetPasswordPageExists, 'Reset password page not yet implemented')
       
       // Mock an expired token
-      const expiredToken = 'expired-token-' + 'e'.repeat(50)
+      const expiredToken = generateMockToken('e')
       
       // Navigate to reset password page
       await page.goto(`/auth/reset-password?token=${expiredToken}`)
@@ -497,7 +504,7 @@ test.describe('Password Reset Flow', () => {
       // 3. Verifying it's rejected
       
       // For now, we test the error handling when accessing with used token
-      const usedToken = 'used-token-' + 'f'.repeat(50)
+      const usedToken = generateMockToken('f')
       
       await page.goto(`/auth/reset-password?token=${usedToken}`)
       await page.waitForLoadState('networkidle')
