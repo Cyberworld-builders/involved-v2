@@ -42,7 +42,6 @@ test.describe('Navigation Component Consistency', () => {
       const logo = page.locator('text=Involved Talent')
       await expect(logo).toBeVisible()
     } else {
-      
       test.skip(true, 'Dashboard requires authentication')
     }
   })
@@ -73,7 +72,6 @@ test.describe('Navigation Component Consistency', () => {
       const userSection = page.locator('.border-t.border-gray-700')
       await expect(userSection).toBeVisible()
     } else {
-      
       test.skip(true, 'Dashboard requires authentication')
     }
   })
@@ -119,7 +117,6 @@ test.describe('Responsive Layout - Mobile', () => {
       const container = page.locator('.flex.h-screen')
       await expect(container).toBeVisible()
     } else {
-      
       test.skip(true, 'Dashboard requires authentication')
     }
     
@@ -141,7 +138,6 @@ test.describe('Responsive Layout - Mobile', () => {
       // Verify sidebar component exists in DOM (even if hidden)
       expect(sidebarCount).toBeGreaterThan(0)
     } else {
-      
       test.skip(true, 'Dashboard requires authentication')
     }
     
@@ -170,7 +166,6 @@ test.describe('Responsive Layout - Tablet', () => {
       const cards = page.locator('.grid.grid-cols-1')
       await expect(cards.first()).toBeVisible()
     } else {
-      
       test.skip(true, 'Dashboard requires authentication')
     }
     
@@ -200,7 +195,6 @@ test.describe('Responsive Layout - Desktop', () => {
       const viewportWidth = page.viewportSize()?.width || 0
       expect(bodyWidth).toBeLessThanOrEqual(viewportWidth + VIEWPORT_TOLERANCE_PX) // Allow 10px tolerance
     } else {
-      
       test.skip(true, 'Dashboard requires authentication')
     }
     
@@ -223,7 +217,6 @@ test.describe('Responsive Layout - Desktop', () => {
       const statsGrid = page.locator('.grid.grid-cols-1')
       await expect(statsGrid.first()).toBeVisible()
     } else {
-      
       test.skip(true, 'Dashboard requires authentication')
     }
     
@@ -253,7 +246,6 @@ test.describe('Layout Consistency', () => {
       const container = page.locator('.flex.h-screen')
       await expect(container).toBeVisible()
     } else {
-      
       test.skip(true, 'Dashboard requires authentication')
     }
   })
