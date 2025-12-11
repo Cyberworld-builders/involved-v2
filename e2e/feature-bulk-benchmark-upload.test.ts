@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
-import path from 'path'
-import fs from 'fs'
+import * as path from 'path'
+import * as fs from 'fs'
+import { shouldSkipAuthTests } from './helpers/auth'
 
 /**
  * E2E tests for Bulk Benchmark Upload Flow
@@ -53,7 +54,14 @@ test.afterAll(() => {
   if (fs.existsSync(VALID_CSV_PATH)) fs.unlinkSync(VALID_CSV_PATH)
   if (fs.existsSync(INVALID_CSV_PATH)) fs.unlinkSync(INVALID_CSV_PATH)
   if (fs.existsSync(EMPTY_CSV_PATH)) fs.unlinkSync(EMPTY_CSV_PATH)
-  if (fs.existsSync(TEST_CSV_DIR)) fs.rmdirSync(TEST_CSV_DIR)
+  // Use recursive removal to handle non-empty directories
+  if (fs.existsSync(TEST_CSV_DIR)) {
+    try {
+      fs.rmSync(TEST_CSV_DIR, { recursive: true, force: true })
+    } catch {
+      // Ignore errors during cleanup
+    }
+  }
 })
 
 /**
@@ -73,6 +81,12 @@ async function setupAndNavigateToBenchmarks(page: { goto: (url: string) => Promi
 
 test.describe('Bulk Benchmark Upload Flow', () => {
   test.beforeEach(async () => {
+    // Skip all tests if SKIP_AUTH_TESTS is set
+    if (shouldSkipAuthTests()) {
+      test.skip(true, 'Auth tests are disabled (SKIP_AUTH_TESTS=true)')
+      return
+    }
+    
     // Set up a longer timeout for these tests
     test.setTimeout(60000)
   })
