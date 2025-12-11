@@ -35,7 +35,11 @@ npm run test:e2e:debug
 npx playwright test e2e/feature-client-crud.test.ts
 npx playwright test e2e/feature-group-crud.test.ts
 npx playwright test e2e/feature-navigation-layout.test.ts
+npx playwright test e2e/feature-industry-crud.test.ts
+npx playwright test e2e/feature-benchmark-crud.test.ts
 npx playwright test e2e/feature-user-invitation.test.ts
+npx playwright test e2e/feature-bulk-user-upload.test.ts
+npx playwright test e2e/feature-environment-setup.test.ts
 
 # Run tests in headed mode (see the browser)
 npx playwright test --headed
@@ -57,8 +61,12 @@ npx playwright test -g "Admin can create new industry"
 - `feature-client-crud.test.ts` - Complete client CRUD flow tests
 - `feature-group-crud.test.ts` - Complete group CRUD flow tests (issues #37-43)
 - `feature-navigation-layout.test.ts` - Navigation and responsive layout tests
+- `feature-industry-crud.test.ts` - Industry CRUD operations tests
+- `feature-benchmark-crud.test.ts` - Benchmark CRUD operations tests
 - `feature-user-invitation.test.ts` - User invitation and account claim flow tests
 - `feature-bulk-benchmark-upload.test.ts` - Bulk benchmark upload tests
+- `feature-bulk-user-upload.test.ts` - Bulk user upload tests
+- `feature-environment-setup.test.ts` - Environment setup verification tests
 - `test-auth-setup.test.ts` - Authentication setup verification tests
 
 ### Test Fixtures
@@ -67,6 +75,9 @@ The `fixtures/` directory contains test assets used in E2E tests:
 - `logo.png` - Test logo image for client logo upload tests
 - `background.png` - Test background image for client background upload tests
 - `test-data.ts` - Reusable test data fixtures
+- `valid-users.csv` - Valid CSV file for bulk user upload tests
+- `invalid-users.csv` - Invalid CSV file for testing error handling
+- `incomplete-row-users.csv` - CSV with incomplete rows for testing validation
 
 ## Authentication Setup
 
@@ -190,6 +201,41 @@ The CI environment uses secrets for authentication:
 - ✅ Form validation prevents empty client name
 - ✅ Client list shows empty state when no clients exist
 
+### Industry CRUD Tests (`feature-industry-crud.test.ts`)
+
+#### Core CRUD Operations
+- ✅ **Create Industry**: Admin can create new industry with form validation
+- ✅ **View Industries List**: Admin can view all industries with proper table structure
+- ✅ **View Industry Details**: Admin can view single industry details via edit page
+- ✅ **Update Industry**: Admin can update industry information
+- ✅ **Delete Industry**: Admin can delete industry (with confirmation handling)
+- ✅ **User-Industry Assignment**: Users can be assigned to industries via user form
+- ✅ **Form Validation**: Tests form validation rules and error handling
+- ✅ **Navigation**: Tests navigation between industry pages
+- ✅ **Data Display**: Verifies correct data display and empty states
+
+#### Related Issues
+- Industry CRUD operations (Issues #53-#57)
+- [#58](https://github.com/Cyberworld-builders/involved-v2/issues/58): User-industry assignment
+
+### Benchmark CRUD Tests (`feature-benchmark-crud.test.ts`)
+
+#### Core CRUD Operations
+- ✅ Admin can view benchmarks list page
+- ✅ Benchmarks can be filtered by assessment
+- ✅ Benchmarks can be filtered by industry
+- ✅ Admin can view single benchmark details (dimension-specific)
+- ✅ Admin can create new benchmark
+- ✅ Admin can update benchmark information
+- ✅ Admin can delete benchmark
+- ✅ Benchmark CSV upload and download functionality
+- ✅ Benchmarks page has proper navigation and breadcrumbs
+- ✅ Benchmark values are validated as numbers
+
+#### Related Issues
+- Benchmark CRUD operations (Issues #59-#63)
+- [#64](https://github.com/Cyberworld-builders/involved-v2/issues/64): Implement benchmark filtering
+
 ### User Invitation Tests (`feature-user-invitation.test.ts`)
 
 Comprehensive E2E tests for the user invitation and account claim flow.
@@ -291,6 +337,7 @@ When adding new E2E tests:
 7. **Wait for network idle**: Use `waitForLoadState('networkidle')` when needed
 8. **Add screenshots**: Take screenshots on failure for debugging
 9. **Add appropriate skip logic**: For unimplemented features, use smart skip logic
+10. **Document test prerequisites**: Include expected behavior and prerequisites
 
 Example:
 
@@ -337,6 +384,7 @@ Find them in the `test-results` directory.
 
 ### Debug a specific test
 ```bash
+npx playwright test --debug feature-industry-crud -g "Admin can create"
 npx playwright test --debug feature-user-invitation -g "Admin can send"
 ```
 
