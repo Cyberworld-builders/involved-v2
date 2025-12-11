@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { generateUsernameFromName, generateUniqueUsername } from '@/lib/utils/username-generation'
+import { isValidEmail } from '@/lib/utils/email-validation'
 
 /**
  * POST /api/users/bulk
@@ -73,8 +74,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!emailRegex.test(email.trim())) {
+      if (!isValidEmail(email)) {
         results.push({
           user: email,
           success: false,

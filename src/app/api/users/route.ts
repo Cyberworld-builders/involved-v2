@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { Database } from '@/types/database'
 import { generateUsernameFromName, generateUniqueUsername } from '@/lib/utils/username-generation'
+import { isValidEmail } from '@/lib/utils/email-validation'
 
 type ProfileInsert = Database['public']['Tables']['profiles']['Insert']
 
@@ -86,8 +87,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email.trim())) {
+    if (!isValidEmail(email)) {
       return NextResponse.json(
         { error: 'Invalid email format' },
         { status: 400 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { Database } from '@/types/database'
+import { isValidEmail } from '@/lib/utils/email-validation'
 
 type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
 
@@ -108,8 +109,7 @@ export async function PATCH(
         )
       }
       // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!emailRegex.test(email.trim())) {
+      if (!isValidEmail(email)) {
         return NextResponse.json(
           { error: 'Invalid email format' },
           { status: 400 }
