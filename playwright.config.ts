@@ -87,7 +87,5 @@ export default defineConfig({
     url: 'http://localhost:3000',
     reuseExistingServer: true,
     timeout: 120 * 1000,
-    /* Give server more time to start */
-    startupTimeout: 120 * 1000,
   },
 })
