@@ -96,10 +96,14 @@ function getUniqueClientName(baseName: string): string {
 
 test.describe('Client CRUD Operations', () => {
   test.beforeEach(async ({ page }) => {
-    // Login before each test
-    const loggedIn = await loginAsAdmin(page)
-    if (!loggedIn) {
-      test.skip(true, 'Authentication not available. Set PLAYWRIGHT_TEST_EMAIL and PLAYWRIGHT_TEST_PASSWORD environment variables.')
+    // Check if we're authenticated (auth state should be loaded from global setup)
+    const isAuth = await isAuthenticated(page)
+    if (!isAuth) {
+      // Try to login if auth state wasn't loaded
+      const loggedIn = await loginAsAdmin(page)
+      if (!loggedIn) {
+        test.skip(true, 'Authentication not available. Set PLAYWRIGHT_TEST_EMAIL and PLAYWRIGHT_TEST_PASSWORD environment variables.')
+      }
     }
   })
 
@@ -407,9 +411,14 @@ test.describe('Client CRUD Operations', () => {
 
 test.describe('Client CRUD Edge Cases', () => {
   test.beforeEach(async ({ page }) => {
-    const loggedIn = await loginAsAdmin(page)
-    if (!loggedIn) {
-      test.skip(true, 'Authentication not available. Set PLAYWRIGHT_TEST_EMAIL and PLAYWRIGHT_TEST_PASSWORD environment variables.')
+    // Check if we're authenticated (auth state should be loaded from global setup)
+    const isAuth = await isAuthenticated(page)
+    if (!isAuth) {
+      // Try to login if auth state wasn't loaded
+      const loggedIn = await loginAsAdmin(page)
+      if (!loggedIn) {
+        test.skip(true, 'Authentication not available. Set PLAYWRIGHT_TEST_EMAIL and PLAYWRIGHT_TEST_PASSWORD environment variables.')
+      }
     }
   })
 

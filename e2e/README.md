@@ -60,28 +60,47 @@ The `fixtures/` directory contains test assets used in E2E tests:
 
 ## Authentication Setup
 
-The E2E tests require authentication to access protected routes. You have two options:
+The E2E tests use **Playwright's global setup** to automatically authenticate before running tests. This means:
 
-### Option 1: Environment Variables (Recommended)
+1. **Authentication happens once** before all tests run (via `e2e/global-setup.ts`)
+2. **Auth state is saved** and reused across all tests
+3. **No need to login in each test** - tests start already authenticated
 
-Set up test user credentials in environment variables:
+### Required Environment Variables
+
+Set up test user credentials:
 
 ```bash
-export PLAYWRIGHT_TEST_EMAIL="admin@test.com"
-export PLAYWRIGHT_TEST_PASSWORD="testpassword123"
+export PLAYWRIGHT_TEST_EMAIL="e2e-test-admin@involved-talent.test"
+export PLAYWRIGHT_TEST_PASSWORD="TestPassword123!"
 ```
 
 Or create a `.env.test` file (not committed to version control):
 
 ```env
-PLAYWRIGHT_TEST_EMAIL=admin@test.com
-PLAYWRIGHT_TEST_PASSWORD=testpassword123
+PLAYWRIGHT_TEST_EMAIL=e2e-test-admin@involved-talent.test
+PLAYWRIGHT_TEST_PASSWORD=TestPassword123!
 PLAYWRIGHT_TEST_BASE_URL=http://localhost:3000
 ```
 
-### Option 2: Playwright Authentication State
+### Automatic Test User Creation (Optional)
 
-For more advanced setups, you can use Playwright's [authentication state](https://playwright.dev/docs/auth) to persist login sessions.
+If you provide `SUPABASE_SERVICE_ROLE_KEY`, the global setup will:
+- Automatically create the test user if it doesn't exist
+- Create the user's profile with admin role
+- Update the password if the user already exists
+
+This is ideal for CI/CD environments where you want fully automated test setup.
+
+### Manual Test User Setup
+
+If you prefer to create the test user manually:
+
+1. **Via Supabase Dashboard**: Create a user with admin role
+2. **Via SQL** (see SQL example below)
+3. **Via Application**: Sign up through the app and assign admin role
+
+The global setup will authenticate using the credentials you provide.
 
 ## Setting Up Test Users
 
