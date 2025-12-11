@@ -17,9 +17,12 @@ import { getAdminClient } from './helpers/database'
  */
 
 test.describe('User Sign Up Flow', () => {
+  // Test email domain constant
+  const TEST_EMAIL_DOMAIN = 'involved-talent.test'
+  
   // Helper function to generate unique test user data for each test
   const generateTestUser = () => ({
-    email: `signup-test-${Date.now()}-${Math.random().toString(36).substring(7)}@involved-talent.test`,
+    email: `signup-test-${Date.now()}-${Math.random().toString(36).substring(7)}@${TEST_EMAIL_DOMAIN}`,
     password: 'SignupTest123!',
     firstName: 'Signup',
     lastName: 'Test',
@@ -36,11 +39,6 @@ test.describe('User Sign Up Flow', () => {
   test.beforeEach(async ({ page }) => {
     // Start from home page
     await page.goto('/')
-  })
-
-  test.afterAll(async () => {
-    // Cleanup is handled per-test since each test creates unique users
-    // and we don't want to track them globally
   })
 
   test('User can access signup page', async ({ page }) => {
@@ -273,11 +271,13 @@ test.describe('User Sign Up Flow', () => {
     expect(page.url()).toContain('/auth/signup')
 
     // HTML5 validation should prevent submission
-    // Check that required fields have the required attribute
-    const firstNameRequired = await page.locator('input[id="firstName"]').getAttribute('required')
-    const lastNameRequired = await page.locator('input[id="lastName"]').getAttribute('required')
-    const emailRequired = await page.locator('input[id="email"]').getAttribute('required')
-    const passwordRequired = await page.locator('input[id="password"]').getAttribute('required')
+    // Check that required fields have the required attribute (parallel queries for efficiency)
+    const [firstNameRequired, lastNameRequired, emailRequired, passwordRequired] = await Promise.all([
+      page.locator('input[id="firstName"]').getAttribute('required'),
+      page.locator('input[id="lastName"]').getAttribute('required'),
+      page.locator('input[id="email"]').getAttribute('required'),
+      page.locator('input[id="password"]').getAttribute('required'),
+    ])
 
     expect(firstNameRequired).not.toBeNull()
     expect(lastNameRequired).not.toBeNull()
