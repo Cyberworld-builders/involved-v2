@@ -38,6 +38,7 @@ npx playwright test e2e/feature-navigation-layout.test.ts
 npx playwright test e2e/feature-industry-crud.test.ts
 npx playwright test e2e/feature-benchmark-crud.test.ts
 npx playwright test e2e/feature-user-invitation.test.ts
+npx playwright test e2e/feature-signup.test.ts
 npx playwright test e2e/feature-bulk-user-upload.test.ts
 npx playwright test e2e/feature-environment-setup.test.ts
 
@@ -64,6 +65,7 @@ npx playwright test -g "Admin can create new industry"
 - `feature-industry-crud.test.ts` - Industry CRUD operations tests
 - `feature-benchmark-crud.test.ts` - Benchmark CRUD operations tests
 - `feature-user-invitation.test.ts` - User invitation and account claim flow tests
+- `feature-signup.test.ts` - User sign up flow tests (issues #8, #12)
 - `feature-bulk-benchmark-upload.test.ts` - Bulk benchmark upload tests
 - `feature-bulk-user-upload.test.ts` - Bulk user upload tests
 - `feature-environment-setup.test.ts` - Environment setup verification tests
@@ -301,6 +303,54 @@ When implementing the user invitation features, the following should be added:
 3. **Time-based Testing:**
    - Mock time manipulation for token expiration tests
    - Database helpers to create backdated tokens
+
+### User Sign Up Flow Tests (`feature-signup.test.ts`)
+
+Comprehensive E2E tests for the user registration and email verification flow.
+
+#### Test Coverage
+- ✅ User can access signup page
+- ✅ User can submit signup form
+- ✅ User receives verification email message
+- ✅ User can verify email (using Supabase Admin API for testing)
+- ✅ User can sign in after verification
+- ✅ Complete signup flow end-to-end
+- ✅ Form validation prevents invalid submissions
+- ✅ Signup page has link to login
+
+#### Related Issues
+- [#8](https://github.com/Cyberworld-builders/involved-v2/issues/8): Implement user sign up
+- [#12](https://github.com/Cyberworld-builders/involved-v2/issues/12): Implement email verification
+
+#### Test Behavior
+
+**Email Verification Testing:**
+The signup tests use Supabase Admin API to simulate email verification:
+- Tests create users via the signup form
+- Email verification is simulated using `adminClient.auth.admin.updateUserById()`
+- This approach allows E2E testing without requiring email service infrastructure
+- Real email verification would involve clicking a link from an email
+
+**Test Requirements:**
+- Requires `SUPABASE_SERVICE_ROLE_KEY` for admin operations
+- Tests that require verification will skip if admin client is not available
+- Basic signup page tests work without admin access
+
+**Automatic Cleanup:**
+Tests automatically clean up created test users in the `afterAll` hook to prevent database clutter.
+
+#### Test Implementation Details
+
+| Test | Status | Requirements |
+|------|--------|--------------|
+| Access signup page | ✅ Ready | None |
+| Submit signup form | ✅ Ready | None |
+| Verification message | ✅ Ready | None |
+| Email verification | ✅ Ready | SUPABASE_SERVICE_ROLE_KEY |
+| Sign in after verification | ✅ Ready | SUPABASE_SERVICE_ROLE_KEY |
+| Complete flow | ✅ Ready | SUPABASE_SERVICE_ROLE_KEY |
+| Form validation | ✅ Ready | None |
+| Navigation to login | ✅ Ready | None |
 
 ### Navigation & Layout Tests (`feature-navigation-layout.test.ts`)
 
