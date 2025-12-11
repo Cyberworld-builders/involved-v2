@@ -100,7 +100,7 @@ export function validateVerificationLink(link: string): {
       isValid: true,
       token,
     }
-  } catch (error) {
+  } catch {
     return {
       isValid: false,
       token: null,
