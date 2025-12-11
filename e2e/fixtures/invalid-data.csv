@@ -1,0 +1,3 @@
+Group Name,Target Name,Target Email,Name,Email,Role
+"Engineering Team","John Doe","invalid-email","Jane Smith","jane.smith@example.com","Developer"
+"Engineering Team","John Doe","john.doe@example.com","","","Manager"
