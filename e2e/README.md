@@ -36,6 +36,9 @@ npx playwright test e2e/feature-client-crud.test.ts
 npx playwright test e2e/feature-navigation-layout.test.ts
 npx playwright test e2e/feature-industry-crud.test.ts
 npx playwright test e2e/feature-benchmark-crud.test.ts
+npx playwright test e2e/feature-user-invitation.test.ts
+npx playwright test e2e/feature-bulk-user-upload.test.ts
+npx playwright test e2e/feature-environment-setup.test.ts
 
 # Run tests in headed mode (see the browser)
 npx playwright test --headed
@@ -58,7 +61,10 @@ npx playwright test -g "Admin can create new industry"
 - `feature-navigation-layout.test.ts` - Navigation and responsive layout tests
 - `feature-industry-crud.test.ts` - Industry CRUD operations tests
 - `feature-benchmark-crud.test.ts` - Benchmark CRUD operations tests
+- `feature-user-invitation.test.ts` - User invitation and account claim flow tests
 - `feature-bulk-benchmark-upload.test.ts` - Bulk benchmark upload tests
+- `feature-bulk-user-upload.test.ts` - Bulk user upload tests
+- `feature-environment-setup.test.ts` - Environment setup verification tests
 - `test-auth-setup.test.ts` - Authentication setup verification tests
 
 ### Test Fixtures
@@ -67,6 +73,9 @@ The `fixtures/` directory contains test assets used in E2E tests:
 - `logo.png` - Test logo image for client logo upload tests
 - `background.png` - Test background image for client background upload tests
 - `test-data.ts` - Reusable test data fixtures
+- `valid-users.csv` - Valid CSV file for bulk user upload tests
+- `invalid-users.csv` - Invalid CSV file for testing error handling
+- `incomplete-row-users.csv` - CSV with incomplete rows for testing validation
 
 ## Authentication Setup
 
@@ -225,6 +234,72 @@ The CI environment uses secrets for authentication:
 - Benchmark CRUD operations (Issues #59-#63)
 - [#64](https://github.com/Cyberworld-builders/involved-v2/issues/64): Implement benchmark filtering
 
+### User Invitation Tests (`feature-user-invitation.test.ts`)
+
+Comprehensive E2E tests for the user invitation and account claim flow.
+
+#### Test Coverage
+- ✅ Admin/Manager can send user invite
+- ✅ Invite email is sent with token link
+- ✅ Token expires after 7 days
+- ✅ User can access account claim page with valid token
+- ✅ User can claim account and set password
+- ✅ User is redirected to dashboard after claim
+- ✅ User can sign in after account claim
+- ✅ User can update profile after account claim
+- ✅ User can update password after account claim
+- ✅ User can request password reset after account claim
+- ✅ Expired tokens are rejected
+- ✅ Error handling for invalid tokens
+- ✅ Integration tests for complete flows
+
+#### Related Issues
+- User invitation and account claim (Issues #45-#52)
+
+#### Test Behavior
+
+**Smart Skip Logic:**
+The invitation tests include smart skip logic that:
+- Automatically detects if the `/auth/claim` page exists
+- Skips tests gracefully when features are not yet implemented
+- Provides clear messaging about why tests were skipped
+
+**Expected Test Results (Current State):**
+Most tests in `feature-user-invitation.test.ts` will currently **skip** because:
+- The `/auth/claim` page does not exist yet
+- The invitation API endpoints are not implemented
+- Email service is not configured
+
+These tests serve as **acceptance criteria** for the user invitation feature implementation.
+
+#### Test Implementation Status
+
+| Test Suite | Tests | Status | Notes |
+|------------|-------|--------|-------|
+| Admin/Manager Invitation | 3 | ⏸️ Skipped | Awaiting feature implementation |
+| Account Claim Flow | 4 | ⏸️ Skipped | Awaiting `/auth/claim` page |
+| Post-Claim Functionality | 4 | ⏸️ Skipped | Awaiting feature implementation |
+| Error Handling | 3 | ⏸️ Skipped | Awaiting feature implementation |
+| Integration Tests | 3 | ⏸️ Skipped | Awaiting full implementation |
+
+#### Future Enhancements
+
+When implementing the user invitation features, the following should be added:
+
+1. **Email Testing Infrastructure:**
+   - Integration with test email service (e.g., Ethereal, MailHog)
+   - Database queries to verify invite tokens
+   - API to check email queue status
+
+2. **Test Data Management:**
+   - Automated cleanup of test users after tests complete
+   - Fixtures for creating test users with various states
+   - Database seeding for test scenarios
+
+3. **Time-based Testing:**
+   - Mock time manipulation for token expiration tests
+   - Database helpers to create backdated tokens
+
 ### Navigation & Layout Tests (`feature-navigation-layout.test.ts`)
 
 #### Navigation Component
@@ -259,6 +334,8 @@ When adding new E2E tests:
 6. **Clean up test data**: Consider cleanup in tests or use test isolation
 7. **Wait for network idle**: Use `waitForLoadState('networkidle')` when needed
 8. **Add screenshots**: Take screenshots on failure for debugging
+9. **Add appropriate skip logic**: For unimplemented features, use smart skip logic
+10. **Document test prerequisites**: Include expected behavior and prerequisites
 
 Example:
 
@@ -306,6 +383,12 @@ Find them in the `test-results` directory.
 ### Debug a specific test
 ```bash
 npx playwright test --debug feature-industry-crud -g "Admin can create"
+npx playwright test --debug feature-user-invitation -g "Admin can send"
+```
+
+### Run with Headed Browser
+```bash
+npx playwright test --headed
 ```
 
 ## Troubleshooting
@@ -337,6 +420,17 @@ npx playwright test --debug feature-industry-crud -g "Admin can create"
 
 ## Test Configuration
 
+Test configuration is in `playwright.config.ts` at the project root.
+
+**Key Settings:**
+- Test directory: `./e2e`
+- Base URL: `http://localhost:3000` (configurable via `PLAYWRIGHT_TEST_BASE_URL`)
+- Browsers: Chromium, Firefox, WebKit
+- Retry strategy: 2 retries on CI, 0 locally
+- Screenshots: On failure only
+- Video: On failure only
+- Global setup for authentication
+
 See `playwright.config.ts` in the root directory for configuration options including:
 - Base URL
 - Browser configurations (Chromium, Firefox, WebKit)
@@ -353,6 +447,7 @@ See `playwright.config.ts` in the root directory for configuration options inclu
 4. **Error Handling**: Try-catch blocks handle timing variations
 5. **Realistic Data**: Tests use timestamp-based unique data to avoid conflicts
 6. **Respect SKIP_AUTH_TESTS**: Always check `shouldSkipAuthTests()` in tests that require authentication
+7. **Smart Skip Logic**: Use skip logic for unimplemented features with clear messaging
 
 ## Contributing
 
@@ -363,6 +458,18 @@ When adding new tests:
 4. Handle both success and edge cases
 5. Update this README with new test coverage
 6. Ensure tests respect the `SKIP_AUTH_TESTS` flag
+7. Add appropriate skip logic for unimplemented features
+8. Document test prerequisites and expected behavior
+9. Group related tests using `test.describe()`
+10. Clean up test data in `afterEach` or `afterAll` hooks
+
+## CI/CD Integration
+
+These tests are designed to run in CI/CD pipelines:
+- Tests fail fast on CI with `forbidOnly` flag
+- Retry strategy for flaky tests (2 retries on CI)
+- Tests run serially on CI to avoid race conditions
+- Configured for optimal CI performance
 
 ## Resources
 
@@ -371,3 +478,11 @@ When adding new tests:
 - [Writing Tests](https://playwright.dev/docs/writing-tests)
 - [Test Selectors](https://playwright.dev/docs/selectors)
 - [Project Testing Guide](../docs/TESTING.md)
+
+## Support
+
+For issues with E2E tests:
+1. Check that environment variables are configured
+2. Verify the dev server is running (`npm run dev`)
+3. Review test prerequisites in this README
+4. Check Playwright documentation: https://playwright.dev/

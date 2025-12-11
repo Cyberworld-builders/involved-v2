@@ -1,0 +1,3 @@
+Name,Email,Username,Industry,Client Name
+,invalid@test.com,noindustry,,
+Invalid User,not-an-email,user1,Technology,
