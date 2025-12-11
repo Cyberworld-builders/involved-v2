@@ -18,7 +18,7 @@ const TEST_CLIENT_ID = 'test-client-id'
 const FIXTURES_PATH = path.join(__dirname, 'fixtures')
 
 test.describe('Bulk Group Upload Flow', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async () => {
     // Note: In a real scenario, you would need to:
     // 1. Setup authentication (login as admin/manager)
     // 2. Create a test client and users in the database
