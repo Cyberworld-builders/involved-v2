@@ -33,6 +33,7 @@ npm run test:e2e:debug
 
 # Run specific test file
 npx playwright test e2e/feature-client-crud.test.ts
+npx playwright test e2e/feature-navigation-layout.test.ts
 
 # Run tests in headed mode (see the browser)
 npx playwright test --headed
@@ -49,6 +50,7 @@ npx playwright test --project=webkit
 
 - `example.spec.ts` - Example test demonstrating Playwright usage
 - `feature-client-crud.test.ts` - Complete client CRUD flow tests
+- `feature-navigation-layout.test.ts` - Navigation and responsive layout tests
 
 ### Test Fixtures
 
@@ -126,27 +128,49 @@ The CI environment uses secrets for authentication:
 
 ## Test Coverage
 
-The `feature-client-crud.test.ts` file covers:
+### Client CRUD Tests (`feature-client-crud.test.ts`)
 
-### Core CRUD Operations
+#### Core CRUD Operations
 - ✅ Admin can create new client
 - ✅ Admin can view clients list
 - ✅ Admin can view single client details
 - ✅ Admin can update client information
 - ✅ Admin can delete client
 
-### File Upload Features
+#### File Upload Features
 - ✅ Client logo upload works
 - ✅ Client background image upload works
 
-### Customization Features
+#### Customization Features
 - ✅ Client color customization works
 - ✅ Complete flow with all features
 
-### Edge Cases
+#### Edge Cases
 - ✅ Creating client with minimum required fields
 - ✅ Form validation prevents empty client name
 - ✅ Client list shows empty state when no clients exist
+
+### Navigation & Layout Tests (`feature-navigation-layout.test.ts`)
+
+#### Navigation Component
+- ✅ Sidebar navigation is present on dashboard page
+- ✅ Navigation contains all expected links
+- ✅ Header bar is present with expected elements
+
+#### Responsive Layout
+- ✅ Dashboard layout renders on mobile viewport
+- ✅ Navigation is accessible on mobile viewport
+- ✅ Dashboard layout renders properly on tablet viewport
+- ✅ Dashboard layout renders properly on desktop viewport
+- ✅ Layout maintains proper structure on wide viewports
+
+#### Layout Consistency
+- ✅ Layout maintains consistent structure
+- ✅ Home page renders properly on mobile viewport
+- ✅ Home page renders properly on tablet viewport
+- ✅ Home page renders properly on desktop viewport
+
+**Note**: Dashboard tests require authentication. Tests will skip if not authenticated. Home page tests work without authentication.
 
 ## Writing New Tests
 
@@ -155,7 +179,7 @@ When adding new E2E tests:
 1. **Follow naming convention**: `feature-*.test.ts` or `*-flow.test.ts`
 2. **Use descriptive test names**: Clearly describe what is being tested
 3. **Add test documentation**: Include comments explaining test purpose
-4. **Handle authentication**: Use the `loginAsAdmin()` helper
+4. **Handle authentication**: Use the `loginAsAdmin()` helper or check authentication state
 5. **Use unique identifiers**: Generate unique names/IDs to avoid conflicts
 6. **Clean up test data**: Consider cleanup in tests or use test isolation
 7. **Wait for network idle**: Use `waitForLoadState('networkidle')` when needed
@@ -189,6 +213,7 @@ test('Admin can create new feature', async ({ page }) => {
 - Verify test credentials are correct
 - Check if test user exists in the database
 - Ensure user has admin role
+- Tests will skip gracefully if credentials are not provided
 
 ### File upload tests failing
 
@@ -201,6 +226,15 @@ test('Admin can create new feature', async ({ page }) => {
 - Check CI environment variables are set
 - Verify CI has correct Supabase configuration
 - Review Playwright artifacts uploaded by CI for debugging
+
+## Test Configuration
+
+See `playwright.config.ts` in the root directory for configuration options including:
+- Base URL
+- Browser configurations (Chromium, Firefox, WebKit)
+- Timeout settings
+- Screenshot and video recording options
+- Mobile device emulation
 
 ## Resources
 
