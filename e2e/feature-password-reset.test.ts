@@ -28,14 +28,18 @@ const INVALID_EMAIL = 'nonexistent@involved.test'
 
 // Test timeouts and constants
 const DEFAULT_TIMEOUT = 5000 // Default timeout for element visibility
+const VALIDATION_TIMEOUT = 2000 // Shorter timeout for validation checks
 const MOCK_TOKEN_LENGTH = 50 // Supabase-like token length for testing
 const MAX_RATE_LIMIT_REQUESTS = 5 // Number of requests for rate limit test
 const RATE_LIMIT_REQUEST_DELAY_MS = 500 // Delay between rate limit test requests
 
 // Helper function to generate mock tokens
 // Generates a token similar to Supabase password reset tokens
+// The suffix differentiates tokens in different test cases
 function generateMockToken(suffix: string): string {
-  return 'mock-reset-token-' + suffix.repeat(MOCK_TOKEN_LENGTH)
+  const baseToken = 'mock-reset-token-' + suffix
+  // Pad with 'a' characters to reach desired length
+  return baseToken + 'a'.repeat(Math.max(0, MOCK_TOKEN_LENGTH - baseToken.length))
 }
 
 test.describe('Password Reset Flow', () => {
@@ -188,7 +192,7 @@ test.describe('Password Reset Flow', () => {
       
       const customError = await page.locator(
         'text=/invalid.*email/i, text=/valid.*email/i'
-      ).isVisible({ timeout: 2000 }).catch(() => false) // Shorter timeout for validation
+      ).isVisible({ timeout: VALIDATION_TIMEOUT }).catch(() => false)
       
       // Either HTML5 validation or custom error should prevent submission
       expect(hasValidationError || customError).toBeTruthy()
@@ -555,7 +559,7 @@ test.describe('Password Reset Flow', () => {
       
       // Rate limiting might not be implemented, so we don't assert
       // Just check if it exists
-      const hasRateLimit = await rateLimitMessage.isVisible({ timeout: 2000 }).catch(() => false) // Shorter timeout for rate limit check
+      const hasRateLimit = await rateLimitMessage.isVisible({ timeout: VALIDATION_TIMEOUT }).catch(() => false)
       
       // Log the result for documentation purposes
       if (hasRateLimit) {
