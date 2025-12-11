@@ -1,6 +1,6 @@
 import { chromium, FullConfig } from '@playwright/test'
 import { createTestUser } from './helpers/database'
-import { waitForAuthCookies, waitForAuthentication } from './helpers/auth'
+import { waitForAuthentication } from './helpers/auth'
 
 /**
  * Global setup for E2E tests
@@ -32,7 +32,6 @@ async function globalSetup(config: FullConfig) {
   
   const baseURL = config.projects[0].use.baseURL || 'http://localhost:3000'
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY // For admin operations
   
   // Get test credentials from environment or use defaults
@@ -145,7 +144,7 @@ async function globalSetup(config: FullConfig) {
         { timeout: 15000, waitUntil: 'networkidle' }
       )
       console.log(`   ✅ Navigated to: ${page.url()}`)
-    } catch (error) {
+    } catch {
       console.log(`   ⚠️  Navigation timeout. Current URL: ${page.url()}`)
       // Continue anyway - might still be authenticating
     }

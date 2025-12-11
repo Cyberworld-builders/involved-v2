@@ -116,9 +116,9 @@ export async function createTestUser(
       accepted_terms: true,
       accepted_at: new Date().toISOString(),
     }
-    const { error: profileError } = await (client
-      .from('profiles') as any)
-      .upsert(profileData)
+    // Type assertion needed because admin client doesn't have full type definitions
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: profileError } = await (client.from('profiles') as any).upsert(profileData)
     
     if (profileError) {
       console.warn(`Failed to create profile: ${profileError.message}`)
