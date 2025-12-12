@@ -84,28 +84,22 @@ export async function POST(request: NextRequest) {
     const groupInserts: GroupInsert[] = []
 
     parseResult.data.forEach((group, index) => {
-      // If client_name is provided, find the matching client
-      let clientId: string | null = null
-
-      if (group.client_name) {
-        const client = clients?.find(
-          c => c.name.toLowerCase() === group.client_name?.toLowerCase()
-        )
-
-        if (!client) {
-          validationErrors.push(
-            `Row ${index + 2}: Client '${group.client_name}' not found`
-          )
-          return
-        }
-
-        clientId = client.id
-      }
-
-      // Client ID is required for groups
-      if (!clientId) {
+      // Client name is required for groups
+      if (!group.client_name) {
         validationErrors.push(
           `Row ${index + 2}: Client name is required (column: 'Client Name' or 'client_name')`
+        )
+        return
+      }
+
+      // Find the matching client
+      const client = clients?.find(
+        c => c.name.toLowerCase() === group.client_name.toLowerCase()
+      )
+
+      if (!client) {
+        validationErrors.push(
+          `Row ${index + 2}: Client '${group.client_name}' not found`
         )
         return
       }
@@ -113,7 +107,7 @@ export async function POST(request: NextRequest) {
       groupInserts.push({
         name: group.name,
         description: group.description || null,
-        client_id: clientId,
+        client_id: client.id,
       })
     })
 
