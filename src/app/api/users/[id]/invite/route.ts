@@ -41,7 +41,7 @@ export async function POST(
     // Get user profile
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('id, name, email')
+      .select('id, name, email, client_id')
       .eq('id', userId)
       .single()
 
@@ -52,23 +52,40 @@ export async function POST(
       )
     }
 
+    // Get current user profile for authorization check
+    const { data: currentProfile, error: currentProfileError } = await supabase
+      .from('profiles')
+      .select('id, client_id')
+      .eq('auth_user_id', user.id)
+      .single()
+
+    if (currentProfileError || !currentProfile) {
+      console.error('Error fetching current user profile:', currentProfileError)
+      return NextResponse.json(
+        { error: 'Current user profile not found' },
+        { status: 403 }
+      )
+    }
+
+    // Authorization check: Users can only invite others in the same client
+    // or if they don't have a client_id restriction
+    if (
+      profile.client_id &&
+      currentProfile.client_id &&
+      profile.client_id !== currentProfile.client_id
+    ) {
+      return NextResponse.json(
+        { error: 'Not authorized to invite users from other organizations' },
+        { status: 403 }
+      )
+    }
+
     // Generate invite token with expiration
     const { token, expiresAt } = generateInviteTokenWithExpiration()
 
     // Create invite URL
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const inviteUrl = `${appUrl}/auth/invite?token=${token}`
-
-    // Get current user profile for invited_by field
-    const { data: currentProfile, error: currentProfileError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('auth_user_id', user.id)
-      .single()
-
-    if (currentProfileError) {
-      console.error('Error fetching current user profile:', currentProfileError)
-    }
 
     // Use admin client for inserting invite
     const adminClient = createAdminClient()
@@ -79,7 +96,7 @@ export async function POST(
       token,
       expires_at: expiresAt.toISOString(),
       status: 'pending',
-      invited_by: currentProfile?.id || null,
+      invited_by: currentProfile.id,
     }
 
     const { data: invite, error: inviteError } = await adminClient
@@ -169,6 +186,48 @@ export async function GET(
       return NextResponse.json(
         { error: 'Invalid user ID' },
         { status: 400 }
+      )
+    }
+
+    // Get current user profile for authorization
+    const { data: currentProfile, error: currentProfileError } = await supabase
+      .from('profiles')
+      .select('id, client_id')
+      .eq('auth_user_id', user.id)
+      .single()
+
+    if (currentProfileError || !currentProfile) {
+      return NextResponse.json(
+        { error: 'Current user profile not found' },
+        { status: 403 }
+      )
+    }
+
+    // Get target user profile for authorization check
+    const { data: targetProfile, error: targetProfileError } = await supabase
+      .from('profiles')
+      .select('id, client_id')
+      .eq('id', userId)
+      .single()
+
+    if (targetProfileError || !targetProfile) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      )
+    }
+
+    // Authorization check: Users can only view invites for users in the same client
+    // or if current user is viewing their own invites
+    if (
+      targetProfile.id !== currentProfile.id &&
+      targetProfile.client_id &&
+      currentProfile.client_id &&
+      targetProfile.client_id !== currentProfile.client_id
+    ) {
+      return NextResponse.json(
+        { error: 'Not authorized to view invites for this user' },
+        { status: 403 }
       )
     }
 

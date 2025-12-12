@@ -25,18 +25,39 @@ CREATE TRIGGER update_user_invites_updated_at
 -- Set up RLS (Row Level Security) policies
 ALTER TABLE user_invites ENABLE ROW LEVEL SECURITY;
 
--- Allow authenticated users to read all invites
-CREATE POLICY "Allow authenticated users to read user_invites" ON user_invites
-  FOR SELECT USING (auth.role() = 'authenticated');
+-- Allow authenticated users to read invites they sent or received
+CREATE POLICY "Allow users to read their invites" ON user_invites
+  FOR SELECT USING (
+    auth.uid() IN (
+      SELECT auth_user_id FROM profiles WHERE id = user_invites.profile_id
+    )
+    OR 
+    auth.uid() IN (
+      SELECT auth_user_id FROM profiles WHERE id = user_invites.invited_by
+    )
+  );
 
 -- Allow authenticated users to insert invites
+-- Note: Additional authorization should be enforced at the application level
 CREATE POLICY "Allow authenticated users to insert user_invites" ON user_invites
   FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 
--- Allow authenticated users to update invites
-CREATE POLICY "Allow authenticated users to update user_invites" ON user_invites
-  FOR UPDATE USING (auth.role() = 'authenticated');
+-- Allow users to update invites they sent or received
+CREATE POLICY "Allow users to update their invites" ON user_invites
+  FOR UPDATE USING (
+    auth.uid() IN (
+      SELECT auth_user_id FROM profiles WHERE id = user_invites.profile_id
+    )
+    OR 
+    auth.uid() IN (
+      SELECT auth_user_id FROM profiles WHERE id = user_invites.invited_by
+    )
+  );
 
--- Allow authenticated users to delete invites
-CREATE POLICY "Allow authenticated users to delete user_invites" ON user_invites
-  FOR DELETE USING (auth.role() = 'authenticated');
+-- Allow users to delete invites they sent
+CREATE POLICY "Allow senders to delete invites" ON user_invites
+  FOR DELETE USING (
+    auth.uid() IN (
+      SELECT auth_user_id FROM profiles WHERE id = user_invites.invited_by
+    )
+  );
