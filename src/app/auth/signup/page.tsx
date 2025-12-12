@@ -33,6 +33,7 @@ export default function SignupPage() {
             full_name: `${firstName} ${lastName}`,
             username: generateUsernameFromFirstLast(firstName, lastName)
           },
+          emailRedirectTo: `${window.location.origin}/auth/confirm`,
         },
       })
 
