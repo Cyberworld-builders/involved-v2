@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -12,11 +12,24 @@ interface ClientsTableProps {
   initialClients: Client[]
 }
 
+type MessageType = 'success' | 'error' | null
+
 export default function ClientsTable({ initialClients }: ClientsTableProps) {
   const [clients, setClients] = useState<Client[]>(initialClients)
   const [isDeleting, setIsDeleting] = useState<string | null>(null)
   const [message, setMessage] = useState('')
+  const [messageType, setMessageType] = useState<MessageType>(null)
   const router = useRouter()
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [])
 
   const handleDelete = async (clientId: string, clientName: string) => {
     if (!confirm(`Are you sure you want to delete ${clientName}? This action cannot be undone.`)) {
@@ -25,6 +38,7 @@ export default function ClientsTable({ initialClients }: ClientsTableProps) {
 
     setIsDeleting(clientId)
     setMessage('')
+    setMessageType(null)
 
     try {
       const response = await fetch(`/api/clients/${clientId}`, {
@@ -39,13 +53,20 @@ export default function ClientsTable({ initialClients }: ClientsTableProps) {
       // Remove client from the list
       setClients(prev => prev.filter(c => c.id !== clientId))
       setMessage('Client deleted successfully')
-      setTimeout(() => setMessage(''), 3000)
+      setMessageType('success')
+      
+      // Clear message after 3 seconds
+      timeoutRef.current = setTimeout(() => {
+        setMessage('')
+        setMessageType(null)
+      }, 3000)
       
       // Refresh the page data
       router.refresh()
     } catch (error) {
       console.error('Error deleting client:', error)
       setMessage(error instanceof Error ? error.message : 'Failed to delete client')
+      setMessageType('error')
     } finally {
       setIsDeleting(null)
     }
@@ -55,7 +76,7 @@ export default function ClientsTable({ initialClients }: ClientsTableProps) {
     <>
       {message && (
         <div className={`mb-4 p-4 rounded-md ${
-          message.includes('successfully') 
+          messageType === 'success'
             ? 'bg-green-50 text-green-800 border border-green-200' 
             : 'bg-red-50 text-red-800 border border-red-200'
         }`}>
