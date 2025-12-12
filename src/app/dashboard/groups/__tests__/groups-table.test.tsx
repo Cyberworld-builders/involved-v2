@@ -83,8 +83,10 @@ describe('GroupsTable', () => {
   it('should display formatted dates', () => {
     render(<GroupsTable initialGroups={mockGroups} />)
 
-    // Check created dates are rendered
-    expect(screen.getAllByText(/1\/1\/2024|1\/2\/2024|1\/3\/2024/)).toHaveLength(3)
+    const expectedCreatedDates = mockGroups.map((g) => new Date(g.created_at).toLocaleDateString())
+    for (const date of expectedCreatedDates) {
+      expect(screen.getByText(date)).toBeInTheDocument()
+    }
   })
 
   it('should have Edit and Delete buttons for each group', () => {
