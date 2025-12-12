@@ -36,7 +36,9 @@ describe('ClientGroups', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    vi.mocked(useRouter).mockReturnValue({ refresh: vi.fn() } as any)
+    vi.mocked(useRouter).mockReturnValue(
+      { refresh: vi.fn() } as unknown as ReturnType<typeof useRouter>
+    )
 
     global.confirm = vi.fn()
     global.fetch = vi.fn()

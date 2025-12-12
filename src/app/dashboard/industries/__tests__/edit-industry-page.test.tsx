@@ -47,7 +47,9 @@ describe('EditIndustryPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as any)
+    vi.mocked(useRouter).mockReturnValue(
+      { push: vi.fn() } as unknown as ReturnType<typeof useRouter>
+    )
     vi.mocked(useParams).mockReturnValue({ id: 'industry-123' })
 
     mockSupabase.auth.getUser.mockResolvedValue({
@@ -129,7 +131,9 @@ describe('EditIndustryPage', () => {
 
   it('should redirect to industries list after successful update', async () => {
     const mockPush = vi.fn()
-    vi.mocked(useRouter).mockReturnValue({ push: mockPush } as any)
+    vi.mocked(useRouter).mockReturnValue(
+      { push: mockPush } as unknown as ReturnType<typeof useRouter>
+    )
 
     vi.mocked(fetch).mockResolvedValueOnce({
       ok: true,
@@ -191,7 +195,9 @@ describe('EditIndustryPage', () => {
 
   it('should redirect to login if user is not authenticated', async () => {
     const mockPush = vi.fn()
-    vi.mocked(useRouter).mockReturnValue({ push: mockPush } as any)
+    vi.mocked(useRouter).mockReturnValue(
+      { push: mockPush } as unknown as ReturnType<typeof useRouter>
+    )
 
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: null },

@@ -41,7 +41,9 @@ describe('UsersListClient', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockRouter = { refresh: vi.fn() }
-    vi.mocked(useRouter).mockReturnValue(mockRouter as any)
+    vi.mocked(useRouter).mockReturnValue(
+      mockRouter as unknown as ReturnType<typeof useRouter>
+    )
     
     // Mock window.confirm and window.alert
     global.confirm = vi.fn()

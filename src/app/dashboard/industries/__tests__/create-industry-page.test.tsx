@@ -36,7 +36,9 @@ describe('CreateIndustryPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as any)
+    vi.mocked(useRouter).mockReturnValue(
+      { push: vi.fn() } as unknown as ReturnType<typeof useRouter>
+    )
 
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: { id: 'user-id' } },

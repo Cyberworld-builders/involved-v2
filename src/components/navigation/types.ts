@@ -17,7 +17,7 @@ export interface NavigationProps {
  * Currently matches NavigationProps but allows adding Header-specific props later
  * without breaking changes (e.g., showAuth?: boolean, theme?: 'light' | 'dark')
  */
-export interface HeaderProps extends NavigationProps {}
+export type HeaderProps = NavigationProps
 
 /**
  * SidebarProps extends NavigationProps for future extensibility.

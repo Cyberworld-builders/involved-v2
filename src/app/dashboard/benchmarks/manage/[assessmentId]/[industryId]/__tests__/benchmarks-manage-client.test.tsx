@@ -4,23 +4,28 @@ import '@testing-library/jest-dom'
 import BenchmarksManageClient from '../benchmarks-manage-client'
 
 vi.mock('next/link', () => ({
-  default: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>,
+  default: ({ href, children }: { href: string; children: React.ReactNode }) => (
+    <a href={href}>{children}</a>
+  ),
 }))
 
 vi.mock('@/components/layout/dashboard-layout', () => ({
   default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }))
 
+type ButtonProps = React.ComponentPropsWithoutRef<'button'> & { variant?: string }
 vi.mock('@/components/ui/button', () => ({
-  Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+  Button: ({ children, ...props }: ButtonProps) => <button {...props}>{children}</button>,
 }))
 
+type DivProps = React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode }
+type HeadingProps = React.HTMLAttributes<HTMLHeadingElement> & { children?: React.ReactNode }
 vi.mock('@/components/ui/card', () => ({
-  Card: ({ children }: any) => <div>{children}</div>,
-  CardContent: ({ children }: any) => <div>{children}</div>,
-  CardHeader: ({ children }: any) => <div>{children}</div>,
-  CardTitle: ({ children }: any) => <h3>{children}</h3>,
-  CardDescription: ({ children }: any) => <div>{children}</div>,
+  Card: ({ children, ...props }: DivProps) => <div {...props}>{children}</div>,
+  CardContent: ({ children, ...props }: DivProps) => <div {...props}>{children}</div>,
+  CardHeader: ({ children, ...props }: DivProps) => <div {...props}>{children}</div>,
+  CardTitle: ({ children, ...props }: HeadingProps) => <h3 {...props}>{children}</h3>,
+  CardDescription: ({ children, ...props }: DivProps) => <div {...props}>{children}</div>,
 }))
 
 const mockSupabase = {
@@ -491,17 +496,20 @@ Communication,COMM,85.5`
 
     // Mock FileReader to trigger error
     const originalFileReader = global.FileReader
-    global.FileReader = class MockFileReader {
+    class MockFileReader {
+      onload: ((this: FileReader, ev: ProgressEvent<FileReader>) => unknown) | null = null
+      onerror: ((this: FileReader, ev: ProgressEvent<FileReader>) => unknown) | null = null
+
       readAsText() {
         setTimeout(() => {
           if (this.onerror) {
-            this.onerror(new Event('error'))
+            // FileReader error handlers receive a ProgressEvent<FileReader>
+            this.onerror(new ProgressEvent('error'))
           }
         }, 0)
       }
-      onload = null
-      onerror = null
-    } as any
+    }
+    global.FileReader = MockFileReader as unknown as typeof FileReader
 
     fireEvent.change(fileInput, { target: { files: [file] } })
 
