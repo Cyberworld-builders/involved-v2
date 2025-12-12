@@ -33,7 +33,11 @@ vi.mock('@/lib/supabase/admin', () => ({
 }))
 
 vi.mock('@/lib/utils/username-generation', () => ({
-  generateUsernameFromName: vi.fn((name: string) => name.toLowerCase().replace(/\s+/g, '')),
+  generateUsernameFromName: vi.fn((name: string) => {
+    const result = name.toLowerCase().replace(/[^a-z0-9]/g, '')
+    return result
+  }),
+  generateUsernameFromEmail: vi.fn((email: string) => email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '')),
   generateUniqueUsername: vi.fn((base: string) => Promise.resolve(base)),
 }))
 
@@ -98,6 +102,204 @@ describe('API User Routes', () => {
       expect(response.status).toBe(201)
       expect(data.user).toBeDefined()
       expect(data.user.name).toBe('Test User')
+    })
+
+    it('should auto-generate username from name when username is not provided', async () => {
+      const { generateUsernameFromName, generateUniqueUsername } = await import('@/lib/utils/username-generation')
+
+      // Mock authenticated user
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'auth-user-id' } },
+        error: null,
+      })
+
+      // Mock no existing user with email or username
+      mockSupabaseClient.from = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
+          }),
+        }),
+      })
+
+      // Mock auth user creation
+      mockAdminClient.auth.admin.createUser.mockResolvedValue({
+        data: { user: { id: 'new-auth-user-id' } },
+        error: null,
+      })
+
+      const insertMock = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: { ...mockUser, username: 'testuser' },
+            error: null,
+          }),
+        }),
+      })
+
+      mockAdminClient.from = vi.fn().mockReturnValue({
+        insert: insertMock,
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/users', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: 'Test User',
+          email: 'test@example.com',
+          client_id: 'test-client-id',
+          password: 'password123',
+          // No username provided
+        }),
+      })
+
+      const response = await createUser(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(201)
+      expect(data.user).toBeDefined()
+      
+      // Verify username generation functions were called
+      expect(generateUsernameFromName).toHaveBeenCalledWith('Test User')
+      expect(generateUniqueUsername).toHaveBeenCalled()
+      
+      // Verify the profile was created with a username
+      expect(insertMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          username: expect.any(String),
+          name: 'Test User',
+          email: 'test@example.com',
+        })
+      )
+    })
+
+    it('should handle username uniqueness when auto-generating', async () => {
+      const { generateUniqueUsername } = await import('@/lib/utils/username-generation')
+      
+      // Mock authenticated user
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'auth-user-id' } },
+        error: null,
+      })
+
+      let checkCount = 0
+      mockSupabaseClient.from = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockImplementation(() => {
+              checkCount++
+              // First check is for email (return no user)
+              // Second check is for username (simulate username exists)
+              // Third check is for username1 (return no user)
+              if (checkCount === 2) {
+                return Promise.resolve({ data: { id: 'existing-id' }, error: null })
+              }
+              return Promise.resolve({ data: null, error: null })
+            }),
+          }),
+        }),
+      })
+
+      // Mock auth user creation
+      mockAdminClient.auth.admin.createUser.mockResolvedValue({
+        data: { user: { id: 'new-auth-user-id' } },
+        error: null,
+      })
+
+      const insertMock = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: { ...mockUser, username: 'testuser1' },
+            error: null,
+          }),
+        }),
+      })
+
+      mockAdminClient.from = vi.fn().mockReturnValue({
+        insert: insertMock,
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/users', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: 'Test User',
+          email: 'test@example.com',
+          // No username provided
+        }),
+      })
+
+      const response = await createUser(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(201)
+      expect(data.user).toBeDefined()
+      
+      // Verify generateUniqueUsername was called to handle collision
+      expect(generateUniqueUsername).toHaveBeenCalled()
+    })
+
+    it('should fallback to email-based username when name generates empty username', async () => {
+      const { generateUsernameFromName, generateUsernameFromEmail, generateUniqueUsername } = await import('@/lib/utils/username-generation')
+      
+      // Mock authenticated user
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'auth-user-id' } },
+        error: null,
+      })
+
+      // Mock no existing user
+      mockSupabaseClient.from = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
+          }),
+        }),
+      })
+
+      // Mock auth user creation
+      mockAdminClient.auth.admin.createUser.mockResolvedValue({
+        data: { user: { id: 'new-auth-user-id' } },
+        error: null,
+      })
+
+      const insertMock = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: { ...mockUser, username: 'testuser' },
+            error: null,
+          }),
+        }),
+      })
+
+      mockAdminClient.from = vi.fn().mockReturnValue({
+        insert: insertMock,
+      })
+
+      // Name with only special characters will generate empty username
+      const request = new NextRequest('http://localhost:3000/api/users', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: '!@#$%',
+          email: 'testuser@example.com',
+          // No username provided
+        }),
+      })
+
+      const response = await createUser(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(201)
+      expect(data.user).toBeDefined()
+      
+      // Verify both generation functions were called
+      expect(generateUsernameFromName).toHaveBeenCalledWith('!@#$%')
+      expect(generateUsernameFromEmail).toHaveBeenCalledWith('testuser@example.com')
+      expect(generateUniqueUsername).toHaveBeenCalled()
     })
 
     it('should return 401 if user is not authenticated', async () => {
@@ -1123,6 +1325,87 @@ describe('API User Routes', () => {
       expect(data.results).toHaveLength(2)
       expect(data.results[0].success).toBe(true)
       expect(data.results[1].success).toBe(true)
+    })
+
+    it('should auto-generate usernames when not provided in bulk creation', async () => {
+      const { generateUsernameFromName, generateUniqueUsername } = await import('@/lib/utils/username-generation')
+      
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      // Mock no existing users
+      mockSupabaseClient.from = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
+          }),
+        }),
+      })
+
+      // Mock auth user creation
+      mockAdminClient.auth.admin.createUser.mockResolvedValue({
+        data: { user: { id: 'new-auth-user-id' } },
+        error: null,
+      })
+
+      const insertMock = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: { ...mockUser, id: 'new-user-id' },
+            error: null,
+          }),
+        }),
+      })
+
+      mockAdminClient.from = vi.fn().mockReturnValue({
+        insert: insertMock,
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/users/bulk', {
+        method: 'POST',
+        body: JSON.stringify({
+          users: [
+            {
+              name: 'User One',
+              email: 'user1@example.com',
+              // No username provided
+            },
+            {
+              name: 'User Two',
+              email: 'user2@example.com',
+              // No username provided
+            },
+          ],
+        }),
+      })
+
+      const response = await bulkCreateUsers(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(data.success).toBe(true)
+      expect(data.created).toBe(2)
+      expect(data.failed).toBe(0)
+      
+      // Verify username generation functions were called for each user
+      expect(generateUsernameFromName).toHaveBeenCalledWith('User One')
+      expect(generateUsernameFromName).toHaveBeenCalledWith('User Two')
+      expect(generateUniqueUsername).toHaveBeenCalled()
+      
+      // Verify profiles were created with usernames
+      expect(insertMock).toHaveBeenCalledTimes(2)
+      expect(insertMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          username: expect.any(String),
+          name: 'User One',
+          email: 'user1@example.com',
+        })
+      )
     })
 
     it('should return 401 if user is not authenticated', async () => {
