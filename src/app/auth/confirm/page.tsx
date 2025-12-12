@@ -41,12 +41,13 @@ export default function ConfirmEmailPage() {
           setStatus('success')
           setMessage('Your email has been confirmed successfully!')
           
-          // Redirect to login page after 2 seconds
+          // Redirect to login page after 3 seconds (gives user time to read message)
           setTimeout(() => {
             router.push('/auth/login')
-          }, 2000)
+          }, 3000)
         }
-      } catch {
+      } catch (error) {
+        console.error('Email confirmation error:', error)
         setStatus('error')
         setMessage('An unexpected error occurred. Please try again.')
       }
@@ -94,7 +95,12 @@ export default function ConfirmEmailPage() {
                     />
                   </svg>
                   <p className="text-sm text-green-600">{message}</p>
-                  <p className="text-sm text-gray-600">Redirecting to login...</p>
+                  <p className="text-sm text-gray-600">Redirecting to login in 3 seconds...</p>
+                  <Link href="/auth/login">
+                    <Button className="mt-4">
+                      Continue to Login
+                    </Button>
+                  </Link>
                 </div>
               )}
               

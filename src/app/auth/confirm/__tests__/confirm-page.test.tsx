@@ -116,7 +116,7 @@ describe('ConfirmEmailPage', () => {
     // Verify redirect happens after delay
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith('/auth/login')
-    }, { timeout: 3000 })
+    }, { timeout: 4000 })
   })
 
   it('should show error when verification fails', async () => {
