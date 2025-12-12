@@ -217,6 +217,11 @@ describe('ProfilePasswordUpdateClient', () => {
     expect(currentPasswordInput).toBeDisabled()
     expect(newPasswordInput).toBeDisabled()
     expect(confirmPasswordInput).toBeDisabled()
+
+    // Ensure the async request completes before the test ends
+    await waitFor(() => {
+      expect(screen.getByText('Password updated successfully!')).toBeInTheDocument()
+    })
   })
 
   it('should allow exactly 8 character passwords', async () => {
