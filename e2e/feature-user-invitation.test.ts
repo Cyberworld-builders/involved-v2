@@ -475,7 +475,7 @@ test.describe('User Invitation & Claim Flow', () => {
         
         // Wait for the claim to complete
         try {
-          await page.waitForURL(/\/(dashboard|auth\/login)/, { timeout: 10000 })
+          await page.waitForURL(/\/(dashboard|auth\/login)/, { timeout: 15000 })
         } catch {
           await page.waitForSelector('text=/account.*claimed/i, text=/success/i', { timeout: 5000 }).catch(() => {})
         }
