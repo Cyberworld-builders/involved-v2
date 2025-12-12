@@ -83,7 +83,7 @@ export async function PATCH(
 
     // Parse request body
     const body = await request.json()
-    const { name, email, username, client_id, industry_id, completed_profile } = body
+    const { name, email, username, client_id, industry_id, completed_profile, status } = body
 
     // Build update object
     const updates: ProfileUpdate = {
@@ -138,6 +138,16 @@ export async function PATCH(
 
     if (completed_profile !== undefined) {
       updates.completed_profile = completed_profile
+    }
+
+    if (status !== undefined) {
+      if (!['active', 'inactive', 'suspended'].includes(status)) {
+        return NextResponse.json(
+          { error: 'Invalid status. Must be one of: active, inactive, suspended' },
+          { status: 400 }
+        )
+      }
+      updates.status = status
     }
 
     // Check if there are any fields to update besides updated_at
