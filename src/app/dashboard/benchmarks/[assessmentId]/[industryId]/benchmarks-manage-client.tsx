@@ -33,6 +33,7 @@ export default function BenchmarksManageClient({ assessmentId, industryId }: Ben
   const supabase = createClient()
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [deletingBenchmarkId, setDeletingBenchmarkId] = useState<string | null>(null)
   const [message, setMessage] = useState('')
   const [assessment, setAssessment] = useState<Assessment | null>(null)
   const [industry, setIndustry] = useState<Industry | null>(null)
@@ -167,6 +168,47 @@ export default function BenchmarksManageClient({ assessmentId, industryId }: Ben
       setMessage('Failed to save benchmarks')
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const handleDeleteBenchmark = async (dimensionId: string) => {
+    const current = benchmarks[dimensionId]
+    if (!current) return
+
+    // If it's not saved yet, "delete" just clears the input
+    if (!current.id) {
+      setBenchmarks((prev) => ({
+        ...prev,
+        [dimensionId]: { ...prev[dimensionId], value: null, id: undefined },
+      }))
+      return
+    }
+
+    const dimensionName = dimensions.find((d) => d.id === dimensionId)?.name || 'this benchmark'
+    if (!confirm(`Are you sure you want to delete the benchmark for ${dimensionName}? This action cannot be undone.`)) {
+      return
+    }
+
+    setDeletingBenchmarkId(current.id)
+    setMessage('')
+
+    try {
+      const response = await fetch(`/api/benchmarks/${current.id}`, { method: 'DELETE' })
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to delete benchmark')
+      }
+
+      setBenchmarks((prev) => ({
+        ...prev,
+        [dimensionId]: { ...prev[dimensionId], value: null, id: undefined },
+      }))
+      setMessage('Benchmark deleted successfully!')
+    } catch (error) {
+      console.error('Error deleting benchmark:', error)
+      setMessage(error instanceof Error ? error.message : 'Failed to delete benchmark')
+    } finally {
+      setDeletingBenchmarkId(null)
     }
   }
 
@@ -391,11 +433,16 @@ export default function BenchmarksManageClient({ assessmentId, industryId }: Ben
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Benchmark Value
                         </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {dimensions.map((dimension) => (
-                        <tr key={dimension.id}>
+                      {dimensions.map((dimension) => {
+                        const currentBenchmark = benchmarks[dimension.id]
+                        return (
+                          <tr key={dimension.id}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {dimension.name}
                           </td>
@@ -406,14 +453,25 @@ export default function BenchmarksManageClient({ assessmentId, industryId }: Ben
                             <input
                               type="number"
                               step="0.01"
-                              value={benchmarks[dimension.id]?.value ?? ''}
+                              value={currentBenchmark?.value ?? ''}
                               onChange={(e) => handleValueChange(dimension.id, e.target.value)}
                               className="w-32 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                               placeholder="0.00"
                             />
                           </td>
-                        </tr>
-                      ))}
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => handleDeleteBenchmark(dimension.id)}
+                              disabled={Boolean(deletingBenchmarkId)}
+                            >
+                              {currentBenchmark?.id && deletingBenchmarkId === currentBenchmark.id ? 'Deleting...' : (currentBenchmark?.id ? 'Delete' : 'Clear')}
+                            </Button>
+                          </td>
+                          </tr>
+                        )
+                      })}
                     </tbody>
                   </table>
                 </div>
