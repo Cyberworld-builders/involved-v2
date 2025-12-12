@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import DashboardLayout from '@/components/layout/dashboard-layout'
 import { Database } from '@/types/database'
+import { parseBenchmarkSpreadsheet } from '@/lib/utils/spreadsheet-parsing'
 
 type Assessment = Database['public']['Tables']['assessments']['Row']
 type Industry = Database['public']['Tables']['industries']['Row']
@@ -189,6 +190,14 @@ export default function BenchmarksManageClient({ assessmentId, industryId }: Ben
     const file = event.target.files?.[0]
     if (!file) return
 
+    // We only support CSV right now (no xlsx dependency in Phase 1).
+    const fileName = file.name.toLowerCase()
+    if (!fileName.endsWith('.csv')) {
+      setMessage('Please upload a .csv file (Excel .xlsx/.xls is not supported yet).')
+      event.target.value = ''
+      return
+    }
+
     const reader = new FileReader()
     reader.onload = async (e) => {
       try {
@@ -198,101 +207,65 @@ export default function BenchmarksManageClient({ assessmentId, industryId }: Ben
           return
         }
 
-        // Handle different line endings
-        const lines = text.split(/\r?\n/).filter(line => line.trim())
-        if (lines.length < 2) {
-          setMessage('Error: CSV file must have at least a header row and one data row')
+        const { data: parsedRows, errors } = parseBenchmarkSpreadsheet(text)
+        if (errors.length > 0) {
+          setMessage(`CSV validation failed: ${errors.slice(0, 3).join(' | ')}${errors.length > 3 ? ` (+${errors.length - 3} more)` : ''}`)
           return
         }
 
-        // Parse headers - handle quoted values
-        const parseCSVLine = (line: string): string[] => {
-          const result: string[] = []
-          let current = ''
-          let inQuotes = false
-          
-          for (let i = 0; i < line.length; i++) {
-            const char = line[i]
-            if (char === '"') {
-              inQuotes = !inQuotes
-            } else if (char === ',' && !inQuotes) {
-              result.push(current.trim())
-              current = ''
-            } else {
-              current += char
-            }
-          }
-          result.push(current.trim())
-          return result
-        }
-
-        const headers = parseCSVLine(lines[0]).map(h => h.replace(/^"|"$/g, '').trim())
-
-        // Find column indices (more flexible matching)
-        const nameIndex = headers.findIndex(h => 
-          h.toLowerCase().includes('dimension') && h.toLowerCase().includes('name')
-        )
-        const codeIndex = headers.findIndex(h => 
-          h.toLowerCase().includes('dimension') && h.toLowerCase().includes('code')
-        )
-        const valueIndex = headers.findIndex(h => 
-          h.toLowerCase() === 'value'
-        )
-
-        if (nameIndex === -1 || codeIndex === -1 || valueIndex === -1) {
-          setMessage(`Invalid CSV format. Expected columns: Dimension Name, Dimension Code, Value. Found: ${headers.join(', ')}`)
-          console.error('CSV Headers:', headers)
-          return
-        }
-
-        // Parse CSV and update benchmarks
-        const updatedBenchmarks = { ...benchmarks }
+        const updatedBenchmarks: Record<string, Benchmark> = { ...benchmarks }
+        const uploadErrors: string[] = []
         let loadedCount = 0
         let skippedCount = 0
 
-        for (let i = 1; i < lines.length; i++) {
-          const values = parseCSVLine(lines[i]).map(v => v.replace(/^"|"$/g, '').trim())
-          
-          if (values.length < Math.max(nameIndex, codeIndex, valueIndex) + 1) {
+        for (const row of parsedRows) {
+          const dimensionName = row.dimension_name?.trim()
+          const dimensionCode = row.dimension_code?.trim()
+
+          // Find dimension by code first, then name (case-insensitive)
+          const matchedDimension = dimensions.find((d) => {
+            const codeMatch =
+              dimensionCode &&
+              d.code.toLowerCase().trim() === dimensionCode.toLowerCase().trim()
+            const nameMatch =
+              dimensionName &&
+              d.name.toLowerCase().trim() === dimensionName.toLowerCase().trim()
+            return Boolean(codeMatch || nameMatch)
+          })
+
+          if (!matchedDimension) {
             skippedCount++
+            uploadErrors.push(
+              `No matching dimension found for row: ${dimensionCode || dimensionName || '(missing dimension)'}`
+            )
             continue
           }
 
-          const dimensionName = values[nameIndex]
-          const dimensionCode = values[codeIndex]
-          const valueStr = values[valueIndex]
-
-          if (!dimensionName && !dimensionCode) {
+          // Range validation (match API behavior)
+          if (row.benchmark_value < 0 || row.benchmark_value > 100) {
             skippedCount++
+            uploadErrors.push(
+              `Invalid value for ${matchedDimension.code}: must be between 0 and 100`
+            )
             continue
           }
 
-          const value = parseFloat(valueStr)
-          if (isNaN(value) || valueStr === '') {
-            skippedCount++
-            continue
+          const existing = updatedBenchmarks[matchedDimension.id]
+          updatedBenchmarks[matchedDimension.id] = {
+            dimension_id: matchedDimension.id,
+            value: row.benchmark_value,
+            ...(existing?.id ? { id: existing.id } : {}),
           }
-
-          // Find dimension by name or code (case-insensitive, trimmed)
-          const dimension = dimensions.find(
-            d => (dimensionName && d.name.toLowerCase().trim() === dimensionName.toLowerCase().trim()) ||
-                 (dimensionCode && d.code.toLowerCase().trim() === dimensionCode.toLowerCase().trim())
-          )
-
-          if (dimension) {
-            updatedBenchmarks[dimension.id] = {
-              dimension_id: dimension.id,
-              value: value,
-            }
-            loadedCount++
-          } else {
-            skippedCount++
-            console.warn(`Dimension not found: ${dimensionName || dimensionCode}`)
-          }
+          loadedCount++
         }
 
         setBenchmarks(updatedBenchmarks)
-        setMessage(`CSV loaded successfully! ${loadedCount} values loaded, ${skippedCount} rows skipped. Click Save to apply changes.`)
+        setMessage(
+          `CSV loaded successfully! ${loadedCount} values loaded, ${skippedCount} rows skipped. Click Save to apply changes.` +
+            (uploadErrors.length > 0
+              ? ` (${uploadErrors.slice(0, 2).join(' | ')}${uploadErrors.length > 2 ? ` (+${uploadErrors.length - 2} more)` : ''})`
+              : '')
+        )
       } catch (error) {
         console.error('Error parsing CSV:', error)
         setMessage(`Error parsing CSV file: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -347,7 +320,7 @@ export default function BenchmarksManageClient({ assessmentId, industryId }: Ben
             <label className="cursor-pointer">
               <input
                 type="file"
-                accept=".csv,.xlsx,.xls"
+                accept=".csv"
                 onChange={handleFileUpload}
                 className="hidden"
                 id="csv-upload-input"
