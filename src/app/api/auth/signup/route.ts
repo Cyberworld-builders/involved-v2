@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { generateUsernameFromFirstLast } from '@/lib/utils/username-generation'
 import { isValidEmail } from '@/lib/utils/email-validation'
+import { generateUsernameFromFirstLast } from '@/lib/utils/username-generation'
 import { MIN_PASSWORD_LENGTH } from '@/lib/utils/auth-constants'
 
 /**
  * POST /api/auth/signup
- * Creates a new user account with email and password
+ * Create a new user account
  */
 export async function POST(request: NextRequest) {
   try {
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     )
   } catch (error) {
-    console.error('Unexpected error:', error)
+    console.error('Signup error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

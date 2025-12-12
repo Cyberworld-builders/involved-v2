@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 
 /**
  * POST /api/auth/signout
- * Signs out the currently authenticated user
+ * Sign out the current user
  */
 export async function POST() {
   try {
@@ -33,7 +33,7 @@ export async function POST() {
       { status: 200 }
     )
   } catch (error) {
-    console.error('Unexpected error:', error)
+    console.error('Signout error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

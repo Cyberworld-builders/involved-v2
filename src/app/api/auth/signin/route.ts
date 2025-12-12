@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { isValidEmail } from '@/lib/utils/email-validation'
 
 /**
  * POST /api/auth/signin
- * Signs in a user with email and password
+ * Sign in user with email and password
  */
 export async function POST(request: NextRequest) {
   try {
@@ -14,6 +15,14 @@ export async function POST(request: NextRequest) {
     if (!email || !password) {
       return NextResponse.json(
         { error: 'Email and password are required' },
+        { status: 400 }
+      )
+    }
+
+    // Email validation
+    if (!isValidEmail(email)) {
+      return NextResponse.json(
+        { error: 'Invalid email format' },
         { status: 400 }
       )
     }
@@ -46,7 +55,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     )
   } catch (error) {
-    console.error('Unexpected error:', error)
+    console.error('Signin error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

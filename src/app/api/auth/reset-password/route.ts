@@ -4,7 +4,7 @@ import { isValidEmail } from '@/lib/utils/email-validation'
 
 /**
  * POST /api/auth/reset-password
- * Sends a password reset email to the user
+ * Send password reset email to user
  */
 export async function POST(request: NextRequest) {
   try {
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     )
   } catch (error) {
-    console.error('Unexpected error:', error)
+    console.error('Reset password error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
