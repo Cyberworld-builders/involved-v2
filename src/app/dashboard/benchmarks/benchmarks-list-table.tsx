@@ -140,6 +140,12 @@ export default function BenchmarksListTable({ initialBenchmarks }: BenchmarksLis
                     <td className="px-3 py-4 whitespace-nowrap text-sm font-medium sm:px-6">
                       <div className="flex space-x-2">
                         <Link
+                          href={`/dashboard/benchmarks/${benchmark.id}`}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          View
+                        </Link>
+                        <Link
                           href={`/dashboard/benchmarks/${benchmark.dimensions?.assessment_id}/${benchmark.industry_id}`}
                           className="text-indigo-600 hover:text-indigo-900"
                         >
