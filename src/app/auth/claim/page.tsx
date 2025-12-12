@@ -101,12 +101,18 @@ export default function ClaimAccountPage() {
         return
       }
 
-      setMessage('Account claimed successfully! Redirecting to dashboard...')
-      
-      // Redirect to dashboard after a short delay
-      setTimeout(() => {
+      // Check if manual sign-in is required
+      if (data.requiresManualSignIn) {
+        setMessage('Account claimed successfully! Please sign in with your email and password.')
+        // Redirect to login page after a moment
+        setTimeout(() => {
+          router.push('/auth/login')
+        }, 2000)
+      } else {
+        setMessage('Account claimed successfully! Redirecting to dashboard...')
+        // Redirect to dashboard immediately
         router.push('/dashboard')
-      }, 2000)
+      }
     } catch (err) {
       console.error('Error claiming account:', err)
       setError('An unexpected error occurred. Please try again.')

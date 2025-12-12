@@ -383,7 +383,7 @@ describe('POST /api/auth/claim', () => {
     const response = await POST(request)
     const data = await response.json()
     
-    expect(response.status).toBe(200)
+    expect(response.status).toBe(201)
     expect(data.success).toBe(true)
     expect(data.message).toBe('Account claimed successfully')
     expect(data.session).toBeDefined()
@@ -469,7 +469,7 @@ describe('POST /api/auth/claim', () => {
     const response = await POST(request)
     const data = await response.json()
     
-    expect(response.status).toBe(200)
+    expect(response.status).toBe(201)
     expect(data.success).toBe(true)
     expect(mockAdminClient.auth.admin.updateUserById).toHaveBeenCalledWith(
       'existing-auth-id',

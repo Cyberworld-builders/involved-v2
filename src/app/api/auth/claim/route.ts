@@ -216,7 +216,11 @@ export async function POST(request: NextRequest) {
 
       if (updateError) {
         console.error('Error updating profile with auth_user_id:', updateError)
-        // Continue anyway, the auth user was created successfully
+        // This is a critical error - user account created but not linked to profile
+        return NextResponse.json(
+          { error: 'Account created but failed to link to profile. Please contact support.' },
+          { status: 500 }
+        )
       }
     } else {
       // User already has an auth account, update password
@@ -234,7 +238,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Update invite status to accepted
+    // Update invite status to accepted - CRITICAL: Must succeed to prevent reuse
     const { error: updateInviteError } = await adminClient
       .from('user_invites')
       .update({
@@ -245,7 +249,12 @@ export async function POST(request: NextRequest) {
 
     if (updateInviteError) {
       console.error('Error updating invite status:', updateInviteError)
-      // Continue anyway, the user account was created/updated successfully
+      // This is critical - if we can't mark the invite as used, it could be reused
+      // We should fail the operation to prevent security issues
+      return NextResponse.json(
+        { error: 'Failed to complete account setup. Please try again.' },
+        { status: 500 }
+      )
     }
 
     // Sign in the user using the regular client
@@ -257,17 +266,20 @@ export async function POST(request: NextRequest) {
 
     if (signInError || !signInData.session) {
       console.error('Error signing in user:', signInError)
-      return NextResponse.json(
-        { error: 'Account created but failed to sign in. Please try signing in manually.' },
-        { status: 500 }
-      )
+      // Account was successfully created/updated, but auto sign-in failed
+      // Return success with a note about manual sign-in
+      return NextResponse.json({
+        success: true,
+        message: 'Account claimed successfully. Please sign in with your email and password.',
+        requiresManualSignIn: true,
+      }, { status: 201 })
     }
 
     return NextResponse.json({
       success: true,
       message: 'Account claimed successfully',
       session: signInData.session,
-    })
+    }, { status: 201 })
   } catch (error) {
     console.error('Error claiming account:', error)
     return NextResponse.json(
