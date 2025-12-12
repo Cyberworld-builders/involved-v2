@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
         return
       }
 
-      // Store client name for type safety
+      // Extract client name to avoid repeated null checks
       const clientName = group.client_name
 
       // Find the matching client
