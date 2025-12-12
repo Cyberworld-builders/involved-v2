@@ -30,9 +30,16 @@ export default async function BenchmarksPage() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Page Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Benchmarks</h1>
-          <p className="text-gray-600">Manage industry benchmarks for assessment dimensions.</p>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Benchmarks</h1>
+            <p className="text-gray-600">Manage industry benchmarks for assessment dimensions.</p>
+          </div>
+          <Link href="/dashboard/benchmarks/list">
+            <Button variant="outline">
+              View All Benchmarks
+            </Button>
+          </Link>
         </div>
 
         {/* Breadcrumbs */}

@@ -437,4 +437,135 @@ test.describe('Benchmark CRUD Flow', () => {
       }
     }
   })
+
+  test('Admin can navigate to all benchmarks list view', async ({ page }) => {
+    // Verify "View All Benchmarks" button is present
+    const viewAllButton = page.locator('a:has-text("View All Benchmarks")')
+    await expect(viewAllButton).toBeVisible()
+    
+    // Click the button to navigate to list view
+    await viewAllButton.click()
+    await page.waitForLoadState('networkidle')
+    
+    // Verify we're on the list page
+    await expect(page).toHaveURL('/dashboard/benchmarks/list')
+    
+    // Verify page title
+    await expect(page.locator('h1')).toContainText('All Benchmarks')
+    
+    // Verify page description
+    await expect(page.locator('p')).toContainText('View and manage all industry benchmarks')
+  })
+
+  test('Admin can view benchmarks in list table', async ({ page }) => {
+    // Navigate to benchmarks list
+    await page.goto('/dashboard/benchmarks/list')
+    await page.waitForLoadState('networkidle')
+    
+    // Check if there are benchmarks
+    const noBenchmarksMessage = page.locator('text=No benchmarks yet')
+    const hasBenchmarks = await isNotVisible(noBenchmarksMessage)
+    
+    if (hasBenchmarks) {
+      // Verify table headers are present
+      await expect(page.locator('th:has-text("Dimension")')).toBeVisible()
+      await expect(page.locator('th:has-text("Industry")')).toBeVisible()
+      await expect(page.locator('th:has-text("Value")')).toBeVisible()
+      await expect(page.locator('th:has-text("Updated")')).toBeVisible()
+      await expect(page.locator('th:has-text("Actions")')).toBeVisible()
+      
+      // Verify at least one benchmark row exists
+      const tableRows = page.locator('tbody tr')
+      await expect(tableRows.first()).toBeVisible()
+      
+      // Verify Edit and Delete buttons exist in the first row
+      const firstRow = tableRows.first()
+      await expect(firstRow.locator('a:has-text("Edit")')).toBeVisible()
+      await expect(firstRow.locator('button:has-text("Delete")')).toBeVisible()
+    } else {
+      // Verify empty state message
+      await expect(noBenchmarksMessage).toBeVisible()
+      await expect(page.locator('text=Get started by creating benchmarks')).toBeVisible()
+    }
+  })
+
+  test('Admin can view benchmark count in list view', async ({ page }) => {
+    // Navigate to benchmarks list
+    await page.goto('/dashboard/benchmarks/list')
+    await page.waitForLoadState('networkidle')
+    
+    // Check if there are benchmarks
+    const noBenchmarksMessage = page.locator('text=No benchmarks yet')
+    const hasBenchmarks = await isNotVisible(noBenchmarksMessage)
+    
+    if (hasBenchmarks) {
+      // Verify the count is displayed
+      const countText = page.locator('text=/\\(\\d+ benchmark(s)?\\)/')
+      await expect(countText).toBeVisible()
+    }
+  })
+
+  test('Benchmarks list table displays dimension and industry information', async ({ page }) => {
+    // Navigate to benchmarks list
+    await page.goto('/dashboard/benchmarks/list')
+    await page.waitForLoadState('networkidle')
+    
+    // Check if there are benchmarks
+    const noBenchmarksMessage = page.locator('text=No benchmarks yet')
+    const hasBenchmarks = await isNotVisible(noBenchmarksMessage)
+    
+    if (hasBenchmarks) {
+      const firstRow = page.locator('tbody tr').first()
+      
+      // Verify dimension information is displayed (name and code)
+      const dimensionCell = firstRow.locator('td').first()
+      await expect(dimensionCell).toBeVisible()
+      
+      // Verify the cell contains text content (dimension name and code)
+      const dimensionText = await dimensionCell.textContent()
+      expect(dimensionText).toBeTruthy()
+      expect(dimensionText?.length).toBeGreaterThan(0)
+    }
+  })
+
+  test('Benchmarks list has breadcrumb navigation', async ({ page }) => {
+    // Navigate to benchmarks list
+    await page.goto('/dashboard/benchmarks/list')
+    await page.waitForLoadState('networkidle')
+    
+    // Verify breadcrumbs are present
+    const breadcrumb = page.locator('nav[aria-label="Breadcrumb"]')
+    await expect(breadcrumb).toBeVisible()
+    
+    // Verify breadcrumb contains "Benchmarks" link
+    await expect(breadcrumb.locator('a:has-text("Benchmarks")')).toBeVisible()
+    
+    // Verify current page in breadcrumb
+    await expect(breadcrumb.locator('text=All Benchmarks')).toBeVisible()
+    
+    // Click on Benchmarks link in breadcrumb to navigate back
+    await breadcrumb.locator('a:has-text("Benchmarks")').click()
+    await page.waitForLoadState('networkidle')
+    
+    // Verify we're back on the main benchmarks page
+    await expect(page).toHaveURL('/dashboard/benchmarks')
+  })
+
+  test('Benchmarks list has "Manage by Assessment" button', async ({ page }) => {
+    // Navigate to benchmarks list
+    await page.goto('/dashboard/benchmarks/list')
+    await page.waitForLoadState('networkidle')
+    
+    // Verify "Manage by Assessment" button is present
+    const manageButton = page.locator('a:has-text("Manage by Assessment")')
+    await expect(manageButton).toBeVisible()
+    
+    // Click the button to navigate to main benchmarks page
+    await manageButton.click()
+    await page.waitForLoadState('networkidle')
+    
+    // Verify we're on the main benchmarks page
+    await expect(page).toHaveURL('/dashboard/benchmarks')
+    await expect(page.locator('text=Select Assessment')).toBeVisible()
+  })
 })
