@@ -7,6 +7,7 @@ import {
   generateLogoStoragePath,
   generateBackgroundStoragePath,
 } from '@/lib/utils/file-upload-utilities'
+import { sanitizeHexColor } from '@/lib/utils/color-validation'
 
 type ClientUpdate = Database['public']['Tables']['clients']['Update']
 
@@ -91,8 +92,8 @@ export async function PATCH(
     let backgroundFile: File | null = null
     let logo: string | null | undefined
     let background: string | null | undefined
-    let primary_color: string | undefined
-    let accent_color: string | undefined
+    let primary_color: string | null | undefined
+    let accent_color: string | null | undefined
     let require_profile: boolean | undefined
     let require_research: boolean | undefined
     let whitelabel: boolean | undefined
@@ -104,8 +105,10 @@ export async function PATCH(
       address = formData.get('address') as string | undefined
       logoFile = formData.get('logo') as File | null
       backgroundFile = formData.get('background') as File | null
-      primary_color = formData.get('primary_color') as string | undefined
-      accent_color = formData.get('accent_color') as string | undefined
+      const rawPrimaryColor = formData.get('primary_color')
+      const rawAccentColor = formData.get('accent_color')
+      primary_color = typeof rawPrimaryColor === 'string' ? rawPrimaryColor : undefined
+      accent_color = typeof rawAccentColor === 'string' ? rawAccentColor : undefined
       
       const requireProfileValue = formData.get('require_profile')
       const requireResearchValue = formData.get('require_research')
@@ -182,14 +185,56 @@ export async function PATCH(
       }
     }
 
+    // Validate and sanitize colors if provided
+    let sanitizedPrimaryColor: string | null | undefined = undefined
+    let sanitizedAccentColor: string | null | undefined = undefined
+
+    if (primary_color !== undefined) {
+      if (primary_color === null || primary_color === '') {
+        sanitizedPrimaryColor = null
+      } else if (typeof primary_color !== 'string') {
+        return NextResponse.json(
+          { error: 'Invalid primary color format. Must be a valid hex color (e.g., #2D2E30 or #FFF)' },
+          { status: 400 }
+        )
+      } else {
+        sanitizedPrimaryColor = sanitizeHexColor(primary_color)
+        if (!sanitizedPrimaryColor) {
+          return NextResponse.json(
+            { error: 'Invalid primary color format. Must be a valid hex color (e.g., #2D2E30 or #FFF)' },
+            { status: 400 }
+          )
+        }
+      }
+    }
+
+    if (accent_color !== undefined) {
+      if (accent_color === null || accent_color === '') {
+        sanitizedAccentColor = null
+      } else if (typeof accent_color !== 'string') {
+        return NextResponse.json(
+          { error: 'Invalid accent color format. Must be a valid hex color (e.g., #FFBA00 or #FFF)' },
+          { status: 400 }
+        )
+      } else {
+        sanitizedAccentColor = sanitizeHexColor(accent_color)
+        if (!sanitizedAccentColor) {
+          return NextResponse.json(
+            { error: 'Invalid accent color format. Must be a valid hex color (e.g., #FFBA00 or #FFF)' },
+            { status: 400 }
+          )
+        }
+      }
+    }
+
     // Prepare update data - only include fields that are provided
     const updateData: ClientUpdate = {}
     if (name !== undefined) updateData.name = name.trim()
     if (address !== undefined) updateData.address = address || null
     if (logo !== undefined) updateData.logo = logo
     if (background !== undefined) updateData.background = background
-    if (primary_color !== undefined) updateData.primary_color = primary_color || null
-    if (accent_color !== undefined) updateData.accent_color = accent_color || null
+    if (sanitizedPrimaryColor !== undefined) updateData.primary_color = sanitizedPrimaryColor
+    if (sanitizedAccentColor !== undefined) updateData.accent_color = sanitizedAccentColor
     if (require_profile !== undefined) updateData.require_profile = require_profile
     if (require_research !== undefined) updateData.require_research = require_research
     if (whitelabel !== undefined) updateData.whitelabel = whitelabel

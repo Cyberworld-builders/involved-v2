@@ -7,6 +7,7 @@ import {
   generateLogoStoragePath,
   generateBackgroundStoragePath,
 } from '@/lib/utils/file-upload-utilities'
+import { sanitizeHexColor } from '@/lib/utils/color-validation'
 
 type ClientInsert = Database['public']['Tables']['clients']['Insert']
 
@@ -77,8 +78,8 @@ export async function POST(request: NextRequest) {
     let address: string | undefined
     let logoFile: File | null = null
     let backgroundFile: File | null = null
-    let primary_color: string | undefined
-    let accent_color: string | undefined
+    let primary_color: string | null | undefined
+    let accent_color: string | null | undefined
     let require_profile: boolean
     let require_research: boolean
     let whitelabel: boolean
@@ -90,8 +91,10 @@ export async function POST(request: NextRequest) {
       address = formData.get('address') as string | undefined
       logoFile = formData.get('logo') as File | null
       backgroundFile = formData.get('background') as File | null
-      primary_color = formData.get('primary_color') as string | undefined
-      accent_color = formData.get('accent_color') as string | undefined
+      const rawPrimaryColor = formData.get('primary_color')
+      const rawAccentColor = formData.get('accent_color')
+      primary_color = typeof rawPrimaryColor === 'string' ? rawPrimaryColor : undefined
+      accent_color = typeof rawAccentColor === 'string' ? rawAccentColor : undefined
       require_profile = formData.get('require_profile') === 'true'
       require_research = formData.get('require_research') === 'true'
       whitelabel = formData.get('whitelabel') === 'true'
@@ -145,14 +148,56 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Validate and sanitize colors if provided
+    let sanitizedPrimaryColor: string | null = null
+    let sanitizedAccentColor: string | null = null
+
+    if (primary_color !== undefined) {
+      if (primary_color === null || primary_color === '') {
+        sanitizedPrimaryColor = null
+      } else if (typeof primary_color !== 'string') {
+        return NextResponse.json(
+          { error: 'Invalid primary color format. Must be a valid hex color (e.g., #2D2E30 or #FFF)' },
+          { status: 400 }
+        )
+      } else {
+        sanitizedPrimaryColor = sanitizeHexColor(primary_color)
+        if (!sanitizedPrimaryColor) {
+          return NextResponse.json(
+            { error: 'Invalid primary color format. Must be a valid hex color (e.g., #2D2E30 or #FFF)' },
+            { status: 400 }
+          )
+        }
+      }
+    }
+
+    if (accent_color !== undefined) {
+      if (accent_color === null || accent_color === '') {
+        sanitizedAccentColor = null
+      } else if (typeof accent_color !== 'string') {
+        return NextResponse.json(
+          { error: 'Invalid accent color format. Must be a valid hex color (e.g., #FFBA00 or #FFF)' },
+          { status: 400 }
+        )
+      } else {
+        sanitizedAccentColor = sanitizeHexColor(accent_color)
+        if (!sanitizedAccentColor) {
+          return NextResponse.json(
+            { error: 'Invalid accent color format. Must be a valid hex color (e.g., #FFBA00 or #FFF)' },
+            { status: 400 }
+          )
+        }
+      }
+    }
+
     // First, insert client to get the ID
     const clientData: ClientInsert = {
       name: name.trim(),
       address: address || null,
       logo: null,
       background: null,
-      primary_color: primary_color || null,
-      accent_color: accent_color || null,
+      primary_color: sanitizedPrimaryColor,
+      accent_color: sanitizedAccentColor,
       require_profile: require_profile ?? false,
       require_research: require_research ?? false,
       whitelabel: whitelabel ?? false,
