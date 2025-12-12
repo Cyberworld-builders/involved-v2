@@ -59,12 +59,13 @@ describe('Account Claim API Route', () => {
     updated_at: new Date().toISOString(),
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockAdminClient: any
 
   beforeEach(() => {
     // Create a simple mock that returns appropriate responses
     mockAdminClient = {
-      from: vi.fn((table: string) => {
+      from: vi.fn(() => {
         const chain = {
           select: vi.fn().mockReturnThis(),
           eq: vi.fn().mockReturnThis(),

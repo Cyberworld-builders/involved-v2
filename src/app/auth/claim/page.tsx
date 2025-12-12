@@ -7,6 +7,9 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
+const REDIRECT_DELAY_MS = 2000 // 2 seconds before redirect after error
+const SUCCESS_REDIRECT_DELAY_MS = 1000 // 1 second before redirect after success
+
 function ClaimPageContent() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -85,7 +88,6 @@ function ClaimPageContent() {
 
       if (!claimResponse.ok) {
         setMessage(claimData.error || 'Failed to claim account')
-        setLoading(false)
         return
       }
 
@@ -100,7 +102,7 @@ function ClaimPageContent() {
         setMessage('Account created, but automatic login failed. Please log in manually.')
         setTimeout(() => {
           router.push('/auth/login')
-        }, 2000)
+        }, REDIRECT_DELAY_MS)
         return
       }
 
@@ -109,10 +111,11 @@ function ClaimPageContent() {
       // Redirect to dashboard
       setTimeout(() => {
         router.push('/dashboard')
-      }, 1000)
+      }, SUCCESS_REDIRECT_DELAY_MS)
     } catch (error) {
       console.error('Error claiming account:', error)
       setMessage('An unexpected error occurred. Please try again.')
+    } finally {
       setLoading(false)
     }
   }

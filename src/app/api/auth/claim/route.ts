@@ -226,22 +226,32 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if profile already has an auth user
-    const profile = invite.profiles as unknown as Profile
-    if (profile && profile.auth_user_id) {
-      return NextResponse.json(
-        { valid: false, error: 'This account has already been claimed' },
-        { status: 400 }
-      )
+    // Note: profiles is a join result, need to access it as a nested object
+    const profileData = invite.profiles
+    if (profileData && typeof profileData === 'object' && 'auth_user_id' in profileData) {
+      const profile = profileData as Profile
+      if (profile.auth_user_id) {
+        return NextResponse.json(
+          { valid: false, error: 'This account has already been claimed' },
+          { status: 400 }
+        )
+      }
+
+      return NextResponse.json({
+        valid: true,
+        invite: {
+          email: profile.email || '',
+          name: profile.name || '',
+          expiresAt: invite.expires_at,
+        },
+      })
     }
 
-    return NextResponse.json({
-      valid: true,
-      invite: {
-        email: profile?.email || '',
-        name: profile?.name || '',
-        expiresAt: invite.expires_at,
-      },
-    })
+    // If profile data is not available or malformed
+    return NextResponse.json(
+      { valid: false, error: 'Invalid invitation data' },
+      { status: 500 }
+    )
   } catch (error) {
     console.error('Unexpected error in claim validation:', error)
     return NextResponse.json(

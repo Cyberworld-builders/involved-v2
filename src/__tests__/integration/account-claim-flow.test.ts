@@ -12,7 +12,7 @@
  * Related to Phase 1 Issue: Implement login after account claim
  */
 
-import { describe, it, expect, beforeAll } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { generateInviteTokenWithExpiration } from '@/lib/utils/invite-token-generation'
 
 describe('Account Claim Flow Integration', () => {
