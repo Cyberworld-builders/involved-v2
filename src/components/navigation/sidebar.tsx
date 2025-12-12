@@ -3,15 +3,12 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-
-interface SidebarProps {
-  className?: string
-}
+import { NavigationItem, SidebarProps } from './types'
 
 export default function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname()
 
-  const navigation = [
+  const navigation: NavigationItem[] = [
     {
       name: 'Home',
       href: '/dashboard',
@@ -62,7 +59,7 @@ export default function Sidebar({ className }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-2 py-4">
+      <nav className="flex-1 space-y-1 px-2 py-4" role="navigation" aria-label="Dashboard navigation">
         {navigation.map((item) => {
           const isActive = pathname === item.href
           return (
