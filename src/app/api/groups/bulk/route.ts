@@ -56,6 +56,7 @@ export async function POST(request: NextRequest) {
           name: group.name.trim(),
           client_id: group.client_id.trim(),
           description: group.description && group.description.trim() !== '' ? group.description.trim() : null,
+          target_id: group.target_id && typeof group.target_id === 'string' && group.target_id.trim() !== '' ? group.target_id.trim() : null,
         })
       }
     })

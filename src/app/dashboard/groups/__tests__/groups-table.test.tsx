@@ -83,7 +83,9 @@ describe('GroupsTable', () => {
   it('should display formatted dates', () => {
     render(<GroupsTable initialGroups={mockGroups} />)
 
-    const expectedCreatedDates = mockGroups.map((g) => new Date(g.created_at).toLocaleDateString())
+    const expectedCreatedDates = mockGroups.map((g) =>
+      new Date(g.created_at).toLocaleDateString(undefined, { timeZone: 'UTC' })
+    )
     for (const date of expectedCreatedDates) {
       expect(screen.getByText(date)).toBeInTheDocument()
     }

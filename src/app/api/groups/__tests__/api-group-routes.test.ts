@@ -1209,8 +1209,8 @@ describe('API Group Routes', () => {
       await bulkCreateGroups(request)
 
       expect(insertMock).toHaveBeenCalledWith([
-        { name: 'Group 1', client_id: 'client-1', description: 'Description 1' },
-        { name: 'Group 2', client_id: 'client-2', description: null },
+        { name: 'Group 1', client_id: 'client-1', description: 'Description 1', target_id: null },
+        { name: 'Group 2', client_id: 'client-2', description: null, target_id: null },
       ])
     })
 
@@ -1245,9 +1245,363 @@ describe('API Group Routes', () => {
       await bulkCreateGroups(request)
 
       expect(insertMock).toHaveBeenCalledWith([
-        { name: 'Group 1', client_id: 'client-1', description: null },
-        { name: 'Group 2', client_id: 'client-2', description: 'Has description' },
+        { name: 'Group 1', client_id: 'client-1', description: null, target_id: null },
+        { name: 'Group 2', client_id: 'client-2', description: 'Has description', target_id: null },
       ])
+    })
+  })
+
+  describe('Group Manager Assignment', () => {
+    describe('POST /api/groups with target_id', () => {
+      it('should create a group with target_id when provided', async () => {
+        mockSupabaseClient.auth.getUser.mockResolvedValue({
+          data: { user: { id: 'user-id' } },
+          error: null,
+        })
+
+        const insertMock = vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: { ...mockGroup, target_id: 'manager-id' },
+              error: null,
+            }),
+          }),
+        })
+
+        const mockFrom = vi.fn().mockReturnValue({
+          insert: insertMock,
+        })
+        mockSupabaseClient.from = mockFrom
+
+        const request = new NextRequest('http://localhost:3000/api/groups', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: 'Test Group',
+            client_id: 'test-client-id',
+            description: 'A test group',
+            target_id: 'manager-id',
+          }),
+        })
+
+        const response = await createGroup(request)
+        const data = await response.json()
+
+        expect(response.status).toBe(201)
+        expect(data.group).toBeDefined()
+        expect(data.group.target_id).toBe('manager-id')
+        expect(insertMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name: 'Test Group',
+            client_id: 'test-client-id',
+            target_id: 'manager-id',
+          })
+        )
+      })
+
+      it('should create a group without target_id when not provided', async () => {
+        mockSupabaseClient.auth.getUser.mockResolvedValue({
+          data: { user: { id: 'user-id' } },
+          error: null,
+        })
+
+        const insertMock = vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: mockGroup,
+              error: null,
+            }),
+          }),
+        })
+
+        const mockFrom = vi.fn().mockReturnValue({
+          insert: insertMock,
+        })
+        mockSupabaseClient.from = mockFrom
+
+        const request = new NextRequest('http://localhost:3000/api/groups', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: 'Test Group',
+            client_id: 'test-client-id',
+          }),
+        })
+
+        await createGroup(request)
+
+        expect(insertMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            target_id: null,
+          })
+        )
+      })
+
+      it('should set target_id to null when empty string provided', async () => {
+        mockSupabaseClient.auth.getUser.mockResolvedValue({
+          data: { user: { id: 'user-id' } },
+          error: null,
+        })
+
+        const insertMock = vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: mockGroup,
+              error: null,
+            }),
+          }),
+        })
+
+        const mockFrom = vi.fn().mockReturnValue({
+          insert: insertMock,
+        })
+        mockSupabaseClient.from = mockFrom
+
+        const request = new NextRequest('http://localhost:3000/api/groups', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: 'Test Group',
+            client_id: 'test-client-id',
+            target_id: '   ',
+          }),
+        })
+
+        await createGroup(request)
+
+        expect(insertMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            target_id: null,
+          })
+        )
+      })
+
+      it('should trim whitespace from target_id', async () => {
+        mockSupabaseClient.auth.getUser.mockResolvedValue({
+          data: { user: { id: 'user-id' } },
+          error: null,
+        })
+
+        const insertMock = vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: { ...mockGroup, target_id: 'manager-id' },
+              error: null,
+            }),
+          }),
+        })
+
+        const mockFrom = vi.fn().mockReturnValue({
+          insert: insertMock,
+        })
+        mockSupabaseClient.from = mockFrom
+
+        const request = new NextRequest('http://localhost:3000/api/groups', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: 'Test Group',
+            client_id: 'test-client-id',
+            target_id: '  manager-id  ',
+          }),
+        })
+
+        await createGroup(request)
+
+        expect(insertMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            target_id: 'manager-id',
+          })
+        )
+      })
+    })
+
+    describe('PATCH /api/groups/[id] with target_id', () => {
+      it('should update group with target_id', async () => {
+        mockSupabaseClient.auth.getUser.mockResolvedValue({
+          data: { user: { id: 'user-id' } },
+          error: null,
+        })
+
+        const updateMock = vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            select: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: { ...mockGroup, target_id: 'new-manager-id' },
+                error: null,
+              }),
+            }),
+          }),
+        })
+
+        const mockFrom = vi.fn().mockReturnValue({
+          update: updateMock,
+        })
+        mockSupabaseClient.from = mockFrom
+
+        const request = new NextRequest('http://localhost:3000/api/groups/test-id', {
+          method: 'PATCH',
+          body: JSON.stringify({
+            target_id: 'new-manager-id',
+          }),
+        })
+        const params = Promise.resolve({ id: 'test-id' })
+        await updateGroup(request, { params })
+
+        expect(updateMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            target_id: 'new-manager-id',
+          })
+        )
+      })
+
+      it('should set target_id to null when explicitly clearing', async () => {
+        mockSupabaseClient.auth.getUser.mockResolvedValue({
+          data: { user: { id: 'user-id' } },
+          error: null,
+        })
+
+        const updateMock = vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            select: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: { ...mockGroup, target_id: null },
+                error: null,
+              }),
+            }),
+          }),
+        })
+
+        const mockFrom = vi.fn().mockReturnValue({
+          update: updateMock,
+        })
+        mockSupabaseClient.from = mockFrom
+
+        const request = new NextRequest('http://localhost:3000/api/groups/test-id', {
+          method: 'PATCH',
+          body: JSON.stringify({
+            target_id: '',
+          }),
+        })
+        const params = Promise.resolve({ id: 'test-id' })
+        await updateGroup(request, { params })
+
+        expect(updateMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            target_id: null,
+          })
+        )
+      })
+
+      it('should trim whitespace from target_id when updating', async () => {
+        mockSupabaseClient.auth.getUser.mockResolvedValue({
+          data: { user: { id: 'user-id' } },
+          error: null,
+        })
+
+        const updateMock = vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            select: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: { ...mockGroup, target_id: 'manager-id' },
+                error: null,
+              }),
+            }),
+          }),
+        })
+
+        const mockFrom = vi.fn().mockReturnValue({
+          update: updateMock,
+        })
+        mockSupabaseClient.from = mockFrom
+
+        const request = new NextRequest('http://localhost:3000/api/groups/test-id', {
+          method: 'PATCH',
+          body: JSON.stringify({
+            target_id: '  manager-id  ',
+          }),
+        })
+        const params = Promise.resolve({ id: 'test-id' })
+        await updateGroup(request, { params })
+
+        expect(updateMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            target_id: 'manager-id',
+          })
+        )
+      })
+    })
+
+    describe('POST /api/groups/bulk with target_id', () => {
+      it('should create multiple groups with target_id', async () => {
+        mockSupabaseClient.auth.getUser.mockResolvedValue({
+          data: { user: { id: 'user-id' } },
+          error: null,
+        })
+
+        const insertMock = vi.fn().mockReturnValue({
+          select: vi.fn().mockResolvedValue({
+            data: mockGroups,
+            error: null,
+          }),
+        })
+
+        const mockFrom = vi.fn().mockReturnValue({
+          insert: insertMock,
+        })
+        mockSupabaseClient.from = mockFrom
+
+        const request = new NextRequest('http://localhost:3000/api/groups/bulk', {
+          method: 'POST',
+          body: JSON.stringify({
+            groups: [
+              { name: 'Group 1', client_id: 'client-1', target_id: 'manager-1' },
+              { name: 'Group 2', client_id: 'client-2', target_id: 'manager-2' },
+              { name: 'Group 3', client_id: 'client-3' },
+            ],
+          }),
+        })
+
+        await bulkCreateGroups(request)
+
+        expect(insertMock).toHaveBeenCalledWith([
+          { name: 'Group 1', client_id: 'client-1', description: null, target_id: 'manager-1' },
+          { name: 'Group 2', client_id: 'client-2', description: null, target_id: 'manager-2' },
+          { name: 'Group 3', client_id: 'client-3', description: null, target_id: null },
+        ])
+      })
+
+      it('should trim whitespace from target_id in bulk creation', async () => {
+        mockSupabaseClient.auth.getUser.mockResolvedValue({
+          data: { user: { id: 'user-id' } },
+          error: null,
+        })
+
+        const insertMock = vi.fn().mockReturnValue({
+          select: vi.fn().mockResolvedValue({
+            data: mockGroups,
+            error: null,
+          }),
+        })
+
+        const mockFrom = vi.fn().mockReturnValue({
+          insert: insertMock,
+        })
+        mockSupabaseClient.from = mockFrom
+
+        const request = new NextRequest('http://localhost:3000/api/groups/bulk', {
+          method: 'POST',
+          body: JSON.stringify({
+            groups: [
+              { name: 'Group 1', client_id: 'client-1', target_id: '  manager-1  ' },
+              { name: 'Group 2', client_id: 'client-2', target_id: '' },
+            ],
+          }),
+        })
+
+        await bulkCreateGroups(request)
+
+        expect(insertMock).toHaveBeenCalledWith([
+          { name: 'Group 1', client_id: 'client-1', description: null, target_id: 'manager-1' },
+          { name: 'Group 2', client_id: 'client-2', description: null, target_id: null },
+        ])
+      })
     })
   })
 })

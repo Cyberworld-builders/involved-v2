@@ -384,8 +384,8 @@ describe('GroupPage', () => {
 
     render(result as React.ReactElement)
 
-    const expectedCreated = new Date(mockGroup.created_at).toLocaleDateString()
-    const expectedUpdated = new Date(mockGroup.updated_at).toLocaleDateString()
+    const expectedCreated = new Date(mockGroup.created_at).toLocaleDateString(undefined, { timeZone: 'UTC' })
+    const expectedUpdated = new Date(mockGroup.updated_at).toLocaleDateString(undefined, { timeZone: 'UTC' })
 
     expect(screen.getByText(expectedCreated)).toBeInTheDocument()
     expect(screen.getByText(expectedUpdated)).toBeInTheDocument()
