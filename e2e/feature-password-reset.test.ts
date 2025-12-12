@@ -33,6 +33,9 @@ const MOCK_TOKEN_LENGTH = 50 // Supabase-like token length for testing
 const MAX_RATE_LIMIT_REQUESTS = 5 // Number of requests for rate limit test
 const RATE_LIMIT_REQUEST_DELAY_MS = 500 // Delay between rate limit test requests
 
+const shouldMockResetPasswordRequest =
+  process.env.SKIP_AUTH_TESTS === 'true' || process.env.SKIP_AUTH_TESTS === '1'
+
 // Helper function to generate mock tokens
 // Generates a token similar to Supabase password reset tokens
 // The suffix differentiates tokens in different test cases
@@ -72,6 +75,21 @@ test.describe('Password Reset Flow', () => {
   })
 
   test.beforeEach(async ({ page }) => {
+    // In CI we commonly run with SKIP_AUTH_TESTS and no real Supabase instance.
+    // Mock the reset-password endpoint so these UI tests don't hang on network calls.
+    if (shouldMockResetPasswordRequest) {
+      await page.route('**/api/auth/reset-password', async (route) => {
+        const req = route.request()
+        if (req.method() !== 'POST') return route.fallback()
+
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ message: 'Password reset email sent' }),
+        })
+      })
+    }
+
     // Start from the home page before each test
     await page.goto('/')
     await page.waitForLoadState('networkidle')
