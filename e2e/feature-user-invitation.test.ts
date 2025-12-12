@@ -317,12 +317,286 @@ test.describe('User Invitation & Claim Flow', () => {
       }
     })
 
-    test('User can update profile after account claim', async () => {
-      test.skip(true, 'Profile update functionality tested in other test suites')
+    test('User can update profile after account claim', async ({ page }) => {
+      test.skip(!claimPageExists, 'Claim feature not yet implemented')
+      
+      // Create and claim an account
+      const invite = await createTestInvite(
+        `test.profile.${Date.now()}@involved.test`,
+        'Test Profile User',
+        'pending'
+      )
+      
+      if (!invite) {
+        test.skip(true, 'Could not create test invite')
+        return
+      }
+      
+      try {
+        // First claim the account
+        await page.goto(`/auth/claim?token=${invite.token}`)
+        await page.waitForLoadState('networkidle')
+        await page.waitForSelector('input[type="password"]', { timeout: 10000 })
+        
+        const passwordInputs = page.locator('input[type="password"]')
+        const count = await passwordInputs.count()
+        
+        if (count >= 2) {
+          await passwordInputs.nth(0).fill(INVITED_USER_PASSWORD)
+          await passwordInputs.nth(1).fill(INVITED_USER_PASSWORD)
+        } else {
+          await passwordInputs.first().fill(INVITED_USER_PASSWORD)
+        }
+        
+        await page.click('button[type="submit"]')
+        
+        // Wait for the claim to complete
+        try {
+          await page.waitForURL(/\/(dashboard|auth\/login)/, { timeout: 10000 })
+        } catch {
+          // If URL didn't change, wait for success message
+          await page.waitForSelector('text=/account.*claimed/i, text=/success/i', { timeout: 5000 }).catch(() => {})
+        }
+        
+        // If redirected to login, sign in first
+        if (page.url().includes('/auth/login')) {
+          await page.fill('input[type="email"]', invite.email)
+          await page.fill('input[type="password"]', INVITED_USER_PASSWORD)
+          await page.click('button[type="submit"]')
+          await page.waitForURL('/dashboard', { timeout: 10000 })
+        }
+        
+        // Navigate to profile page to update profile
+        const profileUrls = [
+          '/dashboard/profile',
+          '/dashboard/settings',
+          '/dashboard/settings/profile',
+          '/dashboard/account',
+          '/dashboard/account/profile',
+        ]
+        
+        let profilePageFound = false
+        for (const url of profileUrls) {
+          try {
+            const response = await page.goto(url, { timeout: 5000 })
+            if (response?.status() !== 404) {
+              profilePageFound = true
+              break
+            }
+          } catch {
+            // Try next URL
+          }
+        }
+        
+        if (!profilePageFound) {
+          test.skip(true, 'Profile page not found - cannot test profile update')
+          return
+        }
+        
+        await page.waitForLoadState('networkidle')
+        
+        // Update profile name
+        const nameInput = page.locator(
+          'input[name="name"], input[id="name"], input[placeholder*="name" i]'
+        ).first()
+        
+        const nameInputExists = await nameInput.count() > 0
+        
+        if (!nameInputExists) {
+          test.skip(true, 'Name input field not found on profile page')
+          return
+        }
+        
+        await expect(nameInput).toBeVisible({ timeout: 10000 })
+        
+        const updatedName = `Updated Name ${Date.now()}`
+        await nameInput.clear()
+        await nameInput.fill(updatedName)
+        
+        // Save changes
+        const saveButton = page.locator(
+          'button[type="submit"]:has-text("Save"), button:has-text("Update"), button:has-text("Save Changes")'
+        ).first()
+        
+        await expect(saveButton).toBeVisible()
+        await saveButton.click()
+        
+        // Wait for success message
+        await expect(
+          page.locator('text=/success|updated|saved/i, div.text-green, div[class*="success"]')
+        ).toBeVisible({ timeout: 10000 })
+        
+        // Verify the update persisted by reloading
+        await page.reload({ waitUntil: 'networkidle' })
+        
+        const verifyNameInput = page.locator(
+          'input[name="name"], input[id="name"], input[placeholder*="name" i]'
+        ).first()
+        
+        await expect(verifyNameInput).toHaveValue(updatedName)
+      } finally {
+        // Clean up
+        await deleteTestInvite(invite.profileId)
+      }
     })
 
-    test('User can update password after account claim', async () => {
-      test.skip(true, 'Password update functionality tested in other test suites')
+    test('User can update password after account claim', async ({ page }) => {
+      test.skip(!claimPageExists, 'Claim feature not yet implemented')
+      
+      // Create and claim an account
+      const invite = await createTestInvite(
+        `test.password.update.${Date.now()}@involved.test`,
+        'Test Password Update User',
+        'pending'
+      )
+      
+      if (!invite) {
+        test.skip(true, 'Could not create test invite')
+        return
+      }
+      
+      try {
+        // First claim the account
+        await page.goto(`/auth/claim?token=${invite.token}`)
+        await page.waitForLoadState('networkidle')
+        await page.waitForSelector('input[type="password"]', { timeout: 10000 })
+        
+        const passwordInputs = page.locator('input[type="password"]')
+        const count = await passwordInputs.count()
+        
+        if (count >= 2) {
+          await passwordInputs.nth(0).fill(INVITED_USER_PASSWORD)
+          await passwordInputs.nth(1).fill(INVITED_USER_PASSWORD)
+        } else {
+          await passwordInputs.first().fill(INVITED_USER_PASSWORD)
+        }
+        
+        await page.click('button[type="submit"]')
+        
+        // Wait for the claim to complete
+        try {
+          await page.waitForURL(/\/(dashboard|auth\/login)/, { timeout: 10000 })
+        } catch {
+          await page.waitForSelector('text=/account.*claimed/i, text=/success/i', { timeout: 5000 }).catch(() => {})
+        }
+        
+        // If redirected to login, sign in first
+        if (page.url().includes('/auth/login')) {
+          await page.fill('input[type="email"]', invite.email)
+          await page.fill('input[type="password"]', INVITED_USER_PASSWORD)
+          await page.click('button[type="submit"]')
+          await page.waitForURL('/dashboard', { timeout: 10000 })
+        }
+        
+        // Navigate to profile/settings page to update password
+        const profileUrls = [
+          '/dashboard/profile',
+          '/dashboard/settings',
+          '/dashboard/settings/profile',
+          '/dashboard/account',
+          '/dashboard/account/profile',
+        ]
+        
+        let profilePageFound = false
+        for (const url of profileUrls) {
+          try {
+            const response = await page.goto(url, { timeout: 5000 })
+            if (response?.status() !== 404) {
+              profilePageFound = true
+              break
+            }
+          } catch {
+            // Try next URL
+          }
+        }
+        
+        if (!profilePageFound) {
+          test.skip(true, 'Profile/settings page not found - cannot test password update')
+          return
+        }
+        
+        await page.waitForLoadState('networkidle')
+        
+        // Find password fields
+        const currentPasswordField = page.locator(
+          'input[name*="current" i][type="password"], input[name*="old" i][type="password"], input[placeholder*="current password" i]'
+        ).first()
+        
+        const newPasswordField = page.locator(
+          'input[name*="new" i][type="password"], input[placeholder*="new password" i]'
+        ).first()
+        
+        const confirmPasswordField = page.locator(
+          'input[name*="confirm" i][type="password"], input[placeholder*="confirm password" i]'
+        ).first()
+        
+        // Check if password fields exist
+        const hasPasswordFields = await currentPasswordField.count() > 0 && 
+                                   await newPasswordField.count() > 0
+        
+        if (!hasPasswordFields) {
+          test.skip(true, 'Password update fields not found on profile page')
+          return
+        }
+        
+        await expect(currentPasswordField).toBeVisible({ timeout: 10000 })
+        await expect(newPasswordField).toBeVisible()
+        
+        // Fill in password change form
+        const newPassword = 'NewPassword123!'
+        await currentPasswordField.fill(INVITED_USER_PASSWORD)
+        await newPasswordField.fill(newPassword)
+        
+        if (await confirmPasswordField.count() > 0) {
+          await confirmPasswordField.fill(newPassword)
+        }
+        
+        // Submit password change - look for password-specific button first
+        const savePasswordButton = page.locator(
+          'button[type="submit"]:has-text("Change Password"), button[type="submit"]:has-text("Update Password")'
+        ).first()
+        
+        // If no password-specific button found, fall back to generic save button
+        const buttonExists = await savePasswordButton.count() > 0
+        if (buttonExists) {
+          await savePasswordButton.click()
+        } else {
+          // Fall back to any save button near the password fields
+          const genericSaveButton = page.locator('button:has-text("Save")').last()
+          await genericSaveButton.click()
+        }
+        
+        // Should show success message
+        await expect(
+          page.locator('text=/password.*updated|password.*changed|success/i, div.text-green, div[class*="success"]')
+        ).toBeVisible({ timeout: 10000 })
+        
+        // Verify password was changed by signing out and back in with new password
+        // Try to find sign out button
+        const signOutButton = page.locator(
+          'button:has-text("Sign Out"), button:has-text("Logout"), a:has-text("Sign Out"), a:has-text("Logout")'
+        ).first()
+        
+        if (await signOutButton.count() > 0) {
+          await signOutButton.click()
+          await page.waitForURL('/auth/login', { timeout: 5000 }).catch(() => {})
+          
+          // Sign in with new password
+          await page.goto('/auth/login')
+          await page.waitForLoadState('networkidle')
+          
+          await page.fill('input[type="email"]', invite.email)
+          await page.fill('input[type="password"]', newPassword)
+          await page.click('button[type="submit"]')
+          
+          // Should successfully sign in with new password
+          await page.waitForURL('/dashboard', { timeout: 10000 })
+          await expect(page).toHaveURL('/dashboard')
+        }
+      } finally {
+        // Clean up
+        await deleteTestInvite(invite.profileId)
+      }
     })
   })
 
