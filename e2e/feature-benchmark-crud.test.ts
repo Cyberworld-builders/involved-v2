@@ -568,4 +568,162 @@ test.describe('Benchmark CRUD Flow', () => {
     await expect(page).toHaveURL('/dashboard/benchmarks')
     await expect(page.locator('text=Select Assessment')).toBeVisible()
   })
+
+  test('Admin can navigate to single benchmark details from list', async ({ page }) => {
+    // Navigate to benchmarks list
+    await page.goto('/dashboard/benchmarks/list')
+    await page.waitForLoadState('networkidle')
+    
+    // Check if there are benchmarks
+    const noBenchmarksMessage = page.locator('text=No benchmarks yet')
+    const hasBenchmarks = await isNotVisible(noBenchmarksMessage)
+    
+    if (hasBenchmarks) {
+      // Find and click the first "View" link
+      const firstViewLink = page.locator('a:has-text("View")').first()
+      await expect(firstViewLink).toBeVisible()
+      await firstViewLink.click()
+      await page.waitForLoadState('networkidle')
+      
+      // Verify we're on a benchmark detail page (URL should contain /dashboard/benchmarks/[id])
+      await expect(page).toHaveURL(/\/dashboard\/benchmarks\/[a-zA-Z0-9-]+$/)
+    }
+  })
+
+  test('Admin can view single benchmark details page', async ({ page }) => {
+    // Navigate to benchmarks list first to get a benchmark ID
+    await page.goto('/dashboard/benchmarks/list')
+    await page.waitForLoadState('networkidle')
+    
+    // Check if there are benchmarks
+    const noBenchmarksMessage = page.locator('text=No benchmarks yet')
+    const hasBenchmarks = await isNotVisible(noBenchmarksMessage)
+    
+    if (hasBenchmarks) {
+      // Click first "View" link
+      const firstViewLink = page.locator('a:has-text("View")').first()
+      await firstViewLink.click()
+      await page.waitForLoadState('networkidle')
+      
+      // Verify the detail page structure
+      await expect(page.locator('h1')).toBeVisible()
+      
+      // Verify benchmark information card is present
+      await expect(page.locator('text=Benchmark Information')).toBeVisible()
+      
+      // Verify benchmark value is displayed with percentage
+      const valueElement = page.locator('text=/[0-9.]+%/')
+      await expect(valueElement).toBeVisible()
+      
+      // Verify dimension information is displayed
+      await expect(page.locator('text=Dimension')).toBeVisible()
+      await expect(page.locator('text=Dimension Code')).toBeVisible()
+      
+      // Verify industry information is displayed
+      await expect(page.locator('text=Industry')).toBeVisible()
+      
+      // Verify metadata section
+      await expect(page.locator('text=Metadata')).toBeVisible()
+      await expect(page.locator('text=Benchmark ID')).toBeVisible()
+      await expect(page.locator('text=Created')).toBeVisible()
+      await expect(page.locator('text=Last Updated')).toBeVisible()
+    }
+  })
+
+  test('Single benchmark details page has breadcrumb navigation', async ({ page }) => {
+    // Navigate to benchmarks list
+    await page.goto('/dashboard/benchmarks/list')
+    await page.waitForLoadState('networkidle')
+    
+    // Check if there are benchmarks
+    const noBenchmarksMessage = page.locator('text=No benchmarks yet')
+    const hasBenchmarks = await isNotVisible(noBenchmarksMessage)
+    
+    if (hasBenchmarks) {
+      // Click first "View" link
+      await page.locator('a:has-text("View")').first().click()
+      await page.waitForLoadState('networkidle')
+      
+      // Verify breadcrumbs are present
+      const breadcrumb = page.locator('nav[aria-label="Breadcrumb"]')
+      await expect(breadcrumb).toBeVisible()
+      
+      // Verify breadcrumb structure
+      await expect(breadcrumb.locator('a:has-text("Benchmarks")')).toBeVisible()
+      await expect(breadcrumb.locator('a:has-text("All Benchmarks")')).toBeVisible()
+      
+      // Test breadcrumb navigation - click "All Benchmarks"
+      await breadcrumb.locator('a:has-text("All Benchmarks")').click()
+      await page.waitForLoadState('networkidle')
+      
+      // Verify we're back on the benchmarks list page
+      await expect(page).toHaveURL('/dashboard/benchmarks/list')
+    }
+  })
+
+  test('Single benchmark details page has action buttons', async ({ page }) => {
+    // Navigate to benchmarks list
+    await page.goto('/dashboard/benchmarks/list')
+    await page.waitForLoadState('networkidle')
+    
+    // Check if there are benchmarks
+    const noBenchmarksMessage = page.locator('text=No benchmarks yet')
+    const hasBenchmarks = await isNotVisible(noBenchmarksMessage)
+    
+    if (hasBenchmarks) {
+      // Click first "View" link
+      await page.locator('a:has-text("View")').first().click()
+      await page.waitForLoadState('networkidle')
+      
+      // Verify action buttons are present
+      await expect(page.locator('button:has-text("Edit Benchmark")')).toBeVisible()
+      await expect(page.locator('button:has-text("Back to List")')).toBeVisible()
+    }
+  })
+
+  test('Single benchmark details page displays related resources', async ({ page }) => {
+    // Navigate to benchmarks list
+    await page.goto('/dashboard/benchmarks/list')
+    await page.waitForLoadState('networkidle')
+    
+    // Check if there are benchmarks
+    const noBenchmarksMessage = page.locator('text=No benchmarks yet')
+    const hasBenchmarks = await isNotVisible(noBenchmarksMessage)
+    
+    if (hasBenchmarks) {
+      // Click first "View" link
+      await page.locator('a:has-text("View")').first().click()
+      await page.waitForLoadState('networkidle')
+      
+      // Verify related resources section is present
+      await expect(page.locator('text=Related Resources')).toBeVisible()
+      await expect(page.locator('text=View all benchmarks for this industry')).toBeVisible()
+      await expect(page.locator('text=Manage benchmarks by assessment')).toBeVisible()
+    }
+  })
+
+  test('Admin can navigate back from single benchmark details', async ({ page }) => {
+    // Navigate to benchmarks list
+    await page.goto('/dashboard/benchmarks/list')
+    await page.waitForLoadState('networkidle')
+    
+    // Check if there are benchmarks
+    const noBenchmarksMessage = page.locator('text=No benchmarks yet')
+    const hasBenchmarks = await isNotVisible(noBenchmarksMessage)
+    
+    if (hasBenchmarks) {
+      // Click first "View" link
+      await page.locator('a:has-text("View")').first().click()
+      await page.waitForLoadState('networkidle')
+      
+      // Click "Back to List" button
+      const backButton = page.locator('button:has-text("Back to List")').first()
+      await backButton.click()
+      await page.waitForLoadState('networkidle')
+      
+      // Verify we're back on the benchmarks list page
+      await expect(page).toHaveURL('/dashboard/benchmarks/list')
+      await expect(page.locator('text=All Benchmarks')).toBeVisible()
+    }
+  })
 })
