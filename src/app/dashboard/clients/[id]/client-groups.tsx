@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -831,7 +832,9 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
                   {existingGroups.map((group) => (
                     <tr key={group.id}>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{group.name}</div>
+                        <Link href={`/dashboard/groups/${group.id}`}>
+                          <div className="text-sm font-medium text-blue-600 hover:text-blue-800 cursor-pointer">{group.name}</div>
+                        </Link>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-500">
