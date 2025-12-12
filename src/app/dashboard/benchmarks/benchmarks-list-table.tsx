@@ -150,7 +150,7 @@ export default function BenchmarksListTable({ initialBenchmarks }: BenchmarksLis
                           View
                         </Link>
                         <Link
-                          href={`/dashboard/benchmarks/${benchmark.dimensions?.assessment_id}/${benchmark.industry_id}`}
+                          href={`/dashboard/benchmarks/manage/${benchmark.dimensions?.assessment_id}/${benchmark.industry_id}`}
                           className="text-indigo-600 hover:text-indigo-900"
                         >
                           Edit

@@ -15,15 +15,18 @@ vi.mock('@/components/layout/dashboard-layout', () => ({
 }))
 
 // Mock UI components
+type ButtonProps = React.ComponentPropsWithoutRef<'button'>
 vi.mock('@/components/ui/button', () => ({
-  Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+  Button: ({ children, ...props }: ButtonProps) => <button {...props}>{children}</button>,
 }))
 
+type DivProps = React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode }
+type HeadingProps = React.HTMLAttributes<HTMLHeadingElement> & { children?: React.ReactNode }
 vi.mock('@/components/ui/card', () => ({
-  Card: ({ children }: any) => <div data-testid="card">{children}</div>,
-  CardContent: ({ children }: any) => <div data-testid="card-content">{children}</div>,
-  CardHeader: ({ children }: any) => <div data-testid="card-header">{children}</div>,
-  CardTitle: ({ children }: any) => <h3 data-testid="card-title">{children}</h3>,
+  Card: ({ children, ...props }: DivProps) => <div data-testid="card" {...props}>{children}</div>,
+  CardContent: ({ children, ...props }: DivProps) => <div data-testid="card-content" {...props}>{children}</div>,
+  CardHeader: ({ children, ...props }: DivProps) => <div data-testid="card-header" {...props}>{children}</div>,
+  CardTitle: ({ children, ...props }: HeadingProps) => <h3 data-testid="card-title" {...props}>{children}</h3>,
 }))
 
 // Mock Supabase client

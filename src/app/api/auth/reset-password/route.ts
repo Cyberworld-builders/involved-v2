@@ -18,10 +18,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { email } = body
+    const email =
+      typeof body === 'object' && body !== null && 'email' in body
+        ? (body as { email?: unknown }).email
+        : undefined
 
     // Validation
-    if (!email) {
+    if (typeof email !== 'string' || email.trim() === '') {
       return NextResponse.json(
         { error: 'Email is required' },
         { status: 400 }

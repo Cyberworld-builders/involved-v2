@@ -106,7 +106,7 @@ export default async function BenchmarksIndustryPage({ params }: BenchmarksIndus
                 {industries.map((industry) => (
                   <Link
                     key={industry.id}
-                    href={`/dashboard/benchmarks/${assessment.id}/${industry.id}`}
+                    href={`/dashboard/benchmarks/manage/${assessment.id}/${industry.id}`}
                     className="block p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-indigo-300 transition-colors"
                   >
                     <div className="flex items-center justify-between">

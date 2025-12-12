@@ -63,7 +63,7 @@ export default async function BenchmarkPage({ params }: BenchmarkPageProps) {
             <p className="text-gray-600">Benchmark details for {industry?.name || 'Unknown Industry'}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link href={`/dashboard/benchmarks/${dimension?.assessment_id}/${benchmark.industry_id}`}>
+            <Link href={`/dashboard/benchmarks/manage/${dimension?.assessment_id}/${benchmark.industry_id}`}>
               <Button variant="outline">Edit Benchmark</Button>
             </Link>
             <Link href="/dashboard/benchmarks/list">

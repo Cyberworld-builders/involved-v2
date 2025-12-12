@@ -295,7 +295,7 @@ describe('BenchmarkPage', () => {
     render(result as React.ReactElement)
 
     const editLink = screen.getByText('Edit Benchmark').closest('a')
-    expect(editLink).toHaveAttribute('href', '/dashboard/benchmarks/assessment-1/industry-1')
+    expect(editLink).toHaveAttribute('href', '/dashboard/benchmarks/manage/assessment-1/industry-1')
   })
 
   it('should have a link to go back to benchmarks list', async () => {

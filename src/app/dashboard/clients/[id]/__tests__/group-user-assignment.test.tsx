@@ -22,7 +22,9 @@ vi.mock('@/lib/supabase/client', () => ({
 describe('Group-user assignment (ClientGroups)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(useRouter).mockReturnValue({ refresh: vi.fn() } as any)
+    vi.mocked(useRouter).mockReturnValue(
+      { refresh: vi.fn() } as unknown as ReturnType<typeof useRouter>
+    )
 
     // ClientGroups uses confirm/alert in some flows
     global.confirm = vi.fn()

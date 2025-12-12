@@ -238,15 +238,15 @@ describe('BenchmarksListTable', () => {
     
     expect(editLinks[0].closest('a')).toHaveAttribute(
       'href',
-      '/dashboard/benchmarks/assessment-1/industry-1'
+      '/dashboard/benchmarks/manage/assessment-1/industry-1'
     )
     expect(editLinks[1].closest('a')).toHaveAttribute(
       'href',
-      '/dashboard/benchmarks/assessment-1/industry-2'
+      '/dashboard/benchmarks/manage/assessment-1/industry-2'
     )
     expect(editLinks[2].closest('a')).toHaveAttribute(
       'href',
-      '/dashboard/benchmarks/assessment-2/industry-3'
+      '/dashboard/benchmarks/manage/assessment-2/industry-3'
     )
   })
 

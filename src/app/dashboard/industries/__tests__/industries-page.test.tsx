@@ -11,23 +11,28 @@ vi.mock('next/navigation', () => ({
 }))
 
 vi.mock('next/link', () => ({
-  default: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>,
+  default: ({ href, children }: { href: string; children: React.ReactNode }) => (
+    <a href={href}>{children}</a>
+  ),
 }))
 
 vi.mock('@/components/layout/dashboard-layout', () => ({
   default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }))
 
+type ButtonProps = React.ComponentPropsWithoutRef<'button'>
 vi.mock('@/components/ui/button', () => ({
-  Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+  Button: ({ children, ...props }: ButtonProps) => <button {...props}>{children}</button>,
 }))
 
+type DivProps = React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode }
+type HeadingProps = React.HTMLAttributes<HTMLHeadingElement> & { children?: React.ReactNode }
 vi.mock('@/components/ui/card', () => ({
-  Card: ({ children }: any) => <div data-testid="card">{children}</div>,
-  CardContent: ({ children }: any) => <div data-testid="card-content">{children}</div>,
-  CardHeader: ({ children }: any) => <div data-testid="card-header">{children}</div>,
-  CardTitle: ({ children }: any) => <h3 data-testid="card-title">{children}</h3>,
-  CardDescription: ({ children }: any) => <div data-testid="card-description">{children}</div>,
+  Card: ({ children, ...props }: DivProps) => <div data-testid="card" {...props}>{children}</div>,
+  CardContent: ({ children, ...props }: DivProps) => <div data-testid="card-content" {...props}>{children}</div>,
+  CardHeader: ({ children, ...props }: DivProps) => <div data-testid="card-header" {...props}>{children}</div>,
+  CardTitle: ({ children, ...props }: HeadingProps) => <h3 data-testid="card-title" {...props}>{children}</h3>,
+  CardDescription: ({ children, ...props }: DivProps) => <div data-testid="card-description" {...props}>{children}</div>,
 }))
 
 const mockSupabaseClient = {
@@ -54,7 +59,9 @@ describe('IndustriesPage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(useRouter).mockReturnValue({ refresh: vi.fn() } as any)
+    vi.mocked(useRouter).mockReturnValue(
+      { refresh: vi.fn() } as unknown as ReturnType<typeof useRouter>
+    )
   })
 
   it('redirects to login if user is not authenticated', async () => {
