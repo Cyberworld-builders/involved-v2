@@ -29,12 +29,16 @@ export async function GET(request: NextRequest) {
     const dimensionId = searchParams.get('dimension_id')
 
     // Build query with filters
-    let query = supabase.from('benchmarks').select('*')
+    // When filtering by assessment_id, we need to join with dimensions table
+    let query = assessmentId
+      ? supabase
+          .from('benchmarks')
+          .select('*, dimensions!inner(assessment_id)')
+      : supabase.from('benchmarks').select('*')
 
+    // Apply assessment_id filter through the dimensions join
     if (assessmentId) {
-      // Note: benchmarks table doesn't have assessment_id directly
-      // This is a placeholder for potential future filtering logic
-      query = query.eq('id', assessmentId) // Adjust based on actual schema
+      query = query.eq('dimensions.assessment_id', assessmentId)
     }
 
     if (industryId) {

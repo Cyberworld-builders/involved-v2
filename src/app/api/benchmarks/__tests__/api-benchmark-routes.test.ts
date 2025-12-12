@@ -425,6 +425,163 @@ describe('API Benchmark Routes', () => {
       expect(eqMock).toHaveBeenCalledWith('industry_id', 'test-industry-id')
       expect(eqMock).toHaveBeenCalledWith('dimension_id', 'test-dimension-id')
     })
+
+    it('should filter benchmarks by assessment_id', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      const eqMock = vi.fn().mockReturnValue({
+        order: vi.fn().mockResolvedValue({
+          data: [mockBenchmarks[0]],
+          error: null,
+        }),
+      })
+
+      const mockFrom = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: eqMock,
+        }),
+      })
+      mockSupabaseClient.from = mockFrom
+
+      const request = new NextRequest(
+        'http://localhost:3000/api/benchmarks?assessment_id=test-assessment-id'
+      )
+      await getBenchmarks(request)
+
+      expect(mockFrom).toHaveBeenCalledWith('benchmarks')
+      // When filtering by assessment_id, should use dimensions join
+      const selectCall = mockFrom.mock.results[0].value.select
+      expect(selectCall).toHaveBeenCalledWith('*, dimensions!inner(assessment_id)')
+      expect(eqMock).toHaveBeenCalledWith('dimensions.assessment_id', 'test-assessment-id')
+    })
+
+    it('should filter benchmarks by assessment_id and industry_id', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      const eqMock = vi.fn().mockReturnThis()
+      eqMock.mockReturnValue({
+        eq: eqMock,
+        order: vi.fn().mockResolvedValue({
+          data: [mockBenchmarks[0]],
+          error: null,
+        }),
+      })
+
+      const mockFrom = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: eqMock,
+        }),
+      })
+      mockSupabaseClient.from = mockFrom
+
+      const request = new NextRequest(
+        'http://localhost:3000/api/benchmarks?assessment_id=test-assessment-id&industry_id=test-industry-id'
+      )
+      await getBenchmarks(request)
+
+      expect(eqMock).toHaveBeenCalledWith('dimensions.assessment_id', 'test-assessment-id')
+      expect(eqMock).toHaveBeenCalledWith('industry_id', 'test-industry-id')
+    })
+
+    it('should filter benchmarks by assessment_id and dimension_id', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      const eqMock = vi.fn().mockReturnThis()
+      eqMock.mockReturnValue({
+        eq: eqMock,
+        order: vi.fn().mockResolvedValue({
+          data: [mockBenchmarks[0]],
+          error: null,
+        }),
+      })
+
+      const mockFrom = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: eqMock,
+        }),
+      })
+      mockSupabaseClient.from = mockFrom
+
+      const request = new NextRequest(
+        'http://localhost:3000/api/benchmarks?assessment_id=test-assessment-id&dimension_id=test-dimension-id'
+      )
+      await getBenchmarks(request)
+
+      expect(eqMock).toHaveBeenCalledWith('dimensions.assessment_id', 'test-assessment-id')
+      expect(eqMock).toHaveBeenCalledWith('dimension_id', 'test-dimension-id')
+    })
+
+    it('should filter benchmarks by all three parameters: assessment_id, industry_id, and dimension_id', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      const eqMock = vi.fn().mockReturnThis()
+      eqMock.mockReturnValue({
+        eq: eqMock,
+        order: vi.fn().mockResolvedValue({
+          data: [mockBenchmarks[0]],
+          error: null,
+        }),
+      })
+
+      const mockFrom = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: eqMock,
+        }),
+      })
+      mockSupabaseClient.from = mockFrom
+
+      const request = new NextRequest(
+        'http://localhost:3000/api/benchmarks?assessment_id=test-assessment-id&industry_id=test-industry-id&dimension_id=test-dimension-id'
+      )
+      await getBenchmarks(request)
+
+      expect(eqMock).toHaveBeenCalledWith('dimensions.assessment_id', 'test-assessment-id')
+      expect(eqMock).toHaveBeenCalledWith('industry_id', 'test-industry-id')
+      expect(eqMock).toHaveBeenCalledWith('dimension_id', 'test-dimension-id')
+    })
+
+    it('should return empty array when filtering by non-existent assessment_id', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      const eqMock = vi.fn().mockReturnValue({
+        order: vi.fn().mockResolvedValue({
+          data: [],
+          error: null,
+        }),
+      })
+
+      const mockFrom = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: eqMock,
+        }),
+      })
+      mockSupabaseClient.from = mockFrom
+
+      const request = new NextRequest(
+        'http://localhost:3000/api/benchmarks?assessment_id=non-existent-assessment-id'
+      )
+      const response = await getBenchmarks(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(data.benchmarks).toEqual([])
+      expect(eqMock).toHaveBeenCalledWith('dimensions.assessment_id', 'non-existent-assessment-id')
+    })
   })
 
   describe('GET /api/benchmarks/[id]', () => {
