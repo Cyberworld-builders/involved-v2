@@ -105,8 +105,12 @@ describe('BenchmarksListTable', () => {
   it('should display formatted dates', () => {
     render(<BenchmarksListTable initialBenchmarks={mockBenchmarks} />)
 
-    // Check updated dates are rendered
-    expect(screen.getAllByText(/1\/1\/2024|1\/2\/2024|1\/3\/2024/)).toHaveLength(3)
+    const expectedUpdatedDates = mockBenchmarks.map((b) =>
+      new Date(b.updated_at).toLocaleDateString()
+    )
+    for (const date of expectedUpdatedDates) {
+      expect(screen.getByText(date)).toBeInTheDocument()
+    }
   })
 
   it('should have Edit and Delete buttons for each benchmark', () => {
