@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { generateUsernameFromFirstLast } from '@/lib/utils/username-generation'
+import { isValidEmail } from '@/lib/utils/email-validation'
+import { MIN_PASSWORD_LENGTH } from '@/lib/utils/auth-constants'
 
 /**
  * POST /api/auth/signup
@@ -20,8 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
+    if (!isValidEmail(email)) {
       return NextResponse.json(
         { error: 'Invalid email format' },
         { status: 400 }
@@ -29,9 +30,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Password validation
-    if (password.length < 8) {
+    if (password.length < MIN_PASSWORD_LENGTH) {
       return NextResponse.json(
-        { error: 'Password must be at least 8 characters' },
+        { error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters` },
         { status: 400 }
       )
     }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { MIN_VERIFICATION_TOKEN_LENGTH } from '@/lib/utils/auth-constants'
 
 /**
  * POST /api/auth/verify-email
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Token validation
-    if (token.length < 16) {
+    if (token.length < MIN_VERIFICATION_TOKEN_LENGTH) {
       return NextResponse.json(
         { error: 'Invalid verification token' },
         { status: 400 }
