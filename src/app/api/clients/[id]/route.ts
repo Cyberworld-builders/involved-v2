@@ -179,7 +179,7 @@ export async function PATCH(
         .from('client-assets')
         .upload(logoPath, logoFile, {
           contentType: logoFile.type,
-          upsert: false,
+          upsert: true, // Allow replacing existing files on update
         })
 
       if (logoUploadError) {
@@ -202,7 +202,7 @@ export async function PATCH(
         .from('client-assets')
         .upload(backgroundPath, backgroundFile, {
           contentType: backgroundFile.type,
-          upsert: false,
+          upsert: true, // Allow replacing existing files on update
         })
 
       if (backgroundUploadError) {
