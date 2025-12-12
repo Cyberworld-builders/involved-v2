@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import DashboardLayout from '@/components/layout/dashboard-layout'
+import ProfileInformationUpdateClient from './profile-information-update-client'
 import ProfilePasswordUpdateClient from './profile-password-update-client'
 
 export default async function ProfilePage() {
@@ -22,6 +22,13 @@ export default async function ProfilePage() {
     .eq('auth_user_id', user.id)
     .single()
 
+  // Prepare initial profile data for the form
+  const initialProfile = {
+    name: profile?.name || '',
+    username: profile?.username || '',
+    email: profile?.email || user.email || '',
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -30,33 +37,8 @@ export default async function ProfilePage() {
           <p className="text-gray-600">Manage your account settings and password</p>
         </div>
 
-        {/* Profile Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile Information</CardTitle>
-            <CardDescription>
-              Your account details
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Email</label>
-              <p className="mt-1 text-sm text-gray-900">{user.email}</p>
-            </div>
-            {profile?.name && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Name</label>
-                <p className="mt-1 text-sm text-gray-900">{profile.name}</p>
-              </div>
-            )}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Account Created</label>
-              <p className="mt-1 text-sm text-gray-900">
-                {new Date(user.created_at || '').toLocaleDateString()}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Profile Information Update */}
+        <ProfileInformationUpdateClient initialProfile={initialProfile} />
 
         {/* Password Update */}
         <ProfilePasswordUpdateClient />
