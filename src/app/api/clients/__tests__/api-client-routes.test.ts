@@ -232,6 +232,185 @@ describe('API Client Routes', () => {
         })
       )
     })
+
+    it('should validate and sanitize primary_color', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      const insertMock = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: mockClient,
+            error: null,
+          }),
+        }),
+      })
+
+      const mockFrom = vi.fn().mockReturnValue({
+        insert: insertMock,
+      })
+      mockSupabaseClient.from = mockFrom
+
+      const request = new NextRequest('http://localhost:3000/api/clients', {
+        method: 'POST',
+        body: JSON.stringify({ 
+          name: 'Test Client',
+          primary_color: '  #ffba00  ' // lowercase with whitespace
+        }),
+      })
+
+      await createClient(request)
+
+      // Should sanitize to uppercase and trim
+      expect(insertMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          primary_color: '#FFBA00',
+        })
+      )
+    })
+
+    it('should validate and sanitize accent_color', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      const insertMock = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: mockClient,
+            error: null,
+          }),
+        }),
+      })
+
+      const mockFrom = vi.fn().mockReturnValue({
+        insert: insertMock,
+      })
+      mockSupabaseClient.from = mockFrom
+
+      const request = new NextRequest('http://localhost:3000/api/clients', {
+        method: 'POST',
+        body: JSON.stringify({ 
+          name: 'Test Client',
+          accent_color: '#abc' // 3-digit hex
+        }),
+      })
+
+      await createClient(request)
+
+      // Should sanitize to uppercase
+      expect(insertMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          accent_color: '#ABC',
+        })
+      )
+    })
+
+    it('should return 400 for invalid primary_color format', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/clients', {
+        method: 'POST',
+        body: JSON.stringify({ 
+          name: 'Test Client',
+          primary_color: 'FFBA00' // missing #
+        }),
+      })
+
+      const response = await createClient(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(400)
+      expect(data.error).toContain('Invalid primary color format')
+    })
+
+    it('should return 400 for invalid accent_color format', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/clients', {
+        method: 'POST',
+        body: JSON.stringify({ 
+          name: 'Test Client',
+          accent_color: '#GGG' // invalid characters
+        }),
+      })
+
+      const response = await createClient(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(400)
+      expect(data.error).toContain('Invalid accent color format')
+    })
+
+    it('should return 400 for primary_color with wrong length', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/clients', {
+        method: 'POST',
+        body: JSON.stringify({ 
+          name: 'Test Client',
+          primary_color: '#FF' // too short
+        }),
+      })
+
+      const response = await createClient(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(400)
+      expect(data.error).toContain('Invalid primary color format')
+    })
+
+    it('should accept null or empty string for optional colors', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      const insertMock = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: mockClient,
+            error: null,
+          }),
+        }),
+      })
+
+      const mockFrom = vi.fn().mockReturnValue({
+        insert: insertMock,
+      })
+      mockSupabaseClient.from = mockFrom
+
+      const request = new NextRequest('http://localhost:3000/api/clients', {
+        method: 'POST',
+        body: JSON.stringify({ 
+          name: 'Test Client',
+          primary_color: null,
+          accent_color: ''
+        }),
+      })
+
+      const response = await createClient(request)
+      
+      expect(response.status).toBe(201)
+      expect(insertMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          primary_color: null,
+          accent_color: null,
+        })
+      )
+    })
   })
 
   describe('GET /api/clients', () => {
@@ -674,6 +853,155 @@ describe('API Client Routes', () => {
       expect(updateMock).toHaveBeenCalledWith(
         expect.objectContaining({
           updated_at: expect.any(String),
+        })
+      )
+    })
+
+    it('should validate and sanitize primary_color when updating', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      const updateMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: mockClient,
+              error: null,
+            }),
+          }),
+        }),
+      })
+
+      const mockFrom = vi.fn().mockReturnValue({
+        update: updateMock,
+      })
+      mockSupabaseClient.from = mockFrom
+
+      const request = new NextRequest('http://localhost:3000/api/clients/test-id', {
+        method: 'PATCH',
+        body: JSON.stringify({ primary_color: '  #abc123  ' }),
+      })
+      const params = Promise.resolve({ id: 'test-id' })
+      await updateClient(request, { params })
+
+      expect(updateMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          primary_color: '#ABC123',
+        })
+      )
+    })
+
+    it('should validate and sanitize accent_color when updating', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      const updateMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: mockClient,
+              error: null,
+            }),
+          }),
+        }),
+      })
+
+      const mockFrom = vi.fn().mockReturnValue({
+        update: updateMock,
+      })
+      mockSupabaseClient.from = mockFrom
+
+      const request = new NextRequest('http://localhost:3000/api/clients/test-id', {
+        method: 'PATCH',
+        body: JSON.stringify({ accent_color: '#fff' }),
+      })
+      const params = Promise.resolve({ id: 'test-id' })
+      await updateClient(request, { params })
+
+      expect(updateMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          accent_color: '#FFF',
+        })
+      )
+    })
+
+    it('should return 400 for invalid primary_color format when updating', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/clients/test-id', {
+        method: 'PATCH',
+        body: JSON.stringify({ primary_color: 'ABC123' }), // missing #
+      })
+      const params = Promise.resolve({ id: 'test-id' })
+      const response = await updateClient(request, { params })
+      const data = await response.json()
+
+      expect(response.status).toBe(400)
+      expect(data.error).toContain('Invalid primary color format')
+    })
+
+    it('should return 400 for invalid accent_color format when updating', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/clients/test-id', {
+        method: 'PATCH',
+        body: JSON.stringify({ accent_color: '#GGGGGG' }), // invalid characters
+      })
+      const params = Promise.resolve({ id: 'test-id' })
+      const response = await updateClient(request, { params })
+      const data = await response.json()
+
+      expect(response.status).toBe(400)
+      expect(data.error).toContain('Invalid accent color format')
+    })
+
+    it('should allow setting colors to null when updating', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      const updateMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: mockClient,
+              error: null,
+            }),
+          }),
+        }),
+      })
+
+      const mockFrom = vi.fn().mockReturnValue({
+        update: updateMock,
+      })
+      mockSupabaseClient.from = mockFrom
+
+      const request = new NextRequest('http://localhost:3000/api/clients/test-id', {
+        method: 'PATCH',
+        body: JSON.stringify({ 
+          primary_color: null,
+          accent_color: ''
+        }),
+      })
+      const params = Promise.resolve({ id: 'test-id' })
+      const response = await updateClient(request, { params })
+
+      expect(response.status).toBe(200)
+      expect(updateMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          primary_color: null,
+          accent_color: null,
         })
       )
     })

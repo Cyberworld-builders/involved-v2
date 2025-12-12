@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { Database } from '@/types/database'
+import { sanitizeHexColor } from '@/lib/utils/color-validation'
 
 type ClientUpdate = Database['public']['Tables']['clients']['Update']
 
@@ -88,14 +89,39 @@ export async function PATCH(
       )
     }
 
+    // Validate and sanitize colors if provided
+    if (primary_color !== undefined && primary_color !== null && primary_color !== '') {
+      const sanitizedColor = sanitizeHexColor(primary_color)
+      if (!sanitizedColor) {
+        return NextResponse.json(
+          { error: 'Invalid primary color format. Must be a valid hex color (e.g., #2D2E30 or #FFF)' },
+          { status: 400 }
+        )
+      }
+    }
+
+    if (accent_color !== undefined && accent_color !== null && accent_color !== '') {
+      const sanitizedColor = sanitizeHexColor(accent_color)
+      if (!sanitizedColor) {
+        return NextResponse.json(
+          { error: 'Invalid accent color format. Must be a valid hex color (e.g., #FFBA00 or #FFF)' },
+          { status: 400 }
+        )
+      }
+    }
+
     // Prepare update data - only include fields that are provided
     const updateData: ClientUpdate = {}
     if (name !== undefined) updateData.name = name.trim()
     if (address !== undefined) updateData.address = address || null
     if (logo !== undefined) updateData.logo = logo || null
     if (background !== undefined) updateData.background = background || null
-    if (primary_color !== undefined) updateData.primary_color = primary_color || null
-    if (accent_color !== undefined) updateData.accent_color = accent_color || null
+    if (primary_color !== undefined) {
+      updateData.primary_color = primary_color ? sanitizeHexColor(primary_color) : null
+    }
+    if (accent_color !== undefined) {
+      updateData.accent_color = accent_color ? sanitizeHexColor(accent_color) : null
+    }
     if (require_profile !== undefined) updateData.require_profile = require_profile
     if (require_research !== undefined) updateData.require_research = require_research
     if (whitelabel !== undefined) updateData.whitelabel = whitelabel

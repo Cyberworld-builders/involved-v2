@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { Database } from '@/types/database'
+import { sanitizeHexColor } from '@/lib/utils/color-validation'
 
 type ClientInsert = Database['public']['Tables']['clients']['Insert']
 
@@ -76,14 +77,38 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Validate and sanitize colors if provided
+    let sanitizedPrimaryColor: string | null = null
+    let sanitizedAccentColor: string | null = null
+
+    if (primary_color) {
+      sanitizedPrimaryColor = sanitizeHexColor(primary_color)
+      if (!sanitizedPrimaryColor) {
+        return NextResponse.json(
+          { error: 'Invalid primary color format. Must be a valid hex color (e.g., #2D2E30 or #FFF)' },
+          { status: 400 }
+        )
+      }
+    }
+
+    if (accent_color) {
+      sanitizedAccentColor = sanitizeHexColor(accent_color)
+      if (!sanitizedAccentColor) {
+        return NextResponse.json(
+          { error: 'Invalid accent color format. Must be a valid hex color (e.g., #FFBA00 or #FFF)' },
+          { status: 400 }
+        )
+      }
+    }
+
     // Prepare client data
     const clientData: ClientInsert = {
       name: name.trim(),
       address: address || null,
       logo: logo || null,
       background: background || null,
-      primary_color: primary_color || null,
-      accent_color: accent_color || null,
+      primary_color: sanitizedPrimaryColor,
+      accent_color: sanitizedAccentColor,
       require_profile: require_profile ?? false,
       require_research: require_research ?? false,
       whitelabel: whitelabel ?? false,
