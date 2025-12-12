@@ -102,6 +102,7 @@ export default function ClaimAccountPage() {
         console.error('Sign in error:', signInError)
         setStatus('success')
         setMessage('Account claimed successfully! Please sign in with your credentials.')
+        setSubmitting(false)
         
         // Redirect to login after 3 seconds
         setTimeout(() => {
