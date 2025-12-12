@@ -63,9 +63,14 @@ Before beginning regression testing, prepare the following test data:
 ### Browser & Device Preparation
 
 - **Desktop**: Chrome, Firefox, Safari (latest versions)
+- **Desktop (Chromium variants)**: Brave, DuckDuckGo (latest versions)
 - **Mobile**: iOS Safari, Chrome Mobile
 - **Tablet**: iPad Safari, Android Chrome
 - **Screen Recording Tool**: OBS, QuickTime, Loom, or similar
+
+**Notes on Brave/DuckDuckGo**:
+- These browsers are Chromium-based but ship with stricter privacy defaults that can affect cookies/storage.
+- When validating auth flows, repeat key steps with privacy/shields on and off (and record any differences).
 
 ### Test Environment Access
 
@@ -1280,26 +1285,27 @@ Before beginning regression testing, prepare the following test data:
 
 **Steps**:
 1. Sign in as admin
-2. Navigate to Users page or Invites section
-3. Click "Send Invite" or "Invite User" button
-4. Enter user email: `invited@test.com`
-5. Fill in user details (name, role, etc.)
-6. Send invite
-7. Verify success message
-8. Check email inbox for invite email
-9. Verify invite email contains:
+2. **Current implementation note**: there is no dashboard UI button for “Send Invite” yet.
+3. Trigger an invite via the API (example using browser devtools console while signed in):
+   - Determine the target user’s profile id (from the Users list / URL / Supabase table)
+   - Run:
+     - `fetch('/api/users/<PROFILE_ID>/invite', { method: 'POST' }).then(r => r.json())`
+4. Verify the API responds with success (201) and returns invite data
+5. Check email inbox for invite email (if email delivery is configured in the current environment)
+6. Verify invite email contains:
    - User's name
    - Invitation link with token
    - Instructions
+7. **Token link routing**: the invite link should point to `/auth/claim?token=<token>` (account claim flow)
 
 **What to Record**:
-- Invite form completion
-- Success message
+- API call and JSON response
+- Success response
 - Invite email (show email if possible)
 
 **Validation**:
-- ✅ Invite can be sent
-- ✅ Invite email received
+- ✅ Invite can be sent via API
+- ✅ Invite email received (if configured)
 - ✅ Email contains correct information
 - ✅ Email contains valid token link
 
@@ -1532,24 +1538,20 @@ Before beginning regression testing, prepare the following test data:
 
 **Steps**:
 1. Sign in as admin
-2. Navigate to an industry's detail page
-3. Click "Add Users" or similar button
-4. Select one or more users
-5. Save assignment
-6. Verify users appear in industry's user list
-7. View user detail page
-8. Verify industry appears in user's industry assignment
-9. Remove user from industry
-10. Verify user removed from industry
+2. Navigate to Users → create a user (or open an existing user) → Edit User
+3. In the user form, select an Industry from the “Industry” dropdown and save
+4. Open the user detail page and verify the “Industry” field shows the selected industry
+5. (Optional) Open the industry detail page and verify the industry itself loads (name/created/updated)
+6. Remove the industry assignment by setting “Industry” back to blank and saving
+7. Verify the user detail page now shows “-” (or equivalent) for Industry
 
 **What to Record**:
 - User assignment to industry
-- Users in industry list
-- Industry in user's assignments
+- Industry shown on user detail page
 
 **Validation**:
 - ✅ Users can be assigned to industries
-- ✅ Assignment visible on both industry and user pages
+- ✅ Assignment visible on the user page
 - ✅ Assignment can be removed
 
 ---
