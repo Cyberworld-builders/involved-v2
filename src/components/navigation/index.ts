@@ -5,4 +5,4 @@
 
 export { default as Header } from './header'
 export { default as Sidebar } from './sidebar'
-export type { NavigationItem, NavigationProps } from './types'
+export type { NavigationItem, NavigationProps, HeaderProps, SidebarProps } from './types'

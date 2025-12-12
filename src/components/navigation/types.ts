@@ -11,3 +11,7 @@ export interface NavigationItem {
 export interface NavigationProps {
   className?: string
 }
+
+export interface HeaderProps extends NavigationProps {}
+
+export interface SidebarProps extends NavigationProps {}

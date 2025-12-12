@@ -3,10 +3,7 @@
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-
-interface HeaderProps {
-  className?: string
-}
+import { HeaderProps } from './types'
 
 /**
  * Header component for public pages

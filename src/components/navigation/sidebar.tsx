@@ -3,11 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { NavigationItem } from './types'
-
-interface SidebarProps {
-  className?: string
-}
+import { NavigationItem, SidebarProps } from './types'
 
 export default function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname()
