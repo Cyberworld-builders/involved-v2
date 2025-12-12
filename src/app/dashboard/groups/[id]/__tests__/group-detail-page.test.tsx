@@ -210,6 +210,37 @@ describe('GroupPage', () => {
     expect(screen.getByText('2 member(s)')).toBeInTheDocument()
   })
 
+  it('should display client information unavailable when client is null', async () => {
+    mockSupabaseClient.auth.getUser.mockResolvedValue({
+      data: { user: { id: 'user-id' } },
+      error: null,
+    })
+
+    const groupWithoutClient = {
+      ...mockGroup,
+      clients: null,
+    }
+
+    const mockFrom = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: groupWithoutClient,
+            error: null,
+          }),
+        }),
+      }),
+    })
+    mockSupabaseClient.from = mockFrom
+
+    const params = Promise.resolve({ id: 'group-1' })
+    const result = await GroupPage({ params })
+
+    render(result as React.ReactElement)
+
+    expect(screen.getByText('Client information unavailable')).toBeInTheDocument()
+  })
+
   it('should display no description message when description is null', async () => {
     mockSupabaseClient.auth.getUser.mockResolvedValue({
       data: { user: { id: 'user-id' } },
@@ -358,25 +389,20 @@ describe('GroupPage', () => {
     expect(dates.length).toBeGreaterThanOrEqual(1)
   })
 
-  it('should handle members without role', async () => {
+  it('should handle members without profile', async () => {
     mockSupabaseClient.auth.getUser.mockResolvedValue({
       data: { user: { id: 'user-id' } },
       error: null,
     })
 
-    const groupWithMemberWithoutRole = {
+    const groupWithMemberWithoutProfile = {
       ...mockGroup,
       group_members: [
         {
           id: 'member-1',
           profile_id: 'user-1',
           role: null,
-          profiles: {
-            id: 'user-1',
-            name: 'John Doe',
-            email: 'john@example.com',
-            username: 'johndoe',
-          },
+          profiles: null,
         },
       ],
     }
@@ -385,7 +411,7 @@ describe('GroupPage', () => {
       select: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
           single: vi.fn().mockResolvedValue({
-            data: groupWithMemberWithoutRole,
+            data: groupWithMemberWithoutProfile,
             error: null,
           }),
         }),
@@ -398,7 +424,7 @@ describe('GroupPage', () => {
 
     render(result as React.ReactElement)
 
-    expect(screen.getByText('John Doe')).toBeInTheDocument()
+    expect(screen.getByText('Name not available')).toBeInTheDocument()
     expect(screen.queryByText(/Role:/)).not.toBeInTheDocument()
   })
 })

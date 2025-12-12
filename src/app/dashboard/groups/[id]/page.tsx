@@ -44,7 +44,7 @@ export default async function GroupPage({ params }: GroupPageProps) {
     .from('groups')
     .select(`
       *,
-      clients!client_id(id, name),
+      clients!groups_client_id_fkey(id, name),
       group_members(
         id,
         profile_id,
@@ -102,7 +102,7 @@ export default async function GroupPage({ params }: GroupPageProps) {
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">Client</label>
-                <p className="text-gray-900">{group.clients?.name || 'No client assigned'}</p>
+                <p className="text-gray-900">{group.clients?.name || 'Client information unavailable'}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">Members</label>
@@ -130,7 +130,7 @@ export default async function GroupPage({ params }: GroupPageProps) {
                     <div key={member.id} className="border rounded-lg p-3">
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="font-medium text-gray-900">{member.profiles?.name || 'Unknown'}</p>
+                          <p className="font-medium text-gray-900">{member.profiles?.name || 'Name not available'}</p>
                           <p className="text-sm text-gray-500">{member.profiles?.email || ''}</p>
                           {member.role && (
                             <p className="text-xs text-gray-400 mt-1">Role: {member.role}</p>
