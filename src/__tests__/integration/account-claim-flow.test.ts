@@ -15,6 +15,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { generateInviteTokenWithExpiration, validateInviteToken } from '@/lib/utils/invite-token-generation'
+import { isValidEmail } from '@/lib/utils/email-validation'
 
 describe('Account Claim Flow Integration', () => {
   beforeEach(() => {
@@ -287,8 +288,7 @@ describe('Account Claim Flow Integration', () => {
     }
     
     // Validate email format for password reset
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    expect(emailRegex.test(passwordResetRequest.email)).toBe(true)
+    expect(isValidEmail(passwordResetRequest.email)).toBe(true)
     
     // Step 5: Simulate password reset email being sent
     const passwordResetResult = {
@@ -322,16 +322,14 @@ describe('Account Claim Flow Integration', () => {
       '',
     ]
     
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    
     // All valid emails should pass
     for (const email of validEmails) {
-      expect(emailRegex.test(email)).toBe(true)
+      expect(isValidEmail(email)).toBe(true)
     }
     
     // All invalid emails should fail
     for (const email of invalidEmails) {
-      expect(emailRegex.test(email)).toBe(false)
+      expect(isValidEmail(email)).toBe(false)
     }
   })
 
@@ -356,12 +354,11 @@ describe('Account Claim Flow Integration', () => {
     
     // Step 4: Test invalid email format error
     const invalidEmailRequest = { email: 'not-an-email' }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    expect(emailRegex.test(invalidEmailRequest.email)).toBe(false)
+    expect(isValidEmail(invalidEmailRequest.email)).toBe(false)
     
     // Step 5: Test valid password reset request
     const validRequest = { email: claimedUser.email }
-    expect(emailRegex.test(validRequest.email)).toBe(true)
+    expect(isValidEmail(validRequest.email)).toBe(true)
     expect(validRequest.email).toBe(claimedUser.email)
   })
 })

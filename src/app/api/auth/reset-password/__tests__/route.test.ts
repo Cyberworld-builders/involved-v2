@@ -132,12 +132,13 @@ describe('POST /api/auth/reset-password', () => {
       'user+tag@example.com',
     ]
 
-    for (const email of validEmails) {
-      mockSupabaseClient.auth.resetPasswordForEmail.mockResolvedValue({
-        data: {},
-        error: null,
-      })
+    // Mock setup once for all iterations
+    mockSupabaseClient.auth.resetPasswordForEmail.mockResolvedValue({
+      data: {},
+      error: null,
+    })
 
+    for (const email of validEmails) {
       const request = new NextRequest('http://localhost:3000/api/auth/reset-password', {
         method: 'POST',
         body: JSON.stringify({ email }),
