@@ -37,10 +37,23 @@ CREATE POLICY "Allow users to read their invites" ON user_invites
     )
   );
 
--- Allow authenticated users to insert invites
--- Note: Additional authorization should be enforced at the application level
-CREATE POLICY "Allow authenticated users to insert user_invites" ON user_invites
-  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+-- Allow authenticated users to insert invites for profiles in their client
+-- Additional authorization is enforced at the application level
+CREATE POLICY "Allow users to insert invites for their client" ON user_invites
+  FOR INSERT WITH CHECK (
+    auth.role() = 'authenticated'
+    AND (
+      -- Allow if inviter has no client restriction (e.g., admin)
+      (SELECT client_id FROM profiles WHERE auth_user_id = auth.uid()) IS NULL
+      OR
+      -- Allow if invitee is in the same client as inviter
+      (SELECT client_id FROM profiles WHERE id = user_invites.profile_id) = 
+      (SELECT client_id FROM profiles WHERE auth_user_id = auth.uid())
+      OR
+      -- Allow if invitee has no client restriction
+      (SELECT client_id FROM profiles WHERE id = user_invites.profile_id) IS NULL
+    )
+  );
 
 -- Allow users to update invites they sent or received
 CREATE POLICY "Allow users to update their invites" ON user_invites

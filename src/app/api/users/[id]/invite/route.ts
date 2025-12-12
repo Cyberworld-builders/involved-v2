@@ -68,10 +68,13 @@ export async function POST(
     }
 
     // Authorization check: Users can only invite others in the same client
-    // or if they don't have a client_id restriction
+    // Users without client_id restrictions (e.g., admins) can invite anyone
+    const currentHasClientRestriction = currentProfile.client_id !== null
+    const targetHasClientRestriction = profile.client_id !== null
+    
     if (
-      profile.client_id &&
-      currentProfile.client_id &&
+      currentHasClientRestriction &&
+      targetHasClientRestriction &&
       profile.client_id !== currentProfile.client_id
     ) {
       return NextResponse.json(
@@ -217,13 +220,20 @@ export async function GET(
       )
     }
 
-    // Authorization check: Users can only view invites for users in the same client
-    // or if current user is viewing their own invites
+    // Authorization check: Users can only view invites for:
+    // 1. Their own invites
+    // 2. Users in the same client (if both have client restrictions)
+    // 3. Any user if current user has no client restriction (e.g., admins)
+    const isOwnProfile = targetProfile.id === currentProfile.id
+    const currentHasClientRestriction = currentProfile.client_id !== null
+    const targetHasClientRestriction = targetProfile.client_id !== null
+    const sameClient = targetProfile.client_id === currentProfile.client_id
+    
     if (
-      targetProfile.id !== currentProfile.id &&
-      targetProfile.client_id &&
-      currentProfile.client_id &&
-      targetProfile.client_id !== currentProfile.client_id
+      !isOwnProfile &&
+      currentHasClientRestriction &&
+      targetHasClientRestriction &&
+      !sameClient
     ) {
       return NextResponse.json(
         { error: 'Not authorized to view invites for this user' },
