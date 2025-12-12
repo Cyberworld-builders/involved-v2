@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { NavigationItem } from './types'
 
 interface SidebarProps {
   className?: string
@@ -11,7 +12,7 @@ interface SidebarProps {
 export default function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname()
 
-  const navigation = [
+  const navigation: NavigationItem[] = [
     {
       name: 'Home',
       href: '/dashboard',

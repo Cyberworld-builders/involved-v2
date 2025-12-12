@@ -1,28 +1,13 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Header } from '@/components/navigation'
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Navigation Header */}
-      <nav className="bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold text-indigo-600">
-              Involved Talent
-            </Link>
-            <div className="flex items-center space-x-4">
-              <Link href="/auth/login">
-                <Button variant="ghost">Login</Button>
-              </Link>
-              <Link href="/auth/signup">
-                <Button>Sign Up</Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Header />
 
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-16">
