@@ -551,12 +551,20 @@ test.describe('User Invitation & Claim Flow', () => {
           await confirmPasswordField.fill(newPassword)
         }
         
-        // Submit password change
+        // Submit password change - look for password-specific button first
         const savePasswordButton = page.locator(
-          'button[type="submit"]:has-text("Change Password"), button[type="submit"]:has-text("Update Password"), button:has-text("Save")'
-        ).last() // Use last() to get password-specific save button if separate
+          'button[type="submit"]:has-text("Change Password"), button[type="submit"]:has-text("Update Password")'
+        ).first()
         
-        await savePasswordButton.click()
+        // If no password-specific button found, fall back to generic save button
+        const buttonExists = await savePasswordButton.count() > 0
+        if (buttonExists) {
+          await savePasswordButton.click()
+        } else {
+          // Fall back to any save button near the password fields
+          const genericSaveButton = page.locator('button:has-text("Save")').last()
+          await genericSaveButton.click()
+        }
         
         // Should show success message
         await expect(

@@ -184,10 +184,10 @@ describe('Profile Update After Account Claim Integration', () => {
     
     // Test various password requirements
     const weakPasswords = [
-      'short',        // Too short
-      '12345678',     // No letters
-      'abcdefgh',     // No numbers
-      'Password',     // Less than 8 characters with number
+      'short',        // Too short (less than 8 characters)
+      '12345678',     // Only numbers (no letters)
+      'abcdefgh',     // Only letters (no numbers)
+      'Pass1',        // Less than 8 characters
     ]
     
     weakPasswords.forEach(weakPassword => {
@@ -357,17 +357,19 @@ describe('Profile Update After Account Claim Integration', () => {
     }
     
     // Simulate first update
+    const firstUpdateTime = new Date(Date.now() - 60000) // 1 minute ago
     const update1 = {
       ...profileData,
       name: 'First Update',
-      updated_at: new Date('2024-01-01T10:00:00Z').toISOString(),
+      updated_at: firstUpdateTime.toISOString(),
     }
     
     // Simulate second update (more recent)
+    const secondUpdateTime = new Date() // Now
     const update2 = {
       ...profileData,
       name: 'Second Update',
-      updated_at: new Date('2024-01-01T10:01:00Z').toISOString(),
+      updated_at: secondUpdateTime.toISOString(),
     }
     
     // Most recent update should be used
