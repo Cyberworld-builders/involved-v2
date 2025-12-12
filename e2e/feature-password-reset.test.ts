@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { shouldSkipAuthTests } from './helpers/auth'
 
 /**
  * E2E Tests for Password Reset Flow
@@ -33,8 +34,13 @@ const MOCK_TOKEN_LENGTH = 50 // Supabase-like token length for testing
 const MAX_RATE_LIMIT_REQUESTS = 5 // Number of requests for rate limit test
 const RATE_LIMIT_REQUEST_DELAY_MS = 500 // Delay between rate limit test requests
 
-const shouldMockResetPasswordRequest =
-  process.env.SKIP_AUTH_TESTS === 'true' || process.env.SKIP_AUTH_TESTS === '1'
+const skipAuthTests = shouldSkipAuthTests()
+const shouldMockResetPasswordRequest = skipAuthTests
+
+const hasPasswordResetCreds = Boolean(
+  process.env.PLAYWRIGHT_PASSWORD_RESET_TEST_EMAIL &&
+    process.env.PLAYWRIGHT_PASSWORD_RESET_ORIGINAL_PASSWORD
+)
 
 // Helper function to generate mock tokens
 // Generates a token similar to Supabase password reset tokens
@@ -148,17 +154,9 @@ test.describe('Password Reset Flow', () => {
       const submitButton = page.locator('button[type="submit"]').first()
       await expect(submitButton).toBeVisible()
       await submitButton.click()
-      
-      // Wait for submission to complete
-      await page.waitForLoadState('networkidle')
-      
-      // Verify success message
-      await expect(
-        page.locator(
-          // Accept both explicit and non-enumerating success messaging
-          'text=/reset.*link.*sent/i, text=/check.*email/i, text=/sent.*email/i, text=/email.*sent/i, text=/if an account exists/i'
-        )
-      ).toBeVisible({ timeout: 10000 })
+
+      // Verify success message (UI intentionally does not enumerate emails)
+      await expect(page.getByText(/if an account exists/i)).toBeVisible({ timeout: 10000 })
     })
 
     test('User sees appropriate message for non-existent email', async ({ page }) => {
@@ -173,22 +171,10 @@ test.describe('Password Reset Flow', () => {
       
       // Submit the form
       await page.click('button[type="submit"]')
-      await page.waitForLoadState('networkidle')
+      await expect(page.getByText(/if an account exists/i)).toBeVisible({ timeout: 10000 })
       
-      // Most secure implementations show same message for security reasons
-      // (don't reveal if email exists), so we check for success message
-      const successMessage = page.locator(
-        'text=/reset.*link.*sent/i, text=/check.*email/i, text=/sent.*email/i, text=/if an account exists/i'
-      )
-      const errorMessage = page.locator(
-        'text=/user.*not.*found/i, text=/email.*not.*found/i, text=/invalid.*email/i'
-      )
-      
-      // Either success message (security best practice) or error should appear
-      const successVisible = await successMessage.isVisible({ timeout: DEFAULT_TIMEOUT }).catch(() => false)
-      const errorVisible = await errorMessage.isVisible({ timeout: DEFAULT_TIMEOUT }).catch(() => false)
-      
-      expect(successVisible || errorVisible).toBeTruthy()
+      // Security best-practice: do not reveal whether the email exists.
+      await expect(page.getByText(/if an account exists/i)).toBeVisible({ timeout: 10000 })
     })
 
     test('Form validates email format', async ({ page }) => {
@@ -249,6 +235,11 @@ test.describe('Password Reset Flow', () => {
   })
 
   test.describe('Access Reset Link', () => {
+    test.skip(
+      skipAuthTests,
+      'SKIP_AUTH_TESTS is set - Supabase recovery links cannot be validated without auth services'
+    )
+
     test('User can access reset password page with valid token', async ({ page }) => {
       test.skip(!resetPasswordPageExists, 'Reset password page not yet implemented')
       
@@ -331,6 +322,11 @@ test.describe('Password Reset Flow', () => {
   })
 
   test.describe('Set New Password', () => {
+    test.skip(
+      skipAuthTests,
+      'SKIP_AUTH_TESTS is set - password updates require a real Supabase recovery session'
+    )
+
     test('User can set new password with valid token', async ({ page }) => {
       test.skip(!resetPasswordPageExists, 'Reset password page not yet implemented')
       
@@ -441,6 +437,11 @@ test.describe('Password Reset Flow', () => {
   })
 
   test.describe('Sign In With New Password', () => {
+    test.skip(
+      skipAuthTests || !hasPasswordResetCreds,
+      'Requires real auth + seeded test user credentials (and SKIP_AUTH_TESTS must be off)'
+    )
+
     test('User can sign in with new password after reset', async ({ page }) => {
       // This test verifies the complete flow
       // Note: This requires actual password reset functionality to be working
@@ -501,6 +502,11 @@ test.describe('Password Reset Flow', () => {
   })
 
   test.describe('Error Handling', () => {
+    test.skip(
+      skipAuthTests,
+      'SKIP_AUTH_TESTS is set - token expiry/one-time-use checks require real Supabase recovery sessions'
+    )
+
     test('Expired token is rejected', async ({ page }) => {
       test.skip(!resetPasswordPageExists, 'Reset password page not yet implemented')
       
