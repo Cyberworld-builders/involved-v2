@@ -106,8 +106,9 @@ test.describe('Password Reset Flow', () => {
       }
       
       // Verify the page has loaded
+      // Our UI uses CardTitle (often renders as h3), so prefer role-based heading
       await expect(
-        page.locator('h1, h2').filter({ hasText: /forgot.*password|reset.*password/i })
+        page.getByRole('heading', { name: /forgot password|reset password/i }).first()
       ).toBeVisible({ timeout: DEFAULT_TIMEOUT })
     })
 
@@ -136,7 +137,8 @@ test.describe('Password Reset Flow', () => {
       // Verify success message
       await expect(
         page.locator(
-          'text=/reset.*link.*sent/i, text=/check.*email/i, text=/sent.*email/i, text=/email.*sent/i'
+          // Accept both explicit and non-enumerating success messaging
+          'text=/reset.*link.*sent/i, text=/check.*email/i, text=/sent.*email/i, text=/email.*sent/i, text=/if an account exists/i'
         )
       ).toBeVisible({ timeout: 10000 })
     })
@@ -158,7 +160,7 @@ test.describe('Password Reset Flow', () => {
       // Most secure implementations show same message for security reasons
       // (don't reveal if email exists), so we check for success message
       const successMessage = page.locator(
-        'text=/reset.*link.*sent/i, text=/check.*email/i, text=/sent.*email/i'
+        'text=/reset.*link.*sent/i, text=/check.*email/i, text=/sent.*email/i, text=/if an account exists/i'
       )
       const errorMessage = page.locator(
         'text=/user.*not.*found/i, text=/email.*not.*found/i, text=/invalid.*email/i'
