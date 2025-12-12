@@ -396,7 +396,6 @@ describe('API User Routes', () => {
       })
 
       const response = await createUser(request)
-      const data = await response.json()
 
       expect(response.status).toBe(201)
       expect(insertMock).toHaveBeenCalledWith(
