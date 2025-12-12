@@ -110,10 +110,11 @@ describe('getTokenExpiration', () => {
     const baseDate = new Date('2024-01-01T14:30:45.123Z')
     const expiration = getTokenExpiration(baseDate)
     
-    expect(expiration.getHours()).toBe(14)
-    expect(expiration.getMinutes()).toBe(30)
-    expect(expiration.getSeconds()).toBe(45)
-    expect(expiration.getMilliseconds()).toBe(123)
+    // Use UTC getters so this test is timezone-independent.
+    expect(expiration.getUTCHours()).toBe(14)
+    expect(expiration.getUTCMinutes()).toBe(30)
+    expect(expiration.getUTCSeconds()).toBe(45)
+    expect(expiration.getUTCMilliseconds()).toBe(123)
   })
 
   it('should return Date object', () => {

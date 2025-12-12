@@ -13,7 +13,7 @@ type UserInviteInsert = Database['public']['Tables']['user_invites']['Insert']
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient()
@@ -28,7 +28,7 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const userId = params.id
+    const { id: userId } = await params
 
     // Validate user ID format
     if (!userId || typeof userId !== 'string') {
@@ -167,7 +167,7 @@ export async function POST(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient()
@@ -182,7 +182,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const userId = params.id
+    const { id: userId } = await params
 
     // Validate user ID format
     if (!userId || typeof userId !== 'string') {
