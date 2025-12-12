@@ -54,15 +54,23 @@ export default function CreateIndustryPage() {
         return
       }
 
-      // Create industry record
-      const { error } = await supabase
-        .from('industries')
-        .insert({
-          name: data.name,
-        })
+      const response = await fetch('/api/industries', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({ name: data.name }),
+      })
 
-      if (error) {
-        throw new Error(`Failed to create industry: ${error.message}`)
+      if (!response.ok) {
+        let message = 'Failed to create industry'
+        try {
+          const errorData = await response.json()
+          message = errorData.error || message
+        } catch {
+          // ignore JSON parse errors
+        }
+        throw new Error(message)
       }
 
       setMessage('Industry created successfully!')

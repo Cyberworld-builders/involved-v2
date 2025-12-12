@@ -31,6 +31,10 @@ export default async function GroupPage({ params }: GroupPageProps) {
   const { id } = await params
   const supabase = await createClient()
 
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString(undefined, { timeZone: 'UTC' })
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -110,11 +114,11 @@ export default async function GroupPage({ params }: GroupPageProps) {
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">Created</label>
-                <p className="text-gray-900">{new Date(group.created_at).toLocaleDateString()}</p>
+                <p className="text-gray-900">{formatDate(group.created_at)}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">Last Updated</label>
-                <p className="text-gray-900">{new Date(group.updated_at).toLocaleDateString()}</p>
+                <p className="text-gray-900">{formatDate(group.updated_at)}</p>
               </div>
             </CardContent>
           </Card>
