@@ -18,6 +18,8 @@ export default async function BenchmarksListPage() {
   }
 
   // Fetch benchmarks from database with related dimension and industry data
+  // Using inner joins to ensure we only show benchmarks with valid related records
+  // This is intentional - benchmarks without dimensions or industries are invalid
   const { data: benchmarks, error } = await supabase
     .from('benchmarks')
     .select(`

@@ -131,11 +131,11 @@ export default function BenchmarksListTable({ initialBenchmarks }: BenchmarksLis
                     </td>
                     <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 sm:px-6">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                        {benchmark.value.toFixed(1)}
+                        {benchmark.value?.toFixed(1) ?? '—'}
                       </span>
                     </td>
                     <td className="hidden md:table-cell px-3 py-4 whitespace-nowrap text-sm text-gray-500 sm:px-6">
-                      {new Date(benchmark.updated_at).toLocaleDateString()}
+                      {benchmark.updated_at ? new Date(benchmark.updated_at).toLocaleDateString() : '—'}
                     </td>
                     <td className="px-3 py-4 whitespace-nowrap text-sm font-medium sm:px-6">
                       <div className="flex space-x-2">
