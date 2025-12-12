@@ -302,11 +302,19 @@ export function parseBenchmarkSpreadsheet(csvContent: string): ParseResult<Bench
   const normalizedHeaders = headers.map(h => h.toLowerCase().trim().replace(/\s+/g, '_'))
   
   // Validate headers
-  const requiredColumns = ['dimension_name', 'dimension_code', 'benchmark_value']
-  const validation = validateColumns(normalizedHeaders, requiredColumns)
-  
-  if (!validation.valid) {
-    errors.push(`Missing required columns: ${validation.missing.join(', ')}`)
+  // Accept either "Value" or "Benchmark Value" column name.
+  const requiredBaseColumns = ['dimension_name', 'dimension_code']
+  const baseValidation = validateColumns(normalizedHeaders, requiredBaseColumns)
+
+  if (!baseValidation.valid) {
+    errors.push(`Missing required columns: ${baseValidation.missing.join(', ')}`)
+    return { data, errors }
+  }
+
+  const hasBenchmarkValue = normalizedHeaders.includes('benchmark_value')
+  const hasValue = normalizedHeaders.includes('value')
+  if (!hasBenchmarkValue && !hasValue) {
+    errors.push(`Missing required columns: benchmark_value (or value)`)
     return { data, errors }
   }
   
@@ -315,6 +323,8 @@ export function parseBenchmarkSpreadsheet(csvContent: string): ParseResult<Bench
   normalizedHeaders.forEach((header, index) => {
     headerMap[header] = index
   })
+
+  const valueColumnKey = headerMap['benchmark_value'] !== undefined ? 'benchmark_value' : 'value'
   
   // Parse data rows
   for (let i = 1; i < rows.length; i++) {
@@ -327,17 +337,12 @@ export function parseBenchmarkSpreadsheet(csvContent: string): ParseResult<Bench
     
     const dimension_name = row[headerMap['dimension_name']] || ''
     const dimension_code = row[headerMap['dimension_code']] || ''
-    const benchmark_value_str = row[headerMap['benchmark_value']] || ''
+    const benchmark_value_str = row[headerMap[valueColumnKey]] || ''
     const industry = row[headerMap['industry']] || ''
     
     // Validate required fields
-    if (!dimension_name) {
-      errors.push(`Row ${rowNum}: Dimension name is required`)
-      continue
-    }
-    
-    if (!dimension_code) {
-      errors.push(`Row ${rowNum}: Dimension code is required`)
+    if (!dimension_name && !dimension_code) {
+      errors.push(`Row ${rowNum}: Dimension name or dimension code is required`)
       continue
     }
     
