@@ -115,6 +115,15 @@ export default function LoginPage() {
               />
             </div>
 
+            <div className="flex justify-end">
+              <Link
+                href="/auth/forgot-password"
+                className="text-sm text-indigo-600 hover:text-indigo-500"
+              >
+                Forgot password?
+              </Link>
+            </div>
+
             {message && (
               <div className={`text-sm ${message.includes('successful') ? 'text-green-600' : 'text-red-600'}`}>
                 {message}

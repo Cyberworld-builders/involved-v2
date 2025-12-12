@@ -27,10 +27,10 @@ export default async function AssessmentsPage() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Page Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Assessments</h1>
-            <p className="text-gray-600">Create and manage talent assessments.</p>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Assessments</h1>
+            <p className="text-sm md:text-base text-gray-600">Create and manage talent assessments.</p>
           </div>
           <Link href="/dashboard/assessments/create">
             <Button>
@@ -63,117 +63,121 @@ export default async function AssessmentsPage() {
                 </Link>
               </div>
             ) : (
-              <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                <table className="min-w-full divide-y divide-gray-300">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Assessment
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Type
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Created
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {assessments.map((assessment) => (
-                      <tr key={assessment.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="h-10 w-10 flex-shrink-0">
-                              {assessment.logo ? (
-                                <Image
-                                  className="h-10 w-10 rounded-full"
-                                  src={assessment.logo}
-                                  alt={assessment.title}
-                                  width={40}
-                                  height={40}
-                                />
-                              ) : (
-                                <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                                  <span className="text-sm font-medium text-gray-700">
-                                    {assessment.title.charAt(0).toUpperCase()}
-                                  </span>
+              <div className="overflow-x-auto -mx-4 sm:mx-0">
+                <div className="inline-block min-w-full align-middle">
+                  <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
+                    <table className="min-w-full divide-y divide-gray-300">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
+                            Assessment
+                          </th>
+                          <th className="hidden sm:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
+                            Type
+                          </th>
+                          <th className="hidden md:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
+                            Status
+                          </th>
+                          <th className="hidden lg:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
+                            Created
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {assessments.map((assessment) => (
+                          <tr key={assessment.id} className="hover:bg-gray-50">
+                            <td className="px-3 py-4 sm:px-6">
+                              <div className="flex items-center">
+                                <div className="h-10 w-10 flex-shrink-0">
+                                  {assessment.logo ? (
+                                    <Image
+                                      className="h-10 w-10 rounded-full"
+                                      src={assessment.logo}
+                                      alt={assessment.title}
+                                      width={40}
+                                      height={40}
+                                    />
+                                  ) : (
+                                    <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                      <span className="text-sm font-medium text-gray-700">
+                                        {assessment.title.charAt(0).toUpperCase()}
+                                      </span>
+                                    </div>
+                                  )}
                                 </div>
-                              )}
-                            </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">
+                                <div className="ml-4">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    <Link
+                                      href={`/dashboard/assessments/${assessment.id}`}
+                                      className="hover:text-indigo-600"
+                                    >
+                                      {assessment.title}
+                                    </Link>
+                                  </div>
+                                  {assessment.description && (
+                                    <div 
+                                      className="text-sm text-gray-500 max-w-xs overflow-hidden hidden sm:block"
+                                      style={{
+                                        display: '-webkit-box',
+                                        WebkitLineClamp: 2,
+                                        WebkitBoxOrient: 'vertical',
+                                        overflow: 'hidden',
+                                      }}
+                                      dangerouslySetInnerHTML={{ __html: assessment.description }}
+                                    />
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="hidden sm:table-cell px-3 py-4 sm:px-6">
+                              <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                {assessment.type}
+                              </span>
+                            </td>
+                            <td className="hidden md:table-cell px-3 py-4 sm:px-6">
+                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                assessment.status === 'active' 
+                                  ? 'bg-green-100 text-green-800'
+                                  : assessment.status === 'draft'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : assessment.status === 'completed'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'bg-gray-100 text-gray-800'
+                              }`}>
+                                {assessment.status}
+                              </span>
+                            </td>
+                            <td className="hidden lg:table-cell px-3 py-4 sm:px-6 text-sm text-gray-500">
+                              {new Date(assessment.created_at).toLocaleDateString()}
+                            </td>
+                            <td className="px-3 py-4 sm:px-6 text-sm font-medium">
+                              <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-1 sm:space-y-0">
+                                <Link
+                                  href={`/dashboard/assessments/${assessment.id}/edit`}
+                                  className="text-indigo-600 hover:text-indigo-900"
+                                >
+                                  Edit
+                                </Link>
                                 <Link
                                   href={`/dashboard/assessments/${assessment.id}`}
-                                  className="hover:text-indigo-600"
+                                  className="text-indigo-600 hover:text-indigo-900"
                                 >
-                                  {assessment.title}
+                                  View
                                 </Link>
+                                <button className="text-red-600 hover:text-red-900 text-left">
+                                  Delete
+                                </button>
                               </div>
-                              {assessment.description && (
-                                <div 
-                                  className="text-sm text-gray-500 max-w-md line-clamp-2 overflow-hidden"
-                                  style={{
-                                    display: '-webkit-box',
-                                    WebkitLineClamp: 2,
-                                    WebkitBoxOrient: 'vertical',
-                                    overflow: 'hidden',
-                                  }}
-                                  dangerouslySetInnerHTML={{ __html: assessment.description }}
-                                />
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                            {assessment.type}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            assessment.status === 'active' 
-                              ? 'bg-green-100 text-green-800'
-                              : assessment.status === 'draft'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : assessment.status === 'completed'
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}>
-                            {assessment.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(assessment.created_at).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex space-x-2">
-                            <Link
-                              href={`/dashboard/assessments/${assessment.id}/edit`}
-                              className="text-indigo-600 hover:text-indigo-900"
-                            >
-                              Edit
-                            </Link>
-                            <Link
-                              href={`/dashboard/assessments/${assessment.id}`}
-                              className="text-indigo-600 hover:text-indigo-900"
-                            >
-                              View
-                            </Link>
-                            <button className="text-red-600 hover:text-red-900">
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             )}
           </CardContent>

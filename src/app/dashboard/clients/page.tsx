@@ -31,10 +31,10 @@ export default async function ClientsPage() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Page Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Clients</h1>
-            <p className="text-gray-600">Add or manage clients.</p>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Clients</h1>
+            <p className="text-sm md:text-base text-gray-600">Add or manage clients.</p>
           </div>
           <Link href="/dashboard/clients/create">
             <Button>
