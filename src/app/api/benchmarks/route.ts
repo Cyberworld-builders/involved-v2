@@ -30,11 +30,14 @@ export async function GET(request: NextRequest) {
 
     // Build query with filters
     // When filtering by assessment_id, we need to join with dimensions table
-    let query = assessmentId
-      ? supabase
-          .from('benchmarks')
-          .select('*, dimensions!inner(assessment_id)')
-      : supabase.from('benchmarks').select('*')
+    // to access the assessment_id field through the dimension relationship
+    let query = supabase
+      .from('benchmarks')
+      .select(
+        assessmentId
+          ? '*, dimensions!inner(assessment_id)'
+          : '*'
+      )
 
     // Apply assessment_id filter through the dimensions join
     if (assessmentId) {
