@@ -563,6 +563,54 @@ describe('API User Routes', () => {
 
       expect(orderMock).toHaveBeenCalledWith('created_at', { ascending: false })
     })
+
+    it('should return users array in response body', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      const mockFrom = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          order: vi.fn().mockResolvedValue({
+            data: mockUsers,
+            error: null,
+          }),
+        }),
+      })
+      mockSupabaseClient.from = mockFrom
+
+      const response = await getUsers()
+      const data = await response.json()
+
+      expect(data).toHaveProperty('users')
+      expect(Array.isArray(data.users)).toBe(true)
+      expect(data.users.length).toBe(2)
+    })
+
+    it('should return empty array when no users exist', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      const mockFrom = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          order: vi.fn().mockResolvedValue({
+            data: [],
+            error: null,
+          }),
+        }),
+      })
+      mockSupabaseClient.from = mockFrom
+
+      const response = await getUsers()
+      const data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(data.users).toEqual([])
+      expect(Array.isArray(data.users)).toBe(true)
+    })
   })
 
   describe('GET /api/users/[id]', () => {

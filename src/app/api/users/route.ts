@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json()
-    const { name, email, username, client_id, industry_id, password, role } = body
+    const { name, email, username, client_id, industry_id, password, role, status } = body
 
     // Validate required fields
     if (!name || typeof name !== 'string' || name.trim() === '') {
@@ -95,9 +95,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate role if provided
-    if (role && !['admin', 'client', 'user'].includes(role)) {
+    if (role !== undefined && !['admin', 'client', 'user'].includes(role)) {
       return NextResponse.json(
         { error: 'Invalid role. Must be one of: admin, client, user' },
+        { status: 400 }
+      )
+    }
+
+    // Validate status if provided
+    if (status !== undefined && !['active', 'inactive', 'suspended'].includes(status)) {
+      return NextResponse.json(
+        { error: 'Invalid status. Must be one of: active, inactive, suspended' },
         { status: 400 }
       )
     }
@@ -175,6 +183,7 @@ export async function POST(request: NextRequest) {
       industry_id: industry_id || null,
       role: role || 'user',
       completed_profile: false,
+      status: status || 'active',
     }
 
     // Create profile

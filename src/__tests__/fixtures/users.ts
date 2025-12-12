@@ -17,6 +17,7 @@ export const mockUser: Profile = {
   accepted_terms: true,
   accepted_at: new Date().toISOString(),
   accepted_signature: null,
+  status: 'active',
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
 }
