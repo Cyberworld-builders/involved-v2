@@ -88,7 +88,7 @@ export async function POST(
 
     // Create invite URL
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const inviteUrl = `${appUrl}/auth/invite?token=${token}`
+    const inviteUrl = `${appUrl}/auth/claim?token=${token}`
 
     // Use admin client for inserting invite
     const adminClient = createAdminClient()

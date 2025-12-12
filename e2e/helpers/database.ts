@@ -169,6 +169,131 @@ export async function deleteTestUser(userId: string): Promise<boolean> {
 }
 
 /**
+ * Create a test user invitation
+ * 
+ * Creates a user profile and an invitation token for account claim testing.
+ * 
+ * @param email - User email
+ * @param name - User name
+ * @param status - Invite status (default: 'pending')
+ * @param expiresInDays - Days until expiration (default: 7)
+ * @returns Created invite data with token or null if failed
+ */
+export async function createTestInvite(
+  email: string,
+  name: string,
+  status: 'pending' | 'accepted' | 'expired' | 'revoked' = 'pending',
+  expiresInDays: number = 7
+) {
+  const client = getAdminClient()
+  if (!client) {
+    console.warn('Admin client not available - cannot create test invite')
+    return null
+  }
+  
+  try {
+    // Generate a secure token (32 bytes = 64 hex characters)
+    const buffer = new Uint8Array(32)
+    crypto.getRandomValues(buffer)
+    const token = Array.from(buffer)
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('')
+    
+    // Calculate expiration date
+    const expiresAt = new Date()
+    expiresAt.setDate(expiresAt.getDate() + expiresInDays)
+    
+    // Create a profile for the invited user (without auth_user_id)
+    const emailLocal = email.split('@')[0]
+    const username = (emailLocal && emailLocal.length > 0) ? emailLocal : `testuser_${Date.now()}`
+    const profileData = {
+      username,
+      name,
+      email,
+      client_id: null,
+      industry_id: null,
+      language_id: null,
+      completed_profile: false,
+      accepted_terms: false,
+    }
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: profile, error: profileError } = await (client.from('profiles') as any)
+      .insert(profileData)
+      .select()
+      .single()
+    
+    if (profileError || !profile) {
+      console.error(`Failed to create test profile: ${profileError?.message}`)
+      return null
+    }
+    
+    // Create the invitation
+    const inviteData = {
+      token,
+      profile_id: profile.id,
+      invited_by: null, // Could be set to an admin user ID if needed
+      expires_at: expiresAt.toISOString(),
+      status,
+      accepted_at: status === 'accepted' ? new Date().toISOString() : null,
+    }
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: invite, error: inviteError } = await (client.from('user_invites') as any)
+      .insert(inviteData)
+      .select()
+      .single()
+    
+    if (inviteError || !invite) {
+      console.error(`Failed to create test invite: ${inviteError?.message}`)
+      // Clean up the profile
+      await client.from('profiles').delete().eq('id', profile.id)
+      return null
+    }
+    
+    console.log(`✅ Created test invite for: ${email} with token: ${token.substring(0, 16)}...`)
+    return {
+      token,
+      profileId: profile.id,
+      inviteId: invite.id,
+      email,
+      name,
+      expiresAt,
+    }
+  } catch (error) {
+    console.error('Error creating test invite:', error instanceof Error ? error.message : 'Unknown error')
+    return null
+  }
+}
+
+/**
+ * Delete a test invitation and associated profile
+ * 
+ * @param profileId - Profile ID to delete
+ * @returns true if successful
+ */
+export async function deleteTestInvite(profileId: string): Promise<boolean> {
+  const client = getAdminClient()
+  if (!client) {
+    console.warn('Admin client not available - cannot delete test invite')
+    return false
+  }
+  
+  try {
+    // Delete invitation (will cascade based on DB constraints)
+    await client.from('user_invites').delete().eq('profile_id', profileId)
+    
+    // Delete profile
+    await client.from('profiles').delete().eq('id', profileId)
+    
+    return true
+  } catch (error) {
+    console.error('Error deleting test invite:', error instanceof Error ? error.message : 'Unknown error')
+    return false
+  }
+}
+
+/**
  * Clean up test data
  * 
  * Removes test data created during test runs.
