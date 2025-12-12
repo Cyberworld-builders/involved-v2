@@ -460,7 +460,7 @@ Finance Team,FinanceCorp,Finance department`
     })
 
     const response = await uploadGroups(request)
-    const data = await response.json()
+    await response.json()
 
     expect(response.status).toBe(201)
     expect(insertMock).toHaveBeenCalledWith([
