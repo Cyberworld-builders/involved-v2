@@ -156,36 +156,73 @@ describe('Sidebar Component', () => {
   describe('Responsive Behavior', () => {
     it('should accept and apply custom className', () => {
       const { container } = render(<Sidebar className="custom-class" />)
-      const sidebar = container.firstChild as HTMLElement
+      // The sidebar is now the second child (after the overlay)
+      const sidebar = container.querySelector('.bg-gray-900') as HTMLElement
       expect(sidebar).toHaveClass('custom-class')
     })
 
     it('should apply default width class', () => {
       const { container } = render(<Sidebar />)
-      const sidebar = container.firstChild as HTMLElement
+      const sidebar = container.querySelector('.bg-gray-900') as HTMLElement
       expect(sidebar).toHaveClass('w-64')
     })
 
     it('should apply flex column layout', () => {
       const { container } = render(<Sidebar />)
-      const sidebar = container.firstChild as HTMLElement
+      const sidebar = container.querySelector('.bg-gray-900') as HTMLElement
       expect(sidebar).toHaveClass('flex', 'h-full', 'flex-col')
     })
 
     it('should apply background color', () => {
       const { container } = render(<Sidebar />)
-      const sidebar = container.firstChild as HTMLElement
+      const sidebar = container.querySelector('.bg-gray-900') as HTMLElement
       expect(sidebar).toHaveClass('bg-gray-900')
     })
 
     it('should merge custom className with default classes', () => {
       const { container } = render(<Sidebar className="md:w-72" />)
-      const sidebar = container.firstChild as HTMLElement
+      const sidebar = container.querySelector('.bg-gray-900') as HTMLElement
       expect(sidebar).toHaveClass('w-64', 'md:w-72')
+    })
+
+    it('should render mobile overlay when sidebar is open', () => {
+      const { container } = render(<Sidebar isOpen={true} />)
+      const overlay = container.querySelector('.bg-black.bg-opacity-50')
+      expect(overlay).toBeInTheDocument()
+    })
+
+    it('should hide mobile overlay on desktop', () => {
+      const { container } = render(<Sidebar isOpen={true} />)
+      const overlay = container.querySelector('.bg-black.bg-opacity-50')
+      expect(overlay).toHaveClass('lg:hidden')
+    })
+
+    it('should apply mobile transform classes', () => {
+      const { container } = render(<Sidebar isOpen={false} />)
+      const sidebar = container.querySelector('.bg-gray-900') as HTMLElement
+      expect(sidebar).toHaveClass('-translate-x-full', 'lg:translate-x-0')
+    })
+
+    it('should show sidebar when isOpen is true', () => {
+      const { container } = render(<Sidebar isOpen={true} />)
+      const sidebar = container.querySelector('.bg-gray-900') as HTMLElement
+      expect(sidebar).toHaveClass('translate-x-0')
     })
   })
 
   describe('Logo Section', () => {
+    it('should render close button for mobile', () => {
+      render(<Sidebar isOpen={true} />)
+      const closeButton = screen.getByRole('button', { name: /close menu/i })
+      expect(closeButton).toBeInTheDocument()
+    })
+
+    it('should hide close button on desktop', () => {
+      render(<Sidebar isOpen={true} />)
+      const closeButton = screen.getByRole('button', { name: /close menu/i })
+      expect(closeButton).toHaveClass('lg:hidden')
+    })
+
     it('should render logo link pointing to dashboard', () => {
       render(<Sidebar />)
       const logoLink = screen.getByText('Involved Talent').closest('a')
@@ -222,13 +259,13 @@ describe('Sidebar Component', () => {
   describe('Edge Cases', () => {
     it('should handle undefined className prop', () => {
       const { container } = render(<Sidebar className={undefined} />)
-      const sidebar = container.firstChild as HTMLElement
+      const sidebar = container.querySelector('.bg-gray-900') as HTMLElement
       expect(sidebar).toHaveClass('w-64')
     })
 
     it('should handle empty className prop', () => {
       const { container } = render(<Sidebar className="" />)
-      const sidebar = container.firstChild as HTMLElement
+      const sidebar = container.querySelector('.bg-gray-900') as HTMLElement
       expect(sidebar).toHaveClass('w-64')
     })
 

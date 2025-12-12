@@ -24,4 +24,7 @@ export interface HeaderProps extends NavigationProps {}
  * Currently matches NavigationProps but allows adding Sidebar-specific props later
  * without breaking changes (e.g., collapsed?: boolean, userInfo?: UserInfo)
  */
-export interface SidebarProps extends NavigationProps {}
+export interface SidebarProps extends NavigationProps {
+  isOpen?: boolean
+  onClose?: () => void
+}
