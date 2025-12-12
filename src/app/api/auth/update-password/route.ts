@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 /**
  * POST /api/auth/update-password
@@ -53,8 +54,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verify current password by attempting to sign in
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    // Verify current password using a separate client to avoid session conflicts
+    const adminClient = createAdminClient()
+    const { error: signInError } = await adminClient.auth.signInWithPassword({
       email: user.email!,
       password: currentPassword,
     })
@@ -66,7 +68,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Update the password
+    // Update the password using the regular client (maintains current session)
     const { error: updateError } = await supabase.auth.updateUser({
       password: newPassword,
     })

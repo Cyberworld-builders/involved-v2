@@ -2,13 +2,17 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { POST } from '../route'
 import { NextRequest } from 'next/server'
 import * as supabaseServer from '@/lib/supabase/server'
+import * as supabaseAdmin from '@/lib/supabase/admin'
 
 // Mock modules
 vi.mock('@/lib/supabase/server')
+vi.mock('@/lib/supabase/admin')
 
 describe('POST /api/auth/update-password', () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockSupabaseClient: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let mockAdminClient: any
   
   beforeEach(() => {
     vi.clearAllMocks()
@@ -16,12 +20,18 @@ describe('POST /api/auth/update-password', () => {
     mockSupabaseClient = {
       auth: {
         getUser: vi.fn(),
-        signInWithPassword: vi.fn(),
         updateUser: vi.fn(),
       },
     }
     
+    mockAdminClient = {
+      auth: {
+        signInWithPassword: vi.fn(),
+      },
+    }
+    
     vi.mocked(supabaseServer.createClient).mockResolvedValue(mockSupabaseClient)
+    vi.mocked(supabaseAdmin.createAdminClient).mockReturnValue(mockAdminClient)
   })
   
   afterEach(() => {
@@ -118,7 +128,7 @@ describe('POST /api/auth/update-password', () => {
       error: null,
     })
     
-    mockSupabaseClient.auth.signInWithPassword.mockResolvedValue({
+    mockAdminClient.auth.signInWithPassword.mockResolvedValue({
       data: null,
       error: { message: 'Invalid credentials' },
     })
@@ -149,7 +159,7 @@ describe('POST /api/auth/update-password', () => {
       error: null,
     })
     
-    mockSupabaseClient.auth.signInWithPassword.mockResolvedValue({
+    mockAdminClient.auth.signInWithPassword.mockResolvedValue({
       data: {
         session: {
           access_token: 'token',
@@ -199,7 +209,7 @@ describe('POST /api/auth/update-password', () => {
       error: null,
     })
     
-    mockSupabaseClient.auth.signInWithPassword.mockResolvedValue({
+    mockAdminClient.auth.signInWithPassword.mockResolvedValue({
       data: {
         session: {
           access_token: 'token',
@@ -272,7 +282,7 @@ describe('POST /api/auth/update-password', () => {
       error: null,
     })
     
-    mockSupabaseClient.auth.signInWithPassword.mockResolvedValue({
+    mockAdminClient.auth.signInWithPassword.mockResolvedValue({
       data: {
         session: {
           access_token: 'token',

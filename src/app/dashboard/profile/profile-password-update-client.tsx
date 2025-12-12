@@ -61,7 +61,6 @@ export default function ProfilePasswordUpdateClient() {
 
       if (!response.ok) {
         setError(data.error || 'Failed to update password')
-        setLoading(false)
         return
       }
 
@@ -69,10 +68,10 @@ export default function ProfilePasswordUpdateClient() {
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
-      setLoading(false)
     } catch (err) {
       console.error('Error updating password:', err)
       setError('An unexpected error occurred. Please try again.')
+    } finally {
       setLoading(false)
     }
   }
