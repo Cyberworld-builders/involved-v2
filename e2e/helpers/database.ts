@@ -204,7 +204,8 @@ export async function createTestInvite(
     expiresAt.setDate(expiresAt.getDate() + expiresInDays)
     
     // Create a profile for the invited user (without auth_user_id)
-    const username = email.split('@')[0] || `testuser_${Date.now()}`
+    const emailLocal = email.split('@')[0]
+    const username = (emailLocal && emailLocal.length > 0) ? emailLocal : `testuser_${Date.now()}`
     const profileData = {
       username,
       name,

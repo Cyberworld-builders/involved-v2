@@ -287,8 +287,16 @@ test.describe('User Invitation & Claim Flow', () => {
         
         await page.click('button[type="submit"]')
         
-        // Wait a moment for claim to complete
-        await page.waitForTimeout(2000)
+        // Wait for the claim to complete by checking URL or success message
+        try {
+          // Try to wait for URL change first
+          await page.waitForURL(/\/(dashboard|auth\/login)/, { timeout: 5000 })
+        } catch {
+          // If URL didn't change, wait for success message
+          await page.waitForSelector('text=/account.*claimed/i, text=/success/i', { timeout: 5000 }).catch(() => {
+            // If neither happened, continue anyway - the test will verify login
+          })
+        }
         
         // Now try to sign in
         await page.goto('/auth/login')
