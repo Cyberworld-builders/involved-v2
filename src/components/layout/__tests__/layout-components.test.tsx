@@ -293,6 +293,28 @@ describe('DashboardLayout', () => {
   })
 
   describe('Header Buttons', () => {
+    it('should render mobile menu button', () => {
+      render(
+        <DashboardLayout>
+          <div>Test Content</div>
+        </DashboardLayout>
+      )
+
+      const menuButton = screen.getByRole('button', { name: /open menu/i })
+      expect(menuButton).toBeInTheDocument()
+    })
+
+    it('should hide mobile menu button on desktop', () => {
+      render(
+        <DashboardLayout>
+          <div>Test Content</div>
+        </DashboardLayout>
+      )
+
+      const menuButton = screen.getByRole('button', { name: /open menu/i })
+      expect(menuButton).toHaveClass('lg:hidden')
+    })
+
     it('should render notification button with icon', () => {
       render(
         <DashboardLayout>
