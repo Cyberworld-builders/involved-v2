@@ -185,8 +185,8 @@ describe('POST /api/auth/reset-password', () => {
     const response = await POST(request)
     const data = await response.json()
 
-    expect(response.status).toBe(500)
-    expect(data.error).toBe('Internal server error')
+    expect(response.status).toBe(400)
+    expect(data.error).toBe('Invalid JSON body')
   })
 
   it('should include redirect URL in password reset request', async () => {
