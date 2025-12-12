@@ -418,6 +418,41 @@ export interface Database {
         }
         Relationships: []
       }
+      user_invites: {
+        Row: {
+          id: string
+          profile_id: string
+          token: string
+          expires_at: string
+          status: 'pending' | 'accepted' | 'expired' | 'revoked'
+          invited_by: string | null
+          accepted_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          profile_id: string
+          token: string
+          expires_at: string
+          status?: 'pending' | 'accepted' | 'expired' | 'revoked'
+          invited_by?: string | null
+          accepted_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          profile_id?: string
+          token?: string
+          expires_at?: string
+          status?: 'pending' | 'accepted' | 'expired' | 'revoked'
+          invited_by?: string | null
+          accepted_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
