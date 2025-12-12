@@ -1,169 +1,183 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
-const REDIRECT_DELAY_MS = 2000 // 2 seconds before redirect after error
-const SUCCESS_REDIRECT_DELAY_MS = 1000 // 1 second before redirect after success
-
-function ClaimPageContent() {
+export default function ClaimAccountPage() {
+  const [token, setToken] = useState<string | null>(null)
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [validating, setValidating] = useState(true)
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState('')
-  const [inviteValid, setInviteValid] = useState(false)
-  const [inviteData, setInviteData] = useState<{ email: string; name: string } | null>(null)
+  const [error, setError] = useState('')
+  const [userProfile, setUserProfile] = useState<{ name: string; email: string } | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
-  const token = searchParams.get('token')
 
-  const supabase = createClient()
-
+  // Validate token on mount
   useEffect(() => {
     const validateToken = async () => {
-      if (!token) {
-        setMessage('No invitation token provided')
-        setValidating(false)
+      const tokenParam = searchParams.get('token')
+      
+      if (!tokenParam) {
+        setError('Invalid invitation link. No token provided.')
+        setLoading(false)
         return
       }
 
+      setToken(tokenParam)
+
       try {
-        const response = await fetch(`/api/auth/claim?token=${token}`)
+        const response = await fetch(`/api/auth/claim?token=${tokenParam}`)
         const data = await response.json()
 
-        if (data.valid) {
-          setInviteValid(true)
-          setInviteData(data.invite)
-        } else {
-          setMessage(data.error || 'Invalid invitation link')
+        if (!response.ok) {
+          setError(data.error || 'Invalid or expired invitation link')
+          setLoading(false)
+          return
         }
-      } catch (error) {
-        console.error('Error validating token:', error)
-        setMessage('Failed to validate invitation. Please try again.')
-      } finally {
-        setValidating(false)
+
+        if (data.valid && data.profile) {
+          setUserProfile(data.profile)
+          setLoading(false)
+        } else {
+          setError('Invalid invitation link')
+          setLoading(false)
+        }
+      } catch (err) {
+        console.error('Error validating token:', err)
+        setError('Failed to validate invitation. Please try again.')
+        setLoading(false)
       }
     }
 
     validateToken()
-  }, [token])
+  }, [searchParams])
 
-  const handleClaim = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!token) {
-      setMessage('No invitation token provided')
-      return
-    }
+    setMessage('')
+    setError('')
 
-    if (password !== confirmPassword) {
-      setMessage('Passwords do not match')
+    // Validation
+    if (!password) {
+      setError('Password is required')
       return
     }
 
     if (password.length < 8) {
-      setMessage('Password must be at least 8 characters long')
+      setError('Password must be at least 8 characters long')
       return
     }
 
-    setLoading(true)
-    setMessage('')
+    if (password !== confirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
+
+    setSubmitting(true)
 
     try {
-      // Claim the account
-      const claimResponse = await fetch('/api/auth/claim', {
+      const response = await fetch('/api/auth/claim', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ token, password }),
+        body: JSON.stringify({
+          token,
+          password,
+        }),
       })
 
-      const claimData = await claimResponse.json()
+      const data = await response.json()
 
-      if (!claimResponse.ok) {
-        setMessage(claimData.error || 'Failed to claim account')
+      if (!response.ok) {
+        setError(data.error || 'Failed to claim account')
+        setSubmitting(false)
         return
       }
 
-      // Account claimed successfully, now log in
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: claimData.email,
-        password: password,
-      })
-
-      if (signInError) {
-        console.error('Sign in error after claim:', signInError)
-        setMessage('Account created, but automatic login failed. Please log in manually.')
+      // Check if manual sign-in is required
+      if (data.requiresManualSignIn) {
+        setMessage('Account claimed successfully! Please sign in with your email and password.')
+        // Redirect to login page after a moment
         setTimeout(() => {
           router.push('/auth/login')
-        }, REDIRECT_DELAY_MS)
-        return
-      }
-
-      setMessage('Account claimed successfully! Redirecting...')
-      
-      // Redirect to dashboard
-      setTimeout(() => {
+        }, 2000)
+      } else {
+        setMessage('Account claimed successfully! Redirecting to dashboard...')
+        // Redirect to dashboard immediately
         router.push('/dashboard')
-      }, SUCCESS_REDIRECT_DELAY_MS)
-    } catch (error) {
-      console.error('Error claiming account:', error)
-      setMessage('An unexpected error occurred. Please try again.')
-    } finally {
-      setLoading(false)
+      }
+    } catch (err) {
+      console.error('Error claiming account:', err)
+      setError('An unexpected error occurred. Please try again.')
+      setSubmitting(false)
     }
   }
 
-  if (validating) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="w-full max-w-md">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl text-center text-gray-900">
-                Validating Invitation
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center text-gray-600">
-                Please wait while we validate your invitation...
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-2xl text-center text-gray-900">Account Claim</CardTitle>
+            <CardDescription className="text-center text-gray-600">
+              Validating your invitation...
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          </CardContent>
+        </Card>
       </div>
     )
   }
 
-  if (!inviteValid) {
+  if (error && !userProfile) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="w-full max-w-md">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl text-center text-gray-900">
-                Invalid Invitation
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center">
-                <p className="text-red-600 mb-4">{message || 'This invitation link is invalid or has expired'}</p>
-                <Link
-                  href="/auth/login"
-                  className="text-sm text-indigo-600 hover:text-indigo-500"
-                >
-                  Go to login page
-                </Link>
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-2xl text-center text-red-600">Invalid Invitation</CardTitle>
+            <CardDescription className="text-center text-gray-600">
+              This invitation link is not valid
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-red-800">{error}</p>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+            <div className="flex flex-col space-y-2">
+              <Button
+                variant="outline"
+                onClick={() => router.push('/auth/login')}
+                className="w-full"
+              >
+                Go to Login
+              </Button>
+              <Link 
+                href="/"
+                className="text-center text-sm text-indigo-600 hover:text-indigo-500"
+              >
+                Back to Home
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     )
   }
@@ -181,29 +195,25 @@ function ClaimPageContent() {
         </div>
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl text-center text-gray-900">
-              Claim Your Account
-            </CardTitle>
+            <CardTitle className="text-2xl text-center text-gray-900">Claim Your Account</CardTitle>
             <CardDescription className="text-center text-gray-600">
-              Welcome, {inviteData?.name}! Set your password to complete account setup.
+              {userProfile && (
+                <span>
+                  Welcome, <strong>{userProfile.name}</strong>! Set your password to complete your account setup.
+                </span>
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleClaim} className="space-y-4">
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-900">
-                  Email address
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={inviteData?.email || ''}
-                  disabled
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-700"
-                />
+            {userProfile && (
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-sm text-blue-800">
+                  <strong>Email:</strong> {userProfile.email}
+                </p>
               </div>
+            )}
 
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-900">
                   Password
@@ -217,7 +227,8 @@ function ClaimPageContent() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter your password (min 8 characters)"
+                  placeholder="Enter your password (min. 8 characters)"
+                  disabled={submitting}
                 />
               </div>
 
@@ -235,47 +246,42 @@ function ClaimPageContent() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="Confirm your password"
+                  disabled={submitting}
                 />
               </div>
 
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                  <p className="text-sm text-red-800">{error}</p>
+                </div>
+              )}
+
               {message && (
-                <div className={`text-sm ${message.includes('success') ? 'text-green-600' : 'text-red-600'}`}>
-                  {message}
+                <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                  <p className="text-sm text-green-800">{message}</p>
                 </div>
               )}
 
               <Button
                 type="submit"
                 className="w-full"
-                disabled={loading}
+                disabled={submitting}
               >
-                {loading ? 'Claiming Account...' : 'Claim Account'}
+                {submitting ? 'Claiming Account...' : 'Claim Account'}
               </Button>
             </form>
 
             <div className="mt-6 text-center">
-              <Link
-                href="/auth/login"
-                className="text-sm text-indigo-600 hover:text-indigo-500"
-              >
-                Already have an account? Sign in
-              </Link>
+              <p className="text-sm text-gray-600">
+                Already have an account?{' '}
+                <Link href="/auth/login" className="text-indigo-600 hover:text-indigo-500">
+                  Sign in
+                </Link>
+              </p>
             </div>
           </CardContent>
         </Card>
       </div>
     </div>
-  )
-}
-
-export default function ClaimPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-gray-600">Loading...</div>
-      </div>
-    }>
-      <ClaimPageContent />
-    </Suspense>
   )
 }

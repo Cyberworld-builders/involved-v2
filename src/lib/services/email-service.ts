@@ -185,6 +185,8 @@ export function formatExpirationDate(date: Date): string {
   }
   
   return date.toLocaleDateString('en-US', {
+    // Force UTC to make formatting deterministic across environments/timezones.
+    timeZone: 'UTC',
     weekday: 'long',
     year: 'numeric',
     month: 'long',
