@@ -28,8 +28,8 @@ export default async function BenchmarkPage({ params }: BenchmarkPageProps) {
     .from('benchmarks')
     .select(`
       *,
-      dimensions!inner(id, name, code, assessment_id),
-      industries!inner(id, name)
+      dimensions(id, name, code, assessment_id),
+      industries(id, name)
     `)
     .eq('id', id)
     .single()
