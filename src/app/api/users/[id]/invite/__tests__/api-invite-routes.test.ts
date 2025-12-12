@@ -12,9 +12,20 @@ vi.mock('@/lib/supabase/admin')
 vi.mock('@/lib/utils/invite-token-generation')
 vi.mock('@/lib/services/email-service')
 
+type MockSupabaseClient = {
+  auth: {
+    getUser: ReturnType<typeof vi.fn>
+  }
+  from: ReturnType<typeof vi.fn>
+}
+
+type MockAdminClient = {
+  from: ReturnType<typeof vi.fn>
+}
+
 describe('POST /api/users/[id]/invite', () => {
-  let mockSupabaseClient: any
-  let mockAdminClient: any
+  let mockSupabaseClient: MockSupabaseClient
+  let mockAdminClient: MockAdminClient
   
   beforeEach(() => {
     vi.clearAllMocks()
@@ -199,7 +210,7 @@ describe('POST /api/users/[id]/invite', () => {
 })
 
 describe('GET /api/users/[id]/invite', () => {
-  let mockSupabaseClient: any
+  let mockSupabaseClient: MockSupabaseClient
   
   beforeEach(() => {
     vi.clearAllMocks()

@@ -1,33 +1,131 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { validateInviteToken } from '@/lib/utils/invite-token-generation'
+import { validateInviteToken, validateTokenFormat } from '@/lib/utils/invite-token-generation'
 
 /**
- * POST /api/auth/claim
- * Claim an account using an invite token
+ * GET /api/auth/claim?token=xxx
+ * Validate invite token and get user information
  */
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { token, password } = body
+    const searchParams = request.nextUrl.searchParams
+    const token = searchParams.get('token')
 
-    if (!token || !password) {
+    if (!token) {
       return NextResponse.json(
-        { error: 'Token and password are required' },
+        { error: 'Token is required' },
         { status: 400 }
       )
     }
 
-    // Validate token format
-    if (token.length !== 64 || !/^[0-9a-f]{64}$/.test(token)) {
+    // Avoid requiring admin credentials for clearly invalid tokens
+    if (!validateTokenFormat(token)) {
       return NextResponse.json(
         { error: 'Invalid token format' },
         { status: 400 }
       )
     }
 
-    // Validate password strength
-    if (password.length < 8) {
+    const adminClient = createAdminClient()
+
+    // Look up the invite by token
+    const { data: invite, error: inviteError } = await adminClient
+      .from('user_invites')
+      .select('id, profile_id, expires_at, status')
+      .eq('token', token)
+      .single()
+
+    if (inviteError || !invite) {
+      return NextResponse.json(
+        { error: 'Invalid token' },
+        { status: 404 }
+      )
+    }
+
+    // Check if invite has already been accepted
+    if (invite.status === 'accepted') {
+      return NextResponse.json(
+        { error: 'This invite has already been used' },
+        { status: 400 }
+      )
+    }
+
+    // Check if invite has been revoked
+    if (invite.status === 'revoked') {
+      return NextResponse.json(
+        { error: 'This invite has been revoked' },
+        { status: 400 }
+      )
+    }
+
+    // Validate token expiration
+    const expiresAt = new Date(invite.expires_at)
+    const validation = validateInviteToken(token, expiresAt)
+
+    if (!validation.valid) {
+      // Update status to expired if it's not already
+      if (invite.status === 'pending') {
+        await adminClient
+          .from('user_invites')
+          .update({ status: 'expired' })
+          .eq('id', invite.id)
+      }
+
+      return NextResponse.json(
+        { error: 'Token has expired' },
+        { status: 400 }
+      )
+    }
+
+    // Get user profile information
+    const { data: profile, error: profileError } = await adminClient
+      .from('profiles')
+      .select('id, name, email')
+      .eq('id', invite.profile_id)
+      .single()
+
+    if (profileError || !profile) {
+      return NextResponse.json(
+        { error: 'User profile not found' },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json({
+      valid: true,
+      profile: {
+        id: profile.id,
+        name: profile.name,
+        email: profile.email,
+      },
+    })
+  } catch (error) {
+    console.error('Error validating token:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+/**
+ * POST /api/auth/claim
+ * Claim account with token and set password
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { token, password } = body
+
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Token is required' },
+        { status: 400 }
+      )
+    }
+
+    if (!password || typeof password !== 'string' || password.length < 8) {
       return NextResponse.json(
         { error: 'Password must be at least 8 characters long' },
         { status: 400 }
@@ -36,28 +134,16 @@ export async function POST(request: NextRequest) {
 
     const adminClient = createAdminClient()
 
-    // Look up invite by token
+    // Look up the invite by token
     const { data: invite, error: inviteError } = await adminClient
       .from('user_invites')
-      .select(`
-        id,
-        profile_id,
-        token,
-        expires_at,
-        status,
-        profiles:profile_id (
-          id,
-          email,
-          name,
-          auth_user_id
-        )
-      `)
+      .select('id, profile_id, expires_at, status')
       .eq('token', token)
       .single()
 
     if (inviteError || !invite) {
       return NextResponse.json(
-        { error: 'Invalid or expired invite' },
+        { error: 'Invalid token' },
         { status: 404 }
       )
     }
@@ -90,77 +176,122 @@ export async function POST(request: NextRequest) {
         .eq('id', invite.id)
 
       return NextResponse.json(
-        { error: 'This invite has expired' },
+        { error: 'Token has expired' },
         { status: 400 }
       )
     }
 
-    const profile = invite.profiles as unknown as { id: string; email: string; name: string; auth_user_id: string | null }
+    // Get user profile
+    const { data: profile, error: profileError } = await adminClient
+      .from('profiles')
+      .select('id, email, auth_user_id')
+      .eq('id', invite.profile_id)
+      .single()
+
+    if (profileError || !profile) {
+      return NextResponse.json(
+        { error: 'User profile not found' },
+        { status: 404 }
+      )
+    }
 
     // Check if user already has an auth account
-    if (profile.auth_user_id) {
-      return NextResponse.json(
-        { error: 'This account has already been claimed' },
-        { status: 400 }
+    let authUserId = profile.auth_user_id
+
+    if (!authUserId) {
+      // Create Supabase auth user
+      const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
+        email: profile.email,
+        password: password,
+        email_confirm: true, // Auto-confirm email since they clicked the invite link
+      })
+
+      if (authError || !authData.user) {
+        console.error('Error creating auth user:', authError)
+        return NextResponse.json(
+          { error: 'Failed to create user account' },
+          { status: 500 }
+        )
+      }
+
+      authUserId = authData.user.id
+
+      // Update profile with auth_user_id
+      const { error: updateError } = await adminClient
+        .from('profiles')
+        .update({ auth_user_id: authUserId })
+        .eq('id', profile.id)
+
+      if (updateError) {
+        console.error('Error updating profile with auth_user_id:', updateError)
+        // This is a critical error - user account created but not linked to profile
+        return NextResponse.json(
+          { error: 'Account created but failed to link to profile. Please contact support.' },
+          { status: 500 }
+        )
+      }
+    } else {
+      // User already has an auth account, update password
+      const { error: updatePasswordError } = await adminClient.auth.admin.updateUserById(
+        authUserId,
+        { password: password }
       )
+
+      if (updatePasswordError) {
+        console.error('Error updating user password:', updatePasswordError)
+        return NextResponse.json(
+          { error: 'Failed to update password' },
+          { status: 500 }
+        )
+      }
     }
 
-    // Create Supabase auth user
-    const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
-      email: profile.email,
-      password: password,
-      email_confirm: true, // Auto-confirm email since they were invited
-      user_metadata: {
-        name: profile.name,
-      },
-    })
-
-    if (authError || !authData.user) {
-      console.error('Error creating auth user:', authError)
-      return NextResponse.json(
-        { error: 'Failed to create account. Please try again.' },
-        { status: 500 }
-      )
-    }
-
-    // Update profile with auth_user_id
-    const { error: profileUpdateError } = await adminClient
-      .from('profiles')
-      .update({ auth_user_id: authData.user.id })
-      .eq('id', profile.id)
-
-    if (profileUpdateError) {
-      console.error('Error updating profile:', profileUpdateError)
-      // Clean up auth user if profile update fails
-      await adminClient.auth.admin.deleteUser(authData.user.id)
-      return NextResponse.json(
-        { error: 'Failed to link account. Please try again.' },
-        { status: 500 }
-      )
-    }
-
-    // Update invite status to accepted
-    const { error: inviteUpdateError } = await adminClient
+    // Update invite status to accepted - CRITICAL: Must succeed to prevent reuse
+    const { error: updateInviteError } = await adminClient
       .from('user_invites')
-      .update({ 
+      .update({
         status: 'accepted',
-        accepted_at: new Date().toISOString()
+        accepted_at: new Date().toISOString(),
       })
       .eq('id', invite.id)
 
-    if (inviteUpdateError) {
-      console.error('Error updating invite status:', inviteUpdateError)
-      // Don't fail the request, the account is already created
+    if (updateInviteError) {
+      console.error('Error updating invite status:', updateInviteError)
+      // This is critical - if we can't mark the invite as used, it could be reused
+      // We should fail the operation to prevent security issues
+      return NextResponse.json(
+        { error: 'Failed to complete account setup. Please try again.' },
+        { status: 500 }
+      )
+    }
+
+    // Sign in the user using the regular client
+    const supabase = await createClient()
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      email: profile.email,
+      password: password,
+    })
+
+    if (signInError || !signInData.session) {
+      console.error('Error signing in user:', signInError)
+      // Account was successfully created/updated, but auto sign-in failed
+      // Return success with a note about manual sign-in
+      return NextResponse.json({
+        success: true,
+        message: 'Account claimed successfully. Please sign in with your email and password.',
+        requiresManualSignIn: true,
+      }, { status: 201 })
     }
 
     return NextResponse.json({
       success: true,
       message: 'Account claimed successfully',
-    }, { status: 200 })
+      session: signInData.session,
+    }, { status: 201 })
   } catch (error) {
-    console.error('Account claim error:', error)
+    console.error('Error claiming account:', error)
     return NextResponse.json(
-      { error: 'An unexpected error occurred' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

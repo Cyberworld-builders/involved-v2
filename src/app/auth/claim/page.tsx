@@ -1,53 +1,57 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function ClaimAccountPage() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const [status, setStatus] = useState<'loading' | 'ready' | 'success' | 'error'>('loading')
-  const [message, setMessage] = useState('')
+  const [token, setToken] = useState<string | null>(null)
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
-  const [token, setToken] = useState<string | null>(null)
-  const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
+  const [userProfile, setUserProfile] = useState<{ name: string; email: string } | null>(null)
+  const router = useRouter()
+  const searchParams = useSearchParams()
 
+  // Validate token on mount
   useEffect(() => {
     const validateToken = async () => {
-      const inviteToken = searchParams.get('token')
-
-      if (!inviteToken || inviteToken.length !== 64) {
-        setStatus('error')
-        setMessage('Invalid or missing invite link. Please check your email for the correct link.')
+      const tokenParam = searchParams.get('token')
+      
+      if (!tokenParam) {
+        setError('Invalid invitation link. No token provided.')
+        setLoading(false)
         return
       }
 
-      setToken(inviteToken)
+      setToken(tokenParam)
 
       try {
-        // Validate token with backend
-        const response = await fetch(`/api/auth/claim/validate?token=${inviteToken}`)
+        const response = await fetch(`/api/auth/claim?token=${tokenParam}`)
         const data = await response.json()
 
-        if (!response.ok || !data.valid) {
-          setStatus('error')
-          setMessage(data.message || 'This invite link is invalid or has expired.')
+        if (!response.ok) {
+          setError(data.error || 'Invalid or expired invitation link')
+          setLoading(false)
           return
         }
 
-        // Token is valid, show password form
-        setUserEmail(data.email)
-        setStatus('ready')
-      } catch (error) {
-        console.error('Token validation error:', error)
-        setStatus('error')
-        setMessage('An unexpected error occurred while validating your invite.')
+        if (data.valid && data.profile) {
+          setUserProfile(data.profile)
+          setLoading(false)
+        } else {
+          setError('Invalid invitation link')
+          setLoading(false)
+        }
+      } catch (err) {
+        console.error('Error validating token:', err)
+        setError('Failed to validate invitation. Please try again.')
+        setLoading(false)
       }
     }
 
@@ -56,22 +60,28 @@ export default function ClaimAccountPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setMessage('')
+    setError('')
 
-    if (password !== confirmPassword) {
-      setMessage('Passwords do not match.')
+    // Validation
+    if (!password) {
+      setError('Password is required')
       return
     }
 
     if (password.length < 8) {
-      setMessage('Password must be at least 8 characters long.')
+      setError('Password must be at least 8 characters long')
+      return
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match')
       return
     }
 
     setSubmitting(true)
-    setMessage('')
 
     try {
-      // Claim the account
       const response = await fetch('/api/auth/claim', {
         method: 'POST',
         headers: {
@@ -86,185 +96,188 @@ export default function ClaimAccountPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        setMessage(data.error || 'Failed to claim account. Please try again.')
+        setError(data.error || 'Failed to claim account')
         setSubmitting(false)
         return
       }
 
-      // Sign in the user with Supabase
-      const supabase = createClient()
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: userEmail!,
-        password,
-      })
-
-      if (signInError) {
-        console.error('Sign in error:', signInError)
-        setStatus('success')
-        setMessage('Account claimed successfully! Please sign in with your credentials.')
-        setSubmitting(false)
-        
-        // Redirect to login after 3 seconds
+      // Check if manual sign-in is required
+      if (data.requiresManualSignIn) {
+        setMessage('Account claimed successfully! Please sign in with your email and password.')
+        // Redirect to login page after a moment
         setTimeout(() => {
           router.push('/auth/login')
-        }, 3000)
+        }, 2000)
       } else {
-        setStatus('success')
         setMessage('Account claimed successfully! Redirecting to dashboard...')
-        
         // Redirect to dashboard immediately
-        setTimeout(() => {
-          router.push('/dashboard')
-        }, 1500)
+        router.push('/dashboard')
       }
-    } catch (error) {
-      console.error('Account claim error:', error)
-      setMessage('An unexpected error occurred. Please try again.')
+    } catch (err) {
+      console.error('Error claiming account:', err)
+      setError('An unexpected error occurred. Please try again.')
       setSubmitting(false)
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-2xl text-center text-gray-900">Account Claim</CardTitle>
+            <CardDescription className="text-center text-gray-600">
+              Validating your invitation...
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (error && !userProfile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-2xl text-center text-red-600">Invalid Invitation</CardTitle>
+            <CardDescription className="text-center text-gray-600">
+              This invitation link is not valid
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-red-800">{error}</p>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col space-y-2">
+              <Button
+                variant="outline"
+                onClick={() => router.push('/auth/login')}
+                className="w-full"
+              >
+                Go to Login
+              </Button>
+              <Link 
+                href="/"
+                className="text-center text-sm text-indigo-600 hover:text-indigo-500"
+              >
+                Back to Home
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md">
+        <div className="mb-4">
+          <Link href="/" className="text-sm text-indigo-600 hover:text-indigo-500 flex items-center">
+            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to home
+          </Link>
+        </div>
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl text-center text-gray-900">
-              Claim Your Account
-            </CardTitle>
+            <CardTitle className="text-2xl text-center text-gray-900">Claim Your Account</CardTitle>
             <CardDescription className="text-center text-gray-600">
-              {status === 'loading' && 'Validating your invite...'}
-              {status === 'ready' && 'Set up your password to complete account setup'}
-              {status === 'success' && 'Account claimed successfully'}
-              {status === 'error' && 'Unable to claim account'}
+              {userProfile && (
+                <span>
+                  Welcome, <strong>{userProfile.name}</strong>! Set your password to complete your account setup.
+                </span>
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-center">
-              {status === 'loading' && (
-                <div className="flex flex-col items-center space-y-4">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-                  <p className="text-sm text-gray-600">Please wait...</p>
+            {userProfile && (
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-sm text-blue-800">
+                  <strong>Email:</strong> {userProfile.email}
+                </p>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-900">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Enter your password (min. 8 characters)"
+                  disabled={submitting}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-900">
+                  Confirm Password
+                </label>
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Confirm your password"
+                  disabled={submitting}
+                />
+              </div>
+
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                  <p className="text-sm text-red-800">{error}</p>
                 </div>
               )}
 
-              {status === 'ready' && (
-                <form onSubmit={handleSubmit} className="space-y-4 text-left">
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-900">
-                      Email
-                    </label>
-                    <input
-                      id="email"
-                      type="email"
-                      value={userEmail || ''}
-                      disabled
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-900">
-                      Password
-                    </label>
-                    <input
-                      id="password"
-                      name="password"
-                      type="password"
-                      autoComplete="new-password"
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Enter your password"
-                      disabled={submitting}
-                    />
-                    <p className="mt-1 text-xs text-gray-500">Must be at least 8 characters</p>
-                  </div>
-
-                  <div>
-                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-900">
-                      Confirm Password
-                    </label>
-                    <input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type="password"
-                      autoComplete="new-password"
-                      required
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Confirm your password"
-                      disabled={submitting}
-                    />
-                  </div>
-
-                  {message && (
-                    <div className="text-sm text-red-600">
-                      {message}
-                    </div>
-                  )}
-
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={submitting}
-                  >
-                    {submitting ? 'Claiming Account...' : 'Claim Account'}
-                  </Button>
-                </form>
-              )}
-
-              {status === 'success' && (
-                <div className="flex flex-col items-center space-y-4">
-                  <svg
-                    className="h-16 w-16 text-green-500"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <p className="text-sm text-green-600">{message}</p>
-                  <Link href="/dashboard">
-                    <Button className="mt-4">
-                      Go to Dashboard
-                    </Button>
-                  </Link>
+              {message && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                  <p className="text-sm text-green-800">{message}</p>
                 </div>
               )}
 
-              {status === 'error' && (
-                <div className="flex flex-col items-center space-y-4">
-                  <svg
-                    className="h-16 w-16 text-red-500"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <p className="text-sm text-red-600">{message}</p>
-                  <div className="mt-6 space-y-2">
-                    <Link href="/auth/login">
-                      <Button variant="outline" className="w-full">
-                        Go to Login
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              )}
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={submitting}
+              >
+                {submitting ? 'Claiming Account...' : 'Claim Account'}
+              </Button>
+            </form>
+
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600">
+                Already have an account?{' '}
+                <Link href="/auth/login" className="text-indigo-600 hover:text-indigo-500">
+                  Sign in
+                </Link>
+              </p>
             </div>
           </CardContent>
         </Card>
