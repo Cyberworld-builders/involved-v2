@@ -1476,4 +1476,428 @@ describe('API User Routes', () => {
       expect(data.failed).toBe(1)
     })
   })
+
+  describe('User-Industry Assignment', () => {
+    describe('POST /api/users with industry_id', () => {
+      it('should create a new user with industry_id', async () => {
+        mockSupabaseClient.auth.getUser.mockResolvedValue({
+          data: { user: { id: 'auth-user-id' } },
+          error: null,
+        })
+
+        // Mock no existing user with email
+        const mockSelectChain = {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: null,
+                error: null,
+              }),
+            }),
+          }),
+        }
+        mockSupabaseClient.from = vi.fn().mockReturnValue(mockSelectChain)
+
+        // Mock auth user creation
+        mockAdminClient.auth.admin.createUser.mockResolvedValue({
+          data: { user: { id: 'new-auth-user-id' } },
+          error: null,
+        })
+
+        const insertMock = vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: { ...mockUser, industry_id: 'test-industry-id' },
+              error: null,
+            }),
+          }),
+        })
+
+        mockAdminClient.from = vi.fn().mockReturnValue({
+          insert: insertMock,
+        })
+
+        const request = new NextRequest('http://localhost:3000/api/users', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: 'Test User',
+            email: 'test@example.com',
+            username: 'testuser',
+            industry_id: 'test-industry-id',
+            password: 'password123',
+          }),
+        })
+
+        const response = await createUser(request)
+        const data = await response.json()
+
+        expect(response.status).toBe(201)
+        expect(data.user).toBeDefined()
+        expect(data.user.industry_id).toBe('test-industry-id')
+        expect(insertMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            industry_id: 'test-industry-id',
+          })
+        )
+      })
+
+      it('should create a new user without industry_id (null)', async () => {
+        mockSupabaseClient.auth.getUser.mockResolvedValue({
+          data: { user: { id: 'auth-user-id' } },
+          error: null,
+        })
+
+        const mockSelectChain = {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: null,
+                error: null,
+              }),
+            }),
+          }),
+        }
+        mockSupabaseClient.from = vi.fn().mockReturnValue(mockSelectChain)
+
+        mockAdminClient.auth.admin.createUser.mockResolvedValue({
+          data: { user: { id: 'new-auth-user-id' } },
+          error: null,
+        })
+
+        const insertMock = vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: { ...mockUser, industry_id: null },
+              error: null,
+            }),
+          }),
+        })
+
+        mockAdminClient.from = vi.fn().mockReturnValue({
+          insert: insertMock,
+        })
+
+        const request = new NextRequest('http://localhost:3000/api/users', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: 'Test User',
+            email: 'test@example.com',
+            username: 'testuser',
+            password: 'password123',
+          }),
+        })
+
+        const response = await createUser(request)
+        const data = await response.json()
+
+        expect(response.status).toBe(201)
+        expect(data.user).toBeDefined()
+        expect(data.user.industry_id).toBeNull()
+        expect(insertMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            industry_id: null,
+          })
+        )
+      })
+    })
+
+    describe('PATCH /api/users/[id] with industry_id', () => {
+      it('should update a user with industry_id', async () => {
+        mockSupabaseClient.auth.getUser.mockResolvedValue({
+          data: { user: { id: 'user-id' } },
+          error: null,
+        })
+
+        const updatedUser = { ...mockUser, industry_id: 'new-industry-id' }
+        const updateMock = vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            select: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: updatedUser,
+                error: null,
+              }),
+            }),
+          }),
+        })
+
+        mockSupabaseClient.from = vi.fn().mockReturnValue({
+          update: updateMock,
+        })
+
+        const request = new NextRequest('http://localhost:3000/api/users/test-id', {
+          method: 'PATCH',
+          body: JSON.stringify({ industry_id: 'new-industry-id' }),
+        })
+        const params = Promise.resolve({ id: 'test-id' })
+        const response = await updateUser(request, { params })
+        const data = await response.json()
+
+        expect(response.status).toBe(200)
+        expect(data.user.industry_id).toBe('new-industry-id')
+        expect(updateMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            industry_id: 'new-industry-id',
+            updated_at: expect.any(String),
+          })
+        )
+      })
+
+      it('should update a user to remove industry_id (set to null)', async () => {
+        mockSupabaseClient.auth.getUser.mockResolvedValue({
+          data: { user: { id: 'user-id' } },
+          error: null,
+        })
+
+        const updatedUser = { ...mockUser, industry_id: null }
+        const updateMock = vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            select: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: updatedUser,
+                error: null,
+              }),
+            }),
+          }),
+        })
+
+        mockSupabaseClient.from = vi.fn().mockReturnValue({
+          update: updateMock,
+        })
+
+        const request = new NextRequest('http://localhost:3000/api/users/test-id', {
+          method: 'PATCH',
+          body: JSON.stringify({ industry_id: null }),
+        })
+        const params = Promise.resolve({ id: 'test-id' })
+        const response = await updateUser(request, { params })
+        const data = await response.json()
+
+        expect(response.status).toBe(200)
+        expect(data.user.industry_id).toBeNull()
+        expect(updateMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            industry_id: null,
+            updated_at: expect.any(String),
+          })
+        )
+      })
+
+      it('should update user with both name and industry_id', async () => {
+        mockSupabaseClient.auth.getUser.mockResolvedValue({
+          data: { user: { id: 'user-id' } },
+          error: null,
+        })
+
+        const updatedUser = { 
+          ...mockUser, 
+          name: 'Updated Name',
+          industry_id: 'new-industry-id' 
+        }
+        const updateMock = vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            select: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: updatedUser,
+                error: null,
+              }),
+            }),
+          }),
+        })
+
+        mockSupabaseClient.from = vi.fn().mockReturnValue({
+          update: updateMock,
+        })
+
+        const request = new NextRequest('http://localhost:3000/api/users/test-id', {
+          method: 'PATCH',
+          body: JSON.stringify({ 
+            name: 'Updated Name',
+            industry_id: 'new-industry-id' 
+          }),
+        })
+        const params = Promise.resolve({ id: 'test-id' })
+        const response = await updateUser(request, { params })
+        const data = await response.json()
+
+        expect(response.status).toBe(200)
+        expect(data.user.name).toBe('Updated Name')
+        expect(data.user.industry_id).toBe('new-industry-id')
+        expect(updateMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name: 'Updated Name',
+            industry_id: 'new-industry-id',
+            updated_at: expect.any(String),
+          })
+        )
+      })
+    })
+
+    describe('POST /api/users/bulk with industry_id', () => {
+      it('should create multiple users with industry_id', async () => {
+        mockSupabaseClient.auth.getUser.mockResolvedValue({
+          data: { user: { id: 'user-id' } },
+          error: null,
+        })
+
+        mockSupabaseClient.from = vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: null,
+                error: null,
+              }),
+            }),
+          }),
+        })
+
+        mockAdminClient.auth.admin.createUser.mockResolvedValue({
+          data: { user: { id: 'new-auth-user-id' } },
+          error: null,
+        })
+
+        const insertMock = vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: { ...mockUser, id: 'new-user-id' },
+              error: null,
+            }),
+          }),
+        })
+
+        mockAdminClient.from = vi.fn().mockReturnValue({
+          insert: insertMock,
+        })
+
+        const request = new NextRequest('http://localhost:3000/api/users/bulk', {
+          method: 'POST',
+          body: JSON.stringify({
+            users: [
+              {
+                name: 'User 1',
+                email: 'user1@example.com',
+                username: 'user1',
+                industry_id: 'industry-1',
+              },
+              {
+                name: 'User 2',
+                email: 'user2@example.com',
+                username: 'user2',
+                industry_id: 'industry-2',
+              },
+            ],
+          }),
+        })
+
+        const response = await bulkCreateUsers(request)
+        const data = await response.json()
+
+        expect(response.status).toBe(200)
+        expect(data.success).toBe(true)
+        expect(data.created).toBe(2)
+        expect(data.failed).toBe(0)
+        expect(insertMock).toHaveBeenCalledTimes(2)
+        
+        // Verify first call had industry_id
+        const firstCallArg = insertMock.mock.calls[0][0]
+        expect(firstCallArg).toMatchObject({
+          industry_id: 'industry-1',
+        })
+        
+        // Verify second call had industry_id
+        const secondCallArg = insertMock.mock.calls[1][0]
+        expect(secondCallArg).toMatchObject({
+          industry_id: 'industry-2',
+        })
+      })
+
+      it('should create multiple users with mixed industry_id values', async () => {
+        mockSupabaseClient.auth.getUser.mockResolvedValue({
+          data: { user: { id: 'user-id' } },
+          error: null,
+        })
+
+        mockSupabaseClient.from = vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: null,
+                error: null,
+              }),
+            }),
+          }),
+        })
+
+        mockAdminClient.auth.admin.createUser.mockResolvedValue({
+          data: { user: { id: 'new-auth-user-id' } },
+          error: null,
+        })
+
+        const insertMock = vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: mockUser,
+              error: null,
+            }),
+          }),
+        })
+
+        mockAdminClient.from = vi.fn().mockReturnValue({
+          insert: insertMock,
+        })
+
+        const request = new NextRequest('http://localhost:3000/api/users/bulk', {
+          method: 'POST',
+          body: JSON.stringify({
+            users: [
+              {
+                name: 'User 1',
+                email: 'user1@example.com',
+                username: 'user1',
+                industry_id: 'industry-1',
+              },
+              {
+                name: 'User 2',
+                email: 'user2@example.com',
+                username: 'user2',
+                // No industry_id - should default to null
+              },
+              {
+                name: 'User 3',
+                email: 'user3@example.com',
+                username: 'user3',
+                industry_id: null,
+              },
+            ],
+          }),
+        })
+
+        const response = await bulkCreateUsers(request)
+        const data = await response.json()
+
+        expect(response.status).toBe(200)
+        expect(data.success).toBe(true)
+        expect(data.created).toBe(3)
+        expect(data.failed).toBe(0)
+        expect(insertMock).toHaveBeenCalledTimes(3)
+        
+        // Verify first user has industry_id
+        const firstCallArg = insertMock.mock.calls[0][0]
+        expect(firstCallArg).toMatchObject({
+          industry_id: 'industry-1',
+        })
+        
+        // Verify second user has null industry_id
+        const secondCallArg = insertMock.mock.calls[1][0]
+        expect(secondCallArg).toMatchObject({
+          industry_id: null,
+        })
+        
+        // Verify third user has null industry_id
+        const thirdCallArg = insertMock.mock.calls[2][0]
+        expect(thirdCallArg).toMatchObject({
+          industry_id: null,
+        })
+      })
+    })
+  })
 })
