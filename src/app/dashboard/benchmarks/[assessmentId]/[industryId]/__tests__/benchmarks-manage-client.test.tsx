@@ -139,7 +139,8 @@ describe('BenchmarksManageClient delete benchmark', () => {
 })
 
 describe('BenchmarksManageClient CSV upload', () => {
-  beforeEach(() => {
+  // Helper function to set up mock with custom benchmark data
+  const setupMocksWithBenchmarks = (existingBenchmarks: Array<{ id: string; dimension_id: string; industry_id: string; value: number }> = []) => {
     vi.clearAllMocks()
     global.fetch = vi.fn()
     global.confirm = vi.fn()
@@ -197,7 +198,7 @@ describe('BenchmarksManageClient CSV upload', () => {
           select: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnValue({
               in: vi.fn().mockResolvedValue({
-                data: [],
+                data: existingBenchmarks,
                 error: null,
               }),
             }),
@@ -213,6 +214,10 @@ describe('BenchmarksManageClient CSV upload', () => {
         select: vi.fn().mockResolvedValue({ data: [], error: null }),
       }
     })
+  }
+
+  beforeEach(() => {
+    setupMocksWithBenchmarks()
   })
 
   afterEach(() => {
@@ -494,25 +499,8 @@ Communication,COMM,85.5`
           }
         }, 0)
       }
-      addEventListener() {}
-      removeEventListener() {}
-      dispatchEvent() { return true }
       onload = null
       onerror = null
-      onprogress = null
-      onloadstart = null
-      onloadend = null
-      onabort = null
-      readyState = 0
-      result = null
-      error = null
-      abort() {}
-      readAsArrayBuffer() {}
-      readAsBinaryString() {}
-      readAsDataURL() {}
-      EMPTY = 0
-      LOADING = 1
-      DONE = 2
     } as any
 
     fireEvent.change(fileInput, { target: { files: [file] } })
@@ -551,72 +539,10 @@ Communication,COMM,85.5`
   })
 
   it('should preserve existing benchmark IDs when uploading', async () => {
-    // Mock existing benchmark
-    mockSupabase.from.mockImplementation((table: string) => {
-      if (table === 'assessments') {
-        return {
-          select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              single: vi.fn().mockResolvedValue({
-                data: { id: 'assessment-1', title: 'Leadership Assessment' },
-                error: null,
-              }),
-            }),
-          }),
-        }
-      }
-
-      if (table === 'industries') {
-        return {
-          select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              single: vi.fn().mockResolvedValue({
-                data: { id: 'industry-1', name: 'Technology' },
-                error: null,
-              }),
-            }),
-          }),
-        }
-      }
-
-      if (table === 'dimensions') {
-        return {
-          select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              order: vi.fn().mockResolvedValue({
-                data: [
-                  { id: 'dim-1', name: 'Communication', code: 'COMM', assessment_id: 'assessment-1' },
-                ],
-                error: null,
-              }),
-            }),
-          }),
-        }
-      }
-
-      if (table === 'benchmarks') {
-        return {
-          select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              in: vi.fn().mockResolvedValue({
-                data: [
-                  { id: 'bm-1', dimension_id: 'dim-1', industry_id: 'industry-1', value: 75.5 },
-                ],
-                error: null,
-              }),
-            }),
-          }),
-          upsert: vi.fn().mockResolvedValue({ error: null }),
-          delete: vi.fn().mockReturnValue({
-            in: vi.fn().mockResolvedValue({ error: null }),
-          }),
-        }
-      }
-
-      return {
-        select: vi.fn().mockResolvedValue({ data: [], error: null }),
-      }
-    })
+    // Set up mock with existing benchmark
+    setupMocksWithBenchmarks([
+      { id: 'bm-1', dimension_id: 'dim-1', industry_id: 'industry-1', value: 75.5 }
+    ])
 
     render(<BenchmarksManageClient assessmentId="assessment-1" industryId="industry-1" />)
 
