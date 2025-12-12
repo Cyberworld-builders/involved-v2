@@ -62,6 +62,9 @@ describe('Client Logo Upload API', () => {
             }),
           }),
         }),
+        delete: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ error: null }),
+        }),
       })
       mockSupabaseClient.from = mockFrom
 
@@ -71,6 +74,7 @@ describe('Client Logo Upload API', () => {
         getPublicUrl: vi
           .fn()
           .mockReturnValue({ data: { publicUrl: 'https://storage.example.com/logo.png' } }),
+        remove: vi.fn().mockResolvedValue({ error: null }),
       })
       mockSupabaseClient.storage.from = mockStorageFrom
 
@@ -182,6 +186,9 @@ describe('Client Logo Upload API', () => {
             }),
           }),
         }),
+        delete: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ error: null }),
+        }),
       })
       mockSupabaseClient.from = mockFrom
 
@@ -191,6 +198,7 @@ describe('Client Logo Upload API', () => {
         getPublicUrl: vi
           .fn()
           .mockReturnValue({ data: { publicUrl: 'https://storage.example.com/background.png' } }),
+        remove: vi.fn().mockResolvedValue({ error: null }),
       })
       mockSupabaseClient.storage.from = mockStorageFrom
 
@@ -272,6 +280,9 @@ describe('Client Logo Upload API', () => {
             }),
           }),
         }),
+        delete: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ error: null }),
+        }),
       })
       mockSupabaseClient.from = mockFrom
 
@@ -290,6 +301,7 @@ describe('Client Logo Upload API', () => {
             },
           }
         }),
+        remove: vi.fn().mockResolvedValue({ error: null }),
       })
       mockSupabaseClient.storage.from = mockStorageFrom
 
@@ -348,6 +360,132 @@ describe('Client Logo Upload API', () => {
 
       expect(response.status).toBe(201)
       expect(data.client).toBeDefined()
+    })
+
+    it('should cleanup client record if logo upload fails', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      // Mock database insert
+      const mockDelete = vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      })
+
+      const mockFrom = vi.fn().mockReturnValue({
+        insert: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: { ...mockClient, id: 'new-client-id' },
+              error: null,
+            }),
+          }),
+        }),
+        delete: mockDelete,
+      })
+      mockSupabaseClient.from = mockFrom
+
+      // Mock storage upload with error
+      const mockStorageFrom = vi.fn().mockReturnValue({
+        upload: vi.fn().mockResolvedValue({
+          data: null,
+          error: { message: 'Storage quota exceeded' },
+        }),
+        remove: vi.fn().mockResolvedValue({ error: null }),
+      })
+      mockSupabaseClient.storage.from = mockStorageFrom
+
+      // Create FormData with logo
+      const formData = new FormData()
+      formData.append('name', 'Test Client')
+      formData.append('logo', createMockFile('logo.png', 'image/png', 1024 * 1024))
+      formData.append('require_profile', 'false')
+      formData.append('require_research', 'false')
+      formData.append('whitelabel', 'false')
+
+      const request = new NextRequest('http://localhost:3000/api/clients', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const response = await createClient(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(500)
+      expect(data.error).toContain('Failed to upload logo')
+      expect(mockDelete).toHaveBeenCalled()
+    })
+
+    it('should cleanup client and logo if background upload fails', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      // Mock database insert
+      const mockDelete = vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      })
+
+      const mockFrom = vi.fn().mockReturnValue({
+        insert: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: { ...mockClient, id: 'new-client-id' },
+              error: null,
+            }),
+          }),
+        }),
+        delete: mockDelete,
+      })
+      mockSupabaseClient.from = mockFrom
+
+      // Mock storage upload - logo succeeds, background fails
+      let uploadCallCount = 0
+      const mockRemove = vi.fn().mockResolvedValue({ error: null })
+      const mockStorageFrom = vi.fn().mockReturnValue({
+        upload: vi.fn().mockImplementation(() => {
+          uploadCallCount++
+          if (uploadCallCount === 1) {
+            // Logo upload succeeds
+            return Promise.resolve({ data: null, error: null })
+          } else {
+            // Background upload fails
+            return Promise.resolve({
+              data: null,
+              error: { message: 'Storage quota exceeded' },
+            })
+          }
+        }),
+        getPublicUrl: vi
+          .fn()
+          .mockReturnValue({ data: { publicUrl: 'https://storage.example.com/logo.png' } }),
+        remove: mockRemove,
+      })
+      mockSupabaseClient.storage.from = mockStorageFrom
+
+      // Create FormData with both files
+      const formData = new FormData()
+      formData.append('name', 'Test Client')
+      formData.append('logo', createMockFile('logo.png', 'image/png', 1024 * 1024))
+      formData.append('background', createMockFile('background.jpg', 'image/jpeg', 3 * 1024 * 1024))
+      formData.append('require_profile', 'false')
+      formData.append('require_research', 'false')
+      formData.append('whitelabel', 'false')
+
+      const request = new NextRequest('http://localhost:3000/api/clients', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const response = await createClient(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(500)
+      expect(data.error).toContain('Failed to upload background')
+      expect(mockDelete).toHaveBeenCalled()
+      expect(mockRemove).toHaveBeenCalled()
     })
   })
 

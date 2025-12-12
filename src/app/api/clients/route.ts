@@ -187,14 +187,18 @@ export async function POST(request: NextRequest) {
 
       if (logoUploadError) {
         console.error('Error uploading logo:', logoUploadError)
-        // Don't fail the entire operation, just log the error
-        // In production, you might want to delete the client record or handle this differently
-      } else {
-        const { data: logoUrlData } = supabase.storage
-          .from('client-assets')
-          .getPublicUrl(logoPath)
-        logoUrl = logoUrlData.publicUrl
+        // Delete the client record since logo upload failed
+        await supabase.from('clients').delete().eq('id', client.id)
+        return NextResponse.json(
+          { error: `Failed to upload logo: ${logoUploadError.message}` },
+          { status: 500 }
+        )
       }
+
+      const { data: logoUrlData } = supabase.storage
+        .from('client-assets')
+        .getPublicUrl(logoPath)
+      logoUrl = logoUrlData.publicUrl
     }
 
     if (backgroundFile) {
@@ -208,13 +212,22 @@ export async function POST(request: NextRequest) {
 
       if (backgroundUploadError) {
         console.error('Error uploading background:', backgroundUploadError)
-        // Don't fail the entire operation, just log the error
-      } else {
-        const { data: backgroundUrlData } = supabase.storage
-          .from('client-assets')
-          .getPublicUrl(backgroundPath)
-        backgroundUrl = backgroundUrlData.publicUrl
+        // Delete the client record and logo since background upload failed
+        await supabase.from('clients').delete().eq('id', client.id)
+        if (logoUrl) {
+          const logoPath = generateLogoStoragePath(client.id, logoFile!.name)
+          await supabase.storage.from('client-assets').remove([logoPath])
+        }
+        return NextResponse.json(
+          { error: `Failed to upload background: ${backgroundUploadError.message}` },
+          { status: 500 }
+        )
       }
+
+      const { data: backgroundUrlData } = supabase.storage
+        .from('client-assets')
+        .getPublicUrl(backgroundPath)
+      backgroundUrl = backgroundUrlData.publicUrl
     }
 
     // Update client with file URLs if any were uploaded
