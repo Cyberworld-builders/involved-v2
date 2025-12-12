@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { isValidEmail } from '@/lib/utils/email-validation'
-import { MIN_PASSWORD_LENGTH } from '@/lib/utils/auth-validation'
+import { generateUsernameFromFirstLast } from '@/lib/utils/username-generation'
+import { MIN_PASSWORD_LENGTH } from '@/lib/utils/auth-constants'
 
 /**
  * POST /api/auth/signup
@@ -45,6 +46,7 @@ export async function POST(request: NextRequest) {
           first_name: firstName,
           last_name: lastName,
           full_name: `${firstName} ${lastName}`,
+          username: generateUsernameFromFirstLast(firstName, lastName)
         },
       },
     })
@@ -72,7 +74,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Signup error:', error)
     return NextResponse.json(
-      { error: 'An unexpected error occurred' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

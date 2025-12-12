@@ -40,13 +40,15 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { message: 'Password reset email sent' },
+      {
+        message: 'Password reset email sent',
+      },
       { status: 200 }
     )
   } catch (error) {
     console.error('Reset password error:', error)
     return NextResponse.json(
-      { error: 'An unexpected error occurred' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

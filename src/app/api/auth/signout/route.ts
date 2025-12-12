@@ -35,7 +35,7 @@ export async function POST() {
   } catch (error) {
     console.error('Signout error:', error)
     return NextResponse.json(
-      { error: 'An unexpected error occurred' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

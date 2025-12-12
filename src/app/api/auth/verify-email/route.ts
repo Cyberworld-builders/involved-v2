@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { MIN_TOKEN_LENGTH } from '@/lib/utils/auth-validation'
 import { isValidEmail } from '@/lib/utils/email-validation'
+import { MIN_VERIFICATION_TOKEN_LENGTH } from '@/lib/utils/auth-constants'
 
 /**
  * POST /api/auth/verify-email
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Token validation
-    if (token.length < MIN_TOKEN_LENGTH) {
+    if (token.length < MIN_VERIFICATION_TOKEN_LENGTH) {
       return NextResponse.json(
         { error: 'Invalid verification token' },
         { status: 400 }
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Verify email error:', error)
     return NextResponse.json(
-      { error: 'An unexpected error occurred' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }
