@@ -26,6 +26,10 @@ export default function BenchmarksListTable({ initialBenchmarks }: BenchmarksLis
   const router = useRouter()
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString(undefined, { timeZone: 'UTC' })
+  }
+
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
@@ -135,7 +139,7 @@ export default function BenchmarksListTable({ initialBenchmarks }: BenchmarksLis
                       </span>
                     </td>
                     <td className="hidden md:table-cell px-3 py-4 whitespace-nowrap text-sm text-gray-500 sm:px-6">
-                      {benchmark.updated_at ? new Date(benchmark.updated_at).toLocaleDateString() : '—'}
+                      {benchmark.updated_at ? formatDate(benchmark.updated_at) : '—'}
                     </td>
                     <td className="px-3 py-4 whitespace-nowrap text-sm font-medium sm:px-6">
                       <div className="flex space-x-2">

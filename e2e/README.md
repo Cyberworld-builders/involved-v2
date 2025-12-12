@@ -51,6 +51,18 @@ npx playwright test --project=chromium
 npx playwright test --project=firefox
 npx playwright test --project=webkit
 
+# Run tests in Brave / DuckDuckGo (optional, local-only by default)
+#
+# These projects are only enabled when Playwright can find the browser executable.
+# On macOS, we auto-detect common install paths; otherwise set an explicit path:
+#
+#   export PLAYWRIGHT_BRAVE_EXECUTABLE_PATH="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
+#   export PLAYWRIGHT_DUCKDUCKGO_EXECUTABLE_PATH="/Applications/DuckDuckGo.app/Contents/MacOS/DuckDuckGo"
+#
+# Then run:
+#   npm run test:e2e:brave
+#   npm run test:e2e:duckduckgo
+#
 # Run specific test by name
 npx playwright test -g "Admin can create new industry"
 ```
@@ -180,6 +192,19 @@ The CI environment uses secrets for authentication:
 - `PLAYWRIGHT_TEST_BASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `SKIP_AUTH_TESTS` (set to `true` by default)
+
+## Brave / DuckDuckGo manual regression checklist (recommended)
+
+Even though Brave and DuckDuckGo are Chromium-based, their privacy defaults can affect cookies/storage.
+When validating Phase 1 deliverables, do a quick pass in both:
+
+- **Auth**: sign up, sign in, sign out, password reset
+- **Navigation**: dashboard navigation + responsive sidebar/menu
+- **CRUD**: clients, groups, industries, users, benchmarks
+- **Uploads**: client logos/backgrounds, bulk uploads (users/groups/benchmarks)
+- **Invites**: user invite email link + claim flow
+
+If you hit an issue, try toggling the browser’s privacy/shields settings and capture console/network errors.
 
 ## Test Coverage
 

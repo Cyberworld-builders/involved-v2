@@ -21,6 +21,33 @@ const hasAuthState = fs.existsSync(authStatePath)
 const skipAuthTests =
   process.env.SKIP_AUTH_TESTS === 'true' || process.env.SKIP_AUTH_TESTS === '1'
 
+function getOptionalChromiumExecutablePath(
+  browser: 'brave' | 'duckduckgo'
+): string | undefined {
+  const envVar =
+    browser === 'brave'
+      ? 'PLAYWRIGHT_BRAVE_EXECUTABLE_PATH'
+      : 'PLAYWRIGHT_DUCKDUCKGO_EXECUTABLE_PATH'
+  const fromEnv = process.env[envVar]
+  if (fromEnv && fs.existsSync(fromEnv)) return fromEnv
+
+  // Common macOS locations (recommended for local testing).
+  if (process.platform === 'darwin') {
+    const candidates =
+      browser === 'brave'
+        ? ['/Applications/Brave Browser.app/Contents/MacOS/Brave Browser']
+        : ['/Applications/DuckDuckGo.app/Contents/MacOS/DuckDuckGo']
+    const found = candidates.find((p) => fs.existsSync(p))
+    if (found) return found
+  }
+
+  // For Windows/Linux, prefer providing the env var path.
+  return undefined
+}
+
+const braveExecutablePath = getOptionalChromiumExecutablePath('brave')
+const duckduckgoExecutablePath = getOptionalChromiumExecutablePath('duckduckgo')
+
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
@@ -60,6 +87,36 @@ export default defineConfig({
         ...(hasAuthState && { storageState: authStatePath }),
       },
     },
+
+    ...(braveExecutablePath
+      ? [
+          {
+            name: 'brave',
+            use: {
+              ...devices['Desktop Chrome'],
+              ...(hasAuthState && { storageState: authStatePath }),
+              launchOptions: {
+                executablePath: braveExecutablePath,
+              },
+            },
+          },
+        ]
+      : []),
+
+    ...(duckduckgoExecutablePath
+      ? [
+          {
+            name: 'duckduckgo',
+            use: {
+              ...devices['Desktop Chrome'],
+              ...(hasAuthState && { storageState: authStatePath }),
+              launchOptions: {
+                executablePath: duckduckgoExecutablePath,
+              },
+            },
+          },
+        ]
+      : []),
 
     ...(skipAuthTests
       ? []
