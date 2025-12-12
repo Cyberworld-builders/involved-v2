@@ -350,20 +350,11 @@ test.describe('User Invitation & Claim Flow', () => {
       await page.goto('/auth/claim')
       await page.waitForLoadState('networkidle')
       
-      // Should see error message or be redirected
-      const errorMessage = page
-        .getByText(/invalid.*link|no token|missing/i)
-        .or(page.getByRole('heading', { name: /invalid invitation/i }))
-      const isErrorVisible = await errorMessage.isVisible({ timeout: 5000 }).catch(() => false)
-      
-      if (!isErrorVisible) {
-        // Check if redirected
-        const currentUrl = page.url()
-        const isRedirected = currentUrl.includes('/auth/login') || currentUrl.includes('/error')
-        expect(isRedirected).toBeTruthy()
-      } else {
-        await expect(errorMessage).toBeVisible()
-      }
+      // Should see error message (or be redirected, but current expected UX is inline error)
+      await expect(page.getByRole('heading', { name: /invalid invitation/i })).toBeVisible({ timeout: 10000 })
+      await expect(
+        page.getByText(/no token provided|token is required|invalid invitation link/i)
+      ).toBeVisible({ timeout: 10000 })
     })
 
     test('Already claimed account prevents re-claim', async ({ page }) => {
