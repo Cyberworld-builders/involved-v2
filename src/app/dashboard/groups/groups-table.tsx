@@ -25,6 +25,10 @@ export default function GroupsTable({ initialGroups }: GroupsTableProps) {
   const router = useRouter()
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString(undefined, { timeZone: 'UTC' })
+  }
+
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
@@ -145,7 +149,7 @@ export default function GroupsTable({ initialGroups }: GroupsTableProps) {
                       </div>
                     </td>
                     <td className="hidden md:table-cell px-3 py-4 whitespace-nowrap text-sm text-gray-500 sm:px-6">
-                      {new Date(group.created_at).toLocaleDateString()}
+                      {formatDate(group.created_at)}
                     </td>
                     <td className="px-3 py-4 whitespace-nowrap text-sm font-medium sm:px-6">
                       <div className="flex space-x-2">

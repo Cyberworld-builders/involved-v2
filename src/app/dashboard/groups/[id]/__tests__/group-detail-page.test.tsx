@@ -384,9 +384,11 @@ describe('GroupPage', () => {
 
     render(result as React.ReactElement)
 
-    // Check that dates are rendered (exact format may vary by locale)
-    const dates = screen.getAllByText(/1\/1\/2024|1\/15\/2024/)
-    expect(dates.length).toBeGreaterThanOrEqual(1)
+    const expectedCreated = new Date(mockGroup.created_at).toLocaleDateString(undefined, { timeZone: 'UTC' })
+    const expectedUpdated = new Date(mockGroup.updated_at).toLocaleDateString(undefined, { timeZone: 'UTC' })
+
+    expect(screen.getByText(expectedCreated)).toBeInTheDocument()
+    expect(screen.getByText(expectedUpdated)).toBeInTheDocument()
   })
 
   it('should handle members without profile', async () => {
