@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { Database } from '@/types/database'
-import { generateUsernameFromName, generateUniqueUsername } from '@/lib/utils/username-generation'
+import { generateUsernameFromName, generateUsernameFromEmail, generateUniqueUsername } from '@/lib/utils/username-generation'
 import { isValidEmail } from '@/lib/utils/email-validation'
 
 type ProfileInsert = Database['public']['Tables']['profiles']['Insert']
@@ -125,7 +125,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate username if not provided
-    const baseUsername = username || generateUsernameFromName(name)
+    let baseUsername = username
+    if (!baseUsername) {
+      baseUsername = generateUsernameFromName(name)
+      // If name generates an empty username, fall back to email
+      if (!baseUsername || baseUsername.trim() === '') {
+        baseUsername = generateUsernameFromEmail(email)
+      }
+    }
 
     // Check username uniqueness
     const checkUsernameExists = async (username: string): Promise<boolean> => {
