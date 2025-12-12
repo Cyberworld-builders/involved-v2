@@ -200,6 +200,7 @@ export interface Database {
            client_id: string | null
            industry_id: string | null
            language_id: string | null
+           role: 'admin' | 'client' | 'user'
            last_login_at: string | null
            completed_profile: boolean
            accepted_terms: boolean | null
@@ -217,6 +218,7 @@ export interface Database {
            client_id?: string | null
            industry_id?: string | null
            language_id?: string | null
+           role?: 'admin' | 'client' | 'user'
            last_login_at?: string | null
            completed_profile?: boolean
            accepted_terms?: boolean | null
@@ -234,6 +236,7 @@ export interface Database {
            client_id?: string | null
            industry_id?: string | null
            language_id?: string | null
+           role?: 'admin' | 'client' | 'user'
            last_login_at?: string | null
            completed_profile?: boolean
            accepted_terms?: boolean | null

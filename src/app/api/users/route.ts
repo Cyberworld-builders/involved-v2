@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json()
-    const { name, email, username, client_id, industry_id, password } = body
+    const { name, email, username, client_id, industry_id, password, role } = body
 
     // Validate required fields
     if (!name || typeof name !== 'string' || name.trim() === '') {
@@ -90,6 +90,14 @@ export async function POST(request: NextRequest) {
     if (!isValidEmail(email)) {
       return NextResponse.json(
         { error: 'Invalid email format' },
+        { status: 400 }
+      )
+    }
+
+    // Validate role if provided
+    if (role && !['admin', 'client', 'user'].includes(role)) {
+      return NextResponse.json(
+        { error: 'Invalid role. Must be one of: admin, client, user' },
         { status: 400 }
       )
     }
@@ -165,6 +173,7 @@ export async function POST(request: NextRequest) {
       email: email.trim(),
       client_id: client_id || null,
       industry_id: industry_id || null,
+      role: role || 'user',
       completed_profile: false,
     }
 
