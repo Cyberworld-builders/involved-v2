@@ -71,89 +71,32 @@ export default function EditClientPage() {
     setMessage('')
 
     try {
-      // Check if Supabase is configured
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-      if (!supabaseUrl || !supabaseKey) {
-        setMessage('Supabase not configured. Please set up your environment variables.')
-        return
-      }
-
-      // Upload images if provided
-      let logoUrl = client?.logo || null
-      let backgroundUrl = client?.background || null
-
+      // Prepare FormData for file upload
+      const formData = new FormData()
+      formData.append('name', data.name)
+      formData.append('address', data.address || '')
       if (data.logo) {
-        const logoFormData = new FormData()
-        logoFormData.append('file', data.logo)
-        logoFormData.append('fileType', 'logo')
-        logoFormData.append('clientId', clientId)
-
-        const logoResponse = await fetch('/api/clients/upload', {
-          method: 'POST',
-          body: logoFormData,
-        })
-
-        if (!logoResponse.ok) {
-          let errorMessage = 'Failed to upload logo'
-          try {
-            const errorData = await logoResponse.json()
-            errorMessage = errorData.error || errorMessage
-          } catch {
-            // If response is not JSON, use default message
-          }
-          throw new Error(errorMessage)
-        }
-
-        const logoData = await logoResponse.json()
-        logoUrl = logoData.url
+        formData.append('logo', data.logo)
       }
-
       if (data.background) {
-        const backgroundFormData = new FormData()
-        backgroundFormData.append('file', data.background)
-        backgroundFormData.append('fileType', 'background')
-        backgroundFormData.append('clientId', clientId)
-
-        const backgroundResponse = await fetch('/api/clients/upload', {
-          method: 'POST',
-          body: backgroundFormData,
-        })
-
-        if (!backgroundResponse.ok) {
-          let errorMessage = 'Failed to upload background'
-          try {
-            const errorData = await backgroundResponse.json()
-            errorMessage = errorData.error || errorMessage
-          } catch {
-            // If response is not JSON, use default message
-          }
-          throw new Error(errorMessage)
-        }
-
-        const backgroundData = await backgroundResponse.json()
-        backgroundUrl = backgroundData.url
+        formData.append('background', data.background)
       }
+      formData.append('primary_color', data.primary_color)
+      formData.append('accent_color', data.accent_color)
+      formData.append('require_profile', data.require_profile.toString())
+      formData.append('require_research', data.require_research.toString())
+      formData.append('whitelabel', data.whitelabel.toString())
 
-      // Update client record
-      const { error } = await supabase
-        .from('clients')
-        .update({
-          name: data.name,
-          address: data.address || null,
-          logo: logoUrl,
-          background: backgroundUrl,
-          primary_color: data.primary_color,
-          accent_color: data.accent_color,
-          require_profile: data.require_profile,
-          require_research: data.require_research,
-          whitelabel: data.whitelabel,
-        })
-        .eq('id', clientId)
+      // Send request to API
+      const response = await fetch(`/api/clients/${clientId}`, {
+        method: 'PATCH',
+        body: formData,
+      })
 
-      if (error) {
-        throw new Error(`Failed to update client: ${error.message}`)
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to update client')
       }
 
       setMessage('Client updated successfully!')
