@@ -23,6 +23,10 @@ export default function UsersListClient({ users }: UsersListClientProps) {
   const router = useRouter()
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null)
 
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString(undefined, { timeZone: 'UTC' })
+  }
+
   const handleDelete = async (userId: string, userName: string) => {
     // Confirm deletion
     const confirmed = window.confirm(
@@ -122,11 +126,11 @@ export default function UsersListClient({ users }: UsersListClientProps) {
                   </td>
                   <td className="hidden lg:table-cell px-3 py-4 sm:px-6 text-sm text-gray-500">
                     {user.last_login_at
-                      ? new Date(user.last_login_at).toLocaleDateString()
+                      ? formatDate(user.last_login_at)
                       : 'Never'}
                   </td>
                   <td className="hidden md:table-cell px-3 py-4 sm:px-6 text-sm text-gray-500">
-                    {new Date(user.created_at).toLocaleDateString()}
+                    {formatDate(user.created_at)}
                   </td>
                   <td className="px-3 py-4 sm:px-6 text-sm font-medium">
                     <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-1 sm:space-y-0">

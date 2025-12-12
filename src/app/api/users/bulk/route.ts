@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     const results = []
 
     for (const userData of users) {
-      const { name, email, username, client_id, industry_id, password, status } = userData
+      const { name, email, username, client_id, industry_id, password, role, status } = userData
 
       // Validate required fields for each user
       if (!name || typeof name !== 'string' || name.trim() === '') {
@@ -79,6 +79,16 @@ export async function POST(request: NextRequest) {
           user: email,
           success: false,
           error: 'Invalid email format',
+        })
+        continue
+      }
+
+      // Validate role if provided
+      if (role !== undefined && !['admin', 'client', 'user'].includes(role)) {
+        results.push({
+          user: email,
+          success: false,
+          error: 'Invalid role. Must be one of: admin, client, user',
         })
         continue
       }
@@ -156,6 +166,7 @@ export async function POST(request: NextRequest) {
             email: email.trim(),
             client_id: client_id || null,
             industry_id: industry_id || null,
+            role: role || 'user',
             completed_profile: false,
             status: status || 'active',
           })

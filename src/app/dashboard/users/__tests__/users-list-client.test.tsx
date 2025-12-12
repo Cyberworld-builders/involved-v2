@@ -69,7 +69,12 @@ describe('UsersListClient', () => {
     render(<UsersListClient users={mockUsers} />)
 
     // Check created dates are rendered
-    expect(screen.getAllByText(/1\/1\/2024|1\/2\/2024/)).toHaveLength(2)
+    const expectedCreatedDates = mockUsers.map((u) =>
+      new Date(u.created_at).toLocaleDateString(undefined, { timeZone: 'UTC' })
+    )
+    for (const date of expectedCreatedDates) {
+      expect(screen.getByText(date)).toBeInTheDocument()
+    }
     
     // Check last login displays "Never" for user without login
     expect(screen.getByText('Never')).toBeInTheDocument()

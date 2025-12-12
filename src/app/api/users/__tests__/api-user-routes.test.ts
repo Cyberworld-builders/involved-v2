@@ -351,6 +351,134 @@ describe('API User Routes', () => {
       expect(mockAdminClient.auth.admin.deleteUser).toHaveBeenCalledWith(authUserId)
     })
 
+    it('should create a user with specified role', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      mockSupabaseClient.from = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
+          }),
+        }),
+      })
+
+      mockAdminClient.auth.admin.createUser.mockResolvedValue({
+        data: { user: { id: 'new-auth-user-id' } },
+        error: null,
+      })
+
+      const insertMock = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: { ...mockUser, role: 'admin' },
+            error: null,
+          }),
+        }),
+      })
+
+      mockAdminClient.from = vi.fn().mockReturnValue({
+        insert: insertMock,
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/users', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: 'Admin User',
+          email: 'admin@example.com',
+          role: 'admin',
+        }),
+      })
+
+      const response = await createUser(request)
+
+      expect(response.status).toBe(201)
+      expect(insertMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          role: 'admin',
+        })
+      )
+    })
+
+    it('should default to user role when role is not provided', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      mockSupabaseClient.from = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
+          }),
+        }),
+      })
+
+      mockAdminClient.auth.admin.createUser.mockResolvedValue({
+        data: { user: { id: 'new-auth-user-id' } },
+        error: null,
+      })
+
+      const insertMock = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: mockUser,
+            error: null,
+          }),
+        }),
+      })
+
+      mockAdminClient.from = vi.fn().mockReturnValue({
+        insert: insertMock,
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/users', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: 'Test User',
+          email: 'test@example.com',
+        }),
+      })
+
+      await createUser(request)
+
+      expect(insertMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          role: 'user',
+        })
+      )
+    })
+
+    it('should return 400 for invalid role', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/users', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: 'Test User',
+          email: 'test@example.com',
+          role: 'invalid-role',
+        }),
+      })
+
+      const response = await createUser(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(400)
+      expect(data.error).toBe('Invalid role. Must be one of: admin, client, user')
+    })
+
     // User-Client Assignment Tests
     describe('User-Client Assignment during creation', () => {
       it('should create user with client_id when provided', async () => {
@@ -1303,6 +1431,104 @@ describe('API User Routes', () => {
       expect(response.status).toBe(500)
       expect(data.error).toBe('Failed to update user')
     })
+
+    it('should update user role', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      const updateMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: { ...mockUser, role: 'admin' },
+              error: null,
+            }),
+          }),
+        }),
+      })
+
+      const mockFrom = vi.fn().mockReturnValue({
+        update: updateMock,
+      })
+      mockSupabaseClient.from = mockFrom
+
+      const request = new NextRequest('http://localhost:3000/api/users/test-id', {
+        method: 'PATCH',
+        body: JSON.stringify({ role: 'admin' }),
+      })
+      const params = Promise.resolve({ id: 'test-id' })
+      const response = await updateUser(request, { params })
+      const data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(data.user.role).toBe('admin')
+      expect(updateMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          role: 'admin',
+          updated_at: expect.any(String),
+        })
+      )
+    })
+
+    it('should return 400 for invalid role on update', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/users/test-id', {
+        method: 'PATCH',
+        body: JSON.stringify({ role: 'superuser' }),
+      })
+      const params = Promise.resolve({ id: 'test-id' })
+      const response = await updateUser(request, { params })
+      const data = await response.json()
+
+      expect(response.status).toBe(400)
+      expect(data.error).toBe('Invalid role. Must be one of: admin, client, user')
+    })
+
+    it('should allow updating role to different valid roles', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      const roles = ['admin', 'client', 'user']
+      
+      for (const role of roles) {
+        const updateMock = vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            select: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: { ...mockUser, role },
+                error: null,
+              }),
+            }),
+          }),
+        })
+
+        mockSupabaseClient.from = vi.fn().mockReturnValue({
+          update: updateMock,
+        })
+
+        const request = new NextRequest('http://localhost:3000/api/users/test-id', {
+          method: 'PATCH',
+          body: JSON.stringify({ role }),
+        })
+        const params = Promise.resolve({ id: 'test-id' })
+        const response = await updateUser(request, { params })
+
+        expect(response.status).toBe(200)
+        expect(updateMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            role,
+          })
+        )
+      }
+    })
   })
 
   describe('DELETE /api/users/[id]', () => {
@@ -1916,6 +2142,106 @@ describe('API User Routes', () => {
       expect(response.status).toBe(200)
       expect(data.created).toBe(2)
       expect(data.failed).toBe(1)
+    })
+
+    it('should create users with specified roles in bulk', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      mockSupabaseClient.from = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
+          }),
+        }),
+      })
+
+      mockAdminClient.auth.admin.createUser.mockResolvedValue({
+        data: { user: { id: 'new-auth-user-id' } },
+        error: null,
+      })
+
+      const insertMock = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: mockUser,
+            error: null,
+          }),
+        }),
+      })
+
+      mockAdminClient.from = vi.fn().mockReturnValue({
+        insert: insertMock,
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/users/bulk', {
+        method: 'POST',
+        body: JSON.stringify({
+          users: [
+            {
+              name: 'Admin User',
+              email: 'admin@example.com',
+              role: 'admin',
+            },
+            {
+              name: 'Client User',
+              email: 'client@example.com',
+              role: 'client',
+            },
+          ],
+        }),
+      })
+
+      const response = await bulkCreateUsers(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(data.created).toBe(2)
+      expect(data.failed).toBe(0)
+      expect(insertMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          role: 'admin',
+        })
+      )
+      expect(insertMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          role: 'client',
+        })
+      )
+    })
+
+    it('should reject bulk creation with invalid role', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/users/bulk', {
+        method: 'POST',
+        body: JSON.stringify({
+          users: [
+            {
+              name: 'User 1',
+              email: 'user1@example.com',
+              role: 'superadmin',
+            },
+          ],
+        }),
+      })
+
+      const response = await bulkCreateUsers(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(data.created).toBe(0)
+      expect(data.failed).toBe(1)
+      expect(data.results[0].success).toBe(false)
+      expect(data.results[0].error).toBe('Invalid role. Must be one of: admin, client, user')
     })
   })
 

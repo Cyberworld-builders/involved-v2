@@ -83,7 +83,7 @@ export async function PATCH(
 
     // Parse request body
     const body = await request.json()
-    const { name, email, username, client_id, industry_id, completed_profile, status } = body
+    const { name, email, username, client_id, industry_id, completed_profile, role, status } = body
 
     // Build update object
     const updates: ProfileUpdate = {
@@ -138,6 +138,16 @@ export async function PATCH(
 
     if (completed_profile !== undefined) {
       updates.completed_profile = completed_profile
+    }
+
+    if (role !== undefined) {
+      if (!['admin', 'client', 'user'].includes(role)) {
+        return NextResponse.json(
+          { error: 'Invalid role. Must be one of: admin, client, user' },
+          { status: 400 }
+        )
+      }
+      updates.role = role
     }
 
     if (status !== undefined) {

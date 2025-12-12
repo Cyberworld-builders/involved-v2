@@ -11,6 +11,7 @@ export const mockUser: Profile = {
   client_id: 'test-client-id',
   industry_id: 'test-industry-id',
   language_id: null,
+  role: 'user',
   last_login_at: null,
   completed_profile: true,
   accepted_terms: true,
