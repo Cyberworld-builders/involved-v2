@@ -119,7 +119,7 @@ export default async function AssessmentsPage() {
                                   </div>
                                   {assessment.description && (
                                     <div 
-                                      className="text-sm text-gray-500 max-w-xs line-clamp-2 overflow-hidden hidden sm:block"
+                                      className="text-sm text-gray-500 max-w-xs overflow-hidden hidden sm:block"
                                       style={{
                                         display: '-webkit-box',
                                         WebkitLineClamp: 2,
