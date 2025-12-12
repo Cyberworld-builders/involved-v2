@@ -106,7 +106,7 @@ describe('BenchmarksListTable', () => {
     render(<BenchmarksListTable initialBenchmarks={mockBenchmarks} />)
 
     const expectedUpdatedDates = mockBenchmarks.map((b) =>
-      new Date(b.updated_at).toLocaleDateString()
+      new Date(b.updated_at).toLocaleDateString(undefined, { timeZone: 'UTC' })
     )
     for (const date of expectedUpdatedDates) {
       expect(screen.getByText(date)).toBeInTheDocument()
