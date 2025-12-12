@@ -35,20 +35,20 @@ export default async function UsersPage() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Page Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Users</h1>
-            <p className="text-gray-600">Manage system users and their access.</p>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Users</h1>
+            <p className="text-sm md:text-base text-gray-600">Manage system users and their access.</p>
           </div>
-          <div className="flex space-x-2">
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
             <Link href="/dashboard/users/create">
-              <Button>
+              <Button className="w-full sm:w-auto">
                 <span className="mr-2">+</span>
                 Add User
               </Button>
             </Link>
             <Link href="/dashboard/users/bulk-upload">
-              <Button variant="outline">
+              <Button variant="outline" className="w-full sm:w-auto">
                 <span className="mr-2">📁</span>
                 Bulk Upload
               </Button>
@@ -133,88 +133,92 @@ export default async function UsersPage() {
                 </div>
               </div>
             ) : (
-              <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                <table className="min-w-full divide-y divide-gray-300">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        User
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Client
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Industry
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Last Login
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Created
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Settings
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {users.map((user) => (
-                      <tr key={user.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="h-10 w-10 flex-shrink-0">
-                              <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                                <span className="text-sm font-medium text-gray-700">
-                                  {user.name.charAt(0).toUpperCase()}
-                                </span>
+              <div className="overflow-x-auto -mx-4 sm:mx-0">
+                <div className="inline-block min-w-full align-middle">
+                  <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
+                    <table className="min-w-full divide-y divide-gray-300">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
+                            User
+                          </th>
+                          <th className="hidden sm:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
+                            Client
+                          </th>
+                          <th className="hidden lg:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
+                            Industry
+                          </th>
+                          <th className="hidden lg:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
+                            Last Login
+                          </th>
+                          <th className="hidden md:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
+                            Created
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
+                            Settings
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {users.map((user) => (
+                          <tr key={user.id} className="hover:bg-gray-50">
+                            <td className="px-3 py-4 sm:px-6">
+                              <div className="flex items-center">
+                                <div className="h-10 w-10 flex-shrink-0">
+                                  <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                    <span className="text-sm font-medium text-gray-700">
+                                      {user.name.charAt(0).toUpperCase()}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="ml-4">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    <Link
+                                      href={`/dashboard/users/${user.id}`}
+                                      className="hover:text-indigo-600"
+                                    >
+                                      {user.name}
+                                    </Link>
+                                  </div>
+                                  <div className="text-sm text-gray-500">{user.email}</div>
+                                  <div className="text-xs text-gray-400 hidden sm:block">@{user.username}</div>
+                                </div>
                               </div>
-                            </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">
+                            </td>
+                            <td className="hidden sm:table-cell px-3 py-4 sm:px-6 text-sm text-gray-900">
+                              {user.clients?.name || 'No client'}
+                            </td>
+                            <td className="hidden lg:table-cell px-3 py-4 sm:px-6 text-sm text-gray-900">
+                              {user.industries?.name || '-'}
+                            </td>
+                            <td className="hidden lg:table-cell px-3 py-4 sm:px-6 text-sm text-gray-500">
+                              {user.last_login_at 
+                                ? new Date(user.last_login_at).toLocaleDateString()
+                                : 'Never'
+                              }
+                            </td>
+                            <td className="hidden md:table-cell px-3 py-4 sm:px-6 text-sm text-gray-500">
+                              {new Date(user.created_at).toLocaleDateString()}
+                            </td>
+                            <td className="px-3 py-4 sm:px-6 text-sm font-medium">
+                              <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-1 sm:space-y-0">
                                 <Link
-                                  href={`/dashboard/users/${user.id}`}
-                                  className="hover:text-indigo-600"
+                                  href={`/dashboard/users/${user.id}/edit`}
+                                  className="text-indigo-600 hover:text-indigo-900"
                                 >
-                                  {user.name}
+                                  Edit
                                 </Link>
+                                <button className="text-red-600 hover:text-red-900 text-left">
+                                  Delete
+                                </button>
                               </div>
-                              <div className="text-sm text-gray-500">{user.email}</div>
-                              <div className="text-xs text-gray-400">@{user.username}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {user.clients?.name || 'No client'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {user.industries?.name || '-'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {user.last_login_at 
-                            ? new Date(user.last_login_at).toLocaleDateString()
-                            : 'Never'
-                          }
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(user.created_at).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex space-x-2">
-                            <Link
-                              href={`/dashboard/users/${user.id}/edit`}
-                              className="text-indigo-600 hover:text-indigo-900"
-                            >
-                              Edit
-                            </Link>
-                            <button className="text-red-600 hover:text-red-900">
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             )}
           </CardContent>

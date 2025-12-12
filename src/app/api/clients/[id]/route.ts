@@ -89,6 +89,8 @@ export async function PATCH(
     let address: string | undefined
     let logoFile: File | null = null
     let backgroundFile: File | null = null
+    let logo: string | null | undefined
+    let background: string | null | undefined
     let primary_color: string | undefined
     let accent_color: string | undefined
     let require_profile: boolean | undefined
@@ -125,6 +127,8 @@ export async function PATCH(
       const body = await request.json()
       name = body.name
       address = body.address
+      logo = body.logo
+      background = body.background
       primary_color = body.primary_color
       accent_color = body.accent_color
       require_profile = body.require_profile
@@ -136,6 +140,22 @@ export async function PATCH(
     if (name !== undefined && (typeof name !== 'string' || name.trim() === '')) {
       return NextResponse.json(
         { error: 'Client name cannot be empty' },
+        { status: 400 }
+      )
+    }
+
+    // For JSON requests, only allow clearing logo/background (set to null).
+    // Setting these via JSON is not supported because uploads should be handled
+    // via multipart/form-data file uploads.
+    if (logo !== undefined && logo !== null) {
+      return NextResponse.json(
+        { error: 'Logo must be uploaded as a file or set to null' },
+        { status: 400 }
+      )
+    }
+    if (background !== undefined && background !== null) {
+      return NextResponse.json(
+        { error: 'Background must be uploaded as a file or set to null' },
         { status: 400 }
       )
     }
@@ -166,6 +186,8 @@ export async function PATCH(
     const updateData: ClientUpdate = {}
     if (name !== undefined) updateData.name = name.trim()
     if (address !== undefined) updateData.address = address || null
+    if (logo !== undefined) updateData.logo = logo
+    if (background !== undefined) updateData.background = background
     if (primary_color !== undefined) updateData.primary_color = primary_color || null
     if (accent_color !== undefined) updateData.accent_color = accent_color || null
     if (require_profile !== undefined) updateData.require_profile = require_profile
