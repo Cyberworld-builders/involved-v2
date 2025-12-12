@@ -4,9 +4,10 @@ import DashboardLayout from '../dashboard-layout'
 
 // Mock the Sidebar component
 vi.mock('@/components/navigation/sidebar', () => ({
-  default: ({ className }: { className?: string }) => (
-    <div data-testid="sidebar" className={className}>
+  default: ({ className, isOpen, onClose }: { className?: string; isOpen?: boolean; onClose?: () => void }) => (
+    <div data-testid="sidebar" className={className} data-is-open={isOpen}>
       Mocked Sidebar
+      {onClose && <button onClick={onClose} data-testid="sidebar-close">Close</button>}
     </div>
   ),
 }))
@@ -140,8 +141,7 @@ describe('DashboardLayout', () => {
 
       const childContent = screen.getByTestId('child-content')
       const parentDiv = childContent.parentElement
-      // Updated to match responsive padding classes
-      expect(parentDiv).toHaveClass('p-4', 'lg:p-6')
+      expect(parentDiv).toHaveClass('p-4', 'md:p-6')
     })
 
     it('should have flex column layout for content area', () => {
@@ -287,8 +287,8 @@ describe('DashboardLayout', () => {
 
       const main = screen.getByRole('main')
       const contentWrapper = main.firstChild as HTMLElement
-      // Verify responsive padding that works on mobile
-      expect(contentWrapper).toHaveClass('p-4', 'lg:p-6')
+      // Verify padding that works on mobile
+      expect(contentWrapper).toHaveClass('p-4', 'md:p-6')
     })
   })
 
@@ -462,6 +462,91 @@ describe('DashboardLayout', () => {
       const screenReaderText = settingsButton.querySelector('.sr-only')
       expect(screenReaderText).toBeInTheDocument()
       expect(screenReaderText?.textContent).toBe('Settings')
+    })
+  })
+
+  describe('Mobile Menu', () => {
+    it('should render mobile menu button', () => {
+      render(
+        <DashboardLayout>
+          <div>Test Content</div>
+        </DashboardLayout>
+      )
+
+      const menuButton = screen.getByLabelText('Open menu')
+      expect(menuButton).toBeInTheDocument()
+    })
+
+    it('should have mobile menu button with hamburger icon', () => {
+      render(
+        <DashboardLayout>
+          <div>Test Content</div>
+        </DashboardLayout>
+      )
+
+      const menuButton = screen.getByLabelText('Open menu')
+      const svg = menuButton.querySelector('svg')
+      expect(svg).toBeInTheDocument()
+    })
+
+    it('should have mobile menu button with proper styling', () => {
+      render(
+        <DashboardLayout>
+          <div>Test Content</div>
+        </DashboardLayout>
+      )
+
+      const menuButton = screen.getByLabelText('Open menu')
+      expect(menuButton).toHaveClass('md:hidden', 'p-2', 'text-gray-600')
+    })
+
+    it('should have responsive padding in header', () => {
+      render(
+        <DashboardLayout>
+          <div>Test Content</div>
+        </DashboardLayout>
+      )
+
+      const header = screen.getByRole('banner')
+      const headerContent = header.firstChild as HTMLElement
+      expect(headerContent).toHaveClass('px-4', 'py-4', 'md:px-6')
+    })
+
+    it('should have responsive title size', () => {
+      render(
+        <DashboardLayout>
+          <div>Test Content</div>
+        </DashboardLayout>
+      )
+
+      const title = screen.getByText('Dashboard')
+      expect(title).toHaveClass('text-xl', 'md:text-2xl')
+    })
+
+    it('should have responsive spacing for header buttons', () => {
+      render(
+        <DashboardLayout>
+          <div>Test Content</div>
+        </DashboardLayout>
+      )
+
+      const header = screen.getByRole('banner')
+      const buttonContainer = header.querySelector('.flex.items-center.space-x-2')
+      expect(buttonContainer).toBeInTheDocument()
+    })
+  })
+
+  describe('Responsive Viewport Meta', () => {
+    it('should support mobile viewport scaling', () => {
+      // This test verifies that the layout can handle different viewport sizes
+      const { container } = render(
+        <DashboardLayout>
+          <div>Test Content</div>
+        </DashboardLayout>
+      )
+
+      const mainContainer = container.firstChild as HTMLElement
+      expect(mainContainer).toHaveClass('flex', 'h-screen')
     })
   })
 })

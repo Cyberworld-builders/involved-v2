@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import Sidebar from '../sidebar'
 import * as navigation from 'next/navigation'
 
@@ -156,7 +156,6 @@ describe('Sidebar Component', () => {
   describe('Responsive Behavior', () => {
     it('should accept and apply custom className', () => {
       const { container } = render(<Sidebar className="custom-class" />)
-      // The sidebar is now the second child (after the overlay)
       const sidebar = container.querySelector('.bg-gray-900') as HTMLElement
       expect(sidebar).toHaveClass('custom-class')
     })
@@ -186,21 +185,23 @@ describe('Sidebar Component', () => {
     })
 
     it('should render mobile overlay when sidebar is open', () => {
-      const { container } = render(<Sidebar isOpen={true} />)
+      const onClose = vi.fn()
+      const { container } = render(<Sidebar isOpen={true} onClose={onClose} />)
       const overlay = container.querySelector('.bg-black.bg-opacity-50')
       expect(overlay).toBeInTheDocument()
     })
 
     it('should hide mobile overlay on desktop', () => {
-      const { container } = render(<Sidebar isOpen={true} />)
+      const onClose = vi.fn()
+      const { container } = render(<Sidebar isOpen={true} onClose={onClose} />)
       const overlay = container.querySelector('.bg-black.bg-opacity-50')
-      expect(overlay).toHaveClass('lg:hidden')
+      expect(overlay).toHaveClass('md:hidden')
     })
 
     it('should apply mobile transform classes', () => {
       const { container } = render(<Sidebar isOpen={false} />)
       const sidebar = container.querySelector('.bg-gray-900') as HTMLElement
-      expect(sidebar).toHaveClass('-translate-x-full', 'lg:translate-x-0')
+      expect(sidebar).toHaveClass('-translate-x-full', 'md:translate-x-0')
     })
 
     it('should show sidebar when isOpen is true', () => {
@@ -212,15 +213,17 @@ describe('Sidebar Component', () => {
 
   describe('Logo Section', () => {
     it('should render close button for mobile', () => {
-      render(<Sidebar isOpen={true} />)
+      const onClose = vi.fn()
+      render(<Sidebar isOpen={true} onClose={onClose} />)
       const closeButton = screen.getByRole('button', { name: /close menu/i })
       expect(closeButton).toBeInTheDocument()
     })
 
     it('should hide close button on desktop', () => {
-      render(<Sidebar isOpen={true} />)
+      const onClose = vi.fn()
+      render(<Sidebar isOpen={true} onClose={onClose} />)
       const closeButton = screen.getByRole('button', { name: /close menu/i })
-      expect(closeButton).toHaveClass('lg:hidden')
+      expect(closeButton).toHaveClass('md:hidden')
     })
 
     it('should render logo link pointing to dashboard', () => {
@@ -339,6 +342,97 @@ describe('Sidebar Component', () => {
       render(<Sidebar />)
       const nav = screen.getByRole('navigation')
       expect(nav).toHaveClass('flex-1', 'space-y-1', 'px-2', 'py-4')
+    })
+  })
+
+  describe('Mobile Responsiveness', () => {
+    it('should render with mobile-responsive positioning classes', () => {
+      const { container } = render(<Sidebar />)
+      const sidebar = container.firstChild as HTMLElement
+      expect(sidebar).toHaveClass('fixed', 'inset-y-0', 'left-0', 'z-50')
+    })
+
+    it('should hide sidebar by default when isOpen is false', () => {
+      const { container } = render(<Sidebar isOpen={false} />)
+      const sidebar = container.firstChild as HTMLElement
+      expect(sidebar).toHaveClass('-translate-x-full')
+    })
+
+    it('should show sidebar when isOpen is true', () => {
+      const { container } = render(<Sidebar isOpen={true} />)
+      // Find the actual sidebar div (skip overlay if present)
+      const sidebar = container.querySelector('.flex.h-full.w-64') as HTMLElement
+      expect(sidebar).toHaveClass('translate-x-0')
+    })
+
+    it('should render overlay when sidebar is open on mobile', () => {
+      const onClose = vi.fn()
+      const { container } = render(<Sidebar isOpen={true} onClose={onClose} />)
+      const overlay = container.querySelector('.fixed.inset-0.z-40')
+      expect(overlay).toBeInTheDocument()
+    })
+
+    it('should not render overlay when onClose is not provided', () => {
+      const { container } = render(<Sidebar isOpen={true} />)
+      const overlay = container.querySelector('.fixed.inset-0.z-40')
+      expect(overlay).not.toBeInTheDocument()
+    })
+
+    it('should call onClose when overlay is clicked', () => {
+      const onClose = vi.fn()
+      const { container } = render(<Sidebar isOpen={true} onClose={onClose} />)
+      const overlay = container.querySelector('.fixed.inset-0.z-40') as HTMLElement
+      fireEvent.click(overlay)
+      expect(onClose).toHaveBeenCalledTimes(1)
+    })
+
+    it('should render close button when onClose is provided', () => {
+      const onClose = vi.fn()
+      render(<Sidebar isOpen={true} onClose={onClose} />)
+      const closeButton = screen.getByLabelText('Close menu')
+      expect(closeButton).toBeInTheDocument()
+    })
+
+    it('should call onClose when close button is clicked', () => {
+      const onClose = vi.fn()
+      render(<Sidebar isOpen={true} onClose={onClose} />)
+      const closeButton = screen.getByLabelText('Close menu')
+      fireEvent.click(closeButton)
+      expect(onClose).toHaveBeenCalledTimes(1)
+    })
+
+    it('should call onClose when navigation link is clicked', () => {
+      const onClose = vi.fn()
+      render(<Sidebar isOpen={true} onClose={onClose} />)
+      const homeLink = screen.getByText('Home')
+      fireEvent.click(homeLink)
+      expect(onClose).toHaveBeenCalledTimes(1)
+    })
+
+    it('should not call onClose on link click when onClose is not provided', () => {
+      const { container } = render(<Sidebar isOpen={true} />)
+      const homeLink = screen.getByText('Home')
+      // Should not throw error
+      fireEvent.click(homeLink)
+      expect(container).toBeInTheDocument()
+    })
+
+    it('should hide close button on mobile when onClose is not provided', () => {
+      render(<Sidebar isOpen={true} />)
+      const closeButton = screen.queryByLabelText('Close menu')
+      expect(closeButton).not.toBeInTheDocument()
+    })
+
+    it('should have transition classes for smooth animations', () => {
+      const { container } = render(<Sidebar />)
+      const sidebar = container.querySelector('.flex.h-full.w-64') as HTMLElement
+      expect(sidebar).toHaveClass('transition-transform', 'duration-300', 'ease-in-out')
+    })
+
+    it('should maintain desktop behavior with md:relative class', () => {
+      const { container } = render(<Sidebar />)
+      const sidebar = container.querySelector('.flex.h-full.w-64') as HTMLElement
+      expect(sidebar).toHaveClass('md:relative', 'md:translate-x-0')
     })
   })
 })
