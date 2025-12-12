@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import DashboardLayout from '@/components/layout/dashboard-layout'
 import ClientForm from '@/components/forms/client-form'
 
@@ -22,93 +21,44 @@ export default function CreateClientPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
   const router = useRouter()
-  const supabase = createClient()
 
   const handleSubmit = async (data: ClientFormData) => {
     setIsLoading(true)
     setMessage('')
 
     try {
-      // Check if Supabase is configured
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-      if (!supabaseUrl || !supabaseKey) {
-        // Supabase not configured - show demo mode
-        console.log('Demo mode - Client data:', data)
-        setMessage('Demo mode: Client data logged to console. Set up Supabase to save to database.')
-        
-        // Simulate success after a delay
-        setTimeout(() => {
-          setMessage('Demo mode: Client would be created successfully!')
-          setTimeout(() => {
-            router.push('/dashboard/clients')
-          }, 2000)
-        }, 1000)
-        return
-      }
-
-      // TODO: Upload images to Supabase storage if provided
-      let logoUrl = null
-      let backgroundUrl = null
-
+      // Prepare FormData for file upload
+      const formData = new FormData()
+      formData.append('name', data.name)
+      formData.append('address', data.address || '')
       if (data.logo) {
-        // Upload logo
-        const logoExt = data.logo.name.split('.').pop()
-        const logoFileName = `logo-${Date.now()}.${logoExt}`
-        const { error: logoError } = await supabase.storage
-          .from('client-assets')
-          .upload(logoFileName, data.logo)
-
-        if (logoError) {
-          throw new Error(`Failed to upload logo: ${logoError.message}`)
-        }
-
-        const { data: logoUrlData } = supabase.storage
-          .from('client-assets')
-          .getPublicUrl(logoFileName)
-        logoUrl = logoUrlData.publicUrl
+        formData.append('logo', data.logo)
       }
-
       if (data.background) {
-        // Upload background
-        const backgroundExt = data.background.name.split('.').pop()
-        const backgroundFileName = `background-${Date.now()}.${backgroundExt}`
-        const { error: backgroundError } = await supabase.storage
-          .from('client-assets')
-          .upload(backgroundFileName, data.background)
-
-        if (backgroundError) {
-          throw new Error(`Failed to upload background: ${backgroundError.message}`)
-        }
-
-        const { data: backgroundUrlData } = supabase.storage
-          .from('client-assets')
-          .getPublicUrl(backgroundFileName)
-        backgroundUrl = backgroundUrlData.publicUrl
+        formData.append('background', data.background)
       }
+      formData.append('primary_color', data.primary_color)
+      formData.append('accent_color', data.accent_color)
+      formData.append('require_profile', data.require_profile.toString())
+      formData.append('require_research', data.require_research.toString())
+      formData.append('whitelabel', data.whitelabel.toString())
 
-      // Create client record
-      const { error } = await supabase
-        .from('clients')
-        .insert({
-          name: data.name,
-          address: data.address || null,
-          logo: logoUrl,
-          background: backgroundUrl,
-          primary_color: data.primary_color,
-          accent_color: data.accent_color,
-          require_profile: data.require_profile,
-          require_research: data.require_research,
-          whitelabel: data.whitelabel,
-        })
+      // Send request to API
+      const response = await fetch('/api/clients', {
+        method: 'POST',
+        body: formData,
+      })
 
-      if (error) {
-        throw new Error(`Failed to create client: ${error.message}`)
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create client')
       }
 
       setMessage('Client created successfully!')
-      router.push('/dashboard/clients')
+      setTimeout(() => {
+        router.push('/dashboard/clients')
+      }, 2000)
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'An unexpected error occurred')
     } finally {

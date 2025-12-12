@@ -71,73 +71,32 @@ export default function EditClientPage() {
     setMessage('')
 
     try {
-      // Check if Supabase is configured
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-      if (!supabaseUrl || !supabaseKey) {
-        setMessage('Supabase not configured. Please set up your environment variables.')
-        return
-      }
-
-      // Handle image uploads
-      let logoUrl = client?.logo || null
-      let backgroundUrl = client?.background || null
-
+      // Prepare FormData for file upload
+      const formData = new FormData()
+      formData.append('name', data.name)
+      formData.append('address', data.address || '')
       if (data.logo) {
-        // Upload new logo
-        const logoExt = data.logo.name.split('.').pop()
-        const logoFileName = `logo-${Date.now()}.${logoExt}`
-        const { error: logoError } = await supabase.storage
-          .from('client-assets')
-          .upload(logoFileName, data.logo)
-
-        if (logoError) {
-          throw new Error(`Failed to upload logo: ${logoError.message}`)
-        }
-
-        const { data: logoUrlData } = supabase.storage
-          .from('client-assets')
-          .getPublicUrl(logoFileName)
-        logoUrl = logoUrlData.publicUrl
+        formData.append('logo', data.logo)
       }
-
       if (data.background) {
-        // Upload new background
-        const backgroundExt = data.background.name.split('.').pop()
-        const backgroundFileName = `background-${Date.now()}.${backgroundExt}`
-        const { error: backgroundError } = await supabase.storage
-          .from('client-assets')
-          .upload(backgroundFileName, data.background)
-
-        if (backgroundError) {
-          throw new Error(`Failed to upload background: ${backgroundError.message}`)
-        }
-
-        const { data: backgroundUrlData } = supabase.storage
-          .from('client-assets')
-          .getPublicUrl(backgroundFileName)
-        backgroundUrl = backgroundUrlData.publicUrl
+        formData.append('background', data.background)
       }
+      formData.append('primary_color', data.primary_color)
+      formData.append('accent_color', data.accent_color)
+      formData.append('require_profile', data.require_profile.toString())
+      formData.append('require_research', data.require_research.toString())
+      formData.append('whitelabel', data.whitelabel.toString())
 
-      // Update client record
-      const { error } = await supabase
-        .from('clients')
-        .update({
-          name: data.name,
-          address: data.address || null,
-          logo: logoUrl,
-          background: backgroundUrl,
-          primary_color: data.primary_color,
-          accent_color: data.accent_color,
-          require_profile: data.require_profile,
-          require_research: data.require_research,
-          whitelabel: data.whitelabel,
-        })
-        .eq('id', clientId)
+      // Send request to API
+      const response = await fetch(`/api/clients/${clientId}`, {
+        method: 'PATCH',
+        body: formData,
+      })
 
-      if (error) {
-        throw new Error(`Failed to update client: ${error.message}`)
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to update client')
       }
 
       setMessage('Client updated successfully!')
