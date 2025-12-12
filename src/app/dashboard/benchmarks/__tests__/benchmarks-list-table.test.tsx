@@ -109,12 +109,14 @@ describe('BenchmarksListTable', () => {
     expect(screen.getAllByText(/1\/1\/2024|1\/2\/2024|1\/3\/2024/)).toHaveLength(3)
   })
 
-  it('should have Edit and Delete buttons for each benchmark', () => {
+  it('should have View, Edit and Delete buttons for each benchmark (legacy check)', () => {
     render(<BenchmarksListTable initialBenchmarks={mockBenchmarks} />)
 
+    const viewLinks = screen.getAllByText('View')
     const editLinks = screen.getAllByText('Edit')
     const deleteButtons = screen.getAllByText('Delete')
 
+    expect(viewLinks).toHaveLength(3)
     expect(editLinks).toHaveLength(3)
     expect(deleteButtons).toHaveLength(3)
   })
@@ -240,5 +242,36 @@ describe('BenchmarksListTable', () => {
       'href',
       '/dashboard/benchmarks/assessment-2/industry-3'
     )
+  })
+
+  it('should have View links with correct URLs', () => {
+    render(<BenchmarksListTable initialBenchmarks={mockBenchmarks} />)
+
+    const viewLinks = screen.getAllByText('View')
+    
+    expect(viewLinks[0].closest('a')).toHaveAttribute(
+      'href',
+      '/dashboard/benchmarks/benchmark-1'
+    )
+    expect(viewLinks[1].closest('a')).toHaveAttribute(
+      'href',
+      '/dashboard/benchmarks/benchmark-2'
+    )
+    expect(viewLinks[2].closest('a')).toHaveAttribute(
+      'href',
+      '/dashboard/benchmarks/benchmark-3'
+    )
+  })
+
+  it('should have View, Edit and Delete buttons for each benchmark', () => {
+    render(<BenchmarksListTable initialBenchmarks={mockBenchmarks} />)
+
+    const viewLinks = screen.getAllByText('View')
+    const editLinks = screen.getAllByText('Edit')
+    const deleteButtons = screen.getAllByText('Delete')
+
+    expect(viewLinks).toHaveLength(3)
+    expect(editLinks).toHaveLength(3)
+    expect(deleteButtons).toHaveLength(3)
   })
 })
