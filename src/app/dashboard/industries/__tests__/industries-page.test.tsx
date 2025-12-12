@@ -2,11 +2,12 @@ import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from 'vites
 import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import IndustriesPage from '../page'
-import { redirect } from 'next/navigation'
+import { redirect, useRouter } from 'next/navigation'
 import { mockIndustries } from '@/__tests__/fixtures/industries'
 
 vi.mock('next/navigation', () => ({
   redirect: vi.fn(),
+  useRouter: vi.fn(),
 }))
 
 vi.mock('next/link', () => ({
@@ -53,6 +54,7 @@ describe('IndustriesPage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(useRouter).mockReturnValue({ refresh: vi.fn() } as any)
   })
 
   it('redirects to login if user is not authenticated', async () => {
