@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { MIN_TOKEN_LENGTH } from '@/lib/utils/auth-validation'
+import { isValidEmail } from '@/lib/utils/email-validation'
 
 /**
  * POST /api/auth/verify-email
@@ -22,6 +23,14 @@ export async function POST(request: NextRequest) {
     if (!email) {
       return NextResponse.json(
         { error: 'Email is required' },
+        { status: 400 }
+      )
+    }
+
+    // Email validation
+    if (!isValidEmail(email)) {
+      return NextResponse.json(
+        { error: 'Invalid email format' },
         { status: 400 }
       )
     }
