@@ -341,8 +341,13 @@ export function parseBenchmarkSpreadsheet(csvContent: string): ParseResult<Bench
     const industry = row[headerMap['industry']] || ''
     
     // Validate required fields
-    if (!dimension_name && !dimension_code) {
-      errors.push(`Row ${rowNum}: Dimension name or dimension code is required`)
+    if (!dimension_name) {
+      errors.push(`Row ${rowNum}: Dimension name is required`)
+      continue
+    }
+    
+    if (!dimension_code) {
+      errors.push(`Row ${rowNum}: Dimension code is required`)
       continue
     }
     
