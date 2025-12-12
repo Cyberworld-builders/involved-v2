@@ -9,32 +9,32 @@ export default function Home() {
       <nav className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold text-indigo-600">
+            <Link href="/" className="text-xl sm:text-2xl font-bold text-indigo-600">
               Involved Talent
             </Link>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <Link href="/auth/login">
-                <Button variant="ghost">Login</Button>
+                <Button variant="ghost" size="sm" className="sm:text-base">Login</Button>
               </Link>
               <Link href="/auth/signup">
-                <Button>Sign Up</Button>
+                <Button size="sm" className="sm:text-base">Sign Up</Button>
               </Link>
             </div>
           </div>
         </div>
       </nav>
 
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center mb-16">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">
+      <div className="container mx-auto px-4 py-8 sm:py-16">
+        <div className="text-center mb-12 sm:mb-16">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
             Involved Talent
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4">
             Modern talent assessment and development platform built for the future of work
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mb-12 sm:mb-16">
           <Card>
             <CardHeader>
               <CardTitle>360° Assessments</CardTitle>
@@ -78,14 +78,14 @@ export default function Home() {
           </Card>
         </div>
 
-        <div className="text-center">
+        <div className="text-center flex flex-col sm:flex-row justify-center items-center gap-4">
           <Link href="/auth/signup">
-            <Button size="lg" className="mr-4">
+            <Button size="lg" className="w-full sm:w-auto">
               Get Started
             </Button>
           </Link>
           <Link href="/auth/login">
-            <Button variant="outline" size="lg">
+            <Button variant="outline" size="lg" className="w-full sm:w-auto">
               Sign In
             </Button>
           </Link>
