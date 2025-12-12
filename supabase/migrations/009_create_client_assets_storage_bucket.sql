@@ -2,12 +2,14 @@
 -- This bucket will store client branding images
 
 -- Insert bucket into storage.buckets table
+-- Note: Bucket limit (50MB) is higher than application limits (2MB logo, 5MB background)
+-- to allow flexibility and future requirements
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
   'client-assets',
   'client-assets',
   true, -- Public bucket so images can be accessed via URLs
-  52428800, -- 50MB file size limit
+  52428800, -- 50MB file size limit (allows flexibility beyond app-level limits)
   ARRAY['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
 )
 ON CONFLICT (id) DO NOTHING;

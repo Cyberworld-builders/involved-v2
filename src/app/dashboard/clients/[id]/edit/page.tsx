@@ -96,8 +96,14 @@ export default function EditClientPage() {
         })
 
         if (!logoResponse.ok) {
-          const errorData = await logoResponse.json()
-          throw new Error(`Failed to upload logo: ${errorData.error}`)
+          let errorMessage = 'Failed to upload logo'
+          try {
+            const errorData = await logoResponse.json()
+            errorMessage = errorData.error || errorMessage
+          } catch {
+            // If response is not JSON, use default message
+          }
+          throw new Error(errorMessage)
         }
 
         const logoData = await logoResponse.json()
@@ -116,8 +122,14 @@ export default function EditClientPage() {
         })
 
         if (!backgroundResponse.ok) {
-          const errorData = await backgroundResponse.json()
-          throw new Error(`Failed to upload background: ${errorData.error}`)
+          let errorMessage = 'Failed to upload background'
+          try {
+            const errorData = await backgroundResponse.json()
+            errorMessage = errorData.error || errorMessage
+          } catch {
+            // If response is not JSON, use default message
+          }
+          throw new Error(errorMessage)
         }
 
         const backgroundData = await backgroundResponse.json()
