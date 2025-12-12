@@ -124,7 +124,7 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
       const transformed = data.map(group => ({
         ...group,
         target: group.target_id ? (targets[group.target_id] || null) : null,
-        members: group.group_members?.map(gm => ({
+        members: group.group_members?.map((gm: GroupMemberRow & { profiles?: Profile }) => ({
           id: gm.id,
           profile_id: gm.profile_id,
           position: gm.role || '',
