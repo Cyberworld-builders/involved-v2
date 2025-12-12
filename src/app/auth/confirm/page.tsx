@@ -46,7 +46,7 @@ export default function ConfirmEmailPage() {
             router.push('/auth/login')
           }, 2000)
         }
-      } catch (err) {
+      } catch {
         setStatus('error')
         setMessage('An unexpected error occurred. Please try again.')
       }

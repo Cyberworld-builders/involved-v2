@@ -36,11 +36,11 @@ describe('ConfirmEmailPage', () => {
       back: vi.fn(),
       forward: vi.fn(),
       refresh: vi.fn(),
-    } as any)
+    } as ReturnType<typeof useRouter>)
     
     vi.mocked(useSearchParams).mockReturnValue({
       get: mockGet,
-    } as any)
+    } as ReturnType<typeof useSearchParams>)
   })
 
   it('should render loading state initially', () => {
