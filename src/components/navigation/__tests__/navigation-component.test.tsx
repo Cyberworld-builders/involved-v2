@@ -314,7 +314,6 @@ describe('Sidebar Component', () => {
 
     it('should show sidebar when isOpen is true', () => {
       const { container } = render(<Sidebar isOpen={true} />)
-      const sidebarWrapper = container.firstChild
       // Find the actual sidebar div (skip overlay if present)
       const sidebar = container.querySelector('.flex.h-full.w-64') as HTMLElement
       expect(sidebar).toHaveClass('translate-x-0')

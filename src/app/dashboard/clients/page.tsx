@@ -31,10 +31,10 @@ export default async function ClientsPage() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Page Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Clients</h1>
-            <p className="text-gray-600">Add or manage clients.</p>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Clients</h1>
+            <p className="text-sm md:text-base text-gray-600">Add or manage clients.</p>
           </div>
           <Link href="/dashboard/clients/create">
             <Button>
@@ -111,85 +111,89 @@ export default async function ClientsPage() {
                 </Link>
               </div>
             ) : (
-              <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                <table className="min-w-full divide-y divide-gray-300">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Client
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Users
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Created
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Settings
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {clients.map((client) => (
-                      <tr key={client.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="h-10 w-10 flex-shrink-0">
-                              {client.logo ? (
-                                <Image
-                                  className="h-10 w-10 rounded-full"
-                                  src={client.logo}
-                                  alt={client.name}
-                                  width={40}
-                                  height={40}
-                                />
-                              ) : (
-                                <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                                  <span className="text-sm font-medium text-gray-700">
-                                    {client.name.charAt(0).toUpperCase()}
-                                  </span>
+              <div className="overflow-x-auto -mx-4 sm:mx-0">
+                <div className="inline-block min-w-full align-middle">
+                  <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
+                    <table className="min-w-full divide-y divide-gray-300">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
+                            Client
+                          </th>
+                          <th className="hidden sm:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
+                            Users
+                          </th>
+                          <th className="hidden md:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
+                            Created
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
+                            Settings
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {clients.map((client) => (
+                          <tr key={client.id} className="hover:bg-gray-50">
+                            <td className="px-3 py-4 sm:px-6">
+                              <div className="flex items-center">
+                                <div className="h-10 w-10 flex-shrink-0">
+                                  {client.logo ? (
+                                    <Image
+                                      className="h-10 w-10 rounded-full"
+                                      src={client.logo}
+                                      alt={client.name}
+                                      width={40}
+                                      height={40}
+                                    />
+                                  ) : (
+                                    <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                      <span className="text-sm font-medium text-gray-700">
+                                        {client.name.charAt(0).toUpperCase()}
+                                      </span>
+                                    </div>
+                                  )}
                                 </div>
-                              )}
-                            </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">
-                                <Link
-                                  href={`/dashboard/clients/${client.id}`}
-                                  className="hover:text-indigo-600"
-                                >
-                                  {client.name}
-                                </Link>
+                                <div className="ml-4">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    <Link
+                                      href={`/dashboard/clients/${client.id}`}
+                                      className="hover:text-indigo-600"
+                                    >
+                                      {client.name}
+                                    </Link>
+                                  </div>
+                                  {client.address && (
+                                    <div className="text-sm text-gray-500 hidden sm:block">{client.address}</div>
+                                  )}
+                                </div>
                               </div>
-                              {client.address && (
-                                <div className="text-sm text-gray-500">{client.address}</div>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {/* TODO: Add user count */}
-                          0
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(client.created_at).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex space-x-2">
-                            <Link
-                              href={`/dashboard/clients/${client.id}/edit`}
-                              className="text-indigo-600 hover:text-indigo-900"
-                            >
-                              Edit
-                            </Link>
-                            <button className="text-red-600 hover:text-red-900">
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                            </td>
+                            <td className="hidden sm:table-cell px-3 py-4 sm:px-6 text-sm text-gray-900">
+                              {/* TODO: Add user count */}
+                              0
+                            </td>
+                            <td className="hidden md:table-cell px-3 py-4 sm:px-6 text-sm text-gray-500">
+                              {new Date(client.created_at).toLocaleDateString()}
+                            </td>
+                            <td className="px-3 py-4 sm:px-6 text-sm font-medium">
+                              <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-1 sm:space-y-0">
+                                <Link
+                                  href={`/dashboard/clients/${client.id}/edit`}
+                                  className="text-indigo-600 hover:text-indigo-900"
+                                >
+                                  Edit
+                                </Link>
+                                <button className="text-red-600 hover:text-red-900 text-left">
+                                  Delete
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             )}
           </CardContent>
