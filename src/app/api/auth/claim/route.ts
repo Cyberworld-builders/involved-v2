@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { validateInviteToken } from '@/lib/utils/invite-token-generation'
+import { validateInviteToken, validateTokenFormat } from '@/lib/utils/invite-token-generation'
 
 /**
  * GET /api/auth/claim?token=xxx
@@ -15,6 +15,14 @@ export async function GET(request: NextRequest) {
     if (!token) {
       return NextResponse.json(
         { error: 'Token is required' },
+        { status: 400 }
+      )
+    }
+
+    // Avoid requiring admin credentials for clearly invalid tokens
+    if (!validateTokenFormat(token)) {
+      return NextResponse.json(
+        { error: 'Invalid token format' },
         { status: 400 }
       )
     }

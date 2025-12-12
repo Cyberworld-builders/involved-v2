@@ -19,6 +19,9 @@ vi.mock('@/lib/utils/invite-token-generation', async () => {
 describe('GET /api/auth/claim', () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockAdminClient: any
+  const VALID_HEX_TOKEN = 'a'.repeat(64)
+  const OTHER_VALID_HEX_TOKEN = 'b'.repeat(64)
+  const YET_ANOTHER_VALID_HEX_TOKEN = 'c'.repeat(64)
   
   beforeEach(() => {
     vi.clearAllMocks()
@@ -50,6 +53,16 @@ describe('GET /api/auth/claim', () => {
     expect(data.error).toBe('Token is required')
   })
 
+  it('should return error when token format is invalid', async () => {
+    const request = new NextRequest('http://localhost:3000/api/auth/claim?token=invalid-token')
+
+    const response = await GET(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(data.error).toBe('Invalid token format')
+  })
+
   it('should return error when token is invalid', async () => {
     mockAdminClient.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -62,7 +75,7 @@ describe('GET /api/auth/claim', () => {
       }),
     })
     
-    const request = new NextRequest('http://localhost:3000/api/auth/claim?token=invalid-token')
+    const request = new NextRequest(`http://localhost:3000/api/auth/claim?token=${VALID_HEX_TOKEN}`)
     
     const response = await GET(request)
     const data = await response.json()
@@ -88,7 +101,7 @@ describe('GET /api/auth/claim', () => {
       }),
     })
     
-    const request = new NextRequest('http://localhost:3000/api/auth/claim?token=used-token')
+    const request = new NextRequest(`http://localhost:3000/api/auth/claim?token=${OTHER_VALID_HEX_TOKEN}`)
     
     const response = await GET(request)
     const data = await response.json()
@@ -114,7 +127,7 @@ describe('GET /api/auth/claim', () => {
       }),
     })
     
-    const request = new NextRequest('http://localhost:3000/api/auth/claim?token=revoked-token')
+    const request = new NextRequest(`http://localhost:3000/api/auth/claim?token=${YET_ANOTHER_VALID_HEX_TOKEN}`)
     
     const response = await GET(request)
     const data = await response.json()
@@ -157,7 +170,7 @@ describe('GET /api/auth/claim', () => {
       reason: 'expired',
     })
     
-    const request = new NextRequest('http://localhost:3000/api/auth/claim?token=expired-token')
+    const request = new NextRequest(`http://localhost:3000/api/auth/claim?token=${'d'.repeat(64)}`)
     
     const response = await GET(request)
     const data = await response.json()
@@ -209,7 +222,7 @@ describe('GET /api/auth/claim', () => {
       reason: null,
     })
     
-    const request = new NextRequest('http://localhost:3000/api/auth/claim?token=valid-token')
+    const request = new NextRequest(`http://localhost:3000/api/auth/claim?token=${'e'.repeat(64)}`)
     
     const response = await GET(request)
     const data = await response.json()

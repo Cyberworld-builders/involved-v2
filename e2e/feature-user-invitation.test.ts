@@ -337,9 +337,10 @@ test.describe('User Invitation & Claim Flow', () => {
       await page.waitForLoadState('networkidle')
       
       // Verify error message is displayed
-      await expect(
-        page.locator('text=/invalid.*link/i, text=/invalid.*token/i, text=/invalid.*format/i')
-      ).toBeVisible({ timeout: 10000 })
+      const invalidMessage = page
+        .getByText(/invalid.*(invitation|link|token|format)/i)
+        .or(page.getByRole('heading', { name: /invalid invitation/i }))
+      await expect(invalidMessage.first()).toBeVisible({ timeout: 10000 })
     })
 
     test('Missing token parameter is handled', async ({ page }) => {
@@ -350,7 +351,9 @@ test.describe('User Invitation & Claim Flow', () => {
       await page.waitForLoadState('networkidle')
       
       // Should see error message or be redirected
-      const errorMessage = page.locator('text=/invalid.*link/i, text=/no.*token/i, text=/missing/i')
+      const errorMessage = page
+        .getByText(/invalid.*link|no token|missing/i)
+        .or(page.getByRole('heading', { name: /invalid invitation/i }))
       const isErrorVisible = await errorMessage.isVisible({ timeout: 5000 }).catch(() => false)
       
       if (!isErrorVisible) {
