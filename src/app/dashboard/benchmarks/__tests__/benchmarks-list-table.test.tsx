@@ -105,8 +105,17 @@ describe('BenchmarksListTable', () => {
   it('should display formatted dates', () => {
     render(<BenchmarksListTable initialBenchmarks={mockBenchmarks} />)
 
-    // Check updated dates are rendered
-    expect(screen.getAllByText(/1\/1\/2024|1\/2\/2024|1\/3\/2024/)).toHaveLength(3)
+    // Dates are rendered using `toLocaleDateString()` in the component.
+    // Avoid timezone-dependent assumptions about the exact calendar day.
+    const expectedDates = mockBenchmarks.map((b) => new Date(b.updated_at).toLocaleDateString())
+    const expectedCounts = expectedDates.reduce<Record<string, number>>((acc, date) => {
+      acc[date] = (acc[date] || 0) + 1
+      return acc
+    }, {})
+
+    for (const [date, count] of Object.entries(expectedCounts)) {
+      expect(screen.getAllByText(date)).toHaveLength(count)
+    }
   })
 
   it('should have View, Edit and Delete buttons for each benchmark (legacy check)', () => {
