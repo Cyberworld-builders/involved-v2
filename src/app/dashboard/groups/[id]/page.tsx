@@ -11,6 +11,18 @@ interface GroupPageProps {
   }>
 }
 
+interface GroupMember {
+  id: string
+  profile_id: string
+  role: string | null
+  profiles?: {
+    id: string
+    name: string
+    email: string
+    username?: string
+  }
+}
+
 // Force dynamic rendering to prevent caching
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -114,7 +126,7 @@ export default async function GroupPage({ params }: GroupPageProps) {
             <CardContent>
               {group.group_members && group.group_members.length > 0 ? (
                 <div className="space-y-3">
-                  {group.group_members.map((member: any) => (
+                  {(group.group_members as GroupMember[]).map((member) => (
                     <div key={member.id} className="border rounded-lg p-3">
                       <div className="flex justify-between items-start">
                         <div>
