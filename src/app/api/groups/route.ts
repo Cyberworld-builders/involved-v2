@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json()
-    const { name, client_id, description } = body
+    const { name, client_id, description, target_id } = body
 
     // Validate required fields
     if (!name || typeof name !== 'string' || name.trim() === '') {
@@ -88,6 +88,7 @@ export async function POST(request: NextRequest) {
       name: name.trim(),
       client_id: client_id.trim(),
       description: description && description.trim() !== '' ? description.trim() : null,
+      target_id: target_id && typeof target_id === 'string' && target_id.trim() !== '' ? target_id.trim() : null,
     }
 
     // Insert group into database

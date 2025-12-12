@@ -7,6 +7,17 @@ export const mockGroup: Group = {
   client_id: 'test-client-id',
   name: 'Test Group',
   description: 'A test group for unit testing',
+  target_id: null,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+}
+
+export const mockGroupWithTarget: Group = {
+  id: 'test-group-with-target-id',
+  client_id: 'test-client-id',
+  name: 'Test Group with Target',
+  description: 'A test group with a target/manager',
+  target_id: 'test-manager-id',
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
 }

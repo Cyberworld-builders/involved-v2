@@ -102,7 +102,7 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
 
     if (!error && data) {
       // Load targets separately if target_id exists
-      const targetIds = data.filter((g: GroupRow & { target_id?: string | null }) => g.target_id).map((g: GroupRow & { target_id?: string | null }) => g.target_id)
+      const targetIds = data.filter(g => g.target_id).map(g => g.target_id) as string[]
       type TargetProfile = { id: string; name: string; email: string }
       let targets: Record<string, TargetProfile> = {}
       
@@ -120,7 +120,7 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
         }
       }
 
-      const transformed = data.map((group: GroupRow & { target_id?: string | null; group_members?: Array<GroupMemberRow & { profiles?: Profile }> }) => ({
+      const transformed = data.map(group => ({
         ...group,
         target: group.target_id ? (targets[group.target_id] || null) : null,
         members: group.group_members?.map((gm: GroupMemberRow & { profiles?: Profile }) => ({
@@ -146,15 +146,12 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
     setMessage('')
 
     try {
-      // Create group - only include target_id if it's set
-      const groupData: GroupInsert & { target_id?: string } = {
+      // Create group
+      const groupData: GroupInsert = {
         client_id: clientId,
         name: formData.name.trim(),
         description: formData.description.trim() || null,
-      }
-      
-      if (formData.target_id && formData.target_id.trim()) {
-        groupData.target_id = formData.target_id.trim()
+        target_id: formData.target_id && formData.target_id.trim() ? formData.target_id.trim() : null,
       }
       
       const { data: newGroup, error: groupError } = await supabase
@@ -212,17 +209,12 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
     setMessage('')
 
     try {
-      // Update group - only include target_id if it's set
-      const updateData: GroupUpdate & { target_id?: string | null } = {
+      // Update group
+      const updateData: GroupUpdate = {
         name: formData.name.trim(),
         description: formData.description.trim() || null,
+        target_id: formData.target_id && formData.target_id.trim() ? formData.target_id.trim() : null,
         updated_at: new Date().toISOString(),
-      }
-      
-      if (formData.target_id && formData.target_id.trim()) {
-        updateData.target_id = formData.target_id.trim()
-      } else {
-        updateData.target_id = null
       }
       
       const { error: groupError } = await supabase

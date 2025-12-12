@@ -78,7 +78,7 @@ export async function PATCH(
 
     // Parse request body
     const body = await request.json()
-    const { name, client_id, description } = body
+    const { name, client_id, description, target_id } = body
 
     // Validate name if provided
     if (name !== undefined && (typeof name !== 'string' || name.trim() === '')) {
@@ -102,6 +102,9 @@ export async function PATCH(
     if (client_id !== undefined) updateData.client_id = client_id.trim()
     if (description !== undefined) {
       updateData.description = description && description.trim() !== '' ? description.trim() : null
+    }
+    if (target_id !== undefined) {
+      updateData.target_id = target_id && typeof target_id === 'string' && target_id.trim() !== '' ? target_id.trim() : null
     }
 
     // Check if there are any fields to update
