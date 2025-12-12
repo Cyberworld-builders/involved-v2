@@ -48,63 +48,85 @@ export default function CreateClientPage() {
         return
       }
 
-      // TODO: Upload images to Supabase storage if provided
-      let logoUrl = null
-      let backgroundUrl = null
-
-      if (data.logo) {
-        // Upload logo
-        const logoExt = data.logo.name.split('.').pop()
-        const logoFileName = `logo-${Date.now()}.${logoExt}`
-        const { error: logoError } = await supabase.storage
-          .from('client-assets')
-          .upload(logoFileName, data.logo)
-
-        if (logoError) {
-          throw new Error(`Failed to upload logo: ${logoError.message}`)
-        }
-
-        const { data: logoUrlData } = supabase.storage
-          .from('client-assets')
-          .getPublicUrl(logoFileName)
-        logoUrl = logoUrlData.publicUrl
-      }
-
-      if (data.background) {
-        // Upload background
-        const backgroundExt = data.background.name.split('.').pop()
-        const backgroundFileName = `background-${Date.now()}.${backgroundExt}`
-        const { error: backgroundError } = await supabase.storage
-          .from('client-assets')
-          .upload(backgroundFileName, data.background)
-
-        if (backgroundError) {
-          throw new Error(`Failed to upload background: ${backgroundError.message}`)
-        }
-
-        const { data: backgroundUrlData } = supabase.storage
-          .from('client-assets')
-          .getPublicUrl(backgroundFileName)
-        backgroundUrl = backgroundUrlData.publicUrl
-      }
-
-      // Create client record
-      const { error } = await supabase
+      // First, create client record without images to get the client ID
+      const { data: newClient, error: createError } = await supabase
         .from('clients')
         .insert({
           name: data.name,
           address: data.address || null,
-          logo: logoUrl,
-          background: backgroundUrl,
+          logo: null,
+          background: null,
           primary_color: data.primary_color,
           accent_color: data.accent_color,
           require_profile: data.require_profile,
           require_research: data.require_research,
           whitelabel: data.whitelabel,
         })
+        .select()
+        .single()
 
-      if (error) {
-        throw new Error(`Failed to create client: ${error.message}`)
+      if (createError || !newClient) {
+        throw new Error(`Failed to create client: ${createError?.message || 'Unknown error'}`)
+      }
+
+      // Upload images if provided
+      let logoUrl = null
+      let backgroundUrl = null
+
+      if (data.logo) {
+        const logoFormData = new FormData()
+        logoFormData.append('file', data.logo)
+        logoFormData.append('fileType', 'logo')
+        logoFormData.append('clientId', newClient.id)
+
+        const logoResponse = await fetch('/api/clients/upload', {
+          method: 'POST',
+          body: logoFormData,
+        })
+
+        if (!logoResponse.ok) {
+          const errorData = await logoResponse.json()
+          throw new Error(`Failed to upload logo: ${errorData.error}`)
+        }
+
+        const logoData = await logoResponse.json()
+        logoUrl = logoData.url
+      }
+
+      if (data.background) {
+        const backgroundFormData = new FormData()
+        backgroundFormData.append('file', data.background)
+        backgroundFormData.append('fileType', 'background')
+        backgroundFormData.append('clientId', newClient.id)
+
+        const backgroundResponse = await fetch('/api/clients/upload', {
+          method: 'POST',
+          body: backgroundFormData,
+        })
+
+        if (!backgroundResponse.ok) {
+          const errorData = await backgroundResponse.json()
+          throw new Error(`Failed to upload background: ${errorData.error}`)
+        }
+
+        const backgroundData = await backgroundResponse.json()
+        backgroundUrl = backgroundData.url
+      }
+
+      // Update client with image URLs if any were uploaded
+      if (logoUrl || backgroundUrl) {
+        const updateData: { logo?: string | null; background?: string | null } = {}
+        if (logoUrl) updateData.logo = logoUrl
+        if (backgroundUrl) updateData.background = backgroundUrl
+
+        const { error: updateError } = await supabase
+          .from('clients')
+          .update(updateData)
+          .eq('id', newClient.id)
+
+        if (updateError) {
+          throw new Error(`Failed to update client with image URLs: ${updateError.message}`)
+        }
       }
 
       setMessage('Client created successfully!')
