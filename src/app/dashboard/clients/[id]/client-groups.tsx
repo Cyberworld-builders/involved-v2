@@ -16,8 +16,7 @@ type GroupUpdate = Database['public']['Tables']['groups']['Update']
 interface GroupMember {
   id?: string
   profile_id: string
-  position: string
-  leader: boolean
+  role: string
   profile?: {
     id: string
     name: string
@@ -93,8 +92,7 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
         group_members(
           id,
           profile_id,
-          position,
-          leader,
+          role,
           profiles(id, name, email, username)
         )
       `)
@@ -127,8 +125,7 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
         members: group.group_members?.map((gm: GroupMemberRow & { profiles?: Profile }) => ({
           id: gm.id,
           profile_id: gm.profile_id,
-          position: gm.role || '',
-          leader: false, // This field doesn't exist in the database schema
+          role: gm.role || '',
           profile: gm.profiles
         })) || []
       }))
@@ -177,8 +174,7 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
         const membersToInsert = groupMembers.map(member => ({
           group_id: newGroup.id,
           profile_id: member.profile_id,
-          position: member.position || '',
-          leader: member.leader || false,
+          role: member.role || '',
         }))
 
         const { error: membersError } = await supabase
@@ -253,8 +249,7 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
         const membersToInsert = groupMembers.map(member => ({
           group_id: editingGroup.id,
           profile_id: member.profile_id,
-          position: member.position || '',
-          leader: member.leader || false,
+          role: member.role || '',
         }))
 
         const { error: membersError } = await supabase
@@ -330,8 +325,7 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
       .filter(user => !groupMembers.some(m => m.profile_id === user.id))
       .map(user => ({
         profile_id: user.id,
-        position: '',
-        leader: false,
+        role: '',
         profile: user
       }))
 
@@ -344,15 +338,9 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
     setGroupMembers(groupMembers.filter((_, i) => i !== index))
   }
 
-  const handleUpdateMemberPosition = (index: number, position: string) => {
+  const handleUpdateMemberRole = (index: number, role: string) => {
     const updated = [...groupMembers]
-    updated[index].position = position
-    setGroupMembers(updated)
-  }
-
-  const handleUpdateMemberLeader = (index: number, leader: boolean) => {
-    const updated = [...groupMembers]
-    updated[index].leader = leader
+    updated[index].role = role
     setGroupMembers(updated)
   }
 
@@ -491,8 +479,7 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
         const membersToInsert = groupData.users.map(user => ({
           group_id: newGroup.id,
           profile_id: user.id,
-          position: user.role || '',
-          leader: false,
+          role: user.role || '',
         }))
 
         const { error: membersError } = await supabase
@@ -650,7 +637,7 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
                       >
                         ✕
                       </button>
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-2 gap-4">
                         <div>
                           <h5 className="font-medium text-gray-900">{user.name}</h5>
                           <p className="text-xs text-gray-500">User ID: {user.username || user.id}</p>
@@ -658,28 +645,15 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
                         </div>
                         <div>
                           <label className="block text-xs font-medium text-gray-700 mb-1">
-                            Position In Group
+                            Role In Group
                           </label>
                           <input
                             type="text"
-                            value={member.position}
-                            onChange={(e) => handleUpdateMemberPosition(index, e.target.value)}
+                            value={member.role}
+                            onChange={(e) => handleUpdateMemberRole(index, e.target.value)}
                             className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
                             placeholder="e.g., Developer, Manager"
                           />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-1">
-                            Leadership Position?
-                          </label>
-                          <select
-                            value={member.leader ? '1' : '0'}
-                            onChange={(e) => handleUpdateMemberLeader(index, e.target.value === '1')}
-                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
-                          >
-                            <option value="0">No</option>
-                            <option value="1">Yes</option>
-                          </select>
                         </div>
                       </div>
                     </div>
@@ -845,9 +819,9 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
                               return (
                                 <div key={member.id || member.profile_id}>
                                   {user.name}
-                                  {member.position && (
-                                    <span className={member.position.toLowerCase() === 'self' ? 'text-green-600' : ''}>
-                                      {' '}({member.position})
+                                  {member.role && (
+                                    <span className={member.role.toLowerCase() === 'self' ? 'text-green-600' : ''}>
+                                      {' '}({member.role})
                                     </span>
                                   )}
                                 </div>
