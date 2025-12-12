@@ -67,25 +67,21 @@ export default function EditIndustryPage() {
     setMessage('')
 
     try {
-      // Check if Supabase is configured
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-      if (!supabaseUrl || !supabaseKey) {
-        setMessage('Supabase not configured. Please set up your environment variables.')
-        return
-      }
-
-      // Update industry record
-      const { error } = await supabase
-        .from('industries')
-        .update({
+      // Send request to API
+      const response = await fetch(`/api/industries/${industryId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           name: data.name,
-        })
-        .eq('id', industryId)
+        }),
+      })
 
-      if (error) {
-        throw new Error(`Failed to update industry: ${error.message}`)
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to update industry')
       }
 
       setMessage('Industry updated successfully!')
