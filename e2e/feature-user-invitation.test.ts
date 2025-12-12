@@ -321,8 +321,103 @@ test.describe('User Invitation & Claim Flow', () => {
       test.skip(true, 'Profile update functionality tested in other test suites')
     })
 
-    test('User can update password after account claim', async () => {
-      test.skip(true, 'Password update functionality tested in other test suites')
+    test('User can update password after account claim', async ({ page }) => {
+      test.skip(!claimPageExists, 'Claim feature not yet implemented')
+      
+      // Create and claim an account
+      const invite = await createTestInvite(
+        `test.password.update.${Date.now()}@involved.test`,
+        'Test Password Update User',
+        'pending'
+      )
+      
+      if (!invite) {
+        test.skip(true, 'Could not create test invite')
+        return
+      }
+      
+      try {
+        // First claim the account
+        await page.goto(`/auth/claim?token=${invite.token}`)
+        await page.waitForLoadState('networkidle')
+        await page.waitForSelector('input[type="password"]', { timeout: 10000 })
+        
+        const passwordInputs = page.locator('input[type="password"]')
+        const count = await passwordInputs.count()
+        
+        if (count >= 2) {
+          await passwordInputs.nth(0).fill(INVITED_USER_PASSWORD)
+          await passwordInputs.nth(1).fill(INVITED_USER_PASSWORD)
+        } else {
+          await passwordInputs.first().fill(INVITED_USER_PASSWORD)
+        }
+        
+        await page.click('button[type="submit"]')
+        
+        // Wait for redirect to dashboard or login
+        await page.waitForURL(/\/(dashboard|auth\/login)/, { timeout: 15000 })
+        
+        // If redirected to login, sign in
+        if (page.url().includes('/auth/login')) {
+          await page.fill('input[type="email"]', invite.email)
+          await page.fill('input[type="password"]', INVITED_USER_PASSWORD)
+          await page.click('button[type="submit"]')
+          await page.waitForURL('/dashboard', { timeout: 15000 })
+        }
+        
+        // Navigate to profile page
+        await page.goto('/dashboard/profile')
+        await page.waitForLoadState('networkidle')
+        
+        // Verify we're on the profile page
+        await expect(
+          page.locator('h1, h2').filter({ hasText: /profile.*settings|change.*password/i })
+        ).toBeVisible({ timeout: 10000 })
+        
+        // Fill in password update form
+        const newPassword = 'NewPassword456!'
+        await page.fill('input[name="currentPassword"]', INVITED_USER_PASSWORD)
+        await page.fill('input[name="newPassword"]', newPassword)
+        await page.fill('input[name="confirmPassword"]', newPassword)
+        
+        // Submit password update
+        await page.click('button:has-text("Update Password")')
+        
+        // Verify success message
+        await expect(
+          page.locator('text=/password.*updated.*successfully/i')
+        ).toBeVisible({ timeout: 10000 })
+        
+        // Sign out
+        await page.goto('/dashboard')
+        const signOutButton = page.locator('button:has-text("Sign Out"), a:has-text("Sign Out")')
+        if (await signOutButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+          await signOutButton.click()
+        }
+        
+        // Try to sign in with old password (should fail)
+        await page.goto('/auth/login')
+        await page.waitForLoadState('networkidle')
+        await page.fill('input[type="email"]', invite.email)
+        await page.fill('input[type="password"]', INVITED_USER_PASSWORD)
+        await page.click('button[type="submit"]')
+        
+        // Should see error message or stay on login page
+        await page.waitForTimeout(2000)
+        expect(page.url()).toContain('/auth/login')
+        
+        // Try to sign in with new password (should succeed)
+        await page.fill('input[type="email"]', invite.email)
+        await page.fill('input[type="password"]', newPassword)
+        await page.click('button[type="submit"]')
+        
+        // Should redirect to dashboard
+        await page.waitForURL('/dashboard', { timeout: 15000 })
+        await expect(page).toHaveURL('/dashboard')
+      } finally {
+        // Clean up
+        await deleteTestInvite(invite.profileId)
+      }
     })
   })
 
