@@ -106,21 +106,29 @@ export default function EditUserClient({ id }: EditUserClientProps) {
         return
       }
 
-      // Update user profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
+      const response = await fetch(`/api/users/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
           username: data.username,
           name: data.name,
           email: data.email,
           client_id: data.client_id || null,
           industry_id: data.industry_id || null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', id)
+        }),
+      })
 
-      if (profileError) {
-        throw new Error(`Failed to update user profile: ${profileError.message}`)
+      if (!response.ok) {
+        let message = 'Failed to update user'
+        try {
+          const errorData = await response.json()
+          message = errorData.error || message
+        } catch {
+          // ignore JSON parse errors
+        }
+        throw new Error(message)
       }
 
       // Note: Auth user email updates require server-side admin access
