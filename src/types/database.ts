@@ -62,6 +62,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       dimensions: {
         Row: {
@@ -91,6 +92,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       fields: {
         Row: {
@@ -141,6 +143,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       clients: {
         Row: {
@@ -185,6 +188,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       profiles: {
          Row: {
@@ -238,6 +242,7 @@ export interface Database {
            created_at?: string
            updated_at?: string
          }
+         Relationships: []
        }
       industries: {
         Row: {
@@ -258,6 +263,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       languages: {
         Row: {
@@ -281,6 +287,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       groups: {
         Row: {
@@ -307,6 +314,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       group_members: {
         Row: {
@@ -330,6 +338,7 @@ export interface Database {
           role?: string
           created_at?: string
         }
+        Relationships: []
       }
       benchmarks: {
         Row: {
@@ -356,6 +365,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       assignments: {
         Row: {
@@ -406,6 +416,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
     }
     Views: {
@@ -415,6 +426,9 @@ export interface Database {
       [_ in never]: never
     }
     Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
       [_ in never]: never
     }
   }
