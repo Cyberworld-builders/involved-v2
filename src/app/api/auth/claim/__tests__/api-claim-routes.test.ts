@@ -170,16 +170,14 @@ describe('Claim API Routes', () => {
       })
 
       // Mock auth user creation
-      mockAuthAdmin.mockReturnValue({
-        createUser: vi.fn().mockResolvedValue({
-          data: {
-            user: {
-              id: 'new-auth-id',
-              email: 'test@example.com',
-            },
+      mockAuthAdmin.createUser = vi.fn().mockResolvedValue({
+        data: {
+          user: {
+            id: 'new-auth-id',
+            email: 'test@example.com',
           },
-          error: null,
-        }),
+        },
+        error: null,
       })
 
       const response = await claimPOST(request)
