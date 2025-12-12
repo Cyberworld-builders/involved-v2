@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 import { getAdminClient } from './helpers/database'
 import { shouldSkipAuthTests } from './helpers/auth'
 
@@ -29,8 +29,10 @@ test.describe('User Sign Up Flow', () => {
     lastName: 'Test',
   })
 
+  type TestUser = ReturnType<typeof generateTestUser>
+
   // Helper function to fill signup form
-  const fillSignupForm = async (page: any, testUser: any) => {
+  const fillSignupForm = async (page: Page, testUser: TestUser) => {
     await page.fill('input[id="firstName"]', testUser.firstName)
     await page.fill('input[id="lastName"]', testUser.lastName)
     await page.fill('input[id="email"]', testUser.email)

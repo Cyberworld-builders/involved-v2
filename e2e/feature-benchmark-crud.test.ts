@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Locator } from '@playwright/test'
 import { shouldSkipAuthTests } from './helpers/auth'
 
 /**
@@ -22,7 +22,7 @@ const TEST_BENCHMARK_VALUE = '75.50'
 const UPDATED_BENCHMARK_VALUE = '85.75'
 
 // Helper function to check if an element is not visible
-async function isNotVisible(locator: any): Promise<boolean> {
+async function isNotVisible(locator: Locator): Promise<boolean> {
   return locator.isVisible().then((visible: boolean) => !visible)
 }
 
