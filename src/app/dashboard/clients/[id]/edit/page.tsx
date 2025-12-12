@@ -80,44 +80,60 @@ export default function EditClientPage() {
         return
       }
 
-      // Handle image uploads
+      // Upload images if provided
       let logoUrl = client?.logo || null
       let backgroundUrl = client?.background || null
 
       if (data.logo) {
-        // Upload new logo
-        const logoExt = data.logo.name.split('.').pop()
-        const logoFileName = `logo-${Date.now()}.${logoExt}`
-        const { error: logoError } = await supabase.storage
-          .from('client-assets')
-          .upload(logoFileName, data.logo)
+        const logoFormData = new FormData()
+        logoFormData.append('file', data.logo)
+        logoFormData.append('fileType', 'logo')
+        logoFormData.append('clientId', clientId)
 
-        if (logoError) {
-          throw new Error(`Failed to upload logo: ${logoError.message}`)
+        const logoResponse = await fetch('/api/clients/upload', {
+          method: 'POST',
+          body: logoFormData,
+        })
+
+        if (!logoResponse.ok) {
+          let errorMessage = 'Failed to upload logo'
+          try {
+            const errorData = await logoResponse.json()
+            errorMessage = errorData.error || errorMessage
+          } catch {
+            // If response is not JSON, use default message
+          }
+          throw new Error(errorMessage)
         }
 
-        const { data: logoUrlData } = supabase.storage
-          .from('client-assets')
-          .getPublicUrl(logoFileName)
-        logoUrl = logoUrlData.publicUrl
+        const logoData = await logoResponse.json()
+        logoUrl = logoData.url
       }
 
       if (data.background) {
-        // Upload new background
-        const backgroundExt = data.background.name.split('.').pop()
-        const backgroundFileName = `background-${Date.now()}.${backgroundExt}`
-        const { error: backgroundError } = await supabase.storage
-          .from('client-assets')
-          .upload(backgroundFileName, data.background)
+        const backgroundFormData = new FormData()
+        backgroundFormData.append('file', data.background)
+        backgroundFormData.append('fileType', 'background')
+        backgroundFormData.append('clientId', clientId)
 
-        if (backgroundError) {
-          throw new Error(`Failed to upload background: ${backgroundError.message}`)
+        const backgroundResponse = await fetch('/api/clients/upload', {
+          method: 'POST',
+          body: backgroundFormData,
+        })
+
+        if (!backgroundResponse.ok) {
+          let errorMessage = 'Failed to upload background'
+          try {
+            const errorData = await backgroundResponse.json()
+            errorMessage = errorData.error || errorMessage
+          } catch {
+            // If response is not JSON, use default message
+          }
+          throw new Error(errorMessage)
         }
 
-        const { data: backgroundUrlData } = supabase.storage
-          .from('client-assets')
-          .getPublicUrl(backgroundFileName)
-        backgroundUrl = backgroundUrlData.publicUrl
+        const backgroundData = await backgroundResponse.json()
+        backgroundUrl = backgroundData.url
       }
 
       // Update client record
