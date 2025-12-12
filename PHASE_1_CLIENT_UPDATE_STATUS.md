@@ -48,8 +48,8 @@ The update client functionality has been **fully implemented** and includes comp
 **End-to-End Tests**
 - Location: `/e2e/feature-client-crud.test.ts`
 - Comprehensive E2E test suite covering:
-  - Client update workflow (lines 185-220)
-  - Complete CRUD flow including update (lines 348-408)
+  - Client update workflow
+  - Complete CRUD flow including update
   - All fields update verification
   - Form validation during updates
 
