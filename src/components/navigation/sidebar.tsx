@@ -57,7 +57,7 @@ export default function Sidebar({ className, isOpen = true, onClose }: SidebarPr
       {isOpen && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={onClose}
+          onClick={() => onClose?.()}
           aria-hidden="true"
         />
       )}
@@ -79,7 +79,7 @@ export default function Sidebar({ className, isOpen = true, onClose }: SidebarPr
           
           {/* Close button for mobile */}
           <button
-            onClick={onClose}
+            onClick={() => onClose?.()}
             className="lg:hidden p-2 text-gray-400 hover:text-white rounded-md hover:bg-gray-700"
             aria-label="Close menu"
           >
@@ -97,7 +97,7 @@ export default function Sidebar({ className, isOpen = true, onClose }: SidebarPr
               <Link
                 key={item.name}
                 href={item.href}
-                onClick={onClose}
+                onClick={() => onClose?.()}
                 className={cn(
                   'group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors',
                   isActive
