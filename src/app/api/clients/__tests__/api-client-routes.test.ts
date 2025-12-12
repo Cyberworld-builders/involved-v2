@@ -989,9 +989,9 @@ describe('API Client Routes', () => {
 
       const request = new NextRequest('http://localhost:3000/api/clients/test-id', {
         method: 'PATCH',
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           primary_color: null,
-          accent_color: ''
+          accent_color: '',
         }),
       })
       const params = Promise.resolve({ id: 'test-id' })
@@ -1004,6 +1004,208 @@ describe('API Client Routes', () => {
           accent_color: null,
         })
       )
+    })
+
+    it('should update boolean fields to false', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      const updateMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: mockClient,
+              error: null,
+            }),
+          }),
+        }),
+      })
+
+      const mockFrom = vi.fn().mockReturnValue({
+        update: updateMock,
+      })
+      mockSupabaseClient.from = mockFrom
+
+      const request = new NextRequest('http://localhost:3000/api/clients/test-id', {
+        method: 'PATCH',
+        body: JSON.stringify({ 
+          require_profile: false,
+          require_research: false,
+          whitelabel: false 
+        }),
+      })
+      const params = Promise.resolve({ id: 'test-id' })
+      await updateClient(request, { params })
+
+      expect(updateMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          require_profile: false,
+          require_research: false,
+          whitelabel: false,
+          updated_at: expect.any(String),
+        })
+      )
+    })
+
+    it('should update boolean fields to true', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      const updateMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: mockClient,
+              error: null,
+            }),
+          }),
+        }),
+      })
+
+      const mockFrom = vi.fn().mockReturnValue({
+        update: updateMock,
+      })
+      mockSupabaseClient.from = mockFrom
+
+      const request = new NextRequest('http://localhost:3000/api/clients/test-id', {
+        method: 'PATCH',
+        body: JSON.stringify({ 
+          require_profile: true,
+          require_research: true,
+          whitelabel: true 
+        }),
+      })
+      const params = Promise.resolve({ id: 'test-id' })
+      await updateClient(request, { params })
+
+      expect(updateMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          require_profile: true,
+          require_research: true,
+          whitelabel: true,
+          updated_at: expect.any(String),
+        })
+      )
+    })
+
+    it('should clear optional fields by setting them to null', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      const updateMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: mockClient,
+              error: null,
+            }),
+          }),
+        }),
+      })
+
+      const mockFrom = vi.fn().mockReturnValue({
+        update: updateMock,
+      })
+      mockSupabaseClient.from = mockFrom
+
+      const request = new NextRequest('http://localhost:3000/api/clients/test-id', {
+        method: 'PATCH',
+        body: JSON.stringify({ 
+          address: null,
+          logo: null,
+          background: null,
+          primary_color: null,
+          accent_color: null
+        }),
+      })
+      const params = Promise.resolve({ id: 'test-id' })
+      await updateClient(request, { params })
+
+      expect(updateMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          address: null,
+          logo: null,
+          background: null,
+          primary_color: null,
+          accent_color: null,
+          updated_at: expect.any(String),
+        })
+      )
+    })
+
+    it('should update multiple fields at once', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      const updateMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: mockClient,
+              error: null,
+            }),
+          }),
+        }),
+      })
+
+      const mockFrom = vi.fn().mockReturnValue({
+        update: updateMock,
+      })
+      mockSupabaseClient.from = mockFrom
+
+      const request = new NextRequest('http://localhost:3000/api/clients/test-id', {
+        method: 'PATCH',
+        body: JSON.stringify({ 
+          name: 'Updated Client',
+          address: '456 New St',
+          primary_color: '#123456',
+          accent_color: '#654321',
+          require_profile: true,
+          require_research: false,
+          whitelabel: true
+        }),
+      })
+      const params = Promise.resolve({ id: 'test-id' })
+      await updateClient(request, { params })
+
+      expect(updateMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Updated Client',
+          address: '456 New St',
+          primary_color: '#123456',
+          accent_color: '#654321',
+          require_profile: true,
+          require_research: false,
+          whitelabel: true,
+          updated_at: expect.any(String),
+        })
+      )
+    })
+
+    it('should return 400 if name is not a string', async () => {
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-id' } },
+        error: null,
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/clients/test-id', {
+        method: 'PATCH',
+        body: JSON.stringify({ name: 12345 }),
+      })
+      const params = Promise.resolve({ id: 'test-id' })
+      const response = await updateClient(request, { params })
+      const data = await response.json()
+
+      expect(response.status).toBe(400)
+      expect(data.error).toBe('Client name cannot be empty')
     })
   })
 
