@@ -17,6 +17,7 @@ vi.mock('@/lib/utils/invite-token-generation', async () => {
 })
 
 describe('GET /api/auth/claim', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockAdminClient: any
   
   beforeEach(() => {
@@ -224,7 +225,9 @@ describe('GET /api/auth/claim', () => {
 })
 
 describe('POST /api/auth/claim', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockAdminClient: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockSupabaseClient: any
   
   beforeEach(() => {

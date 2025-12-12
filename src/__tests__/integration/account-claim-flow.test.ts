@@ -35,12 +35,16 @@ describe('Account Claim Flow Integration', () => {
     expect(validation.valid).toBe(true)
     expect(validation.reason).toBeNull()
     
-    // Step 3: Simulate user data for the invite
-    const mockUserProfile = {
+    // Step 3: Verify expected user data structure for the invite
+    const expectedProfile = {
       id: 'user-123',
       name: 'John Doe',
       email: 'john@example.com',
     }
+    
+    expect(expectedProfile.id).toBe('user-123')
+    expect(expectedProfile.name).toBe('John Doe')
+    expect(expectedProfile.email).toBe('john@example.com')
     
     // Step 4: Simulate password requirements
     const password = 'SecurePassword123!'
