@@ -3,17 +3,12 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-
-interface SidebarProps {
-  className?: string
-  isOpen?: boolean
-  onClose?: () => void
-}
+import { NavigationItem, SidebarProps } from './types'
 
 export default function Sidebar({ className, isOpen = true, onClose }: SidebarProps) {
   const pathname = usePathname()
 
-  const navigation = [
+  const navigation: NavigationItem[] = [
     {
       name: 'Home',
       href: '/dashboard',
@@ -53,15 +48,6 @@ export default function Sidebar({ className, isOpen = true, onClose }: SidebarPr
 
   return (
     <>
-      {/* Mobile overlay */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={() => onClose?.()}
-          aria-hidden="true"
-        />
-      )}
-      
       {/* Sidebar */}
       <div className={cn(
         'fixed lg:static inset-y-0 left-0 z-50 flex h-full w-64 flex-col bg-gray-900 transform transition-transform duration-300 ease-in-out',
@@ -89,28 +75,28 @@ export default function Sidebar({ className, isOpen = true, onClose }: SidebarPr
           </button>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 space-y-1 px-2 py-4">
-          {navigation.map((item) => {
-            const isActive = pathname === item.href
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                onClick={() => onClose?.()}
-                className={cn(
-                  'group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors',
-                  isActive
-                    ? 'bg-indigo-600 text-white'
-                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                )}
-              >
-                <span className="mr-3 text-lg">{item.icon}</span>
-                {item.name}
-              </Link>
-            )
-          })}
-        </nav>
+      {/* Navigation */}
+      <nav className="flex-1 space-y-1 px-2 py-4" role="navigation" aria-label="Dashboard navigation">
+        {navigation.map((item) => {
+          const isActive = pathname === item.href
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              onClick={() => onClose?.()}
+              className={cn(
+                'group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors',
+                isActive
+                  ? 'bg-indigo-600 text-white'
+                  : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+              )}
+            >
+              <span className="mr-3 text-lg">{item.icon}</span>
+              {item.name}
+            </Link>
+          )
+        })}
+      </nav>
 
         {/* User section */}
         <div className="border-t border-gray-700 p-4">
@@ -125,6 +111,15 @@ export default function Sidebar({ className, isOpen = true, onClose }: SidebarPr
           </div>
         </div>
       </div>
+
+      {/* Mobile overlay (rendered after sidebar for test consistency) */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => onClose?.()}
+          aria-hidden="true"
+        />
+      )}
     </>
   )
 }

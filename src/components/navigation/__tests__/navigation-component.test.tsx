@@ -39,6 +39,12 @@ describe('Sidebar Component', () => {
       expect(sidebar).toBeInTheDocument()
     })
 
+    it('should have accessible ARIA label', () => {
+      render(<Sidebar />)
+      const sidebar = screen.getByRole('navigation', { name: /dashboard navigation/i })
+      expect(sidebar).toBeInTheDocument()
+    })
+
     it('should render the logo section', () => {
       render(<Sidebar />)
       expect(screen.getByText('Involved Talent')).toBeInTheDocument()
