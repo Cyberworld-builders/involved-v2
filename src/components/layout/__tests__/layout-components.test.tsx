@@ -140,7 +140,8 @@ describe('DashboardLayout', () => {
 
       const childContent = screen.getByTestId('child-content')
       const parentDiv = childContent.parentElement
-      expect(parentDiv).toHaveClass('p-6')
+      // Updated to match responsive padding classes
+      expect(parentDiv).toHaveClass('p-4', 'lg:p-6')
     })
 
     it('should have flex column layout for content area', () => {
@@ -286,12 +287,34 @@ describe('DashboardLayout', () => {
 
       const main = screen.getByRole('main')
       const contentWrapper = main.firstChild as HTMLElement
-      // Verify padding that works on mobile
-      expect(contentWrapper).toHaveClass('p-6')
+      // Verify responsive padding that works on mobile
+      expect(contentWrapper).toHaveClass('p-4', 'lg:p-6')
     })
   })
 
   describe('Header Buttons', () => {
+    it('should render mobile menu button', () => {
+      render(
+        <DashboardLayout>
+          <div>Test Content</div>
+        </DashboardLayout>
+      )
+
+      const menuButton = screen.getByRole('button', { name: /open menu/i })
+      expect(menuButton).toBeInTheDocument()
+    })
+
+    it('should hide mobile menu button on desktop', () => {
+      render(
+        <DashboardLayout>
+          <div>Test Content</div>
+        </DashboardLayout>
+      )
+
+      const menuButton = screen.getByRole('button', { name: /open menu/i })
+      expect(menuButton).toHaveClass('lg:hidden')
+    })
+
     it('should render notification button with icon', () => {
       render(
         <DashboardLayout>
