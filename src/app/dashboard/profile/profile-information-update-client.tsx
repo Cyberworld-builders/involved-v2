@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { isValidEmail } from '@/lib/utils/email-validation'
 
 interface ProfileData {
   name: string
@@ -46,9 +47,8 @@ export default function ProfileInformationUpdateClient({ initialProfile }: { ini
       return
     }
 
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
+    // Validate email format using utility function
+    if (!isValidEmail(email)) {
       setError('Please enter a valid email address')
       return
     }
