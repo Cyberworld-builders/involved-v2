@@ -1,4 +1,5 @@
 import { test, expect, devices } from '@playwright/test'
+import { shouldSkipAuthTests } from './helpers/auth'
 
 /**
  * Mobile Responsiveness E2E Tests
@@ -12,6 +13,15 @@ import { test, expect, devices } from '@playwright/test'
  */
 
 test.describe('Mobile Responsiveness', () => {
+  const skipAuth = shouldSkipAuthTests()
+
+  test.beforeEach(() => {
+    // These tests target authenticated dashboard layouts. In CI we often run with
+    // SKIP_AUTH_TESTS=true (no real Supabase), which redirects /dashboard → /auth/login.
+    // In that mode, the expected sidebar/hamburger UI will never render.
+    test.skip(skipAuth, 'SKIP_AUTH_TESTS is set - skipping dashboard mobile responsiveness tests')
+  })
+
   test.describe('Mobile Navigation', () => {
     test('should show hamburger menu button on mobile', async ({ page }) => {
       // Set mobile viewport
