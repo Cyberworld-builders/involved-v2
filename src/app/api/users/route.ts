@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json()
-    const { name, email, username, client_id, industry_id, password } = body
+    const { name, email, username, client_id, industry_id, password, status } = body
 
     // Validate required fields
     if (!name || typeof name !== 'string' || name.trim() === '') {
@@ -90,6 +90,14 @@ export async function POST(request: NextRequest) {
     if (!isValidEmail(email)) {
       return NextResponse.json(
         { error: 'Invalid email format' },
+        { status: 400 }
+      )
+    }
+
+    // Validate status if provided
+    if (status !== undefined && !['active', 'inactive', 'suspended'].includes(status)) {
+      return NextResponse.json(
+        { error: 'Invalid status. Must be one of: active, inactive, suspended' },
         { status: 400 }
       )
     }
@@ -166,6 +174,7 @@ export async function POST(request: NextRequest) {
       client_id: client_id || null,
       industry_id: industry_id || null,
       completed_profile: false,
+      status: status || 'active',
     }
 
     // Create profile

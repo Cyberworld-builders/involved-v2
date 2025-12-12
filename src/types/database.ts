@@ -205,6 +205,7 @@ export interface Database {
            accepted_terms: boolean | null
            accepted_at: string | null
            accepted_signature: string | null
+           status: 'active' | 'inactive' | 'suspended'
            created_at: string
            updated_at: string
          }
@@ -222,6 +223,7 @@ export interface Database {
            accepted_terms?: boolean | null
            accepted_at?: string | null
            accepted_signature?: string | null
+           status?: 'active' | 'inactive' | 'suspended'
            created_at?: string
            updated_at?: string
          }
@@ -239,6 +241,7 @@ export interface Database {
            accepted_terms?: boolean | null
            accepted_at?: string | null
            accepted_signature?: string | null
+           status?: 'active' | 'inactive' | 'suspended'
            created_at?: string
            updated_at?: string
          }
