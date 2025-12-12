@@ -288,12 +288,14 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
     setMessage('')
 
     try {
-      const { error } = await supabase
-        .from('groups')
-        .delete()
-        .eq('id', groupId)
+      const response = await fetch(`/api/groups/${groupId}`, {
+        method: 'DELETE',
+      })
 
-      if (error) throw error
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to delete group')
+      }
 
       setMessage('Group deleted successfully!')
       setTimeout(() => {
