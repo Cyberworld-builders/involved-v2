@@ -16,14 +16,14 @@ vi.mock('@/components/layout/dashboard-layout', () => ({
 
 // Mock UI components
 vi.mock('@/components/ui/button', () => ({
-  Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+  Button: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => <button {...props}>{children}</button>,
 }))
 
 vi.mock('@/components/ui/card', () => ({
-  Card: ({ children }: any) => <div data-testid="card">{children}</div>,
-  CardContent: ({ children }: any) => <div data-testid="card-content">{children}</div>,
-  CardHeader: ({ children }: any) => <div data-testid="card-header">{children}</div>,
-  CardTitle: ({ children }: any) => <h3 data-testid="card-title">{children}</h3>,
+  Card: ({ children }: { children: React.ReactNode }) => <div data-testid="card">{children}</div>,
+  CardContent: ({ children }: { children: React.ReactNode }) => <div data-testid="card-content">{children}</div>,
+  CardHeader: ({ children }: { children: React.ReactNode }) => <div data-testid="card-header">{children}</div>,
+  CardTitle: ({ children }: { children: React.ReactNode }) => <h3 data-testid="card-title">{children}</h3>,
 }))
 
 // Mock Supabase client
@@ -87,7 +87,7 @@ describe('IndustryPage', () => {
     const params = Promise.resolve({ id: 'nonexistent' })
     const result = await IndustryPage({ params })
 
-    const { container } = render(result as React.ReactElement)
+    render(result as React.ReactElement)
 
     expect(screen.getByText('Industry Not Found')).toBeInTheDocument()
     expect(screen.getByText("The industry you're looking for doesn't exist.")).toBeInTheDocument()
@@ -115,7 +115,7 @@ describe('IndustryPage', () => {
     const params = Promise.resolve({ id: 'industry-1' })
     const result = await IndustryPage({ params })
 
-    const { container } = render(result as React.ReactElement)
+    render(result as React.ReactElement)
 
     expect(screen.getAllByText('Technology').length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText('Industry details and information')).toBeInTheDocument()
