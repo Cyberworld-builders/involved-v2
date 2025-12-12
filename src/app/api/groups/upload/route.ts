@@ -92,14 +92,17 @@ export async function POST(request: NextRequest) {
         return
       }
 
+      // Store client name for type safety
+      const clientName = group.client_name
+
       // Find the matching client
       const client = clients?.find(
-        c => c.name.toLowerCase() === group.client_name.toLowerCase()
+        c => c.name.toLowerCase() === clientName.toLowerCase()
       )
 
       if (!client) {
         validationErrors.push(
-          `Row ${index + 2}: Client '${group.client_name}' not found`
+          `Row ${index + 2}: Client '${clientName}' not found`
         )
         return
       }
