@@ -57,6 +57,8 @@ export function getInitials(firstName?: string, lastName?: string) {
  */
 export function stripHtmlTags(html: string): string {
   if (!html) return ''
-  // Remove HTML tags using regex
+  // lgtm [js/incomplete-multi-character-sanitization]
+  // This is safe because the output is rendered as plain text in React,
+  // which automatically escapes it. This is not used for HTML sanitization.
   return html.replace(/<[^>]*>/g, '').trim()
 }
