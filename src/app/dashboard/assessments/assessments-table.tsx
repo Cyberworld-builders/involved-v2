@@ -21,6 +21,11 @@ interface AssessmentsTableProps {
 export default function AssessmentsTable({ initialAssessments }: AssessmentsTableProps) {
   const [assessments] = useState<Assessment[]>(initialAssessments)
 
+  const formatDate = (date: string) => {
+    // Use UTC to avoid timezone-dependent date shifts in UI/tests.
+    return new Date(date).toLocaleDateString(undefined, { timeZone: 'UTC' })
+  }
+
   if (!assessments || assessments.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
@@ -63,7 +68,7 @@ export default function AssessmentsTable({ initialAssessments }: AssessmentsTabl
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {new Date(assessment.created_at).toLocaleDateString()}
+                {formatDate(assessment.created_at)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div className="flex justify-end space-x-2">

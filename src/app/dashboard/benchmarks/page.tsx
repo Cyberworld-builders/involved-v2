@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import DashboardLayout from '@/components/layout/dashboard-layout'
+import { stripHtmlTags, truncateText } from '@/lib/utils'
 
 export default async function BenchmarksPage() {
   const supabase = await createClient()
@@ -24,6 +25,11 @@ export default async function BenchmarksPage() {
 
   if (error) {
     console.error('Error fetching assessments:', error)
+  }
+
+  const formatDescriptionPreview = (description: string) => {
+    const plain = stripHtmlTags(description).replace(/\s+/g, ' ').trim()
+    return truncateText(plain, 140)
   }
 
   return (
@@ -82,14 +88,16 @@ export default async function BenchmarksPage() {
                 {assessments.map((assessment) => (
                   <Link
                     key={assessment.id}
-                    href={`/dashboard/benchmarks/${assessment.id}`}
+                    href={`/dashboard/benchmarks/manage/${assessment.id}`}
                     className="block p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-indigo-300 transition-colors"
                   >
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="text-sm font-medium text-gray-900">{assessment.title}</h3>
                         {assessment.description && (
-                          <p className="text-sm text-gray-500 mt-1">{assessment.description}</p>
+                          <p className="text-sm text-gray-500 mt-1">
+                            {formatDescriptionPreview(assessment.description)}
+                          </p>
                         )}
                       </div>
                       <div className="text-gray-400">
