@@ -404,7 +404,8 @@ export default function AssessmentForm({
     { id: 'details', label: 'Details' },
     { id: 'settings', label: 'Settings' },
     { id: 'dimensions', label: 'Dimensions' },
-    { id: 'fields', label: 'Fields' },
+    // Fields tab hidden for Phase 1
+    // { id: 'fields', label: 'Fields' },
   ] as const
 
   return (
