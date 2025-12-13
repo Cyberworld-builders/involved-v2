@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { stripHtmlTags } from '@/lib/utils'
 
 interface Assessment {
   id: string
@@ -53,7 +54,7 @@ export default function AssessmentsTable({ initialAssessments }: AssessmentsTabl
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="text-sm font-medium text-gray-900">{assessment.title}</div>
                 {assessment.description && (
-                  <div className="text-sm text-gray-500 truncate max-w-xs">{assessment.description}</div>
+                  <div className="text-sm text-gray-500 truncate max-w-xs">{stripHtmlTags(assessment.description)}</div>
                 )}
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
