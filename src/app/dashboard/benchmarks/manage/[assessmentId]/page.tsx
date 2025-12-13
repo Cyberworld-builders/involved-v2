@@ -73,7 +73,7 @@ export default async function BenchmarksIndustryPage({ params }: BenchmarksIndus
             </li>
             <li className="text-gray-400">/</li>
             <li>
-              <Link href={`/dashboard/benchmarks/${assessment.id}`} className="text-gray-500 hover:text-gray-700">
+              <Link href={`/dashboard/benchmarks/manage/${assessment.id}`} className="text-gray-500 hover:text-gray-700">
                 {assessment.title}
               </Link>
             </li>

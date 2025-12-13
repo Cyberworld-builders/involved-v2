@@ -86,7 +86,8 @@ test.describe('Navigation Component Consistency', () => {
         { name: 'Users', href: '/dashboard/users' },
         { name: 'Industries', href: '/dashboard/industries' },
         { name: 'Benchmarks', href: '/dashboard/benchmarks' },
-        { name: 'Feedback', href: '/dashboard/feedback' },
+        // Feedback link hidden for Phase 1
+        // { name: 'Feedback', href: '/dashboard/feedback' },
       ]
       
       for (const link of expectedLinks) {
@@ -112,10 +113,9 @@ test.describe('Navigation Component Consistency', () => {
       const header = page.locator('header')
       await expect(header).toBeVisible()
       
-      // Verify header has notification and settings buttons
-      const headerButtons = page.locator('header button')
-      const buttonCount = await headerButtons.count()
-      expect(buttonCount).toBeGreaterThanOrEqual(2)
+      // Verify header has mobile menu button
+      const menuButton = page.locator('header button[aria-label="Open menu"]')
+      await expect(menuButton).toBeVisible()
     } else {
       test.skip(true, 'Dashboard requires authentication')
     }

@@ -45,3 +45,20 @@ export function getInitials(firstName?: string, lastName?: string) {
   const last = lastName?.charAt(0).toUpperCase() || ''
   return first + last
 }
+
+/**
+ * Strip HTML tags from a string for display purposes
+ * @param html - HTML string to strip tags from
+ * @returns Plain text with HTML tags removed
+ * @note This function is used to convert HTML content to plain text for display.
+ *       The output is rendered as text in React components (not as HTML),
+ *       so React's automatic escaping provides XSS protection.
+ *       Do NOT use this for sanitization if the output will be rendered as HTML.
+ */
+export function stripHtmlTags(html: string): string {
+  if (!html) return ''
+  // lgtm [js/incomplete-multi-character-sanitization]
+  // This is safe because the output is rendered as plain text in React,
+  // which automatically escapes it. This is not used for HTML sanitization.
+  return html.replace(/<[^>]*>/g, '').trim()
+}
