@@ -187,8 +187,25 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
 
       // Delete existing dimensions and fields, then recreate
       // (Simpler than trying to match and update individual items)
-      await supabase.from('dimensions').delete().eq('assessment_id', id)
-      await supabase.from('fields').delete().eq('assessment_id', id)
+      {
+        const { error: deleteDimensionsError } = await supabase
+          .from('dimensions')
+          .delete()
+          .eq('assessment_id', id)
+        if (deleteDimensionsError) {
+          throw new Error(`Failed to delete dimensions: ${deleteDimensionsError.message}`)
+        }
+      }
+
+      {
+        const { error: deleteFieldsError } = await supabase
+          .from('fields')
+          .delete()
+          .eq('assessment_id', id)
+        if (deleteFieldsError) {
+          throw new Error(`Failed to delete fields: ${deleteFieldsError.message}`)
+        }
+      }
 
       // Create dimensions
       if (data.dimensions.length > 0) {
@@ -207,7 +224,7 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
             .insert(dimensionsToInsert)
 
           if (dimensionsError) {
-            console.error('Error updating dimensions:', dimensionsError)
+            throw new Error(`Failed to update dimensions: ${dimensionsError.message}`)
           }
         }
       }
@@ -224,9 +241,7 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
           dimensions?.map(d => [d.code, d.id]) || []
         )
 
-        const fieldsToInsert = data.fields
-          .filter(field => field.content)
-          .map(field => {
+        const fieldsToInsert = data.fields.map((field, index) => {
             let dimensionId = null
             if (field.dimension_id) {
               const dimension = data.dimensions.find(d => d.id === field.dimension_id)
@@ -239,8 +254,10 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
               assessment_id: id,
               dimension_id: dimensionId,
               type: field.type,
-              content: field.content,
-              order: field.order,
+              // Allow saving "empty" fields so users can scaffold lots of questions.
+              // DB requires NOT NULL, so empty string is valid.
+              content: field.content ?? '',
+              order: typeof field.order === 'number' ? field.order : index + 1,
               anchors: field.anchors || [],
             }
           })
@@ -251,7 +268,7 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
             .insert(fieldsToInsert)
 
           if (fieldsError) {
-            console.error('Error updating fields:', fieldsError)
+            throw new Error(`Failed to update fields: ${fieldsError.message}`)
           }
         }
       }

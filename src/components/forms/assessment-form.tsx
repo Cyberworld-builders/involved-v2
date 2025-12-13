@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import RichTextEditor from '@/components/rich-text-editor'
+import { GripVertical } from 'lucide-react'
 
 export interface Dimension {
   id: string
@@ -90,9 +91,31 @@ export default function AssessmentForm({
 
   const [logoPreview, setLogoPreview] = useState<string | null>(existingLogoUrl || null)
   const [backgroundPreview, setBackgroundPreview] = useState<string | null>(existingBackgroundUrl || null)
+  const [draggedFieldId, setDraggedFieldId] = useState<string | null>(null)
 
   const handleInputChange = (field: keyof AssessmentFormData, value: string | number | boolean | File | null) => {
     setFormData(prev => ({ ...prev, [field]: value as never }))
+  }
+
+  const normalizeFieldOrders = (fields: Field[]): Field[] => {
+    return fields.map((f, idx) => ({ ...f, order: idx + 1 }))
+  }
+
+  const createNewField = (type: 'rich_text' | 'multiple_choice' | 'slider', nextOrder: number): Field => {
+    return {
+      id: `field-${Date.now()}`,
+      type,
+      content: '',
+      dimension_id: null,
+      anchors:
+        type === 'multiple_choice' || type === 'slider'
+          ? [
+              { id: `anchor-${Date.now()}-1`, name: '', value: 1, practice: false },
+              { id: `anchor-${Date.now()}-2`, name: '', value: 2, practice: false },
+            ]
+          : [],
+      order: nextOrder,
+    }
   }
 
   const handleFileChange = (field: 'logo' | 'background', file: File | null) => {
@@ -277,21 +300,21 @@ export default function AssessmentForm({
   }
 
   const handleAddField = (type: 'rich_text' | 'multiple_choice' | 'slider') => {
-    const newField: Field = {
-      id: `field-${Date.now()}`,
-      type,
-      content: '',
-      dimension_id: null,
-      anchors: type === 'multiple_choice' || type === 'slider' ? [
-        { id: 'anchor-1', name: '', value: 1, practice: false },
-        { id: 'anchor-2', name: '', value: 2, practice: false },
-      ] : [],
-      order: formData.fields.length + 1,
-    }
     setFormData(prev => ({
       ...prev,
-      fields: [...prev.fields, newField],
+      fields: normalizeFieldOrders([...prev.fields, createNewField(type, prev.fields.length + 1)]),
     }))
+  }
+
+  const handleInsertFieldAt = (insertAfterIndex: number, type: 'rich_text' | 'multiple_choice' | 'slider') => {
+    setFormData(prev => {
+      const nextFields = [...prev.fields]
+      nextFields.splice(insertAfterIndex + 1, 0, createNewField(type, insertAfterIndex + 2))
+      return {
+        ...prev,
+        fields: normalizeFieldOrders(nextFields),
+      }
+    })
   }
 
   const handleUpdateField = (id: string, field: keyof Field, value: string | 'rich_text' | 'multiple_choice' | 'slider' | Anchor[] | number | null) => {
@@ -306,8 +329,29 @@ export default function AssessmentForm({
   const handleDeleteField = (id: string) => {
     setFormData(prev => ({
       ...prev,
-      fields: prev.fields.filter(f => f.id !== id),
+      fields: normalizeFieldOrders(prev.fields.filter(f => f.id !== id)),
     }))
+  }
+
+  const reorderFields = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return
+    setFormData(prev => {
+      const nextFields = [...prev.fields]
+      const [moved] = nextFields.splice(fromIndex, 1)
+      nextFields.splice(toIndex, 0, moved)
+      return {
+        ...prev,
+        fields: normalizeFieldOrders(nextFields),
+      }
+    })
+  }
+
+  const handleDropOnField = (dropTargetId: string) => {
+    if (!draggedFieldId || draggedFieldId === dropTargetId) return
+    const fromIndex = formData.fields.findIndex(f => f.id === draggedFieldId)
+    const toIndex = formData.fields.findIndex(f => f.id === dropTargetId)
+    if (fromIndex === -1 || toIndex === -1) return
+    reorderFields(fromIndex, toIndex)
   }
 
   const handleAddAnchor = (fieldId: string) => {
@@ -779,22 +823,54 @@ export default function AssessmentForm({
             ) : (
               <div className="space-y-6">
                 {formData.fields.map((field, index) => (
-                  <div key={field.id} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-900">
-                          {field.type === 'rich_text' ? 'Rich Text' : field.type === 'multiple_choice' ? 'Multiple Choice' : 'Slider'} Field #{index + 1}
-                        </h3>
+                  <div key={field.id} className="space-y-3">
+                    <div
+                      className={`border border-gray-200 rounded-lg p-4 ${draggedFieldId === field.id ? 'opacity-60' : ''}`}
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.effectAllowed = 'move'
+                        setDraggedFieldId(field.id)
+                      }}
+                      onDragEnd={() => setDraggedFieldId(null)}
+                      onDragOver={(e) => {
+                        // Required to allow drop
+                        e.preventDefault()
+                        e.dataTransfer.dropEffect = 'move'
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault()
+                        handleDropOnField(field.id)
+                        setDraggedFieldId(null)
+                      }}
+                    >
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-start gap-3">
+                          <div className="pt-0.5 text-gray-400" aria-hidden="true" title="Drag to reorder">
+                            <GripVertical className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-medium text-gray-900">
+                              {field.type === 'rich_text'
+                                ? 'Rich Text'
+                                : field.type === 'multiple_choice'
+                                  ? 'Multiple Choice'
+                                  : 'Slider'}{' '}
+                              Field #{index + 1}
+                            </h3>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Drag to reorder
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => handleDeleteField(field.id)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          Delete
+                        </Button>
                       </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => handleDeleteField(field.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        Delete
-                      </Button>
-                    </div>
 
                     {/* Dimension Selection */}
                     {formData.dimensions.length > 0 && (
@@ -927,6 +1003,23 @@ export default function AssessmentForm({
                         )}
                       </div>
                     )}
+                    </div>
+
+                    {/* Add field "between" and "below" controls */}
+                    <div className="flex flex-wrap gap-2 justify-center rounded-md border border-dashed border-gray-300 p-3 bg-gray-50">
+                      <span className="text-xs text-gray-500 w-full text-center">
+                        Add a field below
+                      </span>
+                      <Button type="button" variant="outline" onClick={() => handleInsertFieldAt(index, 'rich_text')}>
+                        + Rich Text
+                      </Button>
+                      <Button type="button" variant="outline" onClick={() => handleInsertFieldAt(index, 'multiple_choice')}>
+                        + Multiple Choice
+                      </Button>
+                      <Button type="button" variant="outline" onClick={() => handleInsertFieldAt(index, 'slider')}>
+                        + Slider
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
