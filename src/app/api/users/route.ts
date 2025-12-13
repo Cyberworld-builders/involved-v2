@@ -10,8 +10,34 @@ type ProfileInsert = Database['public']['Tables']['profiles']['Insert']
 const VALID_ROLES = ['admin', 'manager', 'client', 'user', 'unverified'] as const
 type ValidRole = (typeof VALID_ROLES)[number]
 
-function isManagerRole(role: string | null | undefined): boolean {
-  return role === 'manager' || role === 'client'
+const VALID_ACCESS_LEVELS = ['member', 'client_admin', 'super_admin'] as const
+type ValidAccessLevel = (typeof VALID_ACCESS_LEVELS)[number]
+
+function deriveAccessLevel(input: {
+  access_level?: unknown
+  role?: unknown
+}): ValidAccessLevel {
+  const accessLevel = input.access_level
+  if (typeof accessLevel === 'string' && (VALID_ACCESS_LEVELS as readonly string[]).includes(accessLevel)) {
+    return accessLevel as ValidAccessLevel
+  }
+
+  const role = input.role
+  if (role === 'admin') return 'super_admin'
+  if (role === 'manager' || role === 'client') return 'client_admin'
+  return 'member'
+}
+
+function roleFromAccessLevel(accessLevel: ValidAccessLevel): ValidRole {
+  switch (accessLevel) {
+    case 'super_admin':
+      return 'admin'
+    case 'client_admin':
+      return 'manager'
+    case 'member':
+    default:
+      return 'user'
+  }
 }
 
 /**
@@ -34,20 +60,23 @@ export async function GET() {
 
     const { data: actorProfile } = await supabase
       .from('profiles')
-      .select('role, client_id')
+      .select('access_level, role, client_id')
       .eq('auth_user_id', user.id)
       .single()
 
-    const actorRole = actorProfile?.role || null
+    const actorAccessLevel = deriveAccessLevel({
+      access_level: actorProfile?.access_level,
+      role: actorProfile?.role,
+    })
     const actorClientId = actorProfile?.client_id || null
 
-    const isAdmin = actorRole === 'admin'
-    const isManager = isManagerRole(actorRole)
+    const isSuperAdmin = actorAccessLevel === 'super_admin'
+    const isClientAdmin = actorAccessLevel === 'client_admin'
 
-    if (!isAdmin && !isManager) {
+    if (!isSuperAdmin && !isClientAdmin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
-    if (isManager && !actorClientId) {
+    if (isClientAdmin && !actorClientId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -56,7 +85,7 @@ export async function GET() {
       .from('profiles')
       .select('*')
 
-    if (isManager && actorClientId) {
+    if (isClientAdmin && actorClientId) {
       query = query.eq('client_id', actorClientId)
     }
 
@@ -100,23 +129,29 @@ export async function POST(request: NextRequest) {
 
     const { data: actorProfile } = await supabase
       .from('profiles')
-      .select('role, client_id')
+      .select('access_level, role, client_id')
       .eq('auth_user_id', user.id)
       .single()
 
-    const actorRole = actorProfile?.role || null
+    const actorAccessLevel = deriveAccessLevel({
+      access_level: actorProfile?.access_level,
+      role: actorProfile?.role,
+    })
     const actorClientId = actorProfile?.client_id || null
 
-    const isAdmin = actorRole === 'admin'
-    const isManager = isManagerRole(actorRole)
+    const isSuperAdmin = actorAccessLevel === 'super_admin'
+    const isClientAdmin = actorAccessLevel === 'client_admin'
 
-    if (!isAdmin && !isManager) {
+    if (!isSuperAdmin && !isClientAdmin) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+    if (isClientAdmin && !actorClientId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     // Parse request body
     const body = await request.json()
-    const { name, email, username, client_id, industry_id, password, role, status } = body
+    const { name, email, username, client_id, industry_id, password, role, access_level, status } = body
 
     // Validate required fields
     if (!name || typeof name !== 'string' || name.trim() === '') {
@@ -141,7 +176,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate role if provided
+    // Validate access_level if provided
+    if (access_level !== undefined && (typeof access_level !== 'string' || !VALID_ACCESS_LEVELS.includes(access_level as ValidAccessLevel))) {
+      return NextResponse.json(
+        { error: 'Invalid access_level. Must be one of: member, client_admin, super_admin' },
+        { status: 400 }
+      )
+    }
+
+    // Validate legacy role if provided (kept for backwards compatibility; not used for permissions)
     if (role !== undefined && (typeof role !== 'string' || !VALID_ROLES.includes(role as ValidRole))) {
       return NextResponse.json(
         { error: 'Invalid role. Must be one of: admin, manager, client, user, unverified' },
@@ -227,16 +270,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Prepare profile data
-    const resolvedClientId =
-      isManager ? actorClientId : (client_id || null)
-
-    const resolvedRole =
-      role || 'user'
-
-    if (isManager && resolvedRole === 'admin') {
+    // Resolve access level for new user.
+    // - super_admin can create any access_level
+    // - client_admin can create member/client_admin but never super_admin
+    const resolvedAccessLevel = deriveAccessLevel({
+      access_level,
+      role,
+    })
+    if (isClientAdmin && resolvedAccessLevel === 'super_admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
+
+    // Client scoping:
+    // - client_admin can only create users under their own client_id
+    // - super_admin can create users for any client (or none)
+    const resolvedClientId =
+      isClientAdmin ? actorClientId : (client_id || null)
+
+    // Keep legacy role in sync (until we fully remove it from the product model)
+    const resolvedRole: ValidRole =
+      typeof role === 'string' && VALID_ROLES.includes(role as ValidRole)
+        ? (role as ValidRole)
+        : roleFromAccessLevel(resolvedAccessLevel)
 
     const profileData: ProfileInsert = {
       auth_user_id: authData.user.id,
@@ -246,6 +301,7 @@ export async function POST(request: NextRequest) {
       client_id: resolvedClientId,
       industry_id: industry_id || null,
       role: resolvedRole,
+      access_level: resolvedAccessLevel,
       completed_profile: false,
       status: status || 'active',
     }

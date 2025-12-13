@@ -29,17 +29,23 @@ export default async function UserPage({ params }: UserPageProps) {
 
   const { data: currentProfile } = await supabase
     .from('profiles')
-    .select('role, client_id')
+    .select('access_level, role, client_id')
     .eq('auth_user_id', user.id)
     .single()
 
-  const currentRole = currentProfile?.role || null
+  const currentAccessLevel =
+    currentProfile?.access_level ||
+    (currentProfile?.role === 'admin'
+      ? 'super_admin'
+      : (currentProfile?.role === 'manager' || currentProfile?.role === 'client')
+        ? 'client_admin'
+        : 'member')
   const currentClientId = currentProfile?.client_id || null
 
-  const isAdmin = currentRole === 'admin'
-  const isManager = currentRole === 'manager' || currentRole === 'client'
+  const isSuperAdmin = currentAccessLevel === 'super_admin'
+  const isClientAdmin = currentAccessLevel === 'client_admin'
 
-  if (!isAdmin && !isManager) {
+  if (!isSuperAdmin && !isClientAdmin) {
     redirect('/dashboard')
   }
 
@@ -69,8 +75,8 @@ export default async function UserPage({ params }: UserPageProps) {
     )
   }
 
-  // Managers can only view users under their own client
-  if (isManager && currentClientId && profile.client_id !== currentClientId) {
+  // Client admins can only view users under their own client
+  if (isClientAdmin && currentClientId && profile.client_id !== currentClientId) {
     redirect('/dashboard/users')
   }
 
@@ -113,9 +119,9 @@ export default async function UserPage({ params }: UserPageProps) {
                 <p className="text-gray-900">{profile.email}</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-500">Role</label>
+                <label className="text-sm font-medium text-gray-500">Access Level</label>
                 <p className="text-gray-900">
-                  {profile.role === 'client' ? 'manager' : profile.role}
+                  {profile.access_level || (profile.role === 'admin' ? 'super_admin' : (profile.role === 'manager' || profile.role === 'client') ? 'client_admin' : 'member')}
                 </p>
               </div>
               <div>

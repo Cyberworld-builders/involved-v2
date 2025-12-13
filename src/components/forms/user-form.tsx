@@ -11,7 +11,7 @@ interface UserFormData {
   email: string
   client_id: string
   industry_id: string
-  role?: string
+  access_level?: string
 }
 
 interface UserFormProps {
@@ -21,9 +21,9 @@ interface UserFormProps {
   submitText?: string
   clients?: Array<{ id: string; name: string }>
   industries?: Array<{ id: string; name: string }>
-  showRoleField?: boolean
-  disableRoleField?: boolean
-  roleOptions?: Array<{ value: string; label: string }>
+  showAccessLevelField?: boolean
+  disableAccessLevelField?: boolean
+  accessLevelOptions?: Array<{ value: string; label: string }>
 }
 
 export default function UserForm({
@@ -33,9 +33,9 @@ export default function UserForm({
   submitText = 'Add User',
   clients = [],
   industries = [],
-  showRoleField = false,
-  disableRoleField = false,
-  roleOptions = []
+  showAccessLevelField = false,
+  disableAccessLevelField = false,
+  accessLevelOptions = []
 }: UserFormProps) {
   const [formData, setFormData] = useState<UserFormData>({
     username: initialData?.username || '',
@@ -43,7 +43,7 @@ export default function UserForm({
     email: initialData?.email || '',
     client_id: initialData?.client_id || '',
     industry_id: initialData?.industry_id || '',
-    role: initialData?.role,
+    access_level: initialData?.access_level,
   })
 
 
@@ -122,32 +122,32 @@ export default function UserForm({
             />
           </div>
 
-          {/* Role (admin/manager only) */}
-          {showRoleField && (
+          {/* Access level (permission boundary) */}
+          {showAccessLevelField && (
             <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-900 mb-2">
-                Role
+              <label htmlFor="access_level" className="block text-sm font-medium text-gray-900 mb-2">
+                Access Level
               </label>
               <p className="text-sm text-gray-500 mb-3">
-                Controls what this user can see and manage in the dashboard.
+                Permission boundary for what this user can see and manage in the dashboard.
               </p>
               <select
-                id="role"
-                value={formData.role || ''}
-                onChange={(e) => handleInputChange('role', e.target.value)}
-                disabled={disableRoleField}
+                id="access_level"
+                value={formData.access_level || ''}
+                onChange={(e) => handleInputChange('access_level', e.target.value)}
+                disabled={disableAccessLevelField}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-60"
               >
-                <option value="">Select a role...</option>
-                {roleOptions.map((opt) => (
+                <option value="">Select an access level...</option>
+                {accessLevelOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
                     {opt.label}
                   </option>
                 ))}
               </select>
-              {disableRoleField && (
+              {disableAccessLevelField && (
                 <p className="text-xs text-gray-500 mt-2">
-                  Only admins can change the role for an admin user.
+                  Only super admins can change access for a super admin user.
                 </p>
               )}
             </div>

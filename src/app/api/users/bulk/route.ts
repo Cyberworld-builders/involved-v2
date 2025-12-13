@@ -24,20 +24,38 @@ export async function POST(request: NextRequest) {
 
     const { data: actorProfile } = await supabase
       .from('profiles')
-      .select('role, client_id')
+      .select('access_level, role, client_id')
       .eq('auth_user_id', user.id)
       .single()
 
-    const actorRole = actorProfile?.role || null
     const actorClientId = actorProfile?.client_id || null
 
-    const isAdmin = actorRole === 'admin'
-    const isManager = actorRole === 'manager' || actorRole === 'client'
+    const VALID_ACCESS_LEVELS = ['member', 'client_admin', 'super_admin'] as const
+    type ValidAccessLevel = (typeof VALID_ACCESS_LEVELS)[number]
 
-    if (!isAdmin && !isManager) {
+    const deriveAccessLevel = (input: { access_level?: unknown; role?: unknown }): ValidAccessLevel => {
+      const accessLevel = input.access_level
+      if (typeof accessLevel === 'string' && (VALID_ACCESS_LEVELS as readonly string[]).includes(accessLevel)) {
+        return accessLevel as ValidAccessLevel
+      }
+      const role = input.role
+      if (role === 'admin') return 'super_admin'
+      if (role === 'manager' || role === 'client') return 'client_admin'
+      return 'member'
+    }
+
+    const actorAccessLevel = deriveAccessLevel({
+      access_level: actorProfile?.access_level,
+      role: actorProfile?.role,
+    })
+
+    const isSuperAdmin = actorAccessLevel === 'super_admin'
+    const isClientAdmin = actorAccessLevel === 'client_admin'
+
+    if (!isSuperAdmin && !isClientAdmin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
-    if (isManager && !actorClientId) {
+    if (isClientAdmin && !actorClientId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -71,7 +89,7 @@ export async function POST(request: NextRequest) {
     const results = []
 
     for (const userData of users) {
-      const { name, email, username, client_id, industry_id, password, role, status } = userData
+      const { name, email, username, client_id, industry_id, password, role, access_level, status } = userData
 
       // Validate required fields for each user
       if (!name || typeof name !== 'string' || name.trim() === '') {
@@ -102,7 +120,17 @@ export async function POST(request: NextRequest) {
         continue
       }
 
-      // Validate role if provided
+      // Validate access_level if provided
+      if (access_level !== undefined && (typeof access_level !== 'string' || !VALID_ACCESS_LEVELS.includes(access_level as ValidAccessLevel))) {
+        results.push({
+          user: email,
+          success: false,
+          error: 'Invalid access_level. Must be one of: member, client_admin, super_admin',
+        })
+        continue
+      }
+
+      // Validate legacy role if provided (kept for backwards compatibility; not used for permissions)
       if (role !== undefined && !['admin', 'manager', 'client', 'user', 'unverified'].includes(role)) {
         results.push({
           user: email,
@@ -161,10 +189,11 @@ export async function POST(request: NextRequest) {
       try {
         const finalUsername = await generateUniqueUsername(baseUsername, checkUsernameExists)
 
-        // Managers: enforce client scope and block admin role assignment
-        const resolvedClientId = isManager ? actorClientId : (client_id || null)
-        const resolvedRole = role || 'user'
-        if (isManager && resolvedRole === 'admin') {
+        const resolvedAccessLevel = deriveAccessLevel({ access_level, role })
+
+        // Client admins: enforce client scope and block super_admin access assignment
+        const resolvedClientId = isClientAdmin ? actorClientId : (client_id || null)
+        if (isClientAdmin && resolvedAccessLevel === 'super_admin') {
           results.push({
             user: email,
             success: false,
@@ -172,6 +201,8 @@ export async function POST(request: NextRequest) {
           })
           continue
         }
+
+        const resolvedRole = typeof role === 'string' ? role : (resolvedAccessLevel === 'super_admin' ? 'admin' : resolvedAccessLevel === 'client_admin' ? 'manager' : 'user')
 
         // Create auth user
         const { data: authData, error: authError2 } = await adminClient.auth.admin.createUser({
@@ -205,6 +236,7 @@ export async function POST(request: NextRequest) {
             client_id: resolvedClientId,
             industry_id: industry_id || null,
             role: resolvedRole,
+            access_level: resolvedAccessLevel,
             completed_profile: false,
             status: status || 'active',
           })
