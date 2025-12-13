@@ -19,22 +19,12 @@ export default function CreateAssessmentClient() {
     setMessage('')
 
     try {
-      // Check if Supabase is configured
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-      if (!supabaseUrl || !supabaseKey) {
-        console.log('Demo mode - Assessment data:', data)
-        setMessage('Demo mode: Assessment data logged to console.')
-        return
-      }
-
       // Handle image uploads if provided
       let logoUrl: string | undefined
       let backgroundUrl: string | undefined
 
       if (data.logo) {
-        const logoExt = data.logo.name.split('.').pop()
+        const logoExt = data.logo.name.split('.').pop() || 'png'
         const logoFileName = `assessment-logo-${Date.now()}.${logoExt}`
         const { error: logoError } = await supabase.storage
           .from('assessment-assets')
@@ -51,7 +41,7 @@ export default function CreateAssessmentClient() {
       }
 
       if (data.background) {
-        const backgroundExt = data.background.name.split('.').pop()
+        const backgroundExt = data.background.name.split('.').pop() || 'png'
         const backgroundFileName = `assessment-background-${Date.now()}.${backgroundExt}`
         const { error: backgroundError } = await supabase.storage
           .from('assessment-assets')
