@@ -73,28 +73,6 @@ describe('DashboardLayout', () => {
 
       expect(screen.getByText('Dashboard')).toBeInTheDocument()
     })
-
-    it('should render notification button', () => {
-      render(
-        <DashboardLayout>
-          <div>Test Content</div>
-        </DashboardLayout>
-      )
-
-      const notificationButton = screen.getByRole('button', { name: /notifications/i })
-      expect(notificationButton).toBeInTheDocument()
-    })
-
-    it('should render settings button', () => {
-      render(
-        <DashboardLayout>
-          <div>Test Content</div>
-        </DashboardLayout>
-      )
-
-      const settingsButton = screen.getByRole('button', { name: /settings/i })
-      expect(settingsButton).toBeInTheDocument()
-    })
   })
 
   describe('Layout Structure', () => {
@@ -314,51 +292,6 @@ describe('DashboardLayout', () => {
       const menuButton = screen.getByRole('button', { name: /open menu/i })
       expect(menuButton).toHaveClass('lg:hidden')
     })
-
-    it('should render notification button with icon', () => {
-      render(
-        <DashboardLayout>
-          <div>Test Content</div>
-        </DashboardLayout>
-      )
-
-      const notificationButton = screen.getByRole('button', { name: /notifications/i })
-      expect(notificationButton.textContent).toContain('🔔')
-    })
-
-    it('should render settings button with icon', () => {
-      render(
-        <DashboardLayout>
-          <div>Test Content</div>
-        </DashboardLayout>
-      )
-
-      const settingsButton = screen.getByRole('button', { name: /settings/i })
-      expect(settingsButton.textContent).toContain('⚙️')
-    })
-
-    it('should have proper button styling', () => {
-      render(
-        <DashboardLayout>
-          <div>Test Content</div>
-        </DashboardLayout>
-      )
-
-      const notificationButton = screen.getByRole('button', { name: /notifications/i })
-      expect(notificationButton).toHaveClass('p-2', 'text-gray-400', 'hover:text-gray-600')
-    })
-
-    it('should render buttons in flex container', () => {
-      const { container } = render(
-        <DashboardLayout>
-          <div>Test Content</div>
-        </DashboardLayout>
-      )
-
-      const header = container.querySelector('header')
-      const buttonContainer = header?.querySelector('.flex.items-center.space-x-4')
-      expect(buttonContainer).toBeInTheDocument()
-    })
   })
 
   describe('Edge Cases', () => {
@@ -437,32 +370,6 @@ describe('DashboardLayout', () => {
       expect(screen.getByRole('banner')).toBeInTheDocument()
       expect(screen.getByRole('main')).toBeInTheDocument()
     })
-
-    it('should have screen reader text for buttons', () => {
-      render(
-        <DashboardLayout>
-          <div>Test Content</div>
-        </DashboardLayout>
-      )
-
-      const notificationButton = screen.getByRole('button', { name: /notifications/i })
-      const screenReaderText = notificationButton.querySelector('.sr-only')
-      expect(screenReaderText).toBeInTheDocument()
-      expect(screenReaderText?.textContent).toBe('Notifications')
-    })
-
-    it('should have screen reader text for settings button', () => {
-      render(
-        <DashboardLayout>
-          <div>Test Content</div>
-        </DashboardLayout>
-      )
-
-      const settingsButton = screen.getByRole('button', { name: /settings/i })
-      const screenReaderText = settingsButton.querySelector('.sr-only')
-      expect(screenReaderText).toBeInTheDocument()
-      expect(screenReaderText?.textContent).toBe('Settings')
-    })
   })
 
   describe('Mobile Menu', () => {
@@ -521,18 +428,6 @@ describe('DashboardLayout', () => {
 
       const title = screen.getByText('Dashboard')
       expect(title).toHaveClass('text-xl', 'md:text-2xl')
-    })
-
-    it('should have responsive spacing for header buttons', () => {
-      render(
-        <DashboardLayout>
-          <div>Test Content</div>
-        </DashboardLayout>
-      )
-
-      const header = screen.getByRole('banner')
-      const buttonContainer = header.querySelector('.flex.items-center.space-x-2')
-      expect(buttonContainer).toBeInTheDocument()
     })
   })
 

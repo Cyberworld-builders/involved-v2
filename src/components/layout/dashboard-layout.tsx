@@ -34,16 +34,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </button>
               <h1 className="text-xl md:text-2xl font-semibold text-gray-900">Dashboard</h1>
             </div>
-            <div className="flex items-center space-x-2 md:space-x-4">
-              <button className="p-2 text-gray-400 hover:text-gray-600" aria-label="Notifications" type="button">
-                <span className="sr-only">Notifications</span>
-                🔔
-              </button>
-              <button className="p-2 text-gray-400 hover:text-gray-600" aria-label="Settings" type="button">
-                <span className="sr-only">Settings</span>
-                ⚙️
-              </button>
-            </div>
+
           </div>
         </header>
 
