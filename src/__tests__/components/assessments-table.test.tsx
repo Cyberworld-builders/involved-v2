@@ -59,24 +59,20 @@ describe('AssessmentsTable', () => {
     expect(screen.getByText('No Description Assessment')).toBeInTheDocument()
   })
 
-  it('should render action buttons for each assessment', () => {
+  it('should render manage benchmarks buttons for each assessment', () => {
     render(<AssessmentsTable initialAssessments={mockAssessments} />)
     
-    const viewButtons = screen.getAllByText('View')
-    const editButtons = screen.getAllByText('Edit')
-    
-    expect(viewButtons).toHaveLength(3)
-    expect(editButtons).toHaveLength(3)
+    const manageButtons = screen.getAllByText('Manage Benchmarks')
+    expect(manageButtons).toHaveLength(3)
   })
 
-  it('should render correct links for view and edit buttons', () => {
+  it('should render correct links for manage benchmarks buttons', () => {
     render(<AssessmentsTable initialAssessments={mockAssessments} />)
     
-    const viewLinks = screen.getAllByRole('link', { name: /view/i })
-    const editLinks = screen.getAllByRole('link', { name: /edit/i })
-    
-    expect(viewLinks[0]).toHaveAttribute('href', '/dashboard/assessments/1')
-    expect(editLinks[0]).toHaveAttribute('href', '/dashboard/assessments/1/edit')
+    const manageLinks = screen.getAllByRole('link', { name: /manage benchmarks/i })
+    expect(manageLinks[0]).toHaveAttribute('href', '/dashboard/benchmarks/manage/1')
+    expect(manageLinks[1]).toHaveAttribute('href', '/dashboard/benchmarks/manage/2')
+    expect(manageLinks[2]).toHaveAttribute('href', '/dashboard/benchmarks/manage/3')
   })
 
   it('should display assessment types', () => {
