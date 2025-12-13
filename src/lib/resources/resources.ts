@@ -28,6 +28,14 @@ export const RESOURCE_POSTS: ResourcePost[] = [
     tags: ['Getting Started'],
     video: { bucket: 'resources-videos', path: 'getting-started/welcome.mp4' },
   },
+  {
+    slug: 'upload-test',
+    title: 'Upload test',
+    description: 'Test clip to verify uploads and streaming from Supabase Storage.',
+    publishedAt: '2025-12-12',
+    tags: ['Getting Started'],
+    video: { bucket: 'resources-videos', path: 'getting-started/upload-test.mov' },
+  },
 ]
 
 export function getResourcePostBySlug(slug: string) {
