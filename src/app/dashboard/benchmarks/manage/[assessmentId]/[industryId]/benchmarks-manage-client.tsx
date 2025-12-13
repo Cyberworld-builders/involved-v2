@@ -356,7 +356,12 @@ export default function BenchmarksManageClient({ assessmentId, industryId }: Ben
             <p className="text-gray-600">Manage industry benchmarks for assessment dimensions.</p>
           </div>
           <div className="flex space-x-2">
-            <Button variant="outline" onClick={handleDownloadTemplate}>
+            <Button
+              variant="outline"
+              onClick={handleDownloadTemplate}
+              disabled={dimensions.length === 0}
+              title={dimensions.length === 0 ? 'Add dimensions to this assessment first' : undefined}
+            >
               📥 Download Template
             </Button>
             <label className="cursor-pointer">
@@ -366,8 +371,15 @@ export default function BenchmarksManageClient({ assessmentId, industryId }: Ben
                 onChange={handleFileUpload}
                 className="hidden"
                 id="csv-upload-input"
+                disabled={dimensions.length === 0}
               />
-              <Button variant="outline" type="button" onClick={() => document.getElementById('csv-upload-input')?.click()}>
+              <Button
+                variant="outline"
+                type="button"
+                disabled={dimensions.length === 0}
+                title={dimensions.length === 0 ? 'Add dimensions to this assessment first' : undefined}
+                onClick={() => document.getElementById('csv-upload-input')?.click()}
+              >
                 📤 Upload CSV
               </Button>
             </label>
@@ -415,8 +427,18 @@ export default function BenchmarksManageClient({ assessmentId, industryId }: Ben
           <CardContent>
             {dimensions.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
-                <p>No dimensions found for this assessment.</p>
-                <p className="text-sm mt-2">Add dimensions to the assessment first.</p>
+                <p className="font-medium text-gray-700">No dimensions found for this assessment.</p>
+                <p className="text-sm mt-2">
+                  Benchmarks are set per-dimension. Add dimensions to the assessment first, then come back here.
+                </p>
+                <div className="mt-4 flex justify-center gap-2">
+                  <Link href={`/dashboard/assessments/${assessment.id}/edit`}>
+                    <Button type="button">Edit Assessment (add dimensions)</Button>
+                  </Link>
+                  <Link href={`/dashboard/assessments/${assessment.id}`}>
+                    <Button type="button" variant="outline">View Assessment</Button>
+                  </Link>
+                </div>
               </div>
             ) : (
               <>

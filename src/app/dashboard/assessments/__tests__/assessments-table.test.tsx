@@ -54,11 +54,11 @@ describe('AssessmentsTable', () => {
     }
   })
 
-  it('should not have View or Edit buttons', () => {
+  it('should have Edit Assessment button for each assessment', () => {
     render(<AssessmentsTable initialAssessments={mockAssessments} />)
 
-    expect(screen.queryByText('View')).not.toBeInTheDocument()
-    expect(screen.queryByText('Edit')).not.toBeInTheDocument()
+    const editButtons = screen.getAllByText('Edit Assessment')
+    expect(editButtons).toHaveLength(2)
   })
 
   it('should have Manage Benchmarks button for each assessment', () => {
@@ -66,6 +66,21 @@ describe('AssessmentsTable', () => {
 
     const manageBenchmarksButtons = screen.getAllByText('Manage Benchmarks')
     expect(manageBenchmarksButtons).toHaveLength(2)
+  })
+
+  it('should have correct Edit Assessment links', () => {
+    render(<AssessmentsTable initialAssessments={mockAssessments} />)
+
+    const editButtons = screen.getAllByText('Edit Assessment')
+
+    expect(editButtons[0].closest('a')).toHaveAttribute(
+      'href',
+      '/dashboard/assessments/assessment-1/edit'
+    )
+    expect(editButtons[1].closest('a')).toHaveAttribute(
+      'href',
+      '/dashboard/assessments/assessment-2/edit'
+    )
   })
 
   it('should have correct Manage Benchmarks links', () => {

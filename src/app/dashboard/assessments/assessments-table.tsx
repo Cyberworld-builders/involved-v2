@@ -72,6 +72,9 @@ export default function AssessmentsTable({ initialAssessments }: AssessmentsTabl
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div className="flex justify-end space-x-2">
+                  <Link href={`/dashboard/assessments/${assessment.id}/edit`}>
+                    <Button variant="outline" size="sm">Edit Assessment</Button>
+                  </Link>
                   <Link href={`/dashboard/benchmarks/manage/${assessment.id}`}>
                     <Button variant="outline" size="sm">Manage Benchmarks</Button>
                   </Link>
