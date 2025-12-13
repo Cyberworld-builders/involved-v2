@@ -35,7 +35,15 @@ if (supabaseHostname) {
   remotePatterns.push(
     {
       protocol: 'https',
-      hostname: '**.supabase.co',
+      // Supabase hosted projects are on <project-ref>.supabase.co
+      // Next.js remotePatterns supports wildcard matching with '*'
+      hostname: '*.supabase.co',
+      pathname: '/storage/v1/object/public/**',
+    },
+    {
+      // Some Supabase projects can use regional domains (e.g. supabase.in)
+      protocol: 'https',
+      hostname: '*.supabase.in',
       pathname: '/storage/v1/object/public/**',
     },
     {
