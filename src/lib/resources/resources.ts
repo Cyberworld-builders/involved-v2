@@ -5,6 +5,11 @@ export type ResourcePost = {
   /** ISO date string for display/sorting */
   publishedAt?: string
   tags?: string[]
+  /**
+   * Markdown body content rendered on the detail page.
+   * Keep this relatively short and scannable (best for walkthroughs).
+   */
+  bodyMarkdown?: string
   video: {
     bucket: 'resources-videos'
     /** Path inside the bucket (e.g. "getting-started/welcome.mp4") */
@@ -35,6 +40,153 @@ export const RESOURCE_POSTS: ResourcePost[] = [
     publishedAt: '2025-12-12',
     tags: ['Getting Started'],
     video: { bucket: 'resources-videos', path: 'getting-started/upload-test.mov' },
+  },
+  {
+    slug: 'user-onboarding',
+    title: 'User onboarding (single + bulk) — end-to-end',
+    description:
+      'How to add users, send invites, and how users claim accounts and set passwords.',
+    publishedAt: '2025-12-13',
+    tags: ['Onboarding', 'Users', 'Admin'],
+    bodyMarkdown: `
+## Overview
+
+This guide walks through the full onboarding flow:
+
+- Add a **single user** (recommended for one-offs)
+- **Bulk upload** users from CSV (recommended for batches)
+- Send/verify invites
+- What the invited user does to **activate** their account
+
+> Tip: Record this as a walkthrough video and attach it to this post.
+
+---
+
+## Prerequisites
+
+- You are signed in as an admin (or have permission to manage users).
+- The **Clients** and **Industries** you need already exist.
+
+---
+
+## Option A: Add a single user (recommended for one-off invites)
+
+1. Go to **Dashboard → Users**
+2. Click **Add User**
+3. Fill out:
+   - **Name**
+   - **Email** (this is where the invite will be sent)
+   - **Username** (if required)
+   - **Client** (who the user belongs to)
+   - **Industry** (if applicable)
+   - **Access Level** (if visible): typically **Member**
+4. Click **Create User**
+
+### After creating the user
+
+- Confirm the user appears in the Users list.
+- Next, send the invite (see **“Send invite + verify delivery”** below).
+
+---
+
+## Option B: Bulk upload users from CSV (recommended for batches)
+
+1. Go to **Dashboard → Users**
+2. Click **Bulk Upload**
+3. Download the template (if available) and format your CSV.
+
+### CSV format
+
+You can download an up-to-date sample CSV from the app:
+
+1. Go to **Dashboard → Users → Bulk Upload**
+2. Click **Download Template**
+
+The template uses this exact header row:
+
+| Column | Required | Example | Notes |
+|---|---:|---|---|
+| Name | Yes | Jane Smith | No commas (CSV quoting is not supported in the current uploader). |
+| Email | Yes | jane.smith@example.com | Must be a valid email; should be unique. |
+| Username | No | janesmith | If blank, the system will generate one from Name. |
+| Industry | Yes | Healthcare | Should match an existing Industry name (case-insensitive) or the user may be created without an industry assignment. |
+| Client Name | No | Acme Corp | Optional; if provided, should match an existing Client name (case-insensitive). |
+
+### Sample CSV
+
+Copy/paste this into a file named \`.csv\` (or download the template from the app and edit it):
+
+| Name | Email | Username | Industry | Client Name |
+|---|---|---|---|---|
+| John Doe | john.doe@example.com | johndoe | Technology | Acme Corp |
+| Jane Smith | jane.smith@example.com | janesmith | Healthcare | MedCorp |
+| Bob Johnson | bob.johnson@example.com | bobjohnson | Finance | FinanceCorp |
+
+Additional notes:
+
+- Use a header row (first row).
+- Keep emails clean and unique.
+- If you have optional columns, leave the column present and values blank (don’t remove columns mid-file).
+- Avoid commas inside fields (the current CSV parser uses simple comma-splitting).
+
+### Upload
+
+1. Choose the CSV file
+2. Preview parsed users (if preview is shown)
+3. Click **Create Users**
+
+### After upload completes
+
+- Review any per-row errors shown.
+- Confirm users were created and appear in the Users list.
+- Next, send invites (see below).
+
+---
+
+## Send invite + verify delivery
+
+For each user you want to onboard:
+
+1. Open the user record (or user actions menu)
+2. Click **Invite** / **Send invite**
+3. Confirm success message
+
+### What to check
+
+- Invite status (if displayed)
+- Email delivered to the intended inbox
+- If the invite email is missing:
+  - check spam/junk
+  - confirm the user’s email address is correct
+  - resend invite
+
+---
+
+## What the invited user does (account activation)
+
+1. User opens the invite email
+2. Clicks the invite/claim link
+3. They are taken to the **claim account** flow
+4. They set a password (and any required profile fields)
+5. On success, they can sign in at **/auth/login**
+
+### Troubleshooting for users
+
+- “Link expired” or “Invalid token”: ask an admin to resend the invite.
+- Password issues: user can use **Forgot Password** (if enabled) or admin can resend invite.
+
+---
+
+## Recommended admin checklist (end-to-end)
+
+- [ ] Create client + industry (if needed)
+- [ ] Create users (single or bulk)
+- [ ] Send invite(s)
+- [ ] Confirm user can claim + set password
+- [ ] Confirm user can sign in
+- [ ] Confirm user shows correct client/industry + access level
+`,
+    video: { bucket: 'resources-videos', path: 'getting-started/user-onboarding.mp4' },
   },
 ]
 
