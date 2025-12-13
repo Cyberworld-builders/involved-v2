@@ -21,7 +21,7 @@ const EXPECTED_NAVIGATION_ITEMS = [
   'Users',
   'Industries',
   'Benchmarks',
-  'Feedback',
+  // 'Feedback', // Hidden for Phase 1
 ]
 
 describe('Sidebar Component', () => {
@@ -88,14 +88,16 @@ describe('Sidebar Component', () => {
       const benchmarksLink = screen.getByText('Benchmarks').closest('a')
       expect(benchmarksLink).toHaveAttribute('href', '/dashboard/benchmarks')
 
-      const feedbackLink = screen.getByText('Feedback').closest('a')
-      expect(feedbackLink).toHaveAttribute('href', '/dashboard/feedback')
+      // Feedback link hidden for Phase 1
+      // const feedbackLink = screen.getByText('Feedback').closest('a')
+      // expect(feedbackLink).toHaveAttribute('href', '/dashboard/feedback')
     })
 
     it('should render navigation icons for each link', () => {
       render(<Sidebar />)
       
-      const expectedIcons = ['🏠', '📋', '🏢', '👥', '🏭', '📊', '💬']
+      // '💬' (Feedback) icon hidden for Phase 1
+      const expectedIcons = ['🏠', '📋', '🏢', '👥', '🏭', '📊']
       
       expectedIcons.forEach((icon) => {
         expect(screen.getByText(icon)).toBeInTheDocument()

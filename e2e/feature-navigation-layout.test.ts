@@ -86,7 +86,8 @@ test.describe('Navigation Component Consistency', () => {
         { name: 'Users', href: '/dashboard/users' },
         { name: 'Industries', href: '/dashboard/industries' },
         { name: 'Benchmarks', href: '/dashboard/benchmarks' },
-        { name: 'Feedback', href: '/dashboard/feedback' },
+        // Feedback link hidden for Phase 1
+        // { name: 'Feedback', href: '/dashboard/feedback' },
       ]
       
       for (const link of expectedLinks) {
