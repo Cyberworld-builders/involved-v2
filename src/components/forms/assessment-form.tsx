@@ -402,8 +402,9 @@ export default function AssessmentForm({
 
   const tabs = [
     { id: 'details', label: 'Details' },
-    { id: 'settings', label: 'Settings' },
-    { id: 'dimensions', label: 'Dimensions' },
+    // Settings + Dimensions hidden for now (details only)
+    // { id: 'settings', label: 'Settings' },
+    // { id: 'dimensions', label: 'Dimensions' },
     // Fields tab hidden for Phase 1
     // { id: 'fields', label: 'Fields' },
   ] as const
