@@ -19,6 +19,8 @@ export default function UploadResourceVideoClient() {
   const [file, setFile] = useState<File | null>(null)
   const [folder, setFolder] = useState('getting-started')
   const [baseName, setBaseName] = useState('')
+  const [appendTimestamp, setAppendTimestamp] = useState(false)
+  const [allowOverwrite, setAllowOverwrite] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [message, setMessage] = useState<string>('')
   const [uploadedPath, setUploadedPath] = useState<string>('')
@@ -53,14 +55,15 @@ export default function UploadResourceVideoClient() {
       const safeFolder = slugify(folder || 'resources') || 'resources'
       const safeBase = slugify(baseName || suggestedName || 'clip') || 'clip'
       const ext = file.name.split('.').pop() || 'mp4'
-      const path = `${safeFolder}/${safeBase}-${Date.now()}.${ext}`
+      const suffix = appendTimestamp ? `-${Date.now()}` : ''
+      const path = `${safeFolder}/${safeBase}${suffix}.${ext}`
 
       const { error } = await supabase.storage
         .from('resources-videos')
         .upload(path, file, {
           cacheControl: '3600',
           contentType: file.type || undefined,
-          upsert: false,
+          upsert: allowOverwrite,
         })
 
       if (error) {
@@ -123,6 +126,40 @@ export default function UploadResourceVideoClient() {
           <Button onClick={handleUpload} disabled={!file || isUploading} className="w-full">
             {isUploading ? 'Uploading…' : 'Upload'}
           </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="md:col-span-2 space-y-3">
+          <label className="flex items-start gap-2 text-sm text-gray-800">
+            <input
+              type="checkbox"
+              checked={appendTimestamp}
+              onChange={(e) => setAppendTimestamp(e.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+            />
+            <span>
+              <span className="font-medium">Append timestamp to filename</span>
+              <span className="block text-xs text-gray-500">
+                Off is recommended for staging/prod parity (stable path). On avoids collisions.
+              </span>
+            </span>
+          </label>
+
+          <label className="flex items-start gap-2 text-sm text-gray-800">
+            <input
+              type="checkbox"
+              checked={allowOverwrite}
+              onChange={(e) => setAllowOverwrite(e.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+            />
+            <span>
+              <span className="font-medium">Allow overwrite (upsert)</span>
+              <span className="block text-xs text-gray-500">
+                Useful if you want the same path in staging + production and re-upload updates.
+              </span>
+            </span>
+          </label>
         </div>
       </div>
 
