@@ -9,7 +9,7 @@ interface User {
   name: string
   email: string
   username: string
-  role?: string | null
+  access_level?: string | null
   created_at: string
   last_login_at: string | null
   clients?: { name: string } | null
@@ -26,6 +26,19 @@ export default function UsersListClient({ users }: UsersListClientProps) {
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString(undefined, { timeZone: 'UTC' })
+  }
+
+  const formatAccessLevel = (accessLevel: string | null | undefined) => {
+    switch (accessLevel) {
+      case 'super_admin':
+        return 'Super Admin'
+      case 'client_admin':
+        return 'Client Admin'
+      case 'member':
+        return 'Member'
+      default:
+        return accessLevel || '-'
+    }
   }
 
   const handleDelete = async (userId: string, userName: string) => {
@@ -75,7 +88,7 @@ export default function UsersListClient({ users }: UsersListClientProps) {
                   User
                 </th>
                 <th className="hidden md:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
-                  Role
+                  Access
                 </th>
                 <th className="hidden sm:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
                   Client
@@ -123,7 +136,7 @@ export default function UsersListClient({ users }: UsersListClientProps) {
                     </div>
                   </td>
                   <td className="hidden md:table-cell px-3 py-4 sm:px-6 text-sm text-gray-900">
-                    {(user.role === 'client' ? 'manager' : user.role) || '-'}
+                    {formatAccessLevel(user.access_level)}
                   </td>
                   <td className="hidden sm:table-cell px-3 py-4 sm:px-6 text-sm text-gray-900">
                     {user.clients?.name || 'No client'}

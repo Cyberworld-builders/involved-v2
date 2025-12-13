@@ -12,7 +12,7 @@ interface UserFormData {
   email: string
   client_id: string
   industry_id: string
-  role?: string
+  access_level?: string
 }
 
 function CreateUserContent() {
@@ -22,7 +22,7 @@ function CreateUserContent() {
   const [message, setMessage] = useState('')
   const [clients, setClients] = useState<Array<{ id: string; name: string }>>([])
   const [industries, setIndustries] = useState<Array<{ id: string; name: string }>>([])
-  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null)
+  const [currentUserAccessLevel, setCurrentUserAccessLevel] = useState<string | null>(null)
   const [currentUserClientId, setCurrentUserClientId] = useState<string | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -41,15 +41,23 @@ function CreateUserContent() {
 
       const { data: currentProfile, error: currentProfileError } = await supabase
         .from('profiles')
-        .select('role, client_id')
+        .select('access_level, role, client_id')
         .eq('auth_user_id', user.id)
         .single()
 
       if (currentProfileError || !currentProfile) {
-        setCurrentUserRole(null)
+        setCurrentUserAccessLevel(null)
         setCurrentUserClientId(null)
       } else {
-        setCurrentUserRole(currentProfile.role || null)
+        // Backwards-compatible fallback if access_level isn't set yet.
+        const derived =
+          currentProfile.access_level ||
+          (currentProfile.role === 'admin'
+            ? 'super_admin'
+            : (currentProfile.role === 'manager' || currentProfile.role === 'client')
+              ? 'client_admin'
+              : 'member')
+        setCurrentUserAccessLevel(derived)
         setCurrentUserClientId(currentProfile.client_id || null)
       }
 
@@ -70,8 +78,8 @@ function CreateUserContent() {
         if (clientsResult.error) throw clientsResult.error
         if (industriesResult.error) throw industriesResult.error
 
-        // Managers should only be able to create users under their own client
-        if (currentUserRole === 'manager' || currentUserRole === 'client') {
+        // Client admins should only be able to create users under their own client
+        if (currentUserAccessLevel === 'client_admin') {
           const allowedClientId = currentUserClientId
           setClients((clientsResult.data || []).filter(c => !allowedClientId || c.id === allowedClientId))
         } else {
@@ -86,7 +94,7 @@ function CreateUserContent() {
     }
 
     fetchData()
-  }, [supabase, currentUserRole, currentUserClientId])
+  }, [supabase, currentUserAccessLevel, currentUserClientId])
 
   const handleSubmit = async (data: UserFormData) => {
     setIsLoading(true)
@@ -110,8 +118,8 @@ function CreateUserContent() {
         industry_id: data.industry_id || null,
       }
 
-      if (data.role !== undefined && data.role !== '') {
-        body.role = data.role
+      if (data.access_level !== undefined && data.access_level !== '') {
+        body.access_level = data.access_level
       }
 
       const response = await fetch('/api/users', {
@@ -170,11 +178,10 @@ function CreateUserContent() {
     )
   }
 
-  // RBAC: only admins/managers can create users
+  // RBAC: only super admins / client admins can create users
   if (
-    currentUserRole !== 'admin' &&
-    currentUserRole !== 'manager' &&
-    currentUserRole !== 'client'
+    currentUserAccessLevel !== 'super_admin' &&
+    currentUserAccessLevel !== 'client_admin'
   ) {
     return (
       <DashboardLayout>
@@ -186,20 +193,19 @@ function CreateUserContent() {
     )
   }
 
-  const showRoleField = currentUserRole === 'admin' || currentUserRole === 'manager' || currentUserRole === 'client'
+  const showAccessLevelField =
+    currentUserAccessLevel === 'super_admin' || currentUserAccessLevel === 'client_admin'
 
-  const roleOptions =
-    currentUserRole === 'admin'
+  const accessLevelOptions =
+    currentUserAccessLevel === 'super_admin'
       ? [
-          { value: 'admin', label: 'Admin' },
-          { value: 'manager', label: 'Manager' },
-          { value: 'user', label: 'User' },
-          { value: 'unverified', label: 'Unverified' },
+          { value: 'member', label: 'Member' },
+          { value: 'client_admin', label: 'Client Admin' },
+          { value: 'super_admin', label: 'Super Admin' },
         ]
       : [
-          { value: 'manager', label: 'Manager' },
-          { value: 'user', label: 'User' },
-          { value: 'unverified', label: 'Unverified' },
+          { value: 'member', label: 'Member' },
+          { value: 'client_admin', label: 'Client Admin' },
         ]
 
   return (
@@ -226,18 +232,18 @@ function CreateUserContent() {
         <UserForm
           initialData={{
             client_id:
-              (currentUserRole === 'manager' || currentUserRole === 'client')
+              currentUserAccessLevel === 'client_admin'
                 ? (currentUserClientId || '')
                 : (clientId || ''),
-            role: currentUserRole === 'admin' ? 'user' : 'user',
+            access_level: 'member',
           }}
           onSubmit={handleSubmit}
           isLoading={isLoading}
           submitText="Create User"
           clients={clients}
           industries={industries}
-          showRoleField={showRoleField}
-          roleOptions={roleOptions}
+          showAccessLevelField={showAccessLevelField}
+          accessLevelOptions={accessLevelOptions}
         />
       </div>
     </DashboardLayout>

@@ -201,6 +201,7 @@ export interface Database {
            industry_id: string | null
            language_id: string | null
            role: 'admin' | 'manager' | 'client' | 'user' | 'unverified'
+           access_level: 'member' | 'client_admin' | 'super_admin'
            last_login_at: string | null
            completed_profile: boolean
            accepted_terms: boolean | null
@@ -220,6 +221,7 @@ export interface Database {
            industry_id?: string | null
            language_id?: string | null
            role?: 'admin' | 'manager' | 'client' | 'user' | 'unverified'
+           access_level?: 'member' | 'client_admin' | 'super_admin'
            last_login_at?: string | null
            completed_profile?: boolean
            accepted_terms?: boolean | null
@@ -239,6 +241,7 @@ export interface Database {
            industry_id?: string | null
            language_id?: string | null
            role?: 'admin' | 'manager' | 'client' | 'user' | 'unverified'
+           access_level?: 'member' | 'client_admin' | 'super_admin'
            last_login_at?: string | null
            completed_profile?: boolean
            accepted_terms?: boolean | null

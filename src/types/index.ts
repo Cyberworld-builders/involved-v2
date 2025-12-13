@@ -6,6 +6,7 @@ export interface User {
   first_name?: string
   last_name?: string
   role: 'admin' | 'manager' | 'client' | 'user' | 'unverified'
+  access_level: 'member' | 'client_admin' | 'super_admin'
   created_at: string
   updated_at: string
 }

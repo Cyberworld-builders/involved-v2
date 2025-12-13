@@ -13,8 +13,8 @@ const mockSupabaseClient = {
   from: vi.fn(),
 }
 
-// Default to an admin actor for RBAC checks in these route tests.
-const mockActorProfile = { role: 'admin', client_id: 'test-client-id' }
+// Default to a super admin actor for RBAC checks in these route tests.
+const mockActorProfile = { access_level: 'super_admin', role: 'admin', client_id: 'test-client-id' }
 
 function attachActorProfileSelect(chain: Record<string, unknown>) {
   const originalSelect = (chain as { select?: unknown }).select
@@ -30,8 +30,8 @@ function attachActorProfileSelect(chain: Record<string, unknown>) {
 
   // Ensure select exists and returns a chain with eq/single for actor profile lookup.
   const wrappedSelect = vi.fn((columns?: unknown) => {
-    // Only intercept the *actor* lookup: `.select('role, client_id')`
-    if (typeof columns === 'string' && columns.replace(/\s+/g, '') === 'role,client_id') {
+    // Only intercept the *actor* lookup: `.select('access_level, role, client_id')`
+    if (typeof columns === 'string' && columns.replace(/\s+/g, '') === 'access_level,role,client_id') {
       return actorSelectChain
     }
     if (typeof originalSelect === 'function') {
