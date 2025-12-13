@@ -107,7 +107,9 @@ describe('EditIndustryPage', () => {
       )
     })
 
-    expect(screen.getByText('Industry updated successfully!')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('Industry updated successfully!')).toBeInTheDocument()
+    })
   })
 
   it('should show API error message when PATCH fails', async () => {
