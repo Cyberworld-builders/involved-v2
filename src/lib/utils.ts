@@ -45,3 +45,14 @@ export function getInitials(firstName?: string, lastName?: string) {
   const last = lastName?.charAt(0).toUpperCase() || ''
   return first + last
 }
+
+/**
+ * Strip HTML tags from a string
+ * @param html - HTML string to strip tags from
+ * @returns Plain text with HTML tags removed
+ */
+export function stripHtmlTags(html: string): string {
+  if (!html) return ''
+  // Remove HTML tags using regex
+  return html.replace(/<[^>]*>/g, '').trim()
+}
