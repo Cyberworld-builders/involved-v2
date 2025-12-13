@@ -5,7 +5,7 @@ export interface User {
   email: string
   first_name?: string
   last_name?: string
-  role: 'admin' | 'client' | 'user'
+  role: 'admin' | 'manager' | 'client' | 'user' | 'unverified'
   created_at: string
   updated_at: string
 }

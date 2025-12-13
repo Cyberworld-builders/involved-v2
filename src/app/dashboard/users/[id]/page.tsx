@@ -27,6 +27,22 @@ export default async function UserPage({ params }: UserPageProps) {
     redirect('/auth/login')
   }
 
+  const { data: currentProfile } = await supabase
+    .from('profiles')
+    .select('role, client_id')
+    .eq('auth_user_id', user.id)
+    .single()
+
+  const currentRole = currentProfile?.role || null
+  const currentClientId = currentProfile?.client_id || null
+
+  const isAdmin = currentRole === 'admin'
+  const isManager = currentRole === 'manager' || currentRole === 'client'
+
+  if (!isAdmin && !isManager) {
+    redirect('/dashboard')
+  }
+
   // Fetch user profile with related data
   const { data: profile, error } = await supabase
     .from('profiles')
@@ -51,6 +67,11 @@ export default async function UserPage({ params }: UserPageProps) {
         </div>
       </DashboardLayout>
     )
+  }
+
+  // Managers can only view users under their own client
+  if (isManager && currentClientId && profile.client_id !== currentClientId) {
+    redirect('/dashboard/users')
   }
 
   return (
@@ -90,6 +111,12 @@ export default async function UserPage({ params }: UserPageProps) {
               <div>
                 <label className="text-sm font-medium text-gray-500">Email</label>
                 <p className="text-gray-900">{profile.email}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">Role</label>
+                <p className="text-gray-900">
+                  {profile.role === 'client' ? 'manager' : profile.role}
+                </p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">Client</label>

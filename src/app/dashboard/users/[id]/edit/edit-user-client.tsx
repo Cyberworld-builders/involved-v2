@@ -14,6 +14,7 @@ interface UserFormData {
   email: string
   client_id: string
   industry_id: string
+  role?: string
 }
 
 interface EditUserClientProps {
@@ -28,6 +29,8 @@ export default function EditUserClient({ id }: EditUserClientProps) {
   const [initialData, setInitialData] = useState<Partial<UserFormData> | null>(null)
   const [clients, setClients] = useState<Array<{ id: string; name: string }>>([])
   const [industries, setIndustries] = useState<Array<{ id: string; name: string }>>([])
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null)
+  const [currentUserClientId, setCurrentUserClientId] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -39,6 +42,22 @@ export default function EditUserClient({ id }: EditUserClientProps) {
         router.push('/auth/login')
         return
       }
+
+      // Load current user's profile role for RBAC-aware UI
+      const { data: currentProfile, error: currentProfileError } = await supabase
+        .from('profiles')
+        .select('role, client_id')
+        .eq('auth_user_id', user.id)
+        .single()
+
+      if (currentProfileError || !currentProfile) {
+        // If we can't determine role, be conservative and hide role management UI.
+        setCurrentUserRole(null)
+        setCurrentUserClientId(null)
+      } else {
+        setCurrentUserRole(currentProfile.role || null)
+        setCurrentUserClientId(currentProfile.client_id || null)
+      }
       setIsLoadingAuth(false)
     }
     checkAuth()
@@ -48,6 +67,19 @@ export default function EditUserClient({ id }: EditUserClientProps) {
   useEffect(() => {
     const loadUser = async () => {
       try {
+        // RBAC: only admins/managers can edit users.
+        const isAdmin = currentUserRole === 'admin'
+        const isManager = currentUserRole === 'manager' || currentUserRole === 'client'
+
+        if (!isAdmin && !isManager) {
+          router.push('/dashboard')
+          return
+        }
+        if (isManager && !currentUserClientId) {
+          router.push('/dashboard')
+          return
+        }
+
         // Load user profile
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
@@ -59,6 +91,12 @@ export default function EditUserClient({ id }: EditUserClientProps) {
           throw new Error(`Failed to load user: ${profileError?.message || 'User not found'}`)
         }
 
+        // Managers can only edit users under their own client.
+        if (isManager && currentUserClientId && profile.client_id !== currentUserClientId) {
+          router.push('/dashboard/users')
+          return
+        }
+
         // Fetch clients and industries in parallel
         const [clientsResult, industriesResult] = await Promise.all([
           supabase.from('clients').select('id, name').order('name'),
@@ -68,7 +106,12 @@ export default function EditUserClient({ id }: EditUserClientProps) {
         if (clientsResult.error) throw clientsResult.error
         if (industriesResult.error) throw industriesResult.error
 
-        setClients(clientsResult.data || [])
+        // Managers should only see their own client in the selector.
+        if (isManager && currentUserClientId) {
+          setClients((clientsResult.data || []).filter(c => c.id === currentUserClientId))
+        } else {
+          setClients(clientsResult.data || [])
+        }
         setIndustries(industriesResult.data || [])
 
         // Convert to form data format
@@ -78,6 +121,7 @@ export default function EditUserClient({ id }: EditUserClientProps) {
           email: profile.email,
           client_id: profile.client_id || '',
           industry_id: profile.industry_id || '',
+          role: profile.role === 'client' ? 'manager' : profile.role,
         })
       } catch (error) {
         setMessage(error instanceof Error ? error.message : 'Failed to load user')
@@ -89,8 +133,7 @@ export default function EditUserClient({ id }: EditUserClientProps) {
     if (!isLoadingAuth) {
       loadUser()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, isLoadingAuth])
+  }, [id, isLoadingAuth, currentUserRole, currentUserClientId, router, supabase])
 
   const handleSubmit = async (data: UserFormData) => {
     setIsLoading(true)
@@ -106,18 +149,24 @@ export default function EditUserClient({ id }: EditUserClientProps) {
         return
       }
 
+      const body: Record<string, unknown> = {
+        username: data.username,
+        name: data.name,
+        email: data.email,
+        client_id: data.client_id || null,
+        industry_id: data.industry_id || null,
+      }
+
+      if (data.role !== undefined && data.role !== '') {
+        body.role = data.role
+      }
+
       const response = await fetch(`/api/users/${id}`, {
         method: 'PATCH',
         headers: {
           'content-type': 'application/json',
         },
-        body: JSON.stringify({
-          username: data.username,
-          name: data.name,
-          email: data.email,
-          client_id: data.client_id || null,
-          industry_id: data.industry_id || null,
-        }),
+        body: JSON.stringify(body),
       })
 
       if (!response.ok) {
@@ -209,6 +258,31 @@ export default function EditUserClient({ id }: EditUserClientProps) {
           submitText="Update User"
           clients={clients}
           industries={industries}
+          showRoleField={
+            currentUserRole === 'admin' ||
+            currentUserRole === 'manager' ||
+            currentUserRole === 'client'
+          }
+          disableRoleField={
+            (currentUserRole === 'manager' || currentUserRole === 'client') &&
+            (initialData.role === 'admin')
+          }
+          roleOptions={
+            currentUserRole === 'admin'
+              ? [
+                  { value: 'admin', label: 'Admin' },
+                  { value: 'manager', label: 'Manager' },
+                  { value: 'user', label: 'User' },
+                  { value: 'unverified', label: 'Unverified' },
+                ]
+              : (initialData.role === 'admin'
+                  ? [{ value: 'admin', label: 'Admin' }]
+                  : [
+                      { value: 'manager', label: 'Manager' },
+                      { value: 'user', label: 'User' },
+                      { value: 'unverified', label: 'Unverified' },
+                    ])
+          }
         />
       </div>
     </DashboardLayout>

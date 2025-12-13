@@ -13,6 +13,61 @@ const mockSupabaseClient = {
   from: vi.fn(),
 }
 
+// Default to an admin actor for RBAC checks in these route tests.
+const mockActorProfile = { role: 'admin', client_id: 'test-client-id' }
+
+function attachActorProfileSelect(chain: Record<string, unknown>) {
+  const originalSelect = (chain as { select?: unknown }).select
+
+  const actorSelectChain = {
+    eq: vi.fn().mockReturnValue({
+      single: vi.fn().mockResolvedValue({
+        data: mockActorProfile,
+        error: null,
+      }),
+    }),
+  }
+
+  // Ensure select exists and returns a chain with eq/single for actor profile lookup.
+  const wrappedSelect = vi.fn((columns?: unknown) => {
+    // Only intercept the *actor* lookup: `.select('role, client_id')`
+    if (typeof columns === 'string' && columns.replace(/\s+/g, '') === 'role,client_id') {
+      return actorSelectChain
+    }
+    if (typeof originalSelect === 'function') {
+      return (originalSelect as (arg?: unknown) => unknown)(columns)
+    }
+    // Fallback: PATCH routes now fetch a target profile before updating.
+    // If a test only mocks `update()` without providing a `select()` chain,
+    // return a default profile so the route doesn't 404.
+    return {
+      eq: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({ data: mockUser, error: null }),
+      }),
+    }
+  })
+
+  ;(chain as { select?: unknown }).select = wrappedSelect
+  return chain
+}
+
+// Wrap any per-test .from mocks so RBAC actor profile lookup always works.
+let _fromImpl = mockSupabaseClient.from
+Object.defineProperty(mockSupabaseClient, 'from', {
+  get() {
+    return _fromImpl
+  },
+  set(nextFrom) {
+    _fromImpl = ((...args: unknown[]) => {
+      const result = (nextFrom as (...a: unknown[]) => unknown)(...args)
+      if (result && typeof result === 'object') {
+        return attachActorProfileSelect(result as Record<string, unknown>)
+      }
+      return result
+    }) as unknown as typeof mockSupabaseClient.from
+  },
+})
+
 // Mock Admin Client
 const mockAdminClient = {
   auth: {
@@ -678,7 +733,7 @@ describe('API User Routes', () => {
       const data = await response.json()
 
       expect(response.status).toBe(400)
-      expect(data.error).toBe('Invalid role. Must be one of: admin, client, user')
+      expect(data.error).toBe('Invalid role. Must be one of: admin, manager, client, user, unverified')
     })
 
     // User-Client Assignment Tests
@@ -1689,7 +1744,7 @@ describe('API User Routes', () => {
       const data = await response.json()
 
       expect(response.status).toBe(400)
-      expect(data.error).toBe('Invalid role. Must be one of: admin, client, user')
+      expect(data.error).toBe('Invalid role. Must be one of: admin, manager, client, user, unverified')
     })
 
     it('should allow updating role to different valid roles', async () => {
@@ -1698,7 +1753,7 @@ describe('API User Routes', () => {
         error: null,
       })
 
-      const roles = ['admin', 'client', 'user']
+      const roles = ['admin', 'manager', 'client', 'user', 'unverified']
       
       for (const role of roles) {
         const updateMock = vi.fn().mockReturnValue({
@@ -2524,7 +2579,7 @@ describe('API User Routes', () => {
       expect(data.created).toBe(0)
       expect(data.failed).toBe(1)
       expect(data.results[0].success).toBe(false)
-      expect(data.results[0].error).toBe('Invalid role. Must be one of: admin, client, user')
+      expect(data.results[0].error).toBe('Invalid role. Must be one of: admin, manager, client, user, unverified')
     })
   })
 

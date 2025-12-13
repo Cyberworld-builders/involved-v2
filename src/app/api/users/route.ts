@@ -7,6 +7,13 @@ import { isValidEmail } from '@/lib/utils/email-validation'
 
 type ProfileInsert = Database['public']['Tables']['profiles']['Insert']
 
+const VALID_ROLES = ['admin', 'manager', 'client', 'user', 'unverified'] as const
+type ValidRole = (typeof VALID_ROLES)[number]
+
+function isManagerRole(role: string | null | undefined): boolean {
+  return role === 'manager' || role === 'client'
+}
+
 /**
  * GET /api/users
  * Fetches all users from the database
@@ -25,11 +32,35 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { data: actorProfile } = await supabase
+      .from('profiles')
+      .select('role, client_id')
+      .eq('auth_user_id', user.id)
+      .single()
+
+    const actorRole = actorProfile?.role || null
+    const actorClientId = actorProfile?.client_id || null
+
+    const isAdmin = actorRole === 'admin'
+    const isManager = isManagerRole(actorRole)
+
+    if (!isAdmin && !isManager) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+    if (isManager && !actorClientId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     // Fetch all users
-    const { data: users, error } = await supabase
+    let query = supabase
       .from('profiles')
       .select('*')
-      .order('created_at', { ascending: false })
+
+    if (isManager && actorClientId) {
+      query = query.eq('client_id', actorClientId)
+    }
+
+    const { data: users, error } = await query.order('created_at', { ascending: false })
 
     if (error) {
       console.error('Error fetching users:', error)
@@ -67,6 +98,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { data: actorProfile } = await supabase
+      .from('profiles')
+      .select('role, client_id')
+      .eq('auth_user_id', user.id)
+      .single()
+
+    const actorRole = actorProfile?.role || null
+    const actorClientId = actorProfile?.client_id || null
+
+    const isAdmin = actorRole === 'admin'
+    const isManager = isManagerRole(actorRole)
+
+    if (!isAdmin && !isManager) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     // Parse request body
     const body = await request.json()
     const { name, email, username, client_id, industry_id, password, role, status } = body
@@ -95,9 +142,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate role if provided
-    if (role !== undefined && !['admin', 'client', 'user'].includes(role)) {
+    if (role !== undefined && (typeof role !== 'string' || !VALID_ROLES.includes(role as ValidRole))) {
       return NextResponse.json(
-        { error: 'Invalid role. Must be one of: admin, client, user' },
+        { error: 'Invalid role. Must be one of: admin, manager, client, user, unverified' },
         { status: 400 }
       )
     }
@@ -181,14 +228,24 @@ export async function POST(request: NextRequest) {
     }
 
     // Prepare profile data
+    const resolvedClientId =
+      isManager ? actorClientId : (client_id || null)
+
+    const resolvedRole =
+      role || 'user'
+
+    if (isManager && resolvedRole === 'admin') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     const profileData: ProfileInsert = {
       auth_user_id: authData.user.id,
       username: finalUsername,
       name: name.trim(),
       email: email.trim(),
-      client_id: client_id || null,
+      client_id: resolvedClientId,
       industry_id: industry_id || null,
-      role: role || 'user',
+      role: resolvedRole,
       completed_profile: false,
       status: status || 'active',
     }

@@ -11,6 +11,7 @@ interface UserFormData {
   email: string
   client_id: string
   industry_id: string
+  role?: string
 }
 
 interface UserFormProps {
@@ -20,6 +21,9 @@ interface UserFormProps {
   submitText?: string
   clients?: Array<{ id: string; name: string }>
   industries?: Array<{ id: string; name: string }>
+  showRoleField?: boolean
+  disableRoleField?: boolean
+  roleOptions?: Array<{ value: string; label: string }>
 }
 
 export default function UserForm({
@@ -28,7 +32,10 @@ export default function UserForm({
   isLoading = false,
   submitText = 'Add User',
   clients = [],
-  industries = []
+  industries = [],
+  showRoleField = false,
+  disableRoleField = false,
+  roleOptions = []
 }: UserFormProps) {
   const [formData, setFormData] = useState<UserFormData>({
     username: initialData?.username || '',
@@ -36,6 +43,7 @@ export default function UserForm({
     email: initialData?.email || '',
     client_id: initialData?.client_id || '',
     industry_id: initialData?.industry_id || '',
+    role: initialData?.role,
   })
 
 
@@ -113,6 +121,37 @@ export default function UserForm({
               required
             />
           </div>
+
+          {/* Role (admin/manager only) */}
+          {showRoleField && (
+            <div>
+              <label htmlFor="role" className="block text-sm font-medium text-gray-900 mb-2">
+                Role
+              </label>
+              <p className="text-sm text-gray-500 mb-3">
+                Controls what this user can see and manage in the dashboard.
+              </p>
+              <select
+                id="role"
+                value={formData.role || ''}
+                onChange={(e) => handleInputChange('role', e.target.value)}
+                disabled={disableRoleField}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-60"
+              >
+                <option value="">Select a role...</option>
+                {roleOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              {disableRoleField && (
+                <p className="text-xs text-gray-500 mt-2">
+                  Only admins can change the role for an admin user.
+                </p>
+              )}
+            </div>
+          )}
 
         </CardContent>
       </Card>

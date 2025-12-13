@@ -17,8 +17,27 @@ export default async function UsersPage() {
     redirect('/auth/login')
   }
 
+  const { data: currentProfile } = await supabase
+    .from('profiles')
+    .select('role, client_id')
+    .eq('auth_user_id', user.id)
+    .single()
+
+  const currentRole = currentProfile?.role || null
+  const currentClientId = currentProfile?.client_id || null
+
+  const isAdmin = currentRole === 'admin'
+  const isManager = currentRole === 'manager' || currentRole === 'client'
+
+  if (!isAdmin && !isManager) {
+    redirect('/dashboard')
+  }
+  if (isManager && !currentClientId) {
+    redirect('/dashboard')
+  }
+
   // Fetch users from database with client and industry information
-  const { data: users, error } = await supabase
+  let query = supabase
     .from('profiles')
     .select(`
       *,
@@ -26,7 +45,12 @@ export default async function UsersPage() {
       industries!industry_id(name),
       languages!language_id(name)
     `)
-    .order('created_at', { ascending: false })
+
+  if (isManager && currentClientId) {
+    query = query.eq('client_id', currentClientId)
+  }
+
+  const { data: users, error } = await query.order('created_at', { ascending: false })
 
   if (error) {
     console.error('Error fetching users:', error)

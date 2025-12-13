@@ -22,6 +22,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { data: actorProfile } = await supabase
+      .from('profiles')
+      .select('role, client_id')
+      .eq('auth_user_id', user.id)
+      .single()
+
+    const actorRole = actorProfile?.role || null
+    const actorClientId = actorProfile?.client_id || null
+
+    const isAdmin = actorRole === 'admin'
+    const isManager = actorRole === 'manager' || actorRole === 'client'
+
+    if (!isAdmin && !isManager) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+    if (isManager && !actorClientId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     // Parse request body
     const body = await request.json()
     const { users } = body
@@ -84,11 +103,11 @@ export async function POST(request: NextRequest) {
       }
 
       // Validate role if provided
-      if (role !== undefined && !['admin', 'client', 'user'].includes(role)) {
+      if (role !== undefined && !['admin', 'manager', 'client', 'user', 'unverified'].includes(role)) {
         results.push({
           user: email,
           success: false,
-          error: 'Invalid role. Must be one of: admin, client, user',
+          error: 'Invalid role. Must be one of: admin, manager, client, user, unverified',
         })
         continue
       }
@@ -142,6 +161,18 @@ export async function POST(request: NextRequest) {
       try {
         const finalUsername = await generateUniqueUsername(baseUsername, checkUsernameExists)
 
+        // Managers: enforce client scope and block admin role assignment
+        const resolvedClientId = isManager ? actorClientId : (client_id || null)
+        const resolvedRole = role || 'user'
+        if (isManager && resolvedRole === 'admin') {
+          results.push({
+            user: email,
+            success: false,
+            error: 'Forbidden',
+          })
+          continue
+        }
+
         // Create auth user
         const { data: authData, error: authError2 } = await adminClient.auth.admin.createUser({
           email: email.trim(),
@@ -171,9 +202,9 @@ export async function POST(request: NextRequest) {
             username: finalUsername,
             name: name.trim(),
             email: email.trim(),
-            client_id: client_id || null,
+            client_id: resolvedClientId,
             industry_id: industry_id || null,
-            role: role || 'user',
+            role: resolvedRole,
             completed_profile: false,
             status: status || 'active',
           })

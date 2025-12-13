@@ -6,6 +6,13 @@ import { isValidEmail } from '@/lib/utils/email-validation'
 
 type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
 
+const VALID_ROLES = ['admin', 'manager', 'client', 'user', 'unverified'] as const
+type ValidRole = (typeof VALID_ROLES)[number]
+
+function isManagerRole(role: string | null | undefined): boolean {
+  return role === 'manager' || role === 'client'
+}
+
 /**
  * GET /api/users/[id]
  * Fetches a single user by ID
@@ -28,6 +35,25 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { data: actorProfile } = await supabase
+      .from('profiles')
+      .select('role, client_id')
+      .eq('auth_user_id', user.id)
+      .single()
+
+    const actorRole = actorProfile?.role || null
+    const actorClientId = actorProfile?.client_id || null
+
+    const isAdmin = actorRole === 'admin'
+    const isManager = isManagerRole(actorRole)
+
+    if (!isAdmin && !isManager) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+    if (isManager && !actorClientId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     // Fetch user by ID
     const { data: userData, error } = await supabase
       .from('profiles')
@@ -47,6 +73,11 @@ export async function GET(
         { error: 'Failed to fetch user' },
         { status: 500 }
       )
+    }
+
+    // Managers can only view users within their client scope
+    if (isManager && actorClientId && userData.client_id !== actorClientId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     return NextResponse.json({ user: userData })
@@ -79,6 +110,42 @@ export async function PATCH(
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { data: actorProfile } = await supabase
+      .from('profiles')
+      .select('role, client_id')
+      .eq('auth_user_id', user.id)
+      .single()
+
+    const actorRole = actorProfile?.role || null
+    const actorClientId = actorProfile?.client_id || null
+
+    const isAdmin = actorRole === 'admin'
+    const isManager = isManagerRole(actorRole)
+
+    if (!isAdmin && !isManager) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const { data: targetProfile, error: targetProfileError } = await supabase
+      .from('profiles')
+      .select('id, role, client_id')
+      .eq('id', id)
+      .single()
+
+    if (targetProfileError || !targetProfile) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    // Managers can only manage users within their client scope
+    if (isManager) {
+      if (!actorClientId) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+      if (targetProfile.client_id !== actorClientId) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
     }
 
     // Parse request body
@@ -129,6 +196,10 @@ export async function PATCH(
     }
 
     if (client_id !== undefined) {
+      // Managers cannot move users between clients (or remove client) outside their scope
+      if (isManager && actorClientId && client_id !== actorClientId) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
       updates.client_id = client_id
     }
 
@@ -141,13 +212,21 @@ export async function PATCH(
     }
 
     if (role !== undefined) {
-      if (!['admin', 'client', 'user'].includes(role)) {
+      if (typeof role !== 'string' || !VALID_ROLES.includes(role as ValidRole)) {
         return NextResponse.json(
-          { error: 'Invalid role. Must be one of: admin, client, user' },
+          { error: 'Invalid role. Must be one of: admin, manager, client, user, unverified' },
           { status: 400 }
         )
       }
-      updates.role = role
+      // Managers cannot change the role of an admin user (but admins can).
+      if (isManager && targetProfile.role === 'admin') {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+      // Managers cannot assign admin role
+      if (isManager && role === 'admin') {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+      updates.role = role as ValidRole
     }
 
     if (status !== undefined) {
@@ -222,12 +301,40 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { data: actorProfile } = await supabase
+      .from('profiles')
+      .select('role, client_id')
+      .eq('auth_user_id', user.id)
+      .single()
+
+    const actorRole = actorProfile?.role || null
+    const actorClientId = actorProfile?.client_id || null
+
+    const isAdmin = actorRole === 'admin'
+    const isManager = isManagerRole(actorRole)
+
+    if (!isAdmin && !isManager) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     // Get user's auth_user_id before deleting profile
     const { data: userData } = await supabase
       .from('profiles')
-      .select('auth_user_id')
+      .select('auth_user_id, role, client_id')
       .eq('id', id)
       .single()
+
+    if (isManager) {
+      if (!actorClientId) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+      if (userData?.client_id !== actorClientId) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+      if (userData?.role === 'admin') {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+    }
 
     // Delete profile
     const { error } = await supabase

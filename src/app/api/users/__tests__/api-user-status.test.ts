@@ -13,6 +13,57 @@ const mockSupabaseClient = {
   from: vi.fn(),
 }
 
+// Default to an admin actor for RBAC checks in these route tests.
+const mockActorProfile = { role: 'admin', client_id: 'test-client-id' }
+
+function attachActorProfileSelect(chain: Record<string, unknown>) {
+  const originalSelect = (chain as { select?: unknown }).select
+
+  const actorSelectChain = {
+    eq: vi.fn().mockReturnValue({
+      single: vi.fn().mockResolvedValue({
+        data: mockActorProfile,
+        error: null,
+      }),
+    }),
+  }
+
+  const wrappedSelect = vi.fn((columns?: unknown) => {
+    // Only intercept the *actor* lookup: `.select('role, client_id')`
+    if (typeof columns === 'string' && columns.replace(/\s+/g, '') === 'role,client_id') {
+      return actorSelectChain
+    }
+    if (typeof originalSelect === 'function') {
+      return (originalSelect as (arg?: unknown) => unknown)(columns)
+    }
+    return {
+      eq: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({ data: mockUser, error: null }),
+      }),
+    }
+  })
+
+  ;(chain as { select?: unknown }).select = wrappedSelect
+  return chain
+}
+
+// Wrap any per-test .from mocks so RBAC actor profile lookup always works.
+let _fromImpl = mockSupabaseClient.from
+Object.defineProperty(mockSupabaseClient, 'from', {
+  get() {
+    return _fromImpl
+  },
+  set(nextFrom) {
+    _fromImpl = ((...args: unknown[]) => {
+      const result = (nextFrom as (...a: unknown[]) => unknown)(...args)
+      if (result && typeof result === 'object') {
+        return attachActorProfileSelect(result as Record<string, unknown>)
+      }
+      return result
+    }) as unknown as typeof mockSupabaseClient.from
+  },
+})
+
 // Mock Admin Client
 const mockAdminClient = {
   auth: {

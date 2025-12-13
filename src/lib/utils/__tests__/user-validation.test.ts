@@ -30,7 +30,8 @@ describe('validateRole', () => {
   })
 
   it('should reject invalid role strings', () => {
-    expect(validateRole('manager')).toBe(false)
+    expect(validateRole('manager')).toBe(true)
+    expect(validateRole('unverified')).toBe(true)
     expect(validateRole('superuser')).toBe(false)
     expect(validateRole('moderator')).toBe(false)
     expect(validateRole('guest')).toBe(false)
@@ -89,7 +90,6 @@ describe('validateStatus', () => {
 
   it('should reject invalid status strings', () => {
     expect(validateStatus('pending')).toBe(false)
-    expect(validateStatus('suspended')).toBe(false)
     expect(validateStatus('deleted')).toBe(false)
     expect(validateStatus('archived')).toBe(false)
   })
@@ -232,8 +232,16 @@ describe('hasClientManagementPermission', () => {
     expect(hasClientManagementPermission('client', 'active')).toBe(true)
   })
 
+  it('should return true for active manager', () => {
+    expect(hasClientManagementPermission('manager', 'active')).toBe(true)
+  })
+
   it('should return false for active user', () => {
     expect(hasClientManagementPermission('user', 'active')).toBe(false)
+  })
+
+  it('should return false for active unverified', () => {
+    expect(hasClientManagementPermission('unverified', 'active')).toBe(false)
   })
 
   it('should return false for inactive admin', () => {
@@ -244,8 +252,16 @@ describe('hasClientManagementPermission', () => {
     expect(hasClientManagementPermission('client', 'inactive')).toBe(false)
   })
 
+  it('should return false for inactive manager', () => {
+    expect(hasClientManagementPermission('manager', 'inactive')).toBe(false)
+  })
+
   it('should return false for inactive user', () => {
     expect(hasClientManagementPermission('user', 'inactive')).toBe(false)
+  })
+
+  it('should return false for inactive unverified', () => {
+    expect(hasClientManagementPermission('unverified', 'inactive')).toBe(false)
   })
 })
 
@@ -284,8 +300,16 @@ describe('getPermissionLevel', () => {
     expect(getPermissionLevel('client')).toBe(2)
   })
 
+  it('should return 2 for manager role', () => {
+    expect(getPermissionLevel('manager')).toBe(2)
+  })
+
   it('should return 1 for user role', () => {
     expect(getPermissionLevel('user')).toBe(1)
+  })
+
+  it('should return 1 for unverified role', () => {
+    expect(getPermissionLevel('unverified')).toBe(1)
   })
 
   it('should return higher level for admin than client', () => {
@@ -356,14 +380,14 @@ describe('Type exports', () => {
   })
 
   it('should allow all valid roles in UserRole type', () => {
-    const roles: UserRole[] = ['admin', 'client', 'user']
+    const roles: UserRole[] = ['admin', 'manager', 'client', 'user', 'unverified']
     roles.forEach(role => {
       expect(validateRole(role)).toBe(true)
     })
   })
 
   it('should allow all valid statuses in UserStatus type', () => {
-    const statuses: UserStatus[] = ['active', 'inactive']
+    const statuses: UserStatus[] = ['active', 'inactive', 'suspended']
     statuses.forEach(status => {
       expect(validateStatus(status)).toBe(true)
     })

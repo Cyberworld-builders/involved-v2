@@ -3,11 +3,11 @@
  * Functions for validating user roles, status, and role-based permissions
  */
 
-// Valid user roles based on the User type in src/types/index.ts
-export type UserRole = 'admin' | 'client' | 'user'
+// Valid user roles (keep legacy 'client' as an alias for manager)
+export type UserRole = 'admin' | 'manager' | 'client' | 'user' | 'unverified'
 
 // Valid user status values
-export type UserStatus = 'active' | 'inactive'
+export type UserStatus = 'active' | 'inactive' | 'suspended'
 
 /**
  * Validates if a given value is a valid user role
@@ -18,7 +18,13 @@ export function validateRole(role: unknown): role is UserRole {
   if (typeof role !== 'string') {
     return false
   }
-  return role === 'admin' || role === 'client' || role === 'user'
+  return (
+    role === 'admin' ||
+    role === 'manager' ||
+    role === 'client' ||
+    role === 'user' ||
+    role === 'unverified'
+  )
 }
 
 /**
@@ -30,7 +36,7 @@ export function validateStatus(status: unknown): status is UserStatus {
   if (typeof status !== 'string') {
     return false
   }
-  return status === 'active' || status === 'inactive'
+  return status === 'active' || status === 'inactive' || status === 'suspended'
 }
 
 /**
@@ -48,7 +54,7 @@ export function isAdmin(role: UserRole): boolean {
  * @returns True if the role is client, false otherwise
  */
 export function isClient(role: UserRole): boolean {
-  return role === 'client'
+  return role === 'client' || role === 'manager'
 }
 
 /**
@@ -58,6 +64,10 @@ export function isClient(role: UserRole): boolean {
  */
 export function isUser(role: UserRole): boolean {
   return role === 'user'
+}
+
+export function isUnverified(role: UserRole): boolean {
+  return role === 'unverified'
 }
 
 /**
@@ -120,9 +130,11 @@ export function getPermissionLevel(role: UserRole): number {
   switch (role) {
     case 'admin':
       return 3
+    case 'manager':
     case 'client':
       return 2
     case 'user':
+    case 'unverified':
       return 1
     default:
       return 0

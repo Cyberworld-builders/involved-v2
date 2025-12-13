@@ -9,6 +9,7 @@ interface User {
   name: string
   email: string
   username: string
+  role?: string | null
   created_at: string
   last_login_at: string | null
   clients?: { name: string } | null
@@ -73,6 +74,9 @@ export default function UsersListClient({ users }: UsersListClientProps) {
                 <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
                   User
                 </th>
+                <th className="hidden md:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
+                  Role
+                </th>
                 <th className="hidden sm:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
                   Client
                 </th>
@@ -117,6 +121,9 @@ export default function UsersListClient({ users }: UsersListClientProps) {
                         </div>
                       </div>
                     </div>
+                  </td>
+                  <td className="hidden md:table-cell px-3 py-4 sm:px-6 text-sm text-gray-900">
+                    {(user.role === 'client' ? 'manager' : user.role) || '-'}
                   </td>
                   <td className="hidden sm:table-cell px-3 py-4 sm:px-6 text-sm text-gray-900">
                     {user.clients?.name || 'No client'}

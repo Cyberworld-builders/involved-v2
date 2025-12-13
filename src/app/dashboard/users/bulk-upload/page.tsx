@@ -33,6 +33,27 @@ export default function BulkUploadPage() {
         router.push('/auth/login')
         return
       }
+      // RBAC: only admins/managers can bulk upload users.
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('role, client_id')
+        .eq('auth_user_id', user.id)
+        .single()
+
+      const currentRole = currentProfile?.role || null
+      const currentClientId = currentProfile?.client_id || null
+
+      const isAdmin = currentRole === 'admin'
+      const isManager = currentRole === 'manager' || currentRole === 'client'
+
+      if (!isAdmin && !isManager) {
+        router.push('/dashboard')
+        return
+      }
+      if (isManager && !currentClientId) {
+        router.push('/dashboard')
+        return
+      }
       setIsLoadingAuth(false)
     }
     checkAuth()

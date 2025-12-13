@@ -12,6 +12,7 @@ interface UserFormData {
   email: string
   client_id: string
   industry_id: string
+  role?: string
 }
 
 function CreateUserContent() {
@@ -21,6 +22,8 @@ function CreateUserContent() {
   const [message, setMessage] = useState('')
   const [clients, setClients] = useState<Array<{ id: string; name: string }>>([])
   const [industries, setIndustries] = useState<Array<{ id: string; name: string }>>([])
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null)
+  const [currentUserClientId, setCurrentUserClientId] = useState<string | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClient()
@@ -35,6 +38,21 @@ function CreateUserContent() {
         router.push('/auth/login')
         return
       }
+
+      const { data: currentProfile, error: currentProfileError } = await supabase
+        .from('profiles')
+        .select('role, client_id')
+        .eq('auth_user_id', user.id)
+        .single()
+
+      if (currentProfileError || !currentProfile) {
+        setCurrentUserRole(null)
+        setCurrentUserClientId(null)
+      } else {
+        setCurrentUserRole(currentProfile.role || null)
+        setCurrentUserClientId(currentProfile.client_id || null)
+      }
+
       setIsLoadingAuth(false)
     }
     checkAuth()
@@ -52,7 +70,13 @@ function CreateUserContent() {
         if (clientsResult.error) throw clientsResult.error
         if (industriesResult.error) throw industriesResult.error
 
-        setClients(clientsResult.data || [])
+        // Managers should only be able to create users under their own client
+        if (currentUserRole === 'manager' || currentUserRole === 'client') {
+          const allowedClientId = currentUserClientId
+          setClients((clientsResult.data || []).filter(c => !allowedClientId || c.id === allowedClientId))
+        } else {
+          setClients(clientsResult.data || [])
+        }
         setIndustries(industriesResult.data || [])
       } catch (error) {
         setMessage(error instanceof Error ? error.message : 'Failed to load form data')
@@ -62,7 +86,7 @@ function CreateUserContent() {
     }
 
     fetchData()
-  }, [supabase])
+  }, [supabase, currentUserRole, currentUserClientId])
 
   const handleSubmit = async (data: UserFormData) => {
     setIsLoading(true)
@@ -78,18 +102,24 @@ function CreateUserContent() {
         return
       }
 
+      const body: Record<string, unknown> = {
+        username: data.username,
+        name: data.name,
+        email: data.email,
+        client_id: data.client_id || null,
+        industry_id: data.industry_id || null,
+      }
+
+      if (data.role !== undefined && data.role !== '') {
+        body.role = data.role
+      }
+
       const response = await fetch('/api/users', {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
         },
-        body: JSON.stringify({
-          username: data.username,
-          name: data.name,
-          email: data.email,
-          client_id: data.client_id || null,
-          industry_id: data.industry_id || null,
-        }),
+        body: JSON.stringify(body),
       })
 
       if (!response.ok) {
@@ -140,6 +170,38 @@ function CreateUserContent() {
     )
   }
 
+  // RBAC: only admins/managers can create users
+  if (
+    currentUserRole !== 'admin' &&
+    currentUserRole !== 'manager' &&
+    currentUserRole !== 'client'
+  ) {
+    return (
+      <DashboardLayout>
+        <div className="text-center py-12">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Restricted</h1>
+          <p className="text-gray-600">You don&apos;t have permission to create users.</p>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
+  const showRoleField = currentUserRole === 'admin' || currentUserRole === 'manager' || currentUserRole === 'client'
+
+  const roleOptions =
+    currentUserRole === 'admin'
+      ? [
+          { value: 'admin', label: 'Admin' },
+          { value: 'manager', label: 'Manager' },
+          { value: 'user', label: 'User' },
+          { value: 'unverified', label: 'Unverified' },
+        ]
+      : [
+          { value: 'manager', label: 'Manager' },
+          { value: 'user', label: 'User' },
+          { value: 'unverified', label: 'Unverified' },
+        ]
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -162,12 +224,20 @@ function CreateUserContent() {
 
         {/* User Form */}
         <UserForm
-          initialData={clientId ? { client_id: clientId } : undefined}
+          initialData={{
+            client_id:
+              (currentUserRole === 'manager' || currentUserRole === 'client')
+                ? (currentUserClientId || '')
+                : (clientId || ''),
+            role: currentUserRole === 'admin' ? 'user' : 'user',
+          }}
           onSubmit={handleSubmit}
           isLoading={isLoading}
           submitText="Create User"
           clients={clients}
           industries={industries}
+          showRoleField={showRoleField}
+          roleOptions={roleOptions}
         />
       </div>
     </DashboardLayout>
