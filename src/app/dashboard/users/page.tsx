@@ -6,6 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import DashboardLayout from '@/components/layout/dashboard-layout'
 import UsersListClient from './users-list-client'
 
+// Force dynamic rendering to prevent caching/redirect loops
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function UsersPage() {
   const supabase = await createClient()
 
@@ -19,20 +23,28 @@ export default async function UsersPage() {
 
   const { data: currentProfile } = await supabase
     .from('profiles')
-    .select('role, client_id')
+    .select('access_level, role, client_id')
     .eq('auth_user_id', user.id)
     .single()
 
-  const currentRole = currentProfile?.role || null
   const currentClientId = currentProfile?.client_id || null
 
-  const isAdmin = currentRole === 'admin'
-  const isManager = currentRole === 'manager' || currentRole === 'client'
+  // Backwards-compatible fallback if access_level isn't set yet.
+  const currentAccessLevel =
+    currentProfile?.access_level ||
+    (currentProfile?.role === 'admin'
+      ? 'super_admin'
+      : (currentProfile?.role === 'manager' || currentProfile?.role === 'client')
+        ? 'client_admin'
+        : 'member')
 
-  if (!isAdmin && !isManager) {
+  const isSuperAdmin = currentAccessLevel === 'super_admin'
+  const isClientAdmin = currentAccessLevel === 'client_admin'
+
+  if (!isSuperAdmin && !isClientAdmin) {
     redirect('/dashboard')
   }
-  if (isManager && !currentClientId) {
+  if (isClientAdmin && !currentClientId) {
     redirect('/dashboard')
   }
 
@@ -46,7 +58,7 @@ export default async function UsersPage() {
       languages!language_id(name)
     `)
 
-  if (isManager && currentClientId) {
+  if (isClientAdmin && currentClientId) {
     query = query.eq('client_id', currentClientId)
   }
 
