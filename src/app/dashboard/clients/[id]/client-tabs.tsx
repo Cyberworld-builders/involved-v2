@@ -6,7 +6,6 @@ import Image from 'next/image'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import ClientUsers from './client-users'
 import ClientGroups from './client-groups'
-import ClientAssignments from './client-assignments'
 
 interface ClientTabsProps {
   clientId: string
@@ -39,7 +38,6 @@ export default function ClientTabs({ clientId, activeTab: initialTab, client }: 
     { id: 'details', label: 'Details' },
     { id: 'users', label: 'Users' },
     { id: 'groups', label: 'Groups' },
-    { id: 'assignments', label: 'Assignments' },
   ]
 
   const handleTabChange = (tabId: string) => {
@@ -211,7 +209,6 @@ export default function ClientTabs({ clientId, activeTab: initialTab, client }: 
 
         {activeTab === 'users' && <ClientUsers clientId={clientId} />}
         {activeTab === 'groups' && <ClientGroups clientId={clientId} />}
-        {activeTab === 'assignments' && <ClientAssignments clientId={clientId} />}
       </div>
     </div>
   )
