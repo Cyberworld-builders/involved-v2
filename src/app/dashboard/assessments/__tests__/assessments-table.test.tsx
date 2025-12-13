@@ -47,7 +47,7 @@ describe('AssessmentsTable', () => {
     render(<AssessmentsTable initialAssessments={mockAssessments} />)
 
     const expectedDates = mockAssessments.map((a) =>
-      new Date(a.created_at).toLocaleDateString()
+      new Date(a.created_at).toLocaleDateString(undefined, { timeZone: 'UTC' })
     )
     for (const date of expectedDates) {
       expect(screen.getByText(date)).toBeInTheDocument()
