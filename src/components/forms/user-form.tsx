@@ -46,6 +46,11 @@ export default function UserForm({
     access_level: initialData?.access_level,
   })
 
+  // Username auto-generation:
+  // - Auto-updates while typing Name, until the user edits Username manually
+  // - If the user clears Username, auto mode turns back on
+  const [isUsernameAuto, setIsUsernameAuto] = useState<boolean>(() => !initialData?.username)
+
 
   const handleInputChange = (field: keyof UserFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -56,13 +61,17 @@ export default function UserForm({
     onSubmit(formData)
   }
 
-  // Generate username from name if not provided
+  // Generate/update username from name while in auto mode
   useEffect(() => {
-    if (!formData.username && formData.name) {
-      const generatedUsername = generateUsernameFromName(formData.name)
-      setFormData(prev => ({ ...prev, username: generatedUsername }))
-    }
-  }, [formData.name, formData.username])
+    if (!isUsernameAuto) return
+    if (!formData.name) return
+
+    const generatedUsername = generateUsernameFromName(formData.name)
+    setFormData((prev) => {
+      if (prev.username === generatedUsername) return prev
+      return { ...prev, username: generatedUsername }
+    })
+  }, [formData.name, isUsernameAuto])
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -84,7 +93,13 @@ export default function UserForm({
               type="text"
               id="username"
               value={formData.username}
-              onChange={(e) => handleInputChange('username', e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value
+                handleInputChange('username', value)
+                // If the user types anything, assume they want manual control.
+                // If they clear the field, go back to auto mode.
+                setIsUsernameAuto(value.trim() === '')
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               required
             />
@@ -101,6 +116,12 @@ export default function UserForm({
               id="name"
               value={formData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
+              onBlur={() => {
+                // If auto mode is enabled, refresh username at end of editing.
+                if (!isUsernameAuto) return
+                const generatedUsername = generateUsernameFromName(formData.name)
+                setFormData((prev) => ({ ...prev, username: generatedUsername }))
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               required
             />

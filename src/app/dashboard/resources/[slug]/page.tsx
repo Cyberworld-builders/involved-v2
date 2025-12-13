@@ -5,6 +5,8 @@ import DashboardLayout from '@/components/layout/dashboard-layout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getResourcePostBySlug } from '@/lib/resources/resources'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -98,6 +100,52 @@ export default async function ResourceDetailPage({
             )}
           </CardContent>
         </Card>
+
+        {post.bodyMarkdown ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Instructions</CardTitle>
+              <CardDescription>Step-by-step guide you can follow while recording.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* Tailwind's preflight resets heading/list styles; render with explicit styling. */}
+              <div className="space-y-4 text-sm text-gray-800">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    h2: (props) => <h2 className="mt-6 text-base font-semibold text-gray-900" {...props} />,
+                    h3: (props) => <h3 className="mt-5 text-sm font-semibold text-gray-900" {...props} />,
+                    p: (props) => <p className="leading-6 text-gray-800" {...props} />,
+                    ul: (props) => <ul className="list-disc pl-5 space-y-1" {...props} />,
+                    ol: (props) => <ol className="list-decimal pl-5 space-y-1" {...props} />,
+                    li: (props) => <li className="leading-6" {...props} />,
+                    hr: (props) => <hr className="my-6 border-gray-200" {...props} />,
+                    table: (props) => (
+                      <div className="overflow-x-auto rounded-md border border-gray-200">
+                        <table className="w-full border-collapse text-sm" {...props} />
+                      </div>
+                    ),
+                    thead: (props) => <thead className="bg-gray-50" {...props} />,
+                    tbody: (props) => <tbody className="bg-white" {...props} />,
+                    tr: (props) => <tr className="border-t border-gray-200" {...props} />,
+                    th: (props) => (
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700" {...props} />
+                    ),
+                    td: (props) => <td className="px-3 py-2 align-top text-sm text-gray-800" {...props} />,
+                    blockquote: (props) => (
+                      <blockquote className="rounded-md border border-gray-200 bg-gray-50 p-3 text-gray-700" {...props} />
+                    ),
+                    code: (props) => (
+                      <code className="rounded bg-gray-100 px-1 py-0.5 font-mono text-xs text-gray-800" {...props} />
+                    ),
+                  }}
+                >
+                  {post.bodyMarkdown.trim()}
+                </ReactMarkdown>
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
       </div>
     </DashboardLayout>
   )

@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import DashboardLayout from '@/components/layout/dashboard-layout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { parseUserSpreadsheet } from '@/lib/utils/spreadsheet-parsing'
 
 interface UserData {
   name: string
@@ -87,46 +88,20 @@ export default function BulkUploadPage() {
 
     try {
       const text = await file.text()
-      const lines = text.split('\n')
-      
-      const users: UserData[] = []
-      
-      for (let i = 1; i < lines.length; i++) {
-        const line = lines[i].trim()
-        if (!line) continue
-        
-        const values = line.split(',').map(v => v.trim())
-        if (values.length < 4) continue // Skip incomplete rows
-        
-        const user: UserData = {
-          name: values[0] || '',
-          email: values[1] || '',
-          username: values[2] || '',
-          industry: values[3] || '',
-          client_name: values[4] || ''
-        }
-        
-        // Validate required fields
-        if (!user.name || !user.email || !user.industry) {
-          throw new Error(`Row ${i + 1}: Name, Email, and Industry are required`)
-        }
-        
-        // Validate email format
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) {
-          throw new Error(`Row ${i + 1}: Invalid email format for '${user.email}'`)
-        }
-        
-        // Generate username if not provided
-        if (!user.username && user.name) {
-          user.username = user.name
-            .toLowerCase()
-            .replace(/[^a-z0-9]/g, '')
-            .substring(0, 20)
-        }
-        
-        users.push(user)
+      const { data, errors } = parseUserSpreadsheet(text)
+
+      if (errors.length > 0) {
+        throw new Error(errors.slice(0, 3).join(' | ') + (errors.length > 3 ? ` (+${errors.length - 3} more)` : ''))
       }
-      
+
+      const users: UserData[] = data.map((r) => ({
+        name: r.name,
+        email: r.email,
+        username: r.username,
+        industry: r.industry,
+        client_name: r.client_name,
+      }))
+
       setUploadedUsers(users)
       setMessage(`Successfully parsed ${users.length} users from CSV file.`)
     } catch (error) {
@@ -164,37 +139,38 @@ export default function BulkUploadPage() {
       const industries = industriesResult.data || []
       const clients = clientsResult.data || []
 
-      // Create users
-      const userInserts = uploadedUsers.map(user => {
-        const industry = industries.find(i => 
-          i.name.toLowerCase() === user.industry.toLowerCase()
-        )
-        const client = clients.find(c => 
-          c.name.toLowerCase() === (user.client_name || '').toLowerCase()
-        )
+      // Map CSV to IDs, then call server API to create real auth users + profiles.
+      const usersPayload = uploadedUsers.map((u) => {
+        const industry = industries.find((i) => i.name.toLowerCase() === u.industry.toLowerCase())
+        const client =
+          u.client_name && u.client_name.trim()
+            ? clients.find((c) => c.name.toLowerCase() === u.client_name!.toLowerCase())
+            : undefined
 
         return {
-          username: user.username,
-          name: user.name,
-          email: user.email,
-          password: 'temp123', // Default password - should be changed on first login
-          client_id: client?.id || null,
+          name: u.name,
+          email: u.email,
+          username: u.username,
           industry_id: industry?.id || null,
-          language_id: null, // Default to English
-          completed_profile: false,
+          client_id: client?.id || null,
         }
       })
 
-      const { data: users, error } = await supabase
-        .from('profiles')
-        .insert(userInserts)
-        .select()
+      const response = await fetch('/api/users/bulk', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ users: usersPayload }),
+      })
 
-      if (error) {
-        throw new Error(`Failed to create users: ${error.message}`)
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        const errMsg =
+          (data && (data.error as string)) ||
+          'Failed to create users. (If you are on Vercel, ensure SUPABASE_SERVICE_ROLE_KEY is set.)'
+        throw new Error(errMsg)
       }
 
-      setMessage(`Successfully created ${users.length} users!`)
+      setMessage(`Successfully created ${data.created ?? 0} users! (${data.failed ?? 0} failed)`)
       setTimeout(() => {
         router.push('/dashboard/users')
       }, 3000)
