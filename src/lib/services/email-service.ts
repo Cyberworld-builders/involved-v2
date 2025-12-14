@@ -220,7 +220,7 @@ function createTransporter() {
       host: 'localhost',
       port: 1025,
       secure: false, // Mailpit doesn't use TLS
-      auth: false, // Mailpit doesn't require auth
+      // No auth required for Mailpit
     })
   }
   
