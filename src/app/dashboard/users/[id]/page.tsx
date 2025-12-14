@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import DashboardLayout from '@/components/layout/dashboard-layout'
+import SendInviteButton from './send-invite-button'
 
 interface UserPageProps {
   params: Promise<{
@@ -89,12 +90,17 @@ export default async function UserPage({ params }: UserPageProps) {
             <h1 className="text-2xl font-bold text-gray-900">{profile.name}</h1>
             <p className="text-gray-600">User details and information</p>
           </div>
-          <div className="flex space-x-2">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <SendInviteButton
+              userId={profile.id}
+              userName={profile.name}
+              userEmail={profile.email}
+            />
             <Link href={`/dashboard/users/${profile.id}/edit`}>
-              <Button variant="outline">Edit User</Button>
+              <Button variant="outline" className="w-full sm:w-auto">Edit User</Button>
             </Link>
             <Link href="/dashboard/users">
-              <Button variant="outline">Back to Users</Button>
+              <Button variant="outline" className="w-full sm:w-auto">Back to Users</Button>
             </Link>
           </div>
         </div>

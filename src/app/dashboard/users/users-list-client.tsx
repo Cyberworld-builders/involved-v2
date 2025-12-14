@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
 
 interface User {
   id: string
@@ -23,6 +24,8 @@ interface UsersListClientProps {
 export default function UsersListClient({ users }: UsersListClientProps) {
   const router = useRouter()
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null)
+  const [sendingInviteUserId, setSendingInviteUserId] = useState<string | null>(null)
+  const [inviteMessage, setInviteMessage] = useState<{ userId: string; type: 'success' | 'error'; text: string } | null>(null)
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString(undefined, { timeZone: 'UTC' })
@@ -38,6 +41,44 @@ export default function UsersListClient({ users }: UsersListClientProps) {
         return 'Member'
       default:
         return accessLevel || '-'
+    }
+  }
+
+  const handleSendInvite = async (userId: string, userEmail: string) => {
+    setSendingInviteUserId(userId)
+    setInviteMessage(null)
+
+    try {
+      const response = await fetch(`/api/users/${userId}/invite`, {
+        method: 'POST',
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send invite')
+      }
+
+      setInviteMessage({
+        userId,
+        type: 'success',
+        text: data.warning || `Invite sent to ${userEmail}`,
+      })
+
+      // Clear message after 5 seconds
+      setTimeout(() => setInviteMessage(null), 5000)
+    } catch (error) {
+      console.error('Error sending invite:', error)
+      setInviteMessage({
+        userId,
+        type: 'error',
+        text: error instanceof Error ? error.message : 'Failed to send invite',
+      })
+
+      // Clear message after 5 seconds
+      setTimeout(() => setInviteMessage(null), 5000)
+    } finally {
+      setSendingInviteUserId(null)
     }
   }
 
@@ -153,20 +194,40 @@ export default function UsersListClient({ users }: UsersListClientProps) {
                     {formatDate(user.created_at)}
                   </td>
                   <td className="px-3 py-4 sm:px-6 text-sm font-medium">
-                    <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-1 sm:space-y-0">
-                      <Link
-                        href={`/dashboard/users/${user.id}/edit`}
-                        className="text-indigo-600 hover:text-indigo-900"
-                      >
-                        Edit
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(user.id, user.name)}
-                        disabled={deletingUserId === user.id}
-                        className="text-red-600 hover:text-red-900 text-left disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {deletingUserId === user.id ? 'Deleting...' : 'Delete'}
-                      </button>
+                    <div className="flex flex-col space-y-1">
+                      <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-1 sm:space-y-0">
+                        <button
+                          onClick={() => handleSendInvite(user.id, user.email)}
+                          disabled={sendingInviteUserId === user.id}
+                          className="text-indigo-600 hover:text-indigo-900 text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {sendingInviteUserId === user.id ? 'Sending...' : '📧 Send Invite'}
+                        </button>
+                        <Link
+                          href={`/dashboard/users/${user.id}/edit`}
+                          className="text-indigo-600 hover:text-indigo-900"
+                        >
+                          Edit
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(user.id, user.name)}
+                          disabled={deletingUserId === user.id}
+                          className="text-red-600 hover:text-red-900 text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {deletingUserId === user.id ? 'Deleting...' : 'Delete'}
+                        </button>
+                      </div>
+                      {inviteMessage && inviteMessage.userId === user.id && (
+                        <div
+                          className={`text-xs p-1 rounded ${
+                            inviteMessage.type === 'success'
+                              ? 'bg-green-50 text-green-700'
+                              : 'bg-red-50 text-red-700'
+                          }`}
+                        >
+                          {inviteMessage.text}
+                        </div>
+                      )}
                     </div>
                   </td>
                 </tr>

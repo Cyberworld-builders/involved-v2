@@ -251,8 +251,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create auth user
-    const { data: authData, error: authError2 } = await adminClient.auth.admin.createUser({
+    // Create auth user (we'll handle duplicates/errors below)
+    let authData
+    const { data: newAuthData, error: authError2 } = await adminClient.auth.admin.createUser({
       email: email.trim(),
       password: password || 'temp123',
       email_confirm: true,
@@ -262,12 +263,35 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    if (authError2 || !authData.user) {
+    if (authError2 || !newAuthData.user) {
       console.error('Error creating auth user:', authError2)
+      
+      // If it's a duplicate user error, the user already exists in auth
+      // Check if profile exists - if so, return error; if not, we have an orphaned auth user
+      if (
+        authError2?.message?.includes('already registered') || 
+        authError2?.status === 422 ||
+        authError2?.code === 'user_already_exists'
+      ) {
+        // User exists in auth - check if profile exists via email (we already checked profiles table earlier)
+        // Since we already checked profiles by email and didn't find one, this is an orphaned auth user
+        // We can't easily get the auth user ID without listing all users, so we'll let the profile creation
+        // handle the duplicate key error and clean up there
+        return NextResponse.json(
+          { 
+            error: 'User with this email already exists in authentication system',
+            details: 'Please contact support to resolve this issue'
+          },
+          { status: 409 }
+        )
+      }
+      
       return NextResponse.json(
-        { error: 'Failed to create auth user' },
+        { error: 'Failed to create auth user', details: authError2?.message },
         { status: 500 }
       )
+    } else {
+      authData = newAuthData
     }
 
     // Resolve access level for new user.
@@ -315,6 +339,22 @@ export async function POST(request: NextRequest) {
 
     if (profileError) {
       console.error('Error creating profile:', profileError)
+      
+      // If it's a duplicate key error for auth_user_id, check if profile exists
+      if (profileError.code === '23505' && profileError.details?.includes('auth_user_id')) {
+        // Profile might already exist - try to fetch it
+        const { data: existingProfile } = await adminClient
+          .from('profiles')
+          .select('*')
+          .eq('auth_user_id', authData.user.id)
+          .single()
+        
+        if (existingProfile) {
+          // Profile exists - return it (user was already created)
+          return NextResponse.json({ user: existingProfile }, { status: 200 })
+        }
+      }
+      
       // Try to clean up auth user
       try {
         await adminClient.auth.admin.deleteUser(authData.user.id)
@@ -322,7 +362,11 @@ export async function POST(request: NextRequest) {
         console.error('Failed to cleanup auth user:', deleteError)
       }
       return NextResponse.json(
-        { error: 'Failed to create user profile' },
+        { 
+          error: 'Failed to create user profile',
+          details: profileError.message,
+          code: profileError.code
+        },
         { status: 500 }
       )
     }
