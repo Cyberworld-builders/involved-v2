@@ -3,7 +3,17 @@
  * 
  * Provides functions for generating and sending user invite emails.
  * Related to issue #45: Implement user invite email sending
+ * 
+ * Local Development:
+ * - Uses Mailpit SMTP server (localhost:1025) when running locally
+ * - View emails at http://127.0.0.1:54324
+ * 
+ * Production:
+ * - Uses SMTP server configured via environment variables
+ * - Or can be configured to use Resend, SendGrid, AWS SES, etc.
  */
+
+import nodemailer from 'nodemailer'
 
 export interface InviteEmailData {
   recipientEmail: string
@@ -195,10 +205,53 @@ export function formatExpirationDate(date: Date): string {
 }
 
 /**
- * Send an email (mock-ready function for testing)
+ * Create SMTP transporter based on environment
  * 
- * This function is designed to work with email service providers.
- * In tests, it can be easily mocked to verify email sending behavior.
+ * Local development: Uses Mailpit SMTP (localhost:1025)
+ * Production: Uses configured SMTP server from environment variables
+ */
+function createTransporter() {
+  const isLocal = process.env.NODE_ENV === 'development' || !process.env.SMTP_HOST
+  
+  if (isLocal) {
+    // Local development: Use Mailpit SMTP server
+    // Mailpit runs on port 1025 for SMTP (web UI is on 54324)
+    return nodemailer.createTransport({
+      host: 'localhost',
+      port: 1025,
+      secure: false, // Mailpit doesn't use TLS
+      auth: false, // Mailpit doesn't require auth
+    })
+  }
+  
+  // Production: Use configured SMTP server
+  const smtpHost = process.env.SMTP_HOST
+  const smtpPort = parseInt(process.env.SMTP_PORT || '587', 10)
+  const smtpUser = process.env.SMTP_USER
+  const smtpPass = process.env.SMTP_PASS
+  const smtpSecure = process.env.SMTP_SECURE === 'true' || smtpPort === 465
+  
+  if (!smtpHost) {
+    throw new Error('SMTP_HOST environment variable is required in production')
+  }
+  
+  return nodemailer.createTransport({
+    host: smtpHost,
+    port: smtpPort,
+    secure: smtpSecure,
+    auth: smtpUser && smtpPass ? {
+      user: smtpUser,
+      pass: smtpPass,
+    } : undefined,
+  })
+}
+
+/**
+ * Send an email using SMTP
+ * 
+ * This function uses nodemailer to send emails via SMTP.
+ * In local development, it sends to Mailpit for testing.
+ * In production, it uses the configured SMTP server.
  * 
  * @param to - Recipient email address
  * @param subject - Email subject
@@ -244,18 +297,34 @@ export async function sendEmail(
     throw new Error('to must be a valid email address')
   }
   
-  // TODO: Integrate with actual email service (Resend, SendGrid, AWS SES, etc.)
-  // For now, this is a placeholder that logs the email and returns success
-  console.log('📧 Email to send:')
-  console.log('To:', to)
-  console.log('Subject:', subject)
-  console.log('HTML Body length:', htmlBody.length)
-  console.log('Text Body length:', textBody.length)
-  
-  // Simulate successful delivery with crypto-based message ID
-  return {
-    success: true,
-    messageId: `mock-${Date.now()}-${crypto.randomUUID()}`,
+  try {
+    const transporter = createTransporter()
+    const fromEmail = process.env.SMTP_FROM || process.env.NEXT_PUBLIC_APP_NAME || 'noreply@involvedtalent.com'
+    const fromName = process.env.SMTP_FROM_NAME || process.env.NEXT_PUBLIC_APP_NAME || 'Involved Talent'
+    
+    const info = await transporter.sendMail({
+      from: `"${fromName}" <${fromEmail}>`,
+      to,
+      subject,
+      text: textBody,
+      html: htmlBody,
+    })
+    
+    const isLocal = process.env.NODE_ENV === 'development' || !process.env.SMTP_HOST
+    if (isLocal) {
+      console.log('📧 Email sent to Mailpit. View at http://127.0.0.1:54324')
+    }
+    
+    return {
+      success: true,
+      messageId: info.messageId || `email-${Date.now()}-${crypto.randomUUID()}`,
+    }
+  } catch (error) {
+    console.error('Error sending email:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error sending email',
+    }
   }
 }
 
