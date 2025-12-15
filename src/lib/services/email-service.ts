@@ -243,14 +243,27 @@ function createTransporter() {
   
   // Custom DNS lookup function to help with Vercel's serverless DNS issues
   // Pre-resolve hostname to IP to avoid DNS resolution problems
+  // Skip custom lookup for localhost (used in tests/local dev)
   const customLookup = (
     hostname: string,
     options: dns.LookupOptions,
     callback: (err: NodeJS.ErrnoException | null, address: string | dns.LookupAddress[], family: number) => void
   ) => {
-    // Try to resolve using dns.resolve4 first, then fallback to default lookup
+    // For localhost, use default lookup (no DNS resolution needed)
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return dns.lookup(hostname, options, callback)
+    }
+    
+    // For remote hosts, try to resolve using dns.resolve4 first
+    // Use a timeout to prevent hanging in CI/test environments
+    const timeout = setTimeout(() => {
+      // If resolution takes too long, fallback to default lookup
+      dns.lookup(hostname, options, callback)
+    }, 2000) // 2 second timeout
+    
     resolve4(hostname)
       .then((addresses) => {
+        clearTimeout(timeout)
         if (addresses && addresses.length > 0) {
           // Use the first resolved IP address
           callback(null, addresses[0], 4)
@@ -260,6 +273,7 @@ function createTransporter() {
         }
       })
       .catch(() => {
+        clearTimeout(timeout)
         // If DNS resolution fails, fallback to default lookup
         dns.lookup(hostname, options, callback)
       })

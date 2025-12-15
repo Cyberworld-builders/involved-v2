@@ -10,9 +10,37 @@
  * Related to issue #45: Implement user invite email sending
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { generateInviteTokenWithExpiration, validateInviteToken } from '@/lib/utils/invite-token-generation'
 import { generateInviteEmail, sendInviteEmail } from '@/lib/services/email-service'
+
+// Ensure tests use localhost (Mailpit) by not setting SMTP_HOST
+beforeEach(() => {
+  // Clear SMTP_HOST to force localhost/Mailpit usage in tests
+  delete process.env.SMTP_HOST
+  process.env.NODE_ENV = 'development'
+})
+
+// Mock nodemailer to avoid actual SMTP connections in tests
+vi.mock('nodemailer', () => {
+  let messageIdCounter = 0
+  const mockSendMail = vi.fn().mockImplementation(() => {
+    messageIdCounter++
+    return Promise.resolve({
+      messageId: `<test-message-id-${messageIdCounter}@example.com>`,
+    })
+  })
+  
+  const mockCreateTransport = vi.fn().mockReturnValue({
+    sendMail: mockSendMail,
+  })
+  
+  return {
+    default: {
+      createTransport: mockCreateTransport,
+    },
+  }
+})
 
 describe('User Invite Email Flow Integration', () => {
   it('should complete the full invite flow from token generation to email sending', async () => {
