@@ -423,7 +423,7 @@ Consider exporting or documenting key benchmark values before deleting, if you m
 5. **(Optional, Phase 1)**: Set up **Benchmarks** for each dimension.
 6. Only after Phase 1 is stable, move on to later phases that add **Fields** and **Settings**.
 `,
-    video: { bucket: 'resources-videos', path: 'getting-started/assessments-phase-1.mp4' },
+    video: { bucket: 'resources-videos', path: 'phase-1/assessments-dimensions.mp4' },
   },
   {
     slug: 'benchmarks-phase-1',
@@ -662,10 +662,10 @@ The benchmark will be removed from the database.
   - Generate reports showing performance gaps.
   - Identify areas where performance exceeds or falls short of industry standards.
 `,
-    video: { bucket: 'resources-videos', path: 'getting-started/benchmarks-phase-1.mp4' },
+    video: { bucket: 'resources-videos', path: 'phase-1/benchmarks.mp4' },
   },
   {
-    slug: 'clients-create-edit',
+    slug: 'clients',
     title: 'Clients: create and edit client organizations',
     description:
       'How to create new clients, edit existing client information, configure branding, and manage client-specific settings.',
@@ -961,7 +961,7 @@ This guide covers managing **client organizations** in Phase 1:
   - Enable whitelabeling if the client wants a branded assessment experience.
 - **Organization**: Create clients before creating users, so you can assign users to clients during user creation.
 `,
-    video: { bucket: 'resources-videos', path: 'phase-1/industries.mp4' },
+    video: { bucket: 'resources-videos', path: 'phase-1/clients.mp4' },
   },
   {
     slug: 'industries-create-edit',
@@ -1198,7 +1198,7 @@ The list is sorted alphabetically by name for easy browsing.
   - Merge similar industries if needed.
   - Update names for clarity.
 `,
-    video: { bucket: 'resources-videos', path: 'getting-started/industries-create-edit.mp4' },
+    video: { bucket: 'resources-videos', path: 'phase-1/industries.mp4' },
   },
 ]
 

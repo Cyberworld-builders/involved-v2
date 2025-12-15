@@ -50,6 +50,15 @@ export default async function ResourceDetailPage({
     .from(post.video.bucket)
     .createSignedUrl(post.video.path, 60 * 60) // 1 hour
 
+  if (signedError) {
+    console.error('Failed to create signed URL:', {
+      bucket: post.video.bucket,
+      path: post.video.path,
+      error: signedError.message,
+      code: signedError.statusCode,
+    })
+  }
+
   const signedUrl = signed?.signedUrl || null
 
   return (
@@ -85,8 +94,17 @@ export default async function ResourceDetailPage({
           <CardContent>
             {!signedUrl ? (
               <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
-                Failed to load video URL.
-                {signedError?.message ? <div className="mt-1 text-sm">{signedError.message}</div> : null}
+                <div className="font-semibold">Failed to load video URL.</div>
+                {signedError?.message ? (
+                  <div className="mt-2 text-sm">
+                    <div className="font-medium">Error:</div>
+                    <div>{signedError.message}</div>
+                  </div>
+                ) : null}
+                <div className="mt-2 text-xs text-red-600">
+                  <div>Bucket: {post.video.bucket}</div>
+                  <div>Path: {post.video.path}</div>
+                </div>
               </div>
             ) : (
               <div className="overflow-hidden rounded-lg border border-gray-200 bg-black">

@@ -213,11 +213,44 @@ export default function BenchmarksManageClient({ assessmentId, industryId }: Ben
   }
 
   const handleDownloadTemplate = () => {
-    // Create CSV template
+    if (dimensions.length === 0) {
+      setMessage('No dimensions found for this assessment. Please add dimensions first.')
+      return
+    }
+
+    // Helper function to escape CSV values (handles commas, quotes, newlines)
+    const escapeCSV = (value: string | number | null | undefined): string => {
+      if (value === null || value === undefined) return ''
+      const str = String(value)
+      // If value contains comma, quote, or newline, wrap in quotes and escape internal quotes
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`
+      }
+      return str
+    }
+
+    // Create CSV template with headers
     const headers = ['Dimension Name', 'Dimension Code', 'Value']
-    const rows = dimensions.map(dim => [dim.name, dim.code, ''])
-    const csv = [headers, ...rows].map(row => row.join(',')).join('\n')
-    const blob = new Blob([csv], { type: 'text/csv' })
+    
+    // Generate rows from current assessment dimensions
+    // Include existing benchmark values if they exist (as examples/starting points)
+    const rows = dimensions.map(dim => {
+      const benchmark = benchmarks[dim.id]
+      const value = benchmark?.value !== null && benchmark?.value !== undefined 
+        ? benchmark.value 
+        : '' // Empty for new benchmarks, existing value for updates
+      return [dim.name, dim.code, value]
+    })
+
+    // Build CSV with proper escaping
+    const csvRows = [
+      headers.map(escapeCSV).join(','),
+      ...rows.map(row => row.map(escapeCSV).join(','))
+    ]
+    const csv = csvRows.join('\n')
+
+    // Create and download the file
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -226,6 +259,8 @@ export default function BenchmarksManageClient({ assessmentId, industryId }: Ben
     a.click()
     document.body.removeChild(a)
     window.URL.revokeObjectURL(url)
+    
+    setMessage(`Template downloaded with ${dimensions.length} dimension${dimensions.length !== 1 ? 's' : ''}.`)
   }
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
