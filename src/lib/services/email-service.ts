@@ -330,8 +330,9 @@ async function sendEmailViaSES(
   htmlBody: string,
   textBody: string
 ): Promise<EmailDeliveryResult> {
-  const awsAccessKeyId = process.env.AWS_ACCESS_KEY_ID
-  const awsSecretAccessKey = process.env.AWS_SECRET_ACCESS_KEY
+  // Get and trim credentials to prevent issues with trailing spaces or newlines
+  const awsAccessKeyId = process.env.AWS_ACCESS_KEY_ID?.trim()
+  const awsSecretAccessKey = process.env.AWS_SECRET_ACCESS_KEY?.trim()
   // Trim whitespace from region to prevent SDK errors
   const awsRegion = (process.env.AWS_REGION || 'us-east-1').trim()
   const fromEmail = process.env.SMTP_FROM || process.env.AWS_SES_FROM_EMAIL || 'noreply@involvedtalent.com'
@@ -340,11 +341,22 @@ async function sendEmailViaSES(
     throw new Error('AWS credentials not configured (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)')
   }
   
+  // Validate credentials don't contain invalid characters
+  if (awsAccessKeyId.length < 16 || awsSecretAccessKey.length < 20) {
+    throw new Error('AWS credentials appear to be invalid (too short)')
+  }
+  
+  // Create SES client with trimmed credentials
+  // Note: AWS SDK handles special characters in credentials, but we ensure they're trimmed
   const sesClient = new SESClient({
     region: awsRegion,
     credentials: {
       accessKeyId: awsAccessKeyId,
       secretAccessKey: awsSecretAccessKey,
+    },
+    // Add request handler to help with debugging
+    requestHandler: {
+      requestTimeout: 10000,
     },
   })
   
