@@ -440,37 +440,38 @@ export async function sendEmail(
   const useAwsSes = !!(awsAccessKeyId && awsSecretAccessKey)
   const isLocal = process.env.NODE_ENV === 'development' || !process.env.SMTP_HOST
   
-  // Log for debugging
-  if (useAwsSes) {
-    console.log('Using AWS SES SDK for email sending', {
-      hasAccessKey: !!awsAccessKeyId,
-      hasSecretKey: !!awsSecretAccessKey,
-      region: process.env.AWS_REGION || 'us-east-1',
-    })
-  } else {
-    console.warn('AWS SES credentials not available, falling back to SMTP', {
-      hasAccessKey: !!awsAccessKeyId,
-      hasSecretKey: !!awsSecretAccessKey,
-      nodeEnv: process.env.NODE_ENV,
-      smtpHost: process.env.SMTP_HOST ? 'set' : 'not set',
-    })
-  }
+  // Log for debugging - this will help us see what's happening in Vercel logs
+  console.log('[Email Service] Configuration check:', {
+    useAwsSes,
+    hasAccessKey: !!awsAccessKeyId,
+    hasSecretKey: !!awsSecretAccessKey,
+    accessKeyPrefix: awsAccessKeyId ? awsAccessKeyId.substring(0, 8) + '...' : 'none',
+    region: process.env.AWS_REGION || 'us-east-1',
+    nodeEnv: process.env.NODE_ENV,
+    smtpHost: process.env.SMTP_HOST ? 'set' : 'not set',
+  })
   
   // Use AWS SES if credentials are available (preferred method)
   if (useAwsSes) {
+    console.log('[Email Service] Attempting to send via AWS SES SDK')
     try {
-      return await sendEmailViaSES(to, subject, htmlBody, textBody)
+      const result = await sendEmailViaSES(to, subject, htmlBody, textBody)
+      console.log('[Email Service] AWS SES send successful:', result.messageId)
+      return result
     } catch (error) {
-      console.error('AWS SES failed:', error)
+      console.error('[Email Service] AWS SES failed:', error)
       const errorMessage = error instanceof Error ? error.message : String(error)
       // If AWS SES fails, don't fall back to SMTP - return the error
       // This prevents DNS issues from happening
       return {
         success: false,
-        error: `AWS SES failed: ${errorMessage}. Please verify your email address in AWS SES and check IAM permissions.`,
+        error: `AWS SES failed: ${errorMessage}. Please verify your email address (jay@cyberworldbuilders.com) in AWS SES and check IAM permissions.`,
       }
     }
   }
+  
+  // If we get here, AWS credentials are not available
+  console.warn('[Email Service] AWS SES credentials not available, attempting SMTP fallback')
   
   // Use SMTP (local Mailpit or configured SMTP server)
   try {
