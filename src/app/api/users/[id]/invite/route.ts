@@ -131,10 +131,15 @@ export async function POST(
         console.error('Email sending failed:', emailResult.error)
         // Don't fail the request, as the invite is already created
         // Log the error and return success with a warning
+        const warningMessage = emailResult.error?.includes('SMTP not configured')
+          ? 'Invite created but email sending failed: SMTP not configured in Vercel. See docs/EMAIL_SETUP.md for setup instructions.'
+          : `Invite created but email sending failed: ${emailResult.error || 'Unknown error'}`
+        
         return NextResponse.json({
           success: true,
           invite,
-          warning: 'Invite created but email sending failed',
+          warning: warningMessage,
+          error: emailResult.error, // Include error details for debugging
         }, { status: 201 })
       }
 

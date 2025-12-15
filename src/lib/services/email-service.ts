@@ -324,9 +324,20 @@ export async function sendEmail(
     const errorMessage = error instanceof Error ? error.message : 'Unknown error sending email'
     const errorDetails = error instanceof Error ? error.stack : String(error)
     console.error('Email error details:', errorDetails)
+    
+    // Provide helpful error message if SMTP is not configured
+    let userFriendlyError = errorMessage
+    if (errorMessage.includes('SMTP_HOST') || errorMessage.includes('required in production')) {
+      userFriendlyError = 'SMTP not configured. Please set SMTP_HOST, SMTP_PORT, SMTP_USER, and SMTP_PASS environment variables.'
+    } else if (errorMessage.includes('ECONNREFUSED') || errorMessage.includes('connect')) {
+      userFriendlyError = 'Cannot connect to SMTP server. Please check SMTP_HOST and SMTP_PORT settings.'
+    } else if (errorMessage.includes('authentication') || errorMessage.includes('auth')) {
+      userFriendlyError = 'SMTP authentication failed. Please check SMTP_USER and SMTP_PASS credentials.'
+    }
+    
     return {
       success: false,
-      error: errorMessage,
+      error: userFriendlyError,
     }
   }
 }
