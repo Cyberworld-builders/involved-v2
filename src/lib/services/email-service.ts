@@ -332,7 +332,8 @@ async function sendEmailViaSES(
 ): Promise<EmailDeliveryResult> {
   const awsAccessKeyId = process.env.AWS_ACCESS_KEY_ID
   const awsSecretAccessKey = process.env.AWS_SECRET_ACCESS_KEY
-  const awsRegion = process.env.AWS_REGION || 'us-east-1'
+  // Trim whitespace from region to prevent SDK errors
+  const awsRegion = (process.env.AWS_REGION || 'us-east-1').trim()
   const fromEmail = process.env.SMTP_FROM || process.env.AWS_SES_FROM_EMAIL || 'noreply@involvedtalent.com'
   
   if (!awsAccessKeyId || !awsSecretAccessKey) {
@@ -446,7 +447,7 @@ export async function sendEmail(
     hasAccessKey: !!awsAccessKeyId,
     hasSecretKey: !!awsSecretAccessKey,
     accessKeyPrefix: awsAccessKeyId ? awsAccessKeyId.substring(0, 8) + '...' : 'none',
-    region: process.env.AWS_REGION || 'us-east-1',
+      region: (process.env.AWS_REGION || 'us-east-1').trim(),
     nodeEnv: process.env.NODE_ENV,
     smtpHost: process.env.SMTP_HOST ? 'set' : 'not set',
   })
