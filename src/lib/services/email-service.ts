@@ -434,16 +434,17 @@ export async function sendEmail(
   }
   
   // Prefer AWS SES SDK if credentials are available (avoids DNS issues in serverless)
+  // Always use AWS SES if credentials are available, regardless of environment
   const useAwsSes = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY
   const isLocal = process.env.NODE_ENV === 'development' || !process.env.SMTP_HOST
   
-  // Use AWS SES in production if credentials are available, otherwise use SMTP
-  if (useAwsSes && !isLocal) {
+  // Use AWS SES if credentials are available (preferred method)
+  if (useAwsSes) {
     try {
       return await sendEmailViaSES(to, subject, htmlBody, textBody)
     } catch (error) {
       console.error('AWS SES failed, falling back to SMTP:', error)
-      // Fall through to SMTP fallback
+      // Fall through to SMTP fallback only if AWS SES fails
     }
   }
   
