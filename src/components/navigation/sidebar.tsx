@@ -44,6 +44,11 @@ export default function Sidebar({ className, isOpen = true, onClose }: SidebarPr
       href: '/dashboard/resources',
       icon: '📚',
     },
+    {
+      name: 'Profile',
+      href: '/dashboard/profile',
+      icon: '👤',
+    },
     // Feedback link hidden for Phase 1
     // {
     //   name: 'Feedback',

@@ -3,7 +3,8 @@
  * 
  * Tests the password reset request functionality:
  * - Validates email format
- * - Sends password reset email via Supabase
+ * - Generates password reset link via Supabase Admin API
+ * - Sends password reset email via our email service
  * - Handles errors appropriately
  * 
  * Related Issues: #51, #52 - Password reset after account claim
@@ -13,15 +14,22 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { POST } from '../route'
 import { NextRequest } from 'next/server'
 
-// Mock Supabase client
-const mockSupabaseClient = {
+const mockGenerateLink = vi.fn()
+const mockAdminClient = {
   auth: {
-    resetPasswordForEmail: vi.fn(),
+    admin: {
+      generateLink: mockGenerateLink,
+    },
   },
 }
 
-vi.mock('@/lib/supabase/server', () => ({
-  createClient: vi.fn(async () => mockSupabaseClient),
+vi.mock('@/lib/supabase/admin', () => ({
+  createAdminClient: vi.fn(() => mockAdminClient),
+}))
+
+const mockSendEmail = vi.fn()
+vi.mock('@/lib/services/email-service', () => ({
+  sendEmail: (...args: unknown[]) => mockSendEmail(...args),
 }))
 
 describe('POST /api/auth/reset-password', () => {
@@ -30,10 +38,15 @@ describe('POST /api/auth/reset-password', () => {
   })
 
   it('should send password reset email for valid email', async () => {
-    mockSupabaseClient.auth.resetPasswordForEmail.mockResolvedValue({
-      data: {},
+    mockGenerateLink.mockResolvedValue({
+      data: {
+        properties: {
+          action_link: 'http://localhost:3000/auth/reset-password#access_token=abc&refresh_token=def&type=recovery',
+        },
+      },
       error: null,
     })
+    mockSendEmail.mockResolvedValue({ success: true, messageId: 'test-id' })
 
     const request = new NextRequest('http://localhost:3000/api/auth/reset-password', {
       method: 'POST',
@@ -44,13 +57,17 @@ describe('POST /api/auth/reset-password', () => {
     const data = await response.json()
 
     expect(response.status).toBe(200)
-    expect(data.message).toBe('Password reset email sent')
-    expect(mockSupabaseClient.auth.resetPasswordForEmail).toHaveBeenCalledWith(
-      'user@example.com',
+    expect(data.message).toBe('If an account exists with this email, a password reset link has been sent.')
+    expect(mockGenerateLink).toHaveBeenCalledWith(
       expect.objectContaining({
-        redirectTo: expect.stringContaining('/auth/reset-password'),
+        type: 'recovery',
+        email: 'user@example.com',
+        options: expect.objectContaining({
+          redirectTo: expect.stringContaining('/auth/reset-password'),
+        }),
       })
     )
+    expect(mockSendEmail).toHaveBeenCalled()
   })
 
   it('should return 400 if email is missing', async () => {
@@ -79,11 +96,16 @@ describe('POST /api/auth/reset-password', () => {
     expect(data.error).toBe('Invalid email format')
   })
 
-  it('should handle email service errors gracefully', async () => {
-    mockSupabaseClient.auth.resetPasswordForEmail.mockResolvedValue({
-      data: null,
-      error: { message: 'Email service unavailable' },
+  it('should return 200 even if email sending fails (no user enumeration)', async () => {
+    mockGenerateLink.mockResolvedValue({
+      data: {
+        properties: {
+          action_link: 'http://localhost:3000/auth/reset-password#access_token=abc&refresh_token=def&type=recovery',
+        },
+      },
+      error: null,
     })
+    mockSendEmail.mockResolvedValue({ success: false, error: 'Email service unavailable' })
 
     const request = new NextRequest('http://localhost:3000/api/auth/reset-password', {
       method: 'POST',
@@ -93,17 +115,22 @@ describe('POST /api/auth/reset-password', () => {
     const response = await POST(request)
     const data = await response.json()
 
-    expect(response.status).toBe(500)
-    expect(data.error).toBe('Failed to send reset email')
+    expect(response.status).toBe(200)
+    expect(data.message).toBe('If an account exists with this email, a password reset link has been sent.')
   })
 
   it('should send reset email for user who claimed account via invite', async () => {
     // This test verifies that users who claimed their account via invite
     // can successfully request a password reset
-    mockSupabaseClient.auth.resetPasswordForEmail.mockResolvedValue({
-      data: {},
+    mockGenerateLink.mockResolvedValue({
+      data: {
+        properties: {
+          action_link: 'http://localhost:3000/auth/reset-password#access_token=abc&refresh_token=def&type=recovery',
+        },
+      },
       error: null,
     })
+    mockSendEmail.mockResolvedValue({ success: true, messageId: 'test-id' })
 
     const claimedUserEmail = 'invited-user@example.com'
     const request = new NextRequest('http://localhost:3000/api/auth/reset-password', {
@@ -115,11 +142,14 @@ describe('POST /api/auth/reset-password', () => {
     const data = await response.json()
 
     expect(response.status).toBe(200)
-    expect(data.message).toBe('Password reset email sent')
-    expect(mockSupabaseClient.auth.resetPasswordForEmail).toHaveBeenCalledWith(
-      claimedUserEmail,
+    expect(data.message).toBe('If an account exists with this email, a password reset link has been sent.')
+    expect(mockGenerateLink).toHaveBeenCalledWith(
       expect.objectContaining({
-        redirectTo: expect.stringContaining('/auth/reset-password'),
+        type: 'recovery',
+        email: claimedUserEmail,
+        options: expect.objectContaining({
+          redirectTo: expect.stringContaining('/auth/reset-password'),
+        }),
       })
     )
   })
@@ -133,10 +163,15 @@ describe('POST /api/auth/reset-password', () => {
     ]
 
     // Mock setup once for all iterations
-    mockSupabaseClient.auth.resetPasswordForEmail.mockResolvedValue({
-      data: {},
+    mockGenerateLink.mockResolvedValue({
+      data: {
+        properties: {
+          action_link: 'http://localhost:3000/auth/reset-password#access_token=abc&refresh_token=def&type=recovery',
+        },
+      },
       error: null,
     })
+    mockSendEmail.mockResolvedValue({ success: true, messageId: 'test-id' })
 
     for (const email of validEmails) {
       const request = new NextRequest('http://localhost:3000/api/auth/reset-password', {
@@ -148,7 +183,7 @@ describe('POST /api/auth/reset-password', () => {
       const data = await response.json()
 
       expect(response.status).toBe(200)
-      expect(data.message).toBe('Password reset email sent')
+      expect(data.message).toBe('If an account exists with this email, a password reset link has been sent.')
     }
   })
 
@@ -190,10 +225,15 @@ describe('POST /api/auth/reset-password', () => {
   })
 
   it('should include redirect URL in password reset request', async () => {
-    mockSupabaseClient.auth.resetPasswordForEmail.mockResolvedValue({
-      data: {},
+    mockGenerateLink.mockResolvedValue({
+      data: {
+        properties: {
+          action_link: 'http://localhost:3000/auth/reset-password#access_token=abc&refresh_token=def&type=recovery',
+        },
+      },
       error: null,
     })
+    mockSendEmail.mockResolvedValue({ success: true, messageId: 'test-id' })
 
     const request = new NextRequest('http://localhost:3000/api/auth/reset-password', {
       method: 'POST',
@@ -203,10 +243,11 @@ describe('POST /api/auth/reset-password', () => {
     await POST(request)
 
     // Verify the redirect URL is included in the request
-    expect(mockSupabaseClient.auth.resetPasswordForEmail).toHaveBeenCalledWith(
-      'user@example.com',
+    expect(mockGenerateLink).toHaveBeenCalledWith(
       expect.objectContaining({
-        redirectTo: expect.stringMatching(/\/auth\/reset-password$/),
+        options: expect.objectContaining({
+          redirectTo: expect.stringMatching(/\/auth\/reset-password$/),
+        }),
       })
     )
   })

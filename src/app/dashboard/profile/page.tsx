@@ -22,11 +22,47 @@ export default async function ProfilePage() {
     .eq('auth_user_id', user.id)
     .single()
 
+  // Get client name if client_id exists
+  let clientName = null
+  if (profile?.client_id) {
+    const { data: client } = await supabase
+      .from('clients')
+      .select('name')
+      .eq('id', profile.client_id)
+      .single()
+    clientName = client?.name || null
+  }
+
+  // Get industry name if industry_id exists
+  let industryName = null
+  if (profile?.industry_id) {
+    const { data: industry } = await supabase
+      .from('industries')
+      .select('name')
+      .eq('id', profile.industry_id)
+      .single()
+    industryName = industry?.name || null
+  }
+
+  // Derive access level (for display)
+  const accessLevel =
+    profile?.access_level ||
+    (profile?.role === 'admin'
+      ? 'super_admin'
+      : profile?.role === 'manager' || profile?.role === 'client'
+        ? 'client_admin'
+        : 'member')
+
   // Prepare initial profile data for the form
   const initialProfile = {
     name: profile?.name || '',
     username: profile?.username || '',
     email: profile?.email || user.email || '',
+    access_level: accessLevel,
+    client_id: profile?.client_id || null,
+    client_name: clientName,
+    industry_id: profile?.industry_id || null,
+    industry_name: industryName,
   }
 
   return (

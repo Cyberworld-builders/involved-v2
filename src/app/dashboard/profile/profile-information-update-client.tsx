@@ -9,6 +9,11 @@ interface ProfileData {
   name: string
   username: string
   email: string
+  access_level?: string
+  client_id?: string | null
+  client_name?: string | null
+  industry_id?: string | null
+  industry_name?: string | null
 }
 
 export default function ProfileInformationUpdateClient({ initialProfile }: { initialProfile: ProfileData }) {
@@ -164,6 +169,54 @@ export default function ProfileInformationUpdateClient({ initialProfile }: { ini
           {message && (
             <div className="p-3 bg-green-50 border border-green-200 rounded-md">
               <p className="text-sm text-green-800">{message}</p>
+            </div>
+          )}
+
+          {/* Read-only account information */}
+          {(initialProfile.access_level || initialProfile.client_name || initialProfile.industry_name) && (
+            <div className="pt-4 border-t border-gray-200 space-y-4">
+              <p className="text-sm font-medium text-gray-700">Account Information (read-only)</p>
+              
+              {initialProfile.access_level && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">
+                    Access Level
+                  </label>
+                  <div className="mt-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-900">
+                    {initialProfile.access_level === 'super_admin' ? 'Super Admin' :
+                     initialProfile.access_level === 'client_admin' ? 'Client Admin' :
+                     'Member'}
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Your access level cannot be changed. Contact an administrator if you need different permissions.
+                  </p>
+                </div>
+              )}
+
+              {initialProfile.client_name && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">
+                    Client
+                  </label>
+                  <div className="mt-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-900">
+                    {initialProfile.client_name}
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Your client assignment cannot be changed. Contact an administrator if you need to be moved to a different client.
+                  </p>
+                </div>
+              )}
+
+              {initialProfile.industry_name && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">
+                    Industry
+                  </label>
+                  <div className="mt-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-900">
+                    {initialProfile.industry_name}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

@@ -19,6 +19,17 @@ export default function CreateAssessmentClient() {
     setMessage('')
 
     try {
+      // Ensure we have a signed-in user (required by RLS: created_by must equal auth.uid())
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser()
+
+      if (authError || !user) {
+        setMessage('You must be signed in to create an assessment.')
+        return
+      }
+
       // Handle image uploads if provided
       let logoUrl: string | undefined
       let backgroundUrl: string | undefined
@@ -62,6 +73,7 @@ export default function CreateAssessmentClient() {
         .from('assessments')
         .insert([
           {
+            created_by: user.id,
             title: data.title,
             description: data.description || null,
             logo: logoUrl,
