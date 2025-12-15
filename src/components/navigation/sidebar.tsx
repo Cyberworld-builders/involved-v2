@@ -2,13 +2,61 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { NavigationItem, SidebarProps } from './types'
+import { getUserProfile } from '@/lib/utils/get-user-profile'
 
 export default function Sidebar({ className, isOpen = true, onClose }: SidebarProps) {
   const pathname = usePathname()
+  const [accessLevel, setAccessLevel] = useState<'member' | 'client_admin' | 'super_admin' | null>(null)
+  const [userEmail, setUserEmail] = useState<string>('')
+  const [userName, setUserName] = useState<string>('')
 
-  const navigation: NavigationItem[] = [
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (user) {
+        setUserEmail(user.email || '')
+        const profile = await getUserProfile(supabase, user.id)
+        if (profile) {
+          setAccessLevel(profile.access_level)
+          setUserName(profile.name || user.email || '')
+        }
+      }
+    }
+
+    loadUserProfile()
+  }, [])
+
+  // Base navigation items (available to all users)
+  const profileNavigation: NavigationItem[] = [
+    {
+      name: 'Profile',
+      href: '/dashboard/profile',
+      icon: '👤',
+    },
+  ]
+
+  // My Assignments (only for members and client_admins, not super_admins)
+  const assignmentsNavigation: NavigationItem[] =
+    accessLevel === 'super_admin'
+      ? []
+      : [
+          {
+            name: 'My Assignments',
+            href: '/dashboard/assignments',
+            icon: '📋',
+          },
+        ]
+
+  // Admin navigation items (only for client_admin and super_admin)
+  const adminNavigation: NavigationItem[] = [
     {
       name: 'Home',
       href: '/dashboard',
@@ -44,18 +92,13 @@ export default function Sidebar({ className, isOpen = true, onClose }: SidebarPr
       href: '/dashboard/resources',
       icon: '📚',
     },
-    {
-      name: 'Profile',
-      href: '/dashboard/profile',
-      icon: '👤',
-    },
-    // Feedback link hidden for Phase 1
-    // {
-    //   name: 'Feedback',
-    //   href: '/dashboard/feedback',
-    //   icon: '💬',
-    // },
   ]
+
+  // Determine which navigation items to show
+  const navigation: NavigationItem[] =
+    accessLevel === 'member'
+      ? [...assignmentsNavigation, ...profileNavigation] // Members see My Assignments and Profile
+      : [...adminNavigation, ...assignmentsNavigation, ...profileNavigation] // Admins see admin items + My Assignments (if not super_admin) + Profile
 
   return (
     <>
@@ -72,7 +115,7 @@ export default function Sidebar({ className, isOpen = true, onClose }: SidebarPr
         {/* Logo */}
         <div className="flex h-16 items-center justify-between px-4 border-b border-gray-700">
           <Link
-            href="/dashboard"
+            href={accessLevel === 'member' ? '/dashboard/assignments' : '/dashboard'}
             className="flex items-center space-x-2"
             onClick={() => onClose?.()}
           >
@@ -125,8 +168,8 @@ export default function Sidebar({ className, isOpen = true, onClose }: SidebarPr
               <span className="text-white text-sm">👤</span>
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-white">Admin User</p>
-              <p className="text-xs text-gray-400">admin@example.com</p>
+              <p className="text-sm font-medium text-white">{userName || 'User'}</p>
+              <p className="text-xs text-gray-400">{userEmail || ''}</p>
             </div>
           </div>
         </div>

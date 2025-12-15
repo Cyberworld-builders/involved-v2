@@ -5,6 +5,7 @@ import DashboardLayout from '@/components/layout/dashboard-layout'
 import SignOutButton from './sign-out-button'
 import AuthStatus from '@/components/auth-status'
 import Changelog from '@/components/changelog/changelog'
+import { getUserProfile } from '@/lib/utils/get-user-profile'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -15,6 +16,12 @@ export default async function DashboardPage() {
 
   if (!user) {
     redirect('/auth/login')
+  }
+
+  // Check user access level and redirect members to assignments
+  const profile = await getUserProfile(supabase, user.id)
+  if (profile && profile.access_level === 'member') {
+    redirect('/dashboard/assignments')
   }
 
   return (
