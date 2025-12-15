@@ -9,13 +9,14 @@
  * - View emails at http://127.0.0.1:54324
  * 
  * Production:
- * - Uses AWS SES SDK (recommended for serverless/Vercel) or SMTP
- * - AWS SES SDK avoids DNS resolution issues in serverless environments
+ * - Uses Resend API (preferred) - simple, reliable, no DNS issues
+ * - Falls back to AWS SES SDK or SMTP if Resend not configured
  */
 
 import nodemailer from 'nodemailer'
 import dns from 'dns'
 import { promisify } from 'util'
+import { Resend } from 'resend'
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
 
 const resolve4 = promisify(dns.resolve4)
@@ -314,7 +315,59 @@ function createTransporter() {
 }
 
 /**
- * Send an email using AWS SES SDK (preferred for serverless/Vercel)
+ * Send an email using Resend API
+ * 
+ * Resend is simple, reliable, and works great in serverless environments.
+ * 
+ * @param to - Recipient email address
+ * @param subject - Email subject
+ * @param htmlBody - HTML body content
+ * @param textBody - Plain text body content
+ * @returns Delivery result
+ */
+async function sendEmailViaResend(
+  to: string,
+  subject: string,
+  htmlBody: string,
+  textBody: string
+): Promise<EmailDeliveryResult> {
+  const resendApiKey = process.env.RESEND_API_KEY?.trim()
+  const fromEmail = (process.env.SMTP_FROM || process.env.RESEND_FROM_EMAIL || 'noreply@involvedtalent.com').trim()
+  const fromName = process.env.SMTP_FROM_NAME || 'Involved Talent'
+  
+  if (!resendApiKey) {
+    throw new Error('Resend API key not configured (RESEND_API_KEY)')
+  }
+  
+  const resend = new Resend(resendApiKey)
+  
+  try {
+    const { data, error } = await resend.emails.send({
+      from: `${fromName} <${fromEmail}>`,
+      to,
+      subject,
+      html: htmlBody,
+      text: textBody,
+    })
+    
+    if (error) {
+      console.error('Resend error:', error)
+      throw new Error(`Resend failed: ${error.message || JSON.stringify(error)}`)
+    }
+    
+    return {
+      success: true,
+      messageId: data?.id || `resend-${Date.now()}-${crypto.randomUUID()}`,
+    }
+  } catch (error) {
+    console.error('Resend error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error sending email via Resend'
+    throw new Error(`Resend failed: ${errorMessage}`)
+  }
+}
+
+/**
+ * Send an email using AWS SES SDK (fallback option)
  * 
  * This bypasses SMTP and DNS resolution issues in serverless environments.
  * 
