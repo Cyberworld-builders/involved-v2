@@ -9,6 +9,27 @@ import {
   type EmailDeliveryResult,
 } from '../email-service'
 
+// Mock nodemailer
+vi.mock('nodemailer', () => {
+  let messageIdCounter = 0
+  const mockSendMail = vi.fn().mockImplementation(() => {
+    messageIdCounter++
+    return Promise.resolve({
+      messageId: `<test-message-id-${messageIdCounter}@example.com>`,
+    })
+  })
+  
+  const mockCreateTransport = vi.fn().mockReturnValue({
+    sendMail: mockSendMail,
+  })
+  
+  return {
+    default: {
+      createTransport: mockCreateTransport,
+    },
+  }
+})
+
 describe('generateInviteEmail', () => {
   const validData: InviteEmailData = {
     recipientEmail: 'user@example.com',
@@ -456,8 +477,8 @@ describe('sendEmail', () => {
     
     expect(result.success).toBe(true)
     expect(result.messageId).toBeDefined()
-    // Updated to match crypto.randomUUID() format
-    expect(result.messageId).toMatch(/^mock-\d+-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/)
+    // nodemailer returns messageId in format <id@domain>
+    expect(result.messageId).toContain('@')
   })
 
   it('should return unique message IDs', async () => {
@@ -553,12 +574,18 @@ describe('sendEmail', () => {
     }
   })
 
-  it('should log email details', async () => {
+  it('should log email sent to Mailpit in local development', async () => {
+    // Set NODE_ENV to development to trigger Mailpit log
+    const originalEnv = process.env.NODE_ENV
+    process.env.NODE_ENV = 'development'
+    delete process.env.SMTP_HOST
+    
     await sendEmail('user@example.com', 'Subject', '<p>HTML</p>', 'Text body')
     
-    expect(console.log).toHaveBeenCalledWith('📧 Email to send:')
-    expect(console.log).toHaveBeenCalledWith('To:', 'user@example.com')
-    expect(console.log).toHaveBeenCalledWith('Subject:', 'Subject')
+    expect(console.log).toHaveBeenCalledWith('📧 Email sent to Mailpit. View at http://127.0.0.1:54324')
+    
+    // Restore original env
+    process.env.NODE_ENV = originalEnv
   })
 
   it('should handle long email content', async () => {
@@ -629,8 +656,7 @@ describe('sendInviteEmail', () => {
     const result = await sendInviteEmail(validData)
     
     expect(result.success).toBe(true)
-    expect(console.log).toHaveBeenCalledWith('📧 Email to send:')
-    expect(console.log).toHaveBeenCalledWith('To:', 'user@example.com')
+    expect(result.messageId).toBeDefined()
   })
 
   it('should propagate validation errors from generateInviteEmail', async () => {
@@ -649,8 +675,7 @@ describe('sendInviteEmail', () => {
     const result = await sendInviteEmail(validData)
     
     expect(result.success).toBe(true)
-    // Verify console.log was called with email details
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Subject:'), expect.any(String))
+    expect(result.messageId).toBeDefined()
   })
 
   it('should handle custom organization name', async () => {

@@ -53,7 +53,8 @@ describe('User Invite Email Flow Integration', () => {
     
     expect(result.success).toBe(true)
     expect(result.messageId).toBeDefined()
-    expect(result.messageId).toMatch(/^mock-\d+-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/)
+    // nodemailer returns messageId in format <id@domain>
+    expect(result.messageId).toMatch(/^<.+@.+>$/)
   })
 
   it('should handle expired tokens correctly', async () => {
