@@ -17,13 +17,48 @@ export default async function ClientsPage() {
     redirect('/auth/login')
   }
 
-  // Fetch clients from database
-  const { data: clients, error } = await supabase
+  // Load current user's profile to determine access level and client scoping
+  const { data: currentProfile } = await supabase
+    .from('profiles')
+    .select('access_level, role, client_id')
+    .eq('auth_user_id', user.id)
+    .single()
+
+  const currentClientId = currentProfile?.client_id || null
+
+  const currentAccessLevel =
+    currentProfile?.access_level ||
+    (currentProfile?.role === 'admin'
+      ? 'super_admin'
+      : (currentProfile?.role === 'manager' || currentProfile?.role === 'client')
+        ? 'client_admin'
+        : 'member')
+
+  const isSuperAdmin = currentAccessLevel === 'super_admin'
+  const isClientAdmin = currentAccessLevel === 'client_admin'
+
+  // Only super admins and client admins can access the Clients page
+  if (!isSuperAdmin && !isClientAdmin) {
+    redirect('/dashboard')
+  }
+  // Client admins must be associated with a client
+  if (isClientAdmin && !currentClientId) {
+    redirect('/dashboard')
+  }
+
+  // Fetch clients from database, scoped by client for client_admins
+  let clientsQuery = supabase
     .from('clients')
     .select('*')
     .order('created_at', { ascending: false })
 
-  // Fetch user counts per client
+  if (isClientAdmin && currentClientId) {
+    clientsQuery = clientsQuery.eq('id', currentClientId)
+  }
+
+  const { data: clients, error } = await clientsQuery
+
+  // Fetch user counts per client (only for scoped clients)
   const { data: userCounts } = await supabase
     .from('profiles')
     .select('client_id')
@@ -59,12 +94,15 @@ export default async function ClientsPage() {
             <h1 className="text-xl md:text-2xl font-bold text-gray-900">Clients</h1>
             <p className="text-sm md:text-base text-gray-600">Add or manage clients.</p>
           </div>
-          <Link href="/dashboard/clients/create">
-            <Button>
-              <span className="mr-2">+</span>
-              Add Client
-            </Button>
-          </Link>
+          {/* Only super admins can create new clients */}
+          {isSuperAdmin && (
+            <Link href="/dashboard/clients/create">
+              <Button>
+                <span className="mr-2">+</span>
+                Add Client
+              </Button>
+            </Link>
+          )}
         </div>
 
         {/* Supabase Setup Notice */}
@@ -127,11 +165,17 @@ export default async function ClientsPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No clients yet</h3>
-                <p className="text-gray-500 mb-4">Get started by creating your first client.</p>
-                <Link href="/dashboard/clients/create">
-                  <Button>Create Client</Button>
-                </Link>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No clients found</h3>
+                <p className="text-gray-500 mb-4">
+                  {isSuperAdmin
+                    ? 'Get started by creating your first client.'
+                    : 'You do not have access to any clients.'}
+                </p>
+                {isSuperAdmin && (
+                  <Link href="/dashboard/clients/create">
+                    <Button>Create Client</Button>
+                  </Link>
+                )}
               </div>
             ) : (
               <ClientsTable initialClients={clientsWithCounts} />

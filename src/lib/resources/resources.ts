@@ -66,6 +66,9 @@ This guide walks through the full onboarding flow:
 
 - You are signed in as an admin (or have permission to manage users).
 - The **Clients** and **Industries** you need already exist.
+- **Access model:**
+  - **Super admins** can see all clients and all users, and can choose any client when creating users.
+  - **Client admins** only see **their own client and its users**. Any users they create are **automatically associated with their client**.
 
 ---
 
@@ -78,6 +81,8 @@ This guide walks through the full onboarding flow:
    - **Email** (this is where the invite will be sent)
    - **Username** (if required)
    - **Client** (who the user belongs to)
+     - If you are a **client admin**, this will be **pre-selected to your client** and you **cannot change it**.
+     - If you are a **super admin**, you can choose any existing client.
    - **Industry** (if applicable)
    - **Access Level** (if visible): typically **Member**
 4. Click **Create User**
@@ -85,6 +90,10 @@ This guide walks through the full onboarding flow:
 ### After creating the user
 
 - Confirm the user appears in the Users list.
+  - Client admins will only see **users for their own client**.
+  - Super admins will see all users.
+- The user is **already associated with the selected client** as soon as you save.
+  - The **invite email is only for verifying/activating their auth account** (password + first login); it does **not** change which client they belong to.
 - Next, send the invite (see **“Send invite + verify delivery”** below).
 
 ---
@@ -110,7 +119,7 @@ The template uses this exact header row:
 | Email | Yes | jane.smith@example.com | Must be a valid email; should be unique. |
 | Username | No | janesmith | If blank, the system will generate one from Name. |
 | Industry | Yes | Healthcare | Should match an existing Industry name (case-insensitive) or the user may be created without an industry assignment. |
-| Client Name | No | Acme Corp | Optional; if provided, should match an existing Client name (case-insensitive). |
+| Client Name | No | Acme Corp | Optional; if provided, should match an existing Client name (case-insensitive). For **client admins**, any value here is ignored and users are always created under **your client**. |
 
 ### Sample CSV
 
@@ -179,8 +188,10 @@ For each user you want to onboard:
 
 ## Recommended admin checklist (end-to-end)
 
-- [ ] Create client + industry (if needed)
+- [ ] Create client + industry (if needed) — **super admin** only
 - [ ] Create users (single or bulk)
+  - Super admins: choose the correct client for each user
+  - Client admins: users are automatically scoped to your client
 - [ ] Send invite(s)
 - [ ] Confirm user can claim + set password
 - [ ] Confirm user can sign in
