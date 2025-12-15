@@ -48,6 +48,19 @@ export default function ClientUsers({ clientId }: ClientUsersProps) {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([])
+  const [selectedInviteUserIds, setSelectedInviteUserIds] = useState<string[]>([])
+  const [isSendingInvites, setIsSendingInvites] = useState(false)
+  const [inviteStatus, setInviteStatus] = useState<Record<string, { status: 'success' | 'error' | 'sending', message?: string }>>({})
+  const [resetPasswordUserId, setResetPasswordUserId] = useState<string | null>(null)
+  const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [isResettingPassword, setIsResettingPassword] = useState(false)
+  const [resetPasswordError, setResetPasswordError] = useState('')
+  const [deleteUserId, setDeleteUserId] = useState<string | null>(null)
+  const [deleteUserModalOpen, setDeleteUserModalOpen] = useState(false)
+  const [isDeletingUser, setIsDeletingUser] = useState(false)
+  const [deleteUserName, setDeleteUserName] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
   const supabase = createClient()
@@ -288,6 +301,224 @@ export default function ClientUsers({ clientId }: ClientUsersProps) {
     }
   }
 
+  const handleSendInvite = async (userId: string, userName: string) => {
+    setInviteStatus(prev => ({ ...prev, [userId]: { status: 'sending' } }))
+
+    try {
+      const response = await fetch(`/api/users/${userId}/invite`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        // Show more detailed error message if available
+        const errorMessage = data.details 
+          ? `${data.error}: ${data.details}`
+          : data.error || 'Failed to send invite'
+        throw new Error(errorMessage)
+      }
+
+      setInviteStatus(prev => ({
+        ...prev,
+        [userId]: {
+          status: 'success',
+          message: data.warning || 'Invite sent successfully',
+        },
+      }))
+
+      // Clear status after 3 seconds
+      setTimeout(() => {
+        setInviteStatus(prev => {
+          const newStatus = { ...prev }
+          delete newStatus[userId]
+          return newStatus
+        })
+      }, 3000)
+    } catch (error) {
+      setInviteStatus(prev => ({
+        ...prev,
+        [userId]: {
+          status: 'error',
+          message: error instanceof Error ? error.message : 'Failed to send invite',
+        },
+      }))
+
+      // Clear error status after 5 seconds
+      setTimeout(() => {
+        setInviteStatus(prev => {
+          const newStatus = { ...prev }
+          delete newStatus[userId]
+          return newStatus
+        })
+      }, 5000)
+    }
+  }
+
+  const handleBulkSendInvites = async () => {
+    if (selectedInviteUserIds.length === 0) return
+
+    setIsSendingInvites(true)
+    setMessage('')
+    const statusUpdates: Record<string, { status: 'success' | 'error' | 'sending', message?: string }> = {}
+
+    // Initialize all as sending
+    selectedInviteUserIds.forEach(userId => {
+      statusUpdates[userId] = { status: 'sending' }
+    })
+    setInviteStatus(statusUpdates)
+
+    let successCount = 0
+    let failCount = 0
+
+    // Send invites sequentially to avoid overwhelming the server
+    for (const userId of selectedInviteUserIds) {
+      const user = existingUsers.find(u => u.id === userId)
+      if (!user) continue
+
+      try {
+        const response = await fetch(`/api/users/${userId}/invite`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to send invite')
+        }
+
+        statusUpdates[userId] = {
+          status: 'success',
+          message: data.warning || 'Invite sent',
+        }
+        successCount++
+      } catch (error) {
+        statusUpdates[userId] = {
+          status: 'error',
+          message: error instanceof Error ? error.message : 'Failed to send invite',
+        }
+        failCount++
+      }
+
+      // Update status after each invite
+      setInviteStatus({ ...statusUpdates })
+    }
+
+    setMessage(
+      `Invites sent: ${successCount} successful, ${failCount} failed.`
+    )
+    setSelectedInviteUserIds([])
+
+    // Clear status messages after 5 seconds
+    setTimeout(() => {
+      setInviteStatus({})
+      setMessage('')
+    }, 5000)
+
+    setIsSendingInvites(false)
+  }
+
+  const handleResetPasswordClick = (userId: string) => {
+    setResetPasswordUserId(userId)
+    setResetPasswordModalOpen(true)
+    setNewPassword('')
+    setConfirmPassword('')
+    setResetPasswordError('')
+  }
+
+  const handleResetPasswordSubmit = async () => {
+    if (!resetPasswordUserId) return
+
+    // Validate passwords
+    if (!newPassword || newPassword.length < 8) {
+      setResetPasswordError('Password must be at least 8 characters')
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      setResetPasswordError('Passwords do not match')
+      return
+    }
+
+    setIsResettingPassword(true)
+    setResetPasswordError('')
+
+    try {
+      const response = await fetch(`/api/users/${resetPasswordUserId}/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password: newPassword }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to reset password')
+      }
+
+      // Success - close modal and show success message
+      setResetPasswordModalOpen(false)
+      setResetPasswordUserId(null)
+      setNewPassword('')
+      setConfirmPassword('')
+      setMessage('Password reset successfully!')
+      setTimeout(() => setMessage(''), 3000)
+    } catch (error) {
+      setResetPasswordError(error instanceof Error ? error.message : 'Failed to reset password')
+    } finally {
+      setIsResettingPassword(false)
+    }
+  }
+
+  const handleDeleteUserClick = (userId: string, userName: string) => {
+    setDeleteUserId(userId)
+    setDeleteUserName(userName)
+    setDeleteUserModalOpen(true)
+  }
+
+  const handleDeleteUserConfirm = async () => {
+    if (!deleteUserId) return
+
+    setIsDeletingUser(true)
+    setMessage('')
+
+    try {
+      const response = await fetch(`/api/users/${deleteUserId}`, {
+        method: 'DELETE',
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete user')
+      }
+
+      // Success - close modal and reload users
+      setDeleteUserModalOpen(false)
+      setDeleteUserId(null)
+      setDeleteUserName('')
+      setMessage(`User "${deleteUserName}" deleted successfully!`)
+      
+      setTimeout(() => {
+        loadUsers()
+        router.refresh()
+        setMessage('')
+      }, 2000)
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Failed to delete user')
+    } finally {
+      setIsDeletingUser(false)
+    }
+  }
+
   const createUsers = async () => {
     if (uploadedUsers.length === 0) return
 
@@ -496,10 +727,25 @@ export default function ClientUsers({ clientId }: ClientUsersProps) {
       {/* Existing Users List */}
       <Card>
         <CardHeader>
-          <CardTitle>Existing Users ({existingUsers.length})</CardTitle>
-          <CardDescription>
-            Users associated with this client
-          </CardDescription>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>Existing Users ({existingUsers.length})</CardTitle>
+              <CardDescription>
+                Users associated with this client
+              </CardDescription>
+            </div>
+            {selectedInviteUserIds.length > 0 && (
+              <Button
+                onClick={handleBulkSendInvites}
+                disabled={isSendingInvites}
+                className="bg-indigo-600 hover:bg-indigo-700"
+              >
+                {isSendingInvites
+                  ? `Sending ${selectedInviteUserIds.length} invites...`
+                  : `Send Invites (${selectedInviteUserIds.length})`}
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {isLoadingUsers ? (
@@ -517,6 +763,21 @@ export default function ClientUsers({ clientId }: ClientUsersProps) {
               <table className="min-w-full divide-y divide-gray-300">
                 <thead className="bg-gray-50">
                   <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                      <input
+                        type="checkbox"
+                        checked={selectedInviteUserIds.length === existingUsers.length && existingUsers.length > 0}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedInviteUserIds(existingUsers.map(u => u.id))
+                          } else {
+                            setSelectedInviteUserIds([])
+                          }
+                        }}
+                        className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                        title="Select all users for bulk invite"
+                      />
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       User
                     </th>
@@ -535,53 +796,116 @@ export default function ClientUsers({ clientId }: ClientUsersProps) {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {existingUsers.map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="h-10 w-10 flex-shrink-0">
-                            <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                              <span className="text-sm font-medium text-gray-700">
-                                {user.name.charAt(0).toUpperCase()}
-                              </span>
+                  {existingUsers.map((user) => {
+                    const inviteStatusForUser = inviteStatus[user.id]
+                    return (
+                      <tr key={user.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <input
+                            type="checkbox"
+                            checked={selectedInviteUserIds.includes(user.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedInviteUserIds([...selectedInviteUserIds, user.id])
+                              } else {
+                                setSelectedInviteUserIds(selectedInviteUserIds.filter(id => id !== user.id))
+                              }
+                            }}
+                            className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                            title="Select user for bulk invite"
+                          />
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="h-10 w-10 flex-shrink-0">
+                              <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                <span className="text-sm font-medium text-gray-700">
+                                  {user.name.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-900">
+                                <Link
+                                  href={`/dashboard/users/${user.id}`}
+                                  className="hover:text-indigo-600"
+                                >
+                                  {user.name}
+                                </Link>
+                              </div>
+                              <div className="text-sm text-gray-500">{user.email}</div>
+                              <div className="text-xs text-gray-400">@{user.username}</div>
                             </div>
                           </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">
-                              <Link
-                                href={`/dashboard/users/${user.id}`}
-                                className="hover:text-indigo-600"
-                              >
-                                {user.name}
-                              </Link>
-                            </div>
-                            <div className="text-sm text-gray-500">{user.email}</div>
-                            <div className="text-xs text-gray-400">@{user.username}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {user.industries?.name || '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {user.last_login_at 
+                            ? new Date(user.last_login_at).toLocaleDateString()
+                            : 'Never'
+                          }
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(user.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex items-center space-x-3">
+                            <button
+                              onClick={() => handleSendInvite(user.id, user.name)}
+                              disabled={inviteStatusForUser?.status === 'sending'}
+                              className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ${
+                                inviteStatusForUser?.status === 'sending'
+                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                  : inviteStatusForUser?.status === 'success'
+                                    ? 'bg-green-100 text-green-700'
+                                    : inviteStatusForUser?.status === 'error'
+                                      ? 'bg-red-100 text-red-700'
+                                      : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
+                              }`}
+                              title="Send invite email"
+                            >
+                              {inviteStatusForUser?.status === 'sending'
+                                ? '⏳ Sending...'
+                                : inviteStatusForUser?.status === 'success'
+                                  ? '✓ Sent'
+                                  : inviteStatusForUser?.status === 'error'
+                                    ? '✗ Failed'
+                                    : '📧 Invite'}
+                            </button>
+                            <button
+                              onClick={() => handleResetPasswordClick(user.id)}
+                              className="inline-flex items-center px-2 py-1 text-xs font-medium rounded bg-orange-100 text-orange-700 hover:bg-orange-200"
+                              title="Reset password"
+                            >
+                              🔑 Reset Password
+                            </button>
+                            <button
+                              onClick={() => handleDeleteUserClick(user.id, user.name)}
+                              className="inline-flex items-center px-2 py-1 text-xs font-medium rounded bg-red-100 text-red-700 hover:bg-red-200"
+                              title="Delete user"
+                            >
+                              🗑️ Delete
+                            </button>
+                            <Link
+                              href={`/dashboard/users/${user.id}/edit`}
+                              className="text-indigo-600 hover:text-indigo-900"
+                            >
+                              Edit
+                            </Link>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {user.industries?.name || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {user.last_login_at 
-                          ? new Date(user.last_login_at).toLocaleDateString()
-                          : 'Never'
-                        }
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(user.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <Link
-                          href={`/dashboard/users/${user.id}/edit`}
-                          className="text-indigo-600 hover:text-indigo-900"
-                        >
-                          Edit
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
+                          {inviteStatusForUser?.message && (
+                            <div className={`mt-1 text-xs ${
+                              inviteStatusForUser.status === 'success' ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              {inviteStatusForUser.message}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
@@ -733,6 +1057,161 @@ export default function ClientUsers({ clientId }: ClientUsersProps) {
                   disabled={isLoading || selectedUserIds.length === 0}
                 >
                   {isLoading ? 'Adding...' : `Add ${selectedUserIds.length} User(s)`}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Password Modal */}
+      {resetPasswordModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-gray-900">Reset Password</h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setResetPasswordModalOpen(false)
+                  setResetPasswordUserId(null)
+                  setNewPassword('')
+                  setConfirmPassword('')
+                  setResetPasswordError('')
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter new password (min 8 characters)"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  disabled={isResettingPassword}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Confirm Password
+                </label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm new password"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  disabled={isResettingPassword}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !isResettingPassword) {
+                      handleResetPasswordSubmit()
+                    }
+                  }}
+                />
+              </div>
+
+              {resetPasswordError && (
+                <div className="bg-red-50 border border-red-200 rounded-md p-3 text-sm text-red-800">
+                  {resetPasswordError}
+                </div>
+              )}
+
+              <div className="flex justify-end space-x-2 pt-4 border-t border-gray-200">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setResetPasswordModalOpen(false)
+                    setResetPasswordUserId(null)
+                    setNewPassword('')
+                    setConfirmPassword('')
+                    setResetPasswordError('')
+                  }}
+                  disabled={isResettingPassword}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleResetPasswordSubmit}
+                  disabled={isResettingPassword || !newPassword || !confirmPassword}
+                  className="bg-orange-600 hover:bg-orange-700"
+                >
+                  {isResettingPassword ? 'Resetting...' : 'Reset Password'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete User Confirmation Modal */}
+      {deleteUserModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-gray-900">Delete User</h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setDeleteUserModalOpen(false)
+                  setDeleteUserId(null)
+                  setDeleteUserName('')
+                }}
+                className="text-gray-400 hover:text-gray-600"
+                disabled={isDeletingUser}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                <p className="text-sm text-red-800">
+                  <strong>Warning:</strong> This action cannot be undone. Deleting this user will:
+                </p>
+                <ul className="list-disc list-inside text-sm text-red-700 mt-2 space-y-1">
+                  <li>Remove the user from this client</li>
+                  <li>Delete their profile and authentication account</li>
+                  <li>Remove all associated data</li>
+                </ul>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-700">
+                  Are you sure you want to delete <strong>{deleteUserName}</strong>?
+                </p>
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-4 border-t border-gray-200">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setDeleteUserModalOpen(false)
+                    setDeleteUserId(null)
+                    setDeleteUserName('')
+                  }}
+                  disabled={isDeletingUser}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleDeleteUserConfirm}
+                  disabled={isDeletingUser}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  {isDeletingUser ? 'Deleting...' : 'Delete User'}
                 </Button>
               </div>
             </div>

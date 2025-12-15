@@ -150,14 +150,16 @@ export async function POST(request: NextRequest) {
         continue
       }
 
-      // Check if user with email already exists
-      const { data: existingUser } = await supabase
+      // Check if profile with email already exists
+      const { data: existingProfile } = await supabase
         .from('profiles')
-        .select('id')
-        .eq('email', email.trim())
-        .single()
+        .select('id, auth_user_id, email')
+        .eq('email', email.trim().toLowerCase())
+        .maybeSingle()
 
-      if (existingUser) {
+      // Check if profile with email exists (case-insensitive check)
+      // Also check by auth_user_id if we have it from a previous attempt
+      if (existingProfile) {
         results.push({
           user: email,
           success: false,
@@ -165,6 +167,24 @@ export async function POST(request: NextRequest) {
         })
         continue
       }
+
+      // Try to get auth user by email using admin API
+      // This is important to catch cases where auth user exists but profile doesn't
+      let existingAuthUser = null
+      try {
+        const { data: authUsers, error: listError } = await adminClient.auth.admin.listUsers()
+        if (!listError && authUsers?.users) {
+          existingAuthUser = authUsers.users.find(
+            (u) => u.email?.toLowerCase() === email.trim().toLowerCase()
+          )
+        }
+      } catch (error) {
+        // If we can't list users, we'll handle it when trying to create
+        console.warn('Could not check for existing auth user:', error)
+      }
+
+      // If auth user exists but profile doesn't, we'll create the profile
+      // This handles the case where single user creation partially succeeded
 
       // Generate username if not provided
       let baseUsername = username
@@ -204,57 +224,208 @@ export async function POST(request: NextRequest) {
 
         const resolvedRole = typeof role === 'string' ? role : (resolvedAccessLevel === 'super_admin' ? 'admin' : resolvedAccessLevel === 'client_admin' ? 'manager' : 'user')
 
-        // Create auth user
-        const { data: authData, error: authError2 } = await adminClient.auth.admin.createUser({
-          email: email.trim(),
-          password: password || 'temp123',
-          email_confirm: true,
-          user_metadata: {
-            full_name: name.trim(),
-            username: finalUsername,
-          },
-        })
+        // Create or get existing auth user
+        let authData
+        let authUserId: string
+        let isNewAuthUser = false
 
-        if (authError2 || !authData.user) {
-          console.error('Error creating auth user:', authError2)
-          results.push({
-            user: email,
-            success: false,
-            error: 'Failed to create auth user',
+        if (existingAuthUser) {
+          // Auth user exists, use it
+          authUserId = existingAuthUser.id
+          // Optionally update password if provided
+          if (password) {
+            await adminClient.auth.admin.updateUserById(authUserId, {
+              password: password,
+            })
+          }
+          authData = { user: existingAuthUser }
+        } else {
+          // Create new auth user
+          const { data: newAuthData, error: authError2 } = await adminClient.auth.admin.createUser({
+            email: email.trim(),
+            password: password || 'temp123',
+            email_confirm: true,
+            user_metadata: {
+              full_name: name.trim(),
+              username: finalUsername,
+            },
           })
-          continue
+
+          // Check if error is due to user already existing
+          if (authError2) {
+            // Check if it's a duplicate user error
+            const isDuplicateError =
+              authError2.message?.toLowerCase().includes('already registered') ||
+              authError2.message?.toLowerCase().includes('already exists') ||
+              authError2.message?.toLowerCase().includes('user already registered') ||
+              authError2.status === 422 ||
+              authError2.code === 'user_already_exists'
+
+            if (isDuplicateError) {
+              // User exists, try to find it
+              const { data: authUsers } = await adminClient.auth.admin.listUsers()
+              const foundUser = authUsers?.users?.find(
+                (u) => u.email?.toLowerCase() === email.trim().toLowerCase()
+              )
+              if (foundUser) {
+                authUserId = foundUser.id
+                authData = { user: foundUser }
+                // Update password if provided
+                if (password) {
+                  await adminClient.auth.admin.updateUserById(authUserId, {
+                    password: password,
+                  })
+                }
+              } else {
+                // User exists but we can't find it - this shouldn't happen but handle gracefully
+                results.push({
+                  user: email,
+                  success: false,
+                  error: 'User already exists but could not be retrieved. Please try single user creation.',
+                })
+                continue
+              }
+            } else {
+              console.error('Error creating auth user:', authError2)
+              results.push({
+                user: email,
+                success: false,
+                error: authError2.message || 'Failed to create auth user',
+              })
+              continue
+            }
+          } else if (!newAuthData?.user) {
+            results.push({
+              user: email,
+              success: false,
+              error: 'Failed to create auth user',
+            })
+            continue
+          } else {
+            authData = newAuthData
+            authUserId = newAuthData.user.id
+            isNewAuthUser = true
+          }
         }
 
-        // Create profile
-        const { data: profile, error: profileError } = await adminClient
+        // Before creating profile, check if one already exists with this auth_user_id
+        // This handles the case where profile exists but email check didn't find it
+        const { data: existingProfileByAuthId } = await adminClient
           .from('profiles')
-          .insert({
-            auth_user_id: authData.user.id,
-            username: finalUsername,
-            name: name.trim(),
-            email: email.trim(),
-            client_id: resolvedClientId,
-            industry_id: industry_id || null,
-            role: resolvedRole,
-            access_level: resolvedAccessLevel,
-            completed_profile: false,
-            status: status || 'active',
-          })
-          .select()
-          .single()
+          .select('id, email, auth_user_id')
+          .eq('auth_user_id', authUserId)
+          .maybeSingle()
+
+        // Create or update profile
+        let profile
+        let profileError
+
+        if (existingProfileByAuthId) {
+          // Profile already exists for this auth_user_id - update it
+          const { data: updatedProfile, error: updateError } = await adminClient
+            .from('profiles')
+            .update({
+              username: finalUsername,
+              name: name.trim(),
+              email: email.trim(), // Update email in case it changed
+              client_id: resolvedClientId,
+              industry_id: industry_id || null,
+              role: resolvedRole,
+              access_level: resolvedAccessLevel,
+              status: status || existingProfileByAuthId.status || 'active',
+            })
+            .eq('id', existingProfileByAuthId.id)
+            .select()
+            .single()
+
+          profile = updatedProfile
+          profileError = updateError
+        } else if (existingProfile) {
+          // Profile exists by email but different auth_user_id - this shouldn't happen but handle it
+          const { data: updatedProfile, error: updateError } = await adminClient
+            .from('profiles')
+            .update({
+              auth_user_id: authUserId, // Update to link to correct auth user
+              username: finalUsername,
+              name: name.trim(),
+              client_id: resolvedClientId,
+              industry_id: industry_id || null,
+              role: resolvedRole,
+              access_level: resolvedAccessLevel,
+              status: status || existingProfile.status || 'active',
+            })
+            .eq('id', existingProfile.id)
+            .select()
+            .single()
+
+          profile = updatedProfile
+          profileError = updateError
+        } else {
+          // Create new profile
+          const { data: newProfile, error: createError } = await adminClient
+            .from('profiles')
+            .insert({
+              auth_user_id: authUserId,
+              username: finalUsername,
+              name: name.trim(),
+              email: email.trim(),
+              client_id: resolvedClientId,
+              industry_id: industry_id || null,
+              role: resolvedRole,
+              access_level: resolvedAccessLevel,
+              completed_profile: false,
+              status: status || 'active',
+            })
+            .select()
+            .single()
+
+          profile = newProfile
+          profileError = createError
+        }
 
         if (profileError) {
-          console.error('Error creating profile:', profileError)
-          // Try to clean up auth user
-          try {
-            await adminClient.auth.admin.deleteUser(authData.user.id)
-          } catch (deleteError) {
-            console.error('Failed to cleanup auth user:', deleteError)
+          console.error('Error creating/updating profile:', profileError)
+          
+          // Check if it's a duplicate key error for auth_user_id
+          if (profileError.code === '23505' && profileError.message?.includes('auth_user_id')) {
+            // Profile with this auth_user_id already exists
+            // Try to fetch it and return success (user already exists)
+            try {
+              const { data: existingProfileByAuthId } = await adminClient
+                .from('profiles')
+                .select('*')
+                .eq('auth_user_id', authUserId)
+                .single()
+
+              if (existingProfileByAuthId) {
+                // User already fully exists, treat as success
+                results.push({
+                  user: email,
+                  success: true,
+                  userId: existingProfileByAuthId.id,
+                })
+                continue
+              }
+            } catch (fetchError) {
+              console.error('Error fetching existing profile:', fetchError)
+            }
           }
+
+          // Only try to clean up auth user if we created it (not if it existed)
+          if (isNewAuthUser) {
+            try {
+              await adminClient.auth.admin.deleteUser(authUserId)
+            } catch (deleteError) {
+              console.error('Failed to cleanup auth user:', deleteError)
+            }
+          }
+          
+          // Provide more helpful error message
+          const errorMessage = profileError.message || 'Unknown error'
           results.push({
             user: email,
             success: false,
-            error: 'Failed to create user profile',
+            error: `Profile ${existingProfileByAuthId ? 'update' : existingProfile ? 'update' : 'creation'} failed: ${errorMessage}`,
           })
           continue
         }

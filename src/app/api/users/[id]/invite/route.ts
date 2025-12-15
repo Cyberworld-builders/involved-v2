@@ -83,15 +83,47 @@ export async function POST(
       )
     }
 
+    // Use admin client for inserting invite
+    let adminClient
+    try {
+      adminClient = createAdminClient()
+    } catch (error) {
+      console.error('Failed to create admin client:', error)
+      return NextResponse.json(
+        {
+          error: 'Failed to initialize admin client',
+          details: error instanceof Error ? error.message : 'Unknown error',
+        },
+        { status: 500 }
+      )
+    }
+
+    // Check for existing pending invites for this user
+    const { data: existingInvites } = await adminClient
+      .from('user_invites')
+      .select('id, status, expires_at')
+      .eq('profile_id', profile.id)
+      .eq('status', 'pending')
+      .gt('expires_at', new Date().toISOString())
+
+    // If there's an active invite, we can either:
+    // 1. Return the existing invite, or
+    // 2. Revoke it and create a new one
+    // For now, we'll create a new one (revoking old ones)
+    if (existingInvites && existingInvites.length > 0) {
+      // Revoke existing pending invites
+      await adminClient
+        .from('user_invites')
+        .update({ status: 'revoked' })
+        .in('id', existingInvites.map(inv => inv.id))
+    }
+
     // Generate invite token with expiration
     const { token, expiresAt } = generateInviteTokenWithExpiration()
 
     // Create invite URL
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const inviteUrl = `${appUrl}/auth/claim?token=${token}`
-
-    // Use admin client for inserting invite
-    const adminClient = createAdminClient()
 
     // Store invite token in database
     const inviteData: UserInviteInsert = {
@@ -110,8 +142,35 @@ export async function POST(
 
     if (inviteError) {
       console.error('Error creating invite:', inviteError)
+      // Provide more detailed error message
+      const errorMessage = inviteError.message || 'Failed to create invite'
+      const errorCode = inviteError.code || 'UNKNOWN'
+      const errorDetails = inviteError.details || ''
+      
+      // Check for common constraint violations
+      if (errorCode === '23505') {
+        // Unique constraint violation - token collision (very rare)
+        return NextResponse.json(
+          { error: 'Invite token collision. Please try again.' },
+          { status: 409 }
+        )
+      }
+      
+      // Check for foreign key violations
+      if (errorCode === '23503') {
+        return NextResponse.json(
+          { error: 'Invalid user or inviter reference' },
+          { status: 400 }
+        )
+      }
+      
       return NextResponse.json(
-        { error: 'Failed to create invite' },
+        { 
+          error: 'Failed to create invite',
+          details: errorMessage,
+          code: errorCode,
+          hint: errorDetails
+        },
         { status: 500 }
       )
     }

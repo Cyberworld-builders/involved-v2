@@ -37,21 +37,31 @@ export default function BulkUploadPage() {
       // RBAC: only admins/managers can bulk upload users.
       const { data: currentProfile } = await supabase
         .from('profiles')
-        .select('role, client_id')
+        .select('access_level, role, client_id')
         .eq('auth_user_id', user.id)
         .single()
 
+      const accessLevel = currentProfile?.access_level
       const currentRole = currentProfile?.role || null
       const currentClientId = currentProfile?.client_id || null
 
-      const isAdmin = currentRole === 'admin'
-      const isManager = currentRole === 'manager' || currentRole === 'client'
+      // Derive access level from role if access_level is not set (backwards compatibility)
+      const derivedAccessLevel =
+        accessLevel ||
+        (currentRole === 'admin'
+          ? 'super_admin'
+          : currentRole === 'manager' || currentRole === 'client'
+            ? 'client_admin'
+            : 'member')
 
-      if (!isAdmin && !isManager) {
+      const isSuperAdmin = derivedAccessLevel === 'super_admin'
+      const isClientAdmin = derivedAccessLevel === 'client_admin'
+
+      if (!isSuperAdmin && !isClientAdmin) {
         router.push('/dashboard')
         return
       }
-      if (isManager && !currentClientId) {
+      if (isClientAdmin && !currentClientId) {
         router.push('/dashboard')
         return
       }

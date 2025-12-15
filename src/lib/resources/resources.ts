@@ -180,7 +180,7 @@ For each user you want to onboard:
 - [ ] Confirm user can sign in
 - [ ] Confirm user shows correct client/industry + access level
 `,
-    video: { bucket: 'resources-videos', path: 'phase-1/user-onboarding.mp4' },
+    video: { bucket: 'resources-videos', path: 'phase-1/onboarding.mp4' },
   },
   {
     slug: 'assessments-phase-1',
