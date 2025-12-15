@@ -26,11 +26,15 @@ No additional configuration needed for local development!
 
 ### Supabase Email Service
 
-Supabase has built-in email capabilities, but they're **only for authentication emails** (password reset, email confirmation, etc.). For custom application emails like our user invites, we need our own SMTP configuration.
+Supabase has built-in email capabilities for authentication emails (password reset, email confirmation, etc.). For our custom application emails (user invites), we use the **same SMTP provider** configured in Supabase Dashboard.
 
-**Note**: You can use the **same SMTP provider credentials** for both:
-- Supabase Auth emails (configured in Supabase Dashboard → Authentication → SMTP)
-- Custom application emails (configured via environment variables below)
+**Recommended Approach**: 
+1. Configure SMTP in **Supabase Dashboard** → Authentication → SMTP Settings
+2. Use the **same SMTP credentials** in Vercel environment variables
+
+This way:
+- Supabase Auth emails use Supabase's SMTP configuration
+- Our custom invite emails use the same SMTP credentials via environment variables
 
 ### Required Environment Variables
 
@@ -79,19 +83,40 @@ SUPABASE_SERVICE_ROLE_KEY=xxx      # Required for user creation API
    - `SMTP_USER=AKIAxxxxx` (IAM user)
    - `SMTP_PASS=xxxxx` (SMTP password)
 
-### Adding Environment Variables to Vercel
+### Setup Steps
+
+1. **Configure SMTP in Supabase Dashboard:**
+   - Go to your Supabase project → Authentication → Settings → SMTP
+   - Enable "Custom SMTP"
+   - Enter your SMTP provider credentials (Resend, SendGrid, etc.)
+   - Save the configuration
+
+2. **Add the same SMTP credentials to Vercel:**
 
 ```bash
-# Add SMTP configuration
+# Get these values from your Supabase SMTP configuration
 vercel env add SMTP_HOST production
-vercel env add SMTP_PORT production
-vercel env add SMTP_USER production
-vercel env add SMTP_PASS production
-vercel env add SMTP_SECURE production
-vercel env add SMTP_FROM production
-vercel env add SMTP_FROM_NAME production
+# Enter the same SMTP_HOST you used in Supabase (e.g., smtp.resend.com)
 
-# Add Supabase service role key (required for user creation)
+vercel env add SMTP_PORT production
+# Enter the same SMTP_PORT (usually 587)
+
+vercel env add SMTP_USER production
+# Enter the same SMTP_USER
+
+vercel env add SMTP_PASS production
+# Enter the same SMTP_PASS/API key
+
+vercel env add SMTP_SECURE production
+# Enter: false (for port 587) or true (for port 465)
+
+vercel env add SMTP_FROM production
+# Enter your verified sender email
+
+vercel env add SMTP_FROM_NAME production
+# Enter: Involved Talent (or your app name)
+
+# Also add Supabase service role key (required for user creation)
 vercel env add SUPABASE_SERVICE_ROLE_KEY production
 vercel env add SUPABASE_SERVICE_ROLE_KEY preview
 vercel env add SUPABASE_SERVICE_ROLE_KEY development
