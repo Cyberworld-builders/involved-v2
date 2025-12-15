@@ -325,20 +325,33 @@ export function parseBenchmarkSpreadsheet(csvContent: string): ParseResult<Bench
   })
 
   const valueColumnKey = headerMap['benchmark_value'] !== undefined ? 'benchmark_value' : 'value'
+  const valueColumnIndex = headerMap[valueColumnKey]
+  
+  // Validate that we found the value column
+  if (valueColumnIndex === undefined) {
+    errors.push(`Could not find value column. Expected "Value" or "Benchmark Value"`)
+    return { data, errors }
+  }
   
   // Parse data rows
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i]
     const rowNum = i + 1
     
-    if (row.length === 0 || row.every(cell => !cell)) {
+    if (row.length === 0 || row.every(cell => !cell || cell.trim() === '')) {
       continue // Skip empty rows
     }
     
-    const dimension_name = row[headerMap['dimension_name']] || ''
-    const dimension_code = row[headerMap['dimension_code']] || ''
-    const benchmark_value_str = row[headerMap[valueColumnKey]] || ''
-    const industry = row[headerMap['industry']] || ''
+    // Ensure row has enough columns
+    if (row.length <= Math.max(headerMap['dimension_name'] || 0, headerMap['dimension_code'] || 0, valueColumnIndex)) {
+      errors.push(`Row ${rowNum}: Missing columns. Expected at least ${Math.max(headerMap['dimension_name'] || 0, headerMap['dimension_code'] || 0, valueColumnIndex) + 1} columns, got ${row.length}`)
+      continue
+    }
+    
+    const dimension_name = (row[headerMap['dimension_name']] || '').trim()
+    const dimension_code = (row[headerMap['dimension_code']] || '').trim()
+    const benchmark_value_str = (row[valueColumnIndex] || '').trim()
+    const industry = (row[headerMap['industry']] || '').trim()
     
     // Validate required fields
     if (!dimension_name) {
@@ -352,7 +365,7 @@ export function parseBenchmarkSpreadsheet(csvContent: string): ParseResult<Bench
     }
     
     if (!benchmark_value_str) {
-      errors.push(`Row ${rowNum}: Benchmark value is required`)
+      errors.push(`Row ${rowNum}: Benchmark value is required (found empty value in "${valueColumnKey}" column)`)
       continue
     }
     
