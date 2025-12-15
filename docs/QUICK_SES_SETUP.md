@@ -83,3 +83,4 @@ If emails still fail:
 - Ensure `jay@cyberworldbuilders.com` is verified in AWS SES
 - Check Vercel logs for specific error messages
 - Verify AWS SES account is out of sandbox mode (or recipient is verified)
+

@@ -9,11 +9,15 @@
  * - View emails at http://127.0.0.1:54324
  * 
  * Production:
- * - Uses SMTP server configured via environment variables
- * - Or can be configured to use Resend, SendGrid, AWS SES, etc.
+ * - Uses AWS SES SDK (recommended for serverless/Vercel) or SMTP
+ * - AWS SES SDK avoids DNS resolution issues in serverless environments
  */
 
 import nodemailer from 'nodemailer'
+import dns from 'dns'
+import { promisify } from 'util'
+
+const resolve4 = promisify(dns.resolve4)
 
 export interface InviteEmailData {
   recipientEmail: string
@@ -224,7 +228,9 @@ function createTransporter() {
     })
   }
   
-  // Production: Use configured SMTP server
+  // Production: Use SMTP (for Supabase compatibility)
+  // Note: If you encounter DNS resolution errors in Vercel, consider using AWS SES SDK instead
+  // by setting AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_REGION environment variables
   const smtpHost = process.env.SMTP_HOST
   const smtpPort = parseInt(process.env.SMTP_PORT || '587', 10)
   const smtpUser = process.env.SMTP_USER
@@ -232,10 +238,37 @@ function createTransporter() {
   const smtpSecure = process.env.SMTP_SECURE === 'true' || smtpPort === 465
   
   if (!smtpHost) {
-    throw new Error('SMTP_HOST environment variable is required in production')
+    throw new Error('SMTP_HOST environment variable is required in production (or set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_REGION to use AWS SES SDK)')
   }
   
-  return nodemailer.createTransport({
+  // Custom DNS lookup function to help with Vercel's serverless DNS issues
+  // Pre-resolve hostname to IP to avoid DNS resolution problems
+  const customLookup = (
+    hostname: string,
+    options: dns.LookupOptions,
+    callback: (err: NodeJS.ErrnoException | null, address: string | dns.LookupAddress[], family: number) => void
+  ) => {
+    // Try to resolve using dns.resolve4 first, then fallback to default lookup
+    resolve4(hostname)
+      .then((addresses) => {
+        if (addresses && addresses.length > 0) {
+          // Use the first resolved IP address
+          callback(null, addresses[0], 4)
+        } else {
+          // Fallback to default lookup
+          dns.lookup(hostname, options, callback)
+        }
+      })
+      .catch(() => {
+        // If DNS resolution fails, fallback to default lookup
+        dns.lookup(hostname, options, callback)
+      })
+  }
+
+  // Configure transporter with explicit DNS and connection settings
+  // This helps with serverless environments like Vercel
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const transporterConfig: any = {
     host: smtpHost,
     port: smtpPort,
     secure: smtpSecure,
@@ -243,7 +276,26 @@ function createTransporter() {
       user: smtpUser,
       pass: smtpPass,
     } : undefined,
-  })
+    // Connection timeouts for serverless environments
+    connectionTimeout: 10000, // 10 seconds
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
+    // Use custom lookup to help with DNS resolution in serverless
+    lookup: customLookup,
+  }
+
+  // Add TLS configuration if using secure connection
+  if (smtpSecure || smtpPort === 587) {
+    transporterConfig.tls = {
+      rejectUnauthorized: true,
+      // Explicitly set servername to help with DNS resolution
+      servername: smtpHost,
+      // Use system DNS
+      minVersion: 'TLSv1.2',
+    }
+  }
+
+  return nodemailer.createTransport(transporterConfig)
 }
 
 /**

@@ -173,3 +173,4 @@ After setup:
 2. Monitor email deliverability in AWS SES
 3. Set up bounce/complaint handling (recommended)
 4. Consider setting up SNS notifications for bounces
+
