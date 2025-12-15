@@ -67,3 +67,4 @@ export default function SendInviteButton({ userId, userName, userEmail }: SendIn
     </div>
   )
 }
+

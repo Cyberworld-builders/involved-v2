@@ -321,9 +321,12 @@ export async function sendEmail(
     }
   } catch (error) {
     console.error('Error sending email:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error sending email'
+    const errorDetails = error instanceof Error ? error.stack : String(error)
+    console.error('Email error details:', errorDetails)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error sending email',
+      error: errorMessage,
     }
   }
 }

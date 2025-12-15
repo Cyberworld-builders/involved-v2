@@ -144,3 +144,4 @@ vercel env add SUPABASE_SERVICE_ROLE_KEY development
 ### User creation failing
 - Ensure `SUPABASE_SERVICE_ROLE_KEY` is set in Vercel
 - Get the key from Supabase Dashboard → Settings → API → service_role key
+

@@ -30,3 +30,4 @@ ALTER COLUMN access_level SET DEFAULT 'member';
 
 CREATE INDEX IF NOT EXISTS idx_profiles_access_level ON profiles(access_level);
 
+

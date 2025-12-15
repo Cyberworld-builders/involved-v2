@@ -194,3 +194,4 @@ export function getResourcePostBySlug(slug: string) {
   return RESOURCE_POSTS.find((p) => p.slug === slug) || null
 }
 
+
