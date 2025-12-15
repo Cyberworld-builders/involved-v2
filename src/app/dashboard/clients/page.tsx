@@ -23,6 +23,29 @@ export default async function ClientsPage() {
     .select('*')
     .order('created_at', { ascending: false })
 
+  // Fetch user counts per client
+  const { data: userCounts } = await supabase
+    .from('profiles')
+    .select('client_id')
+    .not('client_id', 'is', null)
+
+  // Count users per client
+  const userCountMap = new Map<string, number>()
+  userCounts?.forEach((profile) => {
+    if (profile.client_id) {
+      userCountMap.set(
+        profile.client_id,
+        (userCountMap.get(profile.client_id) || 0) + 1
+      )
+    }
+  })
+
+  // Add user counts to clients
+  const clientsWithCounts = clients?.map((client) => ({
+    ...client,
+    userCount: userCountMap.get(client.id) || 0,
+  })) || []
+
   if (error) {
     console.error('Error fetching clients:', error)
   }
@@ -111,7 +134,7 @@ export default async function ClientsPage() {
                 </Link>
               </div>
             ) : (
-              <ClientsTable initialClients={clients} />
+              <ClientsTable initialClients={clientsWithCounts} />
             )}
           </CardContent>
         </Card>

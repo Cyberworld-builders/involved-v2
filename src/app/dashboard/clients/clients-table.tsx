@@ -8,14 +8,18 @@ import { Database } from '@/types/database'
 
 type Client = Database['public']['Tables']['clients']['Row']
 
+type ClientWithUserCount = Client & {
+  userCount?: number
+}
+
 interface ClientsTableProps {
-  initialClients: Client[]
+  initialClients: ClientWithUserCount[]
 }
 
 type MessageType = 'success' | 'error' | null
 
 export default function ClientsTable({ initialClients }: ClientsTableProps) {
-  const [clients, setClients] = useState<Client[]>(initialClients)
+  const [clients, setClients] = useState<ClientWithUserCount[]>(initialClients)
   const [isDeleting, setIsDeleting] = useState<string | null>(null)
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<MessageType>(null)
@@ -139,8 +143,7 @@ export default function ClientsTable({ initialClients }: ClientsTableProps) {
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {/* TODO: Add user count */}
-                  0
+                  {client.userCount ?? 0}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {new Date(client.created_at).toLocaleDateString()}
