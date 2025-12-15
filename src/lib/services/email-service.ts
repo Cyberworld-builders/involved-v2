@@ -435,16 +435,40 @@ export async function sendEmail(
   
   // Prefer AWS SES SDK if credentials are available (avoids DNS issues in serverless)
   // Always use AWS SES if credentials are available, regardless of environment
-  const useAwsSes = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY
+  const awsAccessKeyId = process.env.AWS_ACCESS_KEY_ID
+  const awsSecretAccessKey = process.env.AWS_SECRET_ACCESS_KEY
+  const useAwsSes = !!(awsAccessKeyId && awsSecretAccessKey)
   const isLocal = process.env.NODE_ENV === 'development' || !process.env.SMTP_HOST
+  
+  // Log for debugging
+  if (useAwsSes) {
+    console.log('Using AWS SES SDK for email sending', {
+      hasAccessKey: !!awsAccessKeyId,
+      hasSecretKey: !!awsSecretAccessKey,
+      region: process.env.AWS_REGION || 'us-east-1',
+    })
+  } else {
+    console.warn('AWS SES credentials not available, falling back to SMTP', {
+      hasAccessKey: !!awsAccessKeyId,
+      hasSecretKey: !!awsSecretAccessKey,
+      nodeEnv: process.env.NODE_ENV,
+      smtpHost: process.env.SMTP_HOST ? 'set' : 'not set',
+    })
+  }
   
   // Use AWS SES if credentials are available (preferred method)
   if (useAwsSes) {
     try {
       return await sendEmailViaSES(to, subject, htmlBody, textBody)
     } catch (error) {
-      console.error('AWS SES failed, falling back to SMTP:', error)
-      // Fall through to SMTP fallback only if AWS SES fails
+      console.error('AWS SES failed:', error)
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      // If AWS SES fails, don't fall back to SMTP - return the error
+      // This prevents DNS issues from happening
+      return {
+        success: false,
+        error: `AWS SES failed: ${errorMessage}. Please verify your email address in AWS SES and check IAM permissions.`,
+      }
     }
   }
   
