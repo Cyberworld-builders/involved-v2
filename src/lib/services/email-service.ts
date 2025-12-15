@@ -16,6 +16,7 @@
 import nodemailer from 'nodemailer'
 import dns from 'dns'
 import { promisify } from 'util'
+import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
 
 const resolve4 = promisify(dns.resolve4)
 
@@ -313,11 +314,80 @@ function createTransporter() {
 }
 
 /**
- * Send an email using SMTP
+ * Send an email using AWS SES SDK (preferred for serverless/Vercel)
  * 
- * This function uses nodemailer to send emails via SMTP.
- * In local development, it sends to Mailpit for testing.
- * In production, it uses the configured SMTP server.
+ * This bypasses SMTP and DNS resolution issues in serverless environments.
+ * 
+ * @param to - Recipient email address
+ * @param subject - Email subject
+ * @param htmlBody - HTML body content
+ * @param textBody - Plain text body content
+ * @returns Delivery result
+ */
+async function sendEmailViaSES(
+  to: string,
+  subject: string,
+  htmlBody: string,
+  textBody: string
+): Promise<EmailDeliveryResult> {
+  const awsAccessKeyId = process.env.AWS_ACCESS_KEY_ID
+  const awsSecretAccessKey = process.env.AWS_SECRET_ACCESS_KEY
+  const awsRegion = process.env.AWS_REGION || 'us-east-1'
+  const fromEmail = process.env.SMTP_FROM || process.env.AWS_SES_FROM_EMAIL || 'noreply@involvedtalent.com'
+  
+  if (!awsAccessKeyId || !awsSecretAccessKey) {
+    throw new Error('AWS credentials not configured (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)')
+  }
+  
+  const sesClient = new SESClient({
+    region: awsRegion,
+    credentials: {
+      accessKeyId: awsAccessKeyId,
+      secretAccessKey: awsSecretAccessKey,
+    },
+  })
+  
+  const command = new SendEmailCommand({
+    Source: fromEmail,
+    Destination: {
+      ToAddresses: [to],
+    },
+    Message: {
+      Subject: {
+        Data: subject,
+        Charset: 'UTF-8',
+      },
+      Body: {
+        Html: {
+          Data: htmlBody,
+          Charset: 'UTF-8',
+        },
+        Text: {
+          Data: textBody,
+          Charset: 'UTF-8',
+        },
+      },
+    },
+  })
+  
+  try {
+    const response = await sesClient.send(command)
+    return {
+      success: true,
+      messageId: response.MessageId || `ses-${Date.now()}-${crypto.randomUUID()}`,
+    }
+  } catch (error) {
+    console.error('AWS SES error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error sending email via AWS SES'
+    throw new Error(`AWS SES failed: ${errorMessage}`)
+  }
+}
+
+/**
+ * Send an email using SMTP or AWS SES SDK
+ * 
+ * This function prefers AWS SES SDK (if credentials are available) to avoid DNS resolution
+ * issues in serverless environments like Vercel. Falls back to SMTP for local development.
  * 
  * @param to - Recipient email address
  * @param subject - Email subject
@@ -363,6 +433,21 @@ export async function sendEmail(
     throw new Error('to must be a valid email address')
   }
   
+  // Prefer AWS SES SDK if credentials are available (avoids DNS issues in serverless)
+  const useAwsSes = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY
+  const isLocal = process.env.NODE_ENV === 'development' || !process.env.SMTP_HOST
+  
+  // Use AWS SES in production if credentials are available, otherwise use SMTP
+  if (useAwsSes && !isLocal) {
+    try {
+      return await sendEmailViaSES(to, subject, htmlBody, textBody)
+    } catch (error) {
+      console.error('AWS SES failed, falling back to SMTP:', error)
+      // Fall through to SMTP fallback
+    }
+  }
+  
+  // Use SMTP (local Mailpit or configured SMTP server)
   try {
     const transporter = createTransporter()
     const fromEmail = process.env.SMTP_FROM || process.env.NEXT_PUBLIC_APP_NAME || 'noreply@involvedtalent.com'
@@ -376,7 +461,6 @@ export async function sendEmail(
       html: htmlBody,
     })
     
-    const isLocal = process.env.NODE_ENV === 'development' || !process.env.SMTP_HOST
     if (isLocal) {
       console.log('📧 Email sent to Mailpit. View at http://127.0.0.1:54324')
     }
@@ -394,11 +478,13 @@ export async function sendEmail(
     // Provide helpful error message if SMTP is not configured
     let userFriendlyError = errorMessage
     if (errorMessage.includes('SMTP_HOST') || errorMessage.includes('required in production')) {
-      userFriendlyError = 'SMTP not configured. Please set SMTP_HOST, SMTP_PORT, SMTP_USER, and SMTP_PASS environment variables.'
+      userFriendlyError = 'SMTP not configured. Please set SMTP_HOST, SMTP_PORT, SMTP_USER, and SMTP_PASS environment variables, or set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_REGION to use AWS SES SDK.'
     } else if (errorMessage.includes('ECONNREFUSED') || errorMessage.includes('connect')) {
-      userFriendlyError = 'Cannot connect to SMTP server. Please check SMTP_HOST and SMTP_PORT settings.'
+      userFriendlyError = 'Cannot connect to SMTP server. Please check SMTP_HOST and SMTP_PORT settings, or use AWS SES SDK by setting AWS credentials.'
     } else if (errorMessage.includes('authentication') || errorMessage.includes('auth')) {
-      userFriendlyError = 'SMTP authentication failed. Please check SMTP_USER and SMTP_PASS credentials.'
+      userFriendlyError = 'SMTP authentication failed. Please check SMTP_USER and SMTP_PASS credentials, or use AWS SES SDK by setting AWS credentials.'
+    } else if (errorMessage.includes('EBADNAME') || errorMessage.includes('queryA')) {
+      userFriendlyError = 'DNS resolution failed. Please use AWS SES SDK by setting AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_REGION environment variables.'
     }
     
     return {
