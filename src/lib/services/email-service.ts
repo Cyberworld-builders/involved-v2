@@ -335,7 +335,12 @@ async function sendEmailViaSES(
   const awsSecretAccessKey = process.env.AWS_SECRET_ACCESS_KEY?.trim()
   // Trim whitespace from region to prevent SDK errors
   const awsRegion = (process.env.AWS_REGION || 'us-east-1').trim()
-  const fromEmail = process.env.SMTP_FROM || process.env.AWS_SES_FROM_EMAIL || 'noreply@involvedtalent.com'
+  // Get sender email - must be verified in AWS SES
+  // Trim to prevent issues with trailing spaces
+  const fromEmail = (process.env.SMTP_FROM || process.env.AWS_SES_FROM_EMAIL || 'noreply@involvedtalent.com').trim()
+  
+  // Log the sender email for debugging
+  console.log('[Email Service] Using sender email:', fromEmail)
   
   if (!awsAccessKeyId || !awsSecretAccessKey) {
     throw new Error('AWS credentials not configured (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)')
