@@ -55,7 +55,6 @@ export default async function ResourceDetailPage({
       bucket: post.video.bucket,
       path: post.video.path,
       error: signedError.message,
-      code: signedError.statusCode,
     })
   }
 
