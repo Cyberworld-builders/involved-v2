@@ -563,6 +563,10 @@ describe('API User Status Management', () => {
               data: null,
               error: null,
             }),
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
           }),
         }),
       })
@@ -571,6 +575,16 @@ describe('API User Status Management', () => {
         data: { user: { id: 'new-auth-user-id' } },
         error: null,
       })
+
+      // Mock profile existence check
+      const selectChain = {
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: null,
+            error: null,
+          }),
+        }),
+      }
 
       const insertMock = vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
@@ -582,6 +596,7 @@ describe('API User Status Management', () => {
       })
 
       mockAdminClient.from = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue(selectChain),
         insert: insertMock,
       })
 
@@ -617,6 +632,10 @@ describe('API User Status Management', () => {
               data: null,
               error: null,
             }),
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
           }),
         }),
       })
@@ -625,6 +644,16 @@ describe('API User Status Management', () => {
         data: { user: { id: 'new-auth-user-id' } },
         error: null,
       })
+
+      // Mock profile existence check
+      const selectChain = {
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: null,
+            error: null,
+          }),
+        }),
+      }
 
       const insertMock = vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
@@ -636,6 +665,7 @@ describe('API User Status Management', () => {
       })
 
       mockAdminClient.from = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue(selectChain),
         insert: insertMock,
       })
 

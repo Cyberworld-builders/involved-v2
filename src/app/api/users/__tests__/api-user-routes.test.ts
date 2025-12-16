@@ -138,7 +138,18 @@ describe('API User Routes', () => {
       })
 
       // Mock profile creation
+      // Mock profile existence check
+      const selectChain = {
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: null,
+            error: null,
+          }),
+        }),
+      }
+
       mockAdminClient.from = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue(selectChain),
         insert: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({
@@ -182,6 +193,10 @@ describe('API User Routes', () => {
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
+            maybeSingle: vi.fn().mockResolvedValue({
               data: null,
               error: null,
             }),
@@ -318,6 +333,10 @@ describe('API User Routes', () => {
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
+            maybeSingle: vi.fn().mockResolvedValue({
               data: null,
               error: null,
             }),
@@ -467,6 +486,10 @@ describe('API User Routes', () => {
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
+            maybeSingle: vi.fn().mockResolvedValue({
               data: { id: 'existing-user-id' },
               error: null,
             }),
@@ -496,6 +519,10 @@ describe('API User Routes', () => {
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
+            maybeSingle: vi.fn().mockResolvedValue({
               data: null,
               error: null,
             }),
@@ -564,6 +591,10 @@ describe('API User Routes', () => {
               data: null,
               error: null,
             }),
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
           }),
         }),
       })
@@ -595,6 +626,10 @@ describe('API User Routes', () => {
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
+            maybeSingle: vi.fn().mockResolvedValue({
               data: null,
               error: null,
             }),
@@ -642,6 +677,10 @@ describe('API User Routes', () => {
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
+            maybeSingle: vi.fn().mockResolvedValue({
               data: null,
               error: null,
             }),
@@ -696,6 +735,10 @@ describe('API User Routes', () => {
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
+            maybeSingle: vi.fn().mockResolvedValue({
               data: null,
               error: null,
             }),
@@ -787,6 +830,10 @@ describe('API User Routes', () => {
           select: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnValue({
               single: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
+            maybeSingle: vi.fn().mockResolvedValue({
                 data: null,
                 error: null,
               }),
@@ -844,6 +891,10 @@ describe('API User Routes', () => {
           select: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnValue({
               single: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
+            maybeSingle: vi.fn().mockResolvedValue({
                 data: null,
                 error: null,
               }),
@@ -899,6 +950,10 @@ describe('API User Routes', () => {
           select: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnValue({
               single: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
+            maybeSingle: vi.fn().mockResolvedValue({
                 data: null,
                 error: null,
               }),
@@ -954,6 +1009,10 @@ describe('API User Routes', () => {
           select: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnValue({
               single: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
+            maybeSingle: vi.fn().mockResolvedValue({
                 data: null,
                 error: null,
               }),
@@ -2037,6 +2096,10 @@ describe('API User Routes', () => {
               data: null,
               error: null,
             }),
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
           }),
         }),
       })
@@ -2048,7 +2111,18 @@ describe('API User Routes', () => {
       })
 
       // Mock profile creation
+      // Mock profile existence check
+      const selectChain = {
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: null,
+            error: null,
+          }),
+        }),
+      }
+
       mockAdminClient.from = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue(selectChain),
         insert: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({
@@ -2105,6 +2179,10 @@ describe('API User Routes', () => {
               data: null,
               error: null,
             }),
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
           }),
         }),
       })
@@ -2114,6 +2192,16 @@ describe('API User Routes', () => {
         data: { user: { id: 'new-auth-user-id' } },
         error: null,
       })
+
+      // Mock profile existence check
+      const selectChain = {
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: null,
+            error: null,
+          }),
+        }),
+      }
 
       const insertMock = vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
@@ -2125,6 +2213,7 @@ describe('API User Routes', () => {
       })
 
       mockAdminClient.from = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue(selectChain),
         insert: insertMock,
       })
 
@@ -2308,6 +2397,21 @@ describe('API User Routes', () => {
                 error: null,
               })
             }),
+            maybeSingle: vi.fn().mockImplementation(() => {
+              callCount++
+              if (callCount === 1) {
+                // First call - existing user
+                return Promise.resolve({
+                  data: { id: 'existing-user-id' },
+                  error: null,
+                })
+              }
+              // Subsequent calls - no user found
+              return Promise.resolve({
+                data: null,
+                error: null,
+              })
+            }),
           }),
         }),
       })
@@ -2317,7 +2421,18 @@ describe('API User Routes', () => {
         error: null,
       })
 
+      // Mock profile existence check
+      const selectChain = {
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: null,
+            error: null,
+          }),
+        }),
+      }
+
       mockAdminClient.from = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue(selectChain),
         insert: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({
@@ -2368,8 +2483,26 @@ describe('API User Routes', () => {
               data: null,
               error: null,
             }),
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
           }),
         }),
+      })
+
+      // Mock profile existence check
+      const selectChain = {
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: null,
+            error: null,
+          }),
+        }),
+      }
+
+      mockAdminClient.from = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue(selectChain),
       })
 
       mockAdminClient.auth.admin.createUser.mockResolvedValue({
@@ -2412,6 +2545,10 @@ describe('API User Routes', () => {
               data: null,
               error: null,
             }),
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
           }),
         }),
       })
@@ -2422,7 +2559,18 @@ describe('API User Routes', () => {
         error: null,
       })
 
+      // Mock profile existence check
+      const selectChain = {
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: null,
+            error: null,
+          }),
+        }),
+      }
+
       mockAdminClient.from = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue(selectChain),
         insert: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({
@@ -2482,6 +2630,21 @@ describe('API User Routes', () => {
                 error: null,
               })
             }),
+            maybeSingle: vi.fn().mockImplementation(() => {
+              emailCheckCount++
+              if (emailCheckCount === 2) {
+                // Second user already exists
+                return Promise.resolve({
+                  data: { id: 'existing-user-id' },
+                  error: null,
+                })
+              }
+              // Other users don't exist
+              return Promise.resolve({
+                data: null,
+                error: null,
+              })
+            }),
           }),
         }),
       })
@@ -2491,7 +2654,18 @@ describe('API User Routes', () => {
         error: null,
       })
 
+      // Mock profile existence check
+      const selectChain = {
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: null,
+            error: null,
+          }),
+        }),
+      }
+
       mockAdminClient.from = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue(selectChain),
         insert: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({
@@ -2531,6 +2705,10 @@ describe('API User Routes', () => {
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
+            maybeSingle: vi.fn().mockResolvedValue({
               data: null,
               error: null,
             }),
@@ -2903,6 +3081,10 @@ describe('API User Routes', () => {
           select: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnValue({
               single: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
+            maybeSingle: vi.fn().mockResolvedValue({
                 data: null,
                 error: null,
               }),
@@ -2915,6 +3097,16 @@ describe('API User Routes', () => {
           error: null,
         })
 
+        // Mock profile existence check
+        const selectChain = {
+          eq: vi.fn().mockReturnValue({
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
+          }),
+        }
+
         const insertMock = vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({
@@ -2925,6 +3117,7 @@ describe('API User Routes', () => {
         })
 
         mockAdminClient.from = vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue(selectChain),
           insert: insertMock,
         })
 
@@ -2980,6 +3173,10 @@ describe('API User Routes', () => {
           select: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnValue({
               single: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
+            maybeSingle: vi.fn().mockResolvedValue({
                 data: null,
                 error: null,
               }),
@@ -2992,6 +3189,16 @@ describe('API User Routes', () => {
           error: null,
         })
 
+        // Mock profile existence check
+        const selectChain = {
+          eq: vi.fn().mockReturnValue({
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
+          }),
+        }
+
         const insertMock = vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({
@@ -3002,6 +3209,7 @@ describe('API User Routes', () => {
         })
 
         mockAdminClient.from = vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue(selectChain),
           insert: insertMock,
         })
 
