@@ -101,7 +101,20 @@ describe('POST /api/users/[id]/invite', () => {
       expiresAt: mockExpiresAt,
     })
     
+    // Mock existing invites check
+    const selectChain = {
+      eq: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          gt: vi.fn().mockResolvedValue({
+            data: [],
+            error: null,
+          }),
+        }),
+      }),
+    }
+
     mockAdminClient.from.mockReturnValue({
+      select: vi.fn().mockReturnValue(selectChain),
       insert: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
           single: vi.fn().mockResolvedValue({

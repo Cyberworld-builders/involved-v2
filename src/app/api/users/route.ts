@@ -205,7 +205,7 @@ export async function POST(request: NextRequest) {
       .from('profiles')
       .select('id')
       .eq('email', email.trim())
-      .single()
+      .maybeSingle()
 
     if (existingUser) {
       return NextResponse.json(

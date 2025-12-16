@@ -126,6 +126,10 @@ describe('API User Routes', () => {
               data: null,
               error: null,
             }),
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
           }),
         }),
       }
@@ -268,6 +272,16 @@ describe('API User Routes', () => {
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
             single: vi.fn().mockImplementation(() => {
+              checkCount++
+              // First check is for email (return no user)
+              // Second check is for username (simulate username exists)
+              // Third check is for username1 (return no user)
+              if (checkCount === 2) {
+                return Promise.resolve({ data: { id: 'existing-id' }, error: null })
+              }
+              return Promise.resolve({ data: null, error: null })
+            }),
+            maybeSingle: vi.fn().mockImplementation(() => {
               checkCount++
               // First check is for email (return no user)
               // Second check is for username (simulate username exists)
