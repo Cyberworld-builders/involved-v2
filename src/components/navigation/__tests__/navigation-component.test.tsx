@@ -3,6 +3,30 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import Sidebar from '../sidebar'
 import * as navigation from 'next/navigation'
 
+// Mock Supabase client
+vi.mock('@/lib/supabase/client', () => ({
+  createClient: vi.fn(() => ({
+    auth: {
+      getUser: vi.fn().mockResolvedValue({
+        data: { user: { id: 'test-user-id', email: 'admin@example.com' } },
+        error: null,
+      }),
+    },
+  })),
+}))
+
+// Mock getUserProfile
+vi.mock('@/lib/utils/get-user-profile', () => ({
+  getUserProfile: vi.fn().mockResolvedValue({
+    id: 'test-profile-id',
+    name: 'Admin User',
+    email: 'admin@example.com',
+    access_level: 'client_admin',
+    role: 'manager',
+    client_id: 'test-client-id',
+  }),
+}))
+
 /**
  * Navigation Component (Sidebar) Tests
  * 
@@ -22,6 +46,8 @@ const EXPECTED_NAVIGATION_ITEMS = [
   'Industries',
   'Benchmarks',
   'Resources',
+  'My Assignments',
+  'Profile',
   // 'Feedback', // Hidden for Phase 1
 ]
 
@@ -52,10 +78,10 @@ describe('Sidebar Component', () => {
       expect(screen.getByText('IT')).toBeInTheDocument()
     })
 
-    it('should render the user section', () => {
+    it('should render the user section', async () => {
       render(<Sidebar />)
-      expect(screen.getByText('Admin User')).toBeInTheDocument()
-      expect(screen.getByText('admin@example.com')).toBeInTheDocument()
+      expect(await screen.findByText('Admin User')).toBeInTheDocument()
+      expect(await screen.findByText('admin@example.com')).toBeInTheDocument()
     })
   })
 
@@ -97,14 +123,24 @@ describe('Sidebar Component', () => {
       // expect(feedbackLink).toHaveAttribute('href', '/dashboard/feedback')
     })
 
-    it('should render navigation icons for each link', () => {
+    it('should render navigation icons for each link', async () => {
       render(<Sidebar />)
       
+      // Wait for async data to load
+      await screen.findByText('Admin User')
+      
       // '💬' (Feedback) icon hidden for Phase 1
-      const expectedIcons = ['🏠', '📋', '🏢', '👥', '🏭', '📊', '📚']
+      // Note: 📋 appears twice (Assessments and My Assignments), so use getAllByText
+      const expectedIcons = ['🏠', '🏢', '👥', '🏭', '📊', '📚']
+      const duplicateIcons = ['📋'] // Icons that appear multiple times
       
       expectedIcons.forEach((icon) => {
         expect(screen.getByText(icon)).toBeInTheDocument()
+      })
+      
+      // Check duplicate icons appear at least once
+      duplicateIcons.forEach((icon) => {
+        expect(screen.getAllByText(icon).length).toBeGreaterThanOrEqual(1)
       })
     })
   })
@@ -247,20 +283,21 @@ describe('Sidebar Component', () => {
   })
 
   describe('User Section', () => {
-    it('should render user avatar placeholder', () => {
+    it('should render user avatar placeholder', async () => {
       render(<Sidebar />)
-      expect(screen.getByText('👤')).toBeInTheDocument()
+      expect(screen.getAllByText('👤').length).toBeGreaterThanOrEqual(1)
     })
 
-    it('should render user name and email', () => {
+    it('should render user name and email', async () => {
       render(<Sidebar />)
-      expect(screen.getByText('Admin User')).toBeInTheDocument()
-      expect(screen.getByText('admin@example.com')).toBeInTheDocument()
+      expect(await screen.findByText('Admin User')).toBeInTheDocument()
+      expect(await screen.findByText('admin@example.com')).toBeInTheDocument()
     })
 
-    it('should render user section at bottom with border', () => {
+    it('should render user section at bottom with border', async () => {
       render(<Sidebar />)
-      const userSection = screen.getByText('Admin User').closest('div')?.parentElement?.parentElement
+      const adminUser = await screen.findByText('Admin User')
+      const userSection = adminUser.closest('div')?.parentElement?.parentElement
       expect(userSection).toHaveClass('border-t', 'border-gray-700', 'p-4')
     })
   })
