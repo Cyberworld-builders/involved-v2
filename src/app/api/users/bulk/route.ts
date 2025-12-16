@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
       // Check if profile with email already exists
       const { data: existingProfile } = await supabase
         .from('profiles')
-        .select('id, auth_user_id, email')
+        .select('id, auth_user_id, email, status')
         .eq('email', email.trim().toLowerCase())
         .maybeSingle()
 
@@ -312,7 +312,7 @@ export async function POST(request: NextRequest) {
         // This handles the case where profile exists but email check didn't find it
         const { data: existingProfileByAuthId } = await adminClient
           .from('profiles')
-          .select('id, email, auth_user_id')
+          .select('id, email, auth_user_id, status')
           .eq('auth_user_id', authUserId)
           .maybeSingle()
 
@@ -335,26 +335,6 @@ export async function POST(request: NextRequest) {
               status: status || existingProfileByAuthId.status || 'active',
             })
             .eq('id', existingProfileByAuthId.id)
-            .select()
-            .single()
-
-          profile = updatedProfile
-          profileError = updateError
-        } else if (existingProfile) {
-          // Profile exists by email but different auth_user_id - this shouldn't happen but handle it
-          const { data: updatedProfile, error: updateError } = await adminClient
-            .from('profiles')
-            .update({
-              auth_user_id: authUserId, // Update to link to correct auth user
-              username: finalUsername,
-              name: name.trim(),
-              client_id: resolvedClientId,
-              industry_id: industry_id || null,
-              role: resolvedRole,
-              access_level: resolvedAccessLevel,
-              status: status || existingProfile.status || 'active',
-            })
-            .eq('id', existingProfile.id)
             .select()
             .single()
 
