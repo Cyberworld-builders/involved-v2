@@ -2543,7 +2543,7 @@ describe('API User Routes', () => {
       expect(data.created).toBe(0)
       expect(data.failed).toBe(1)
       expect(data.results[0].success).toBe(false)
-      expect(data.results[0].error).toBe('Failed to create auth user')
+      expect(data.results[0].error).toBe('Auth error')
     })
 
     it('should cleanup auth user if profile creation fails', async () => {
@@ -2614,7 +2614,7 @@ describe('API User Routes', () => {
       expect(data.created).toBe(0)
       expect(data.failed).toBe(1)
       expect(data.results[0].success).toBe(false)
-      expect(data.results[0].error).toBe('Failed to create user profile')
+      expect(data.results[0].error).toContain('Profile creation failed')
       expect(mockAdminClient.auth.admin.deleteUser).toHaveBeenCalledWith(authUserId)
     })
 
@@ -2845,6 +2845,10 @@ describe('API User Routes', () => {
                 data: null,
                 error: null,
               }),
+              maybeSingle: vi.fn().mockResolvedValue({
+                data: null,
+                error: null,
+              }),
             }),
           }),
         }
@@ -2903,6 +2907,10 @@ describe('API User Routes', () => {
           select: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnValue({
               single: vi.fn().mockResolvedValue({
+                data: null,
+                error: null,
+              }),
+              maybeSingle: vi.fn().mockResolvedValue({
                 data: null,
                 error: null,
               }),
