@@ -70,6 +70,10 @@ const mockAdminClient = {
     admin: {
       createUser: vi.fn(),
       deleteUser: vi.fn(),
+      listUsers: vi.fn().mockResolvedValue({
+        data: { users: [] },
+        error: null,
+      }),
     },
   },
   from: vi.fn(),
@@ -91,6 +95,11 @@ vi.mock('@/lib/utils/username-generation', () => ({
 describe('API User Status Management', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // Reset listUsers to default
+    mockAdminClient.auth.admin.listUsers = vi.fn().mockResolvedValue({
+      data: { users: [] },
+      error: null,
+    })
   })
 
   describe('POST /api/users - Status field', () => {
