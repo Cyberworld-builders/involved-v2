@@ -498,6 +498,20 @@ describe('API User Routes', () => {
         data: { user: { id: 'new-auth-user-id' } },
         error: null,
       })
+      mockAdminClient.auth.admin.listUsers = vi.fn().mockResolvedValue({
+        data: { users: [] },
+        error: null,
+      })
+
+      // Mock profile creation and existing profile check
+      const selectChain = {
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: null,
+            error: null,
+          }),
+        }),
+      }
 
       const insertMock = vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
@@ -509,6 +523,7 @@ describe('API User Routes', () => {
       })
 
       mockAdminClient.from = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue(selectChain),
         insert: insertMock,
       })
 
@@ -683,6 +698,20 @@ describe('API User Routes', () => {
         data: { user: { id: 'new-auth-user-id' } },
         error: null,
       })
+      mockAdminClient.auth.admin.listUsers = vi.fn().mockResolvedValue({
+        data: { users: [] },
+        error: null,
+      })
+
+      // Mock profile creation and existing profile check
+      const selectChain = {
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: null,
+            error: null,
+          }),
+        }),
+      }
 
       const insertMock = vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
@@ -694,6 +723,7 @@ describe('API User Routes', () => {
       })
 
       mockAdminClient.from = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue(selectChain),
         insert: insertMock,
       })
 
@@ -2503,6 +2533,20 @@ describe('API User Routes', () => {
         data: { user: { id: 'new-auth-user-id' } },
         error: null,
       })
+      mockAdminClient.auth.admin.listUsers = vi.fn().mockResolvedValue({
+        data: { users: [] },
+        error: null,
+      })
+
+      // Mock profile creation and existing profile check
+      const selectChain = {
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: null,
+            error: null,
+          }),
+        }),
+      }
 
       const insertMock = vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
@@ -2514,6 +2558,7 @@ describe('API User Routes', () => {
       })
 
       mockAdminClient.from = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue(selectChain),
         insert: insertMock,
       })
 
