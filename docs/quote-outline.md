@@ -255,7 +255,7 @@ Let me know when you want to move forward or if you need adjustments to the scop
 Thank you for the trust — I’m excited to deliver Involved Talent v2 quickly, on budget, and to a standard you’ll be proud of.
 
 Best regards,  
-Jay Long  
+Jay Long
 Full-Stack Developer  
 jay@cyberworldbuilders.com
 
