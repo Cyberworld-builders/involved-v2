@@ -72,10 +72,10 @@ export default function BulkUploadPage() {
 
   const downloadTemplate = () => {
     const csvContent = [
-      'Name,Email,Username,Industry,Client Name',
-      'John Doe,john.doe@example.com,johndoe,Technology,Acme Corp',
-      'Jane Smith,jane.smith@example.com,janesmith,Healthcare,MedCorp',
-      'Bob Johnson,bob.johnson@example.com,bobjohnson,Finance,FinanceCorp'
+      'Name,Email,Industry,Client Name',
+      'John Doe,john.doe@example.com,Technology,Acme Corp',
+      'Jane Smith,jane.smith@example.com,Healthcare,MedCorp',
+      'Bob Johnson,bob.johnson@example.com,Finance,FinanceCorp'
     ].join('\n')
 
     const blob = new Blob([csvContent], { type: 'text/csv' })
@@ -235,12 +235,66 @@ export default function BulkUploadPage() {
           <CardContent>
             <div className="space-y-4">
               <p className="text-sm text-gray-600">
-                Use the template below to format your CSV file. Required fields are: Name, Email, and Industry.
+                Use the template below to format your CSV file. Required fields are: <strong>Name</strong>, <strong>Email</strong>, and <strong>Industry</strong>. <strong>Client Name</strong> is optional. Usernames are automatically generated from names.
               </p>
-              <Button onClick={downloadTemplate} variant="outline">
-                <span className="mr-2">📥</span>
-                Download Template
-              </Button>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Download Button */}
+                <div className="flex items-start">
+                  <Button onClick={downloadTemplate} variant="outline">
+                    <span className="mr-2">📥</span>
+                    Download Template
+                  </Button>
+                </div>
+
+                {/* Sample Table Preview */}
+                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                  <div className="bg-gray-50 px-3 py-2 border-b border-gray-200">
+                    <p className="text-xs font-medium text-gray-700">CSV Format Preview</p>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200 text-xs">
+                      <thead className="bg-gray-100">
+                        <tr>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700">Name</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700">Email</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700">Industry</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700">Client Name</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        <tr>
+                          <td className="px-3 py-2 text-gray-900">John Doe</td>
+                          <td className="px-3 py-2 text-gray-900">john.doe@example.com</td>
+                          <td className="px-3 py-2 text-gray-900">Technology</td>
+                          <td className="px-3 py-2 text-gray-500">Acme Corp</td>
+                        </tr>
+                        <tr>
+                          <td className="px-3 py-2 text-gray-900">Jane Smith</td>
+                          <td className="px-3 py-2 text-gray-900">jane.smith@example.com</td>
+                          <td className="px-3 py-2 text-gray-900">Healthcare</td>
+                          <td className="px-3 py-2 text-gray-500">MedCorp</td>
+                        </tr>
+                        <tr>
+                          <td className="px-3 py-2 text-gray-900">Bob Johnson</td>
+                          <td className="px-3 py-2 text-gray-900">bob.johnson@example.com</td>
+                          <td className="px-3 py-2 text-gray-900">Finance</td>
+                          <td className="px-3 py-2 text-gray-500">FinanceCorp</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="bg-gray-50 px-3 py-2 border-t border-gray-200">
+                    <p className="text-xs text-gray-500">
+                      <span className="font-medium">Required:</span> Name, Email, Industry
+                      {' • '}
+                      <span className="font-medium">Optional:</span> Client Name
+                      {' • '}
+                      <span className="font-medium">Auto-generated:</span> Username (from Name)
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>

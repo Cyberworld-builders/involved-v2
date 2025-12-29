@@ -308,8 +308,10 @@ export async function POST(request: NextRequest) {
     // Client scoping:
     // - client_admin can only create users under their own client_id
     // - super_admin can create users for any client (or none)
+    // Handle empty strings by converting them to null
+    const clientIdValue = typeof client_id === 'string' && client_id.trim() !== '' ? client_id.trim() : null
     const resolvedClientId =
-      isClientAdmin ? actorClientId : (client_id || null)
+      isClientAdmin ? actorClientId : clientIdValue
 
     // Keep legacy role in sync (until we fully remove it from the product model)
     const resolvedRole: ValidRole =

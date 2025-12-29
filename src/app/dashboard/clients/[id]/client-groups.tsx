@@ -341,7 +341,7 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
 
   const downloadTemplate = () => {
     const csvContent = [
-      'Group Name,Target Name,Target Email,Name,Email,Role',
+      'Group Name,Target Name,Target Email,Name,Email,Position',
       '"Engineering Team","John Doe","john.doe@example.com","Jane Smith","jane.smith@example.com","Developer"',
       '"Engineering Team","John Doe","john.doe@example.com","Bob Johnson","bob.johnson@example.com","Manager"'
     ].join('\n')
@@ -414,7 +414,8 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
         const targetEmail = rowData['Target Email']?.trim() || ''
         const userName = rowData['Name'] || ''
         const userEmail = rowData['Email']?.trim() || ''
-        const userRole = rowData['Role'] || ''
+        // Support both "Position" and "Role" headers for backward compatibility
+        const userRole = rowData['Position'] || rowData['Role'] || ''
 
         if ((!userName && !userEmail) || (!targetName && !targetEmail)) continue
 
@@ -515,12 +516,6 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
           <p className="text-sm text-gray-600">Organize the users into logical groupings for this client.</p>
         </div>
         <div className="flex space-x-2">
-          <Button variant="outline" onClick={downloadTemplate}>
-            📥 Download Template
-          </Button>
-          <Button variant="outline" onClick={() => setShowImportModal(true)}>
-            📤 Import Groups
-          </Button>
           <Button onClick={() => {
             setShowCreateForm(true)
             setEditingGroup(null)
@@ -532,15 +527,100 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
         </div>
       </div>
 
-      {message && (
-        <div className={`p-4 rounded-md ${
-          message.includes('Successfully') || message.includes('created') || message.includes('updated') || message.includes('deleted')
-            ? 'bg-green-50 text-green-800 border border-green-200'
-            : 'bg-red-50 text-red-800 border border-red-200'
-        }`}>
-          {message}
-        </div>
-      )}
+      {/* Bulk Upload Groups Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Bulk Upload Groups</CardTitle>
+          <CardDescription>
+            Upload a CSV file to create multiple groups at once. Required fields are: <strong>Group Name</strong>, <strong>Target Name</strong>, <strong>Target Email</strong>, <strong>Name</strong>, and <strong>Email</strong>. <strong>Position</strong> is optional and used for organizational purposes only.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Upload and Download Buttons */}
+            <div className="space-y-4">
+              <div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isProcessing}
+                  variant="outline"
+                >
+                  {isProcessing ? 'Processing...' : '📤 Upload CSV File'}
+                </Button>
+              </div>
+              <div>
+                <Button variant="outline" onClick={downloadTemplate}>
+                  📥 Download Template
+                </Button>
+              </div>
+            </div>
+
+            {/* Sample Table Preview */}
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <div className="bg-gray-50 px-3 py-2 border-b border-gray-200">
+                <p className="text-xs font-medium text-gray-700">CSV Format Preview</p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200 text-xs">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-medium text-gray-700">Group Name</th>
+                      <th className="px-3 py-2 text-left font-medium text-gray-700">Target Name</th>
+                      <th className="px-3 py-2 text-left font-medium text-gray-700">Target Email</th>
+                      <th className="px-3 py-2 text-left font-medium text-gray-700">Name</th>
+                      <th className="px-3 py-2 text-left font-medium text-gray-700">Email</th>
+                      <th className="px-3 py-2 text-left font-medium text-gray-700">Position</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    <tr>
+                      <td className="px-3 py-2 text-gray-900">Engineering Team</td>
+                      <td className="px-3 py-2 text-gray-900">John Doe</td>
+                      <td className="px-3 py-2 text-gray-900">john.doe@example.com</td>
+                      <td className="px-3 py-2 text-gray-900">Jane Smith</td>
+                      <td className="px-3 py-2 text-gray-900">jane.smith@example.com</td>
+                      <td className="px-3 py-2 text-gray-500">Developer</td>
+                    </tr>
+                    <tr>
+                      <td className="px-3 py-2 text-gray-900">Engineering Team</td>
+                      <td className="px-3 py-2 text-gray-900">John Doe</td>
+                      <td className="px-3 py-2 text-gray-900">john.doe@example.com</td>
+                      <td className="px-3 py-2 text-gray-900">Bob Johnson</td>
+                      <td className="px-3 py-2 text-gray-900">bob.johnson@example.com</td>
+                      <td className="px-3 py-2 text-gray-500">Manager</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div className="bg-gray-50 px-3 py-2 border-t border-gray-200">
+                <p className="text-xs text-gray-500">
+                  <span className="font-medium">Required:</span> Group Name, Target Name, Target Email, Name, Email
+                  {' • '}
+                  <span className="font-medium">Optional:</span> Position
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {message && (
+            <div className={`p-4 rounded-md ${
+              message.includes('Successfully') || message.includes('created')
+                ? 'bg-green-50 text-green-800 border border-green-200'
+                : 'bg-red-50 text-red-800 border border-red-200'
+            }`}>
+              {message}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
 
       {/* Create/Edit Form */}
       {(showCreateForm || editingGroup) && (
@@ -640,15 +720,18 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
                         </div>
                         <div>
                           <label className="block text-xs font-medium text-gray-700 mb-1">
-                            Role In Group
+                            Position In Group
                           </label>
                           <input
                             type="text"
                             value={member.role}
                             onChange={(e) => handleUpdateMemberRole(index, e.target.value)}
                             className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
-                            placeholder="e.g., Developer, Manager"
+                            placeholder="e.g., Developer, Manager, Team Lead"
                           />
+                          <p className="text-xs text-gray-500 mt-1">
+                            Optional: Used for organizational purposes and personnel audits. Does not affect assessments or reports.
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -731,14 +814,15 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
       {/* Import Modal */}
       {showImportModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-2xl">
+          <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>
                   <CardTitle>Import Groups</CardTitle>
                   <CardDescription>
                     Upload a CSV file of groups for faster entry. The first row in the CSV file will be counted as the header.
-                    Please make sure you have <strong>Group Name</strong>, <strong>Target Name</strong>, <strong>Target Email</strong>, <strong>Name</strong>, <strong>Email</strong>, and <strong>Role</strong> as column headers in your first row.
+                    Required fields are: <strong>Group Name</strong>, <strong>Target Name</strong>, <strong>Target Email</strong>, <strong>Name</strong>, and <strong>Email</strong>. <strong>Position</strong> is optional and used for organizational purposes only.
+                    <br />
                     Accepted file types: <strong>.csv</strong>
                   </CardDescription>
                 </div>
@@ -748,26 +832,80 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".csv"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
-                <Button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isProcessing}
-                  variant="outline"
-                >
-                  {isProcessing ? 'Processing...' : '📤 Upload CSV File'}
-                </Button>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Upload and Download Buttons */}
+                <div className="space-y-4">
+                  <div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".csv"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                    <Button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isProcessing}
+                      variant="outline"
+                    >
+                      {isProcessing ? 'Processing...' : '📤 Upload CSV File'}
+                    </Button>
+                  </div>
+                  <div>
+                    <Button variant="outline" onClick={downloadTemplate}>
+                      📥 Download CSV Template
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Sample Table Preview */}
+                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                  <div className="bg-gray-50 px-3 py-2 border-b border-gray-200">
+                    <p className="text-xs font-medium text-gray-700">CSV Format Preview</p>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200 text-xs">
+                      <thead className="bg-gray-100">
+                        <tr>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700">Group Name</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700">Target Name</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700">Target Email</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700">Name</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700">Email</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700">Position</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        <tr>
+                          <td className="px-3 py-2 text-gray-900">Engineering Team</td>
+                          <td className="px-3 py-2 text-gray-900">John Doe</td>
+                          <td className="px-3 py-2 text-gray-900">john.doe@example.com</td>
+                          <td className="px-3 py-2 text-gray-900">Jane Smith</td>
+                          <td className="px-3 py-2 text-gray-900">jane.smith@example.com</td>
+                          <td className="px-3 py-2 text-gray-500">Developer</td>
+                        </tr>
+                        <tr>
+                          <td className="px-3 py-2 text-gray-900">Engineering Team</td>
+                          <td className="px-3 py-2 text-gray-900">John Doe</td>
+                          <td className="px-3 py-2 text-gray-900">john.doe@example.com</td>
+                          <td className="px-3 py-2 text-gray-900">Bob Johnson</td>
+                          <td className="px-3 py-2 text-gray-900">bob.johnson@example.com</td>
+                          <td className="px-3 py-2 text-gray-500">Manager</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="bg-gray-50 px-3 py-2 border-t border-gray-200">
+                    <p className="text-xs text-gray-500">
+                      <span className="font-medium">Required:</span> Group Name, Target Name, Target Email, Name, Email
+                      {' • '}
+                      <span className="font-medium">Optional:</span> Position
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="flex space-x-2">
-                <Button variant="outline" onClick={downloadTemplate}>
-                  📥 Download CSV Template
-                </Button>
+
+              <div className="flex space-x-2 pt-2">
                 <Button variant="outline" onClick={() => setShowImportModal(false)}>
                   Cancel
                 </Button>

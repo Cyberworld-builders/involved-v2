@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { Database } from '@/types/database'
 import { isValidEmail } from '@/lib/utils/email-validation'
+import { generateUsernameFromName, generateUniqueUsername } from '@/lib/utils/username-generation'
 
 type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
 
@@ -175,7 +176,7 @@ export async function PATCH(
 
     // Parse request body
     const body = await request.json()
-    const { name, email, username, client_id, industry_id, completed_profile, role, access_level, status } = body
+    const { name, email, client_id, industry_id, completed_profile, role, access_level, status } = body
 
     // Build update object
     const updates: ProfileUpdate = {
@@ -191,6 +192,20 @@ export async function PATCH(
         )
       }
       updates.name = name.trim()
+      
+      // Auto-generate username when name changes
+      const baseUsername = generateUsernameFromName(name.trim())
+      const checkUsernameExists = async (username: string): Promise<boolean> => {
+        const { data } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('username', username)
+          .neq('id', id) // Exclude current user
+          .single()
+        return !!data
+      }
+      const finalUsername = await generateUniqueUsername(baseUsername, checkUsernameExists)
+      updates.username = finalUsername
     }
 
     if (email !== undefined) {
@@ -208,16 +223,6 @@ export async function PATCH(
         )
       }
       updates.email = email.trim()
-    }
-
-    if (username !== undefined) {
-      if (typeof username !== 'string' || username.trim() === '') {
-        return NextResponse.json(
-          { error: 'Username cannot be empty' },
-          { status: 400 }
-        )
-      }
-      updates.username = username.trim()
     }
 
     if (client_id !== undefined) {

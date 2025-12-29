@@ -38,18 +38,13 @@ export default function UserForm({
   accessLevelOptions = []
 }: UserFormProps) {
   const [formData, setFormData] = useState<UserFormData>({
-    username: initialData?.username || '',
+    username: '', // Username is auto-generated, not user-editable
     name: initialData?.name || '',
     email: initialData?.email || '',
     client_id: initialData?.client_id || '',
     industry_id: initialData?.industry_id || '',
     access_level: initialData?.access_level,
   })
-
-  // Username auto-generation:
-  // - Auto-updates while typing Name, until the user edits Username manually
-  // - If the user clears Username, auto mode turns back on
-  const [isUsernameAuto, setIsUsernameAuto] = useState<boolean>(() => !initialData?.username)
 
 
   const handleInputChange = (field: keyof UserFormData, value: string) => {
@@ -61,17 +56,19 @@ export default function UserForm({
     onSubmit(formData)
   }
 
-  // Generate/update username from name while in auto mode
+  // Auto-generate username from name (always, not user-editable)
   useEffect(() => {
-    if (!isUsernameAuto) return
-    if (!formData.name) return
+    if (!formData.name) {
+      setFormData((prev) => ({ ...prev, username: '' }))
+      return
+    }
 
     const generatedUsername = generateUsernameFromName(formData.name)
     setFormData((prev) => {
       if (prev.username === generatedUsername) return prev
       return { ...prev, username: generatedUsername }
     })
-  }, [formData.name, isUsernameAuto])
+  }, [formData.name])
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -83,28 +80,6 @@ export default function UserForm({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Username */}
-          <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-900 mb-2">
-              Username
-            </label>
-            <p className="text-sm text-gray-500 mb-3">The username that identifies this user.</p>
-            <input
-              type="text"
-              id="username"
-              value={formData.username}
-              onChange={(e) => {
-                const value = e.target.value
-                handleInputChange('username', value)
-                // If the user types anything, assume they want manual control.
-                // If they clear the field, go back to auto mode.
-                setIsUsernameAuto(value.trim() === '')
-              }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              required
-            />
-          </div>
-
           {/* Name */}
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-900 mb-2">
@@ -116,12 +91,6 @@ export default function UserForm({
               id="name"
               value={formData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
-              onBlur={() => {
-                // If auto mode is enabled, refresh username at end of editing.
-                if (!isUsernameAuto) return
-                const generatedUsername = generateUsernameFromName(formData.name)
-                setFormData((prev) => ({ ...prev, username: generatedUsername }))
-              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               required
             />
