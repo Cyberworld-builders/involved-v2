@@ -68,6 +68,21 @@ export default function CreateAssessmentClient() {
         backgroundUrl = backgroundUrlData.publicUrl
       }
 
+      // Prepare custom_fields for database
+      let customFieldsJson: { tag: string[]; default: string[] } | null = null
+      if (data.use_custom_fields && data.custom_fields.length > 0) {
+        customFieldsJson = {
+          tag: data.custom_fields.map(cf => cf.tag),
+          default: data.custom_fields.map(cf => cf.default),
+        }
+      }
+      
+      // Convert target to legacy format (0=self, 1=other_user, 2=group_leader)
+      let targetValue: string | null = null
+      if (data.target === 'self') targetValue = '0'
+      else if (data.target === 'other_user') targetValue = '1'
+      else if (data.target === 'group_leader') targetValue = '2'
+
       // Create assessment record
       const { data: assessment, error: assessmentError } = await supabase
         .from('assessments')
@@ -84,9 +99,11 @@ export default function CreateAssessmentClient() {
             questions_per_page: data.questions_per_page,
             timed: data.timed,
             time_limit: data.time_limit,
-            target: data.target || null,
+            target: targetValue,
             is_360: data.is_360,
             type: data.is_360 ? '360' : 'custom',
+            use_custom_fields: data.use_custom_fields,
+            custom_fields: customFieldsJson,
           },
         ])
         .select()
@@ -118,9 +135,60 @@ export default function CreateAssessmentClient() {
         }
       }
 
+      // Create fields (questions) if any
+      if (data.fields.length > 0) {
+        // Get dimension IDs for mapping
+        const { data: dimensions } = await supabase
+          .from('dimensions')
+          .select('id, code')
+          .eq('assessment_id', assessment.id)
+
+        const dimensionMap = new Map(
+          dimensions?.map(d => [d.code, d.id]) || []
+        )
+
+        // Preserve the exact order from the form data array
+        const fieldsToInsert = data.fields.map((field, index) => {
+          let dimensionId = null
+          if (field.dimension_id) {
+            const dimension = data.dimensions.find(d => d.id === field.dimension_id)
+            if (dimension) {
+              dimensionId = dimensionMap.get(dimension.code) || null
+            }
+          }
+
+          // Use the array index + 1 as the order to preserve the exact order from the form
+          // The array position reflects the current visual order
+          const orderValue = index + 1
+          // Number should match order for consistency
+          const numberValue = orderValue
+
+          return {
+            assessment_id: assessment.id,
+            dimension_id: dimensionId,
+            type: field.type,
+            content: field.content ?? '',
+            order: orderValue,
+            number: numberValue,
+            practice: field.practice || false,
+            anchors: field.anchors || [],
+          }
+        })
+
+        if (fieldsToInsert.length > 0) {
+          const { error: fieldsError } = await supabase
+            .from('fields')
+            .insert(fieldsToInsert)
+
+          if (fieldsError) {
+            throw new Error(`Failed to create questions: ${fieldsError.message}`)
+          }
+        }
+      }
+
       setMessage('Assessment created successfully!')
       setTimeout(() => {
-        router.push('/dashboard/assessments')
+        router.push(`/dashboard/assessments/${assessment.id}/edit`)
       }, 1500)
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'An unexpected error occurred')

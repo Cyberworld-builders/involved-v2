@@ -27,7 +27,7 @@ describe('Navigation Consistency', () => {
     })
 
     it('should use consistent color scheme (indigo)', () => {
-      const { container: headerContainer, unmount: unmountHeader } = render(<Header />)
+      const { unmount: unmountHeader } = render(<Header />)
       const headerLogo = screen.getByText('Involved Talent')
       expect(headerLogo.closest('a')).toHaveClass('text-indigo-600')
       unmountHeader()

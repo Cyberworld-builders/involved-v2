@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Database } from '@/types/database'
 
-type GroupRow = Database['public']['Tables']['groups']['Row']
 type GroupMemberRow = Database['public']['Tables']['group_members']['Row']
 type Profile = Database['public']['Tables']['profiles']['Row']
 type GroupInsert = Database['public']['Tables']['groups']['Insert']

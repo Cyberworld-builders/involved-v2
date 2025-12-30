@@ -145,3 +145,64 @@ body {
 .ProseMirror table.table-borderless tr:last-child th {
   border-bottom: none;
 }
+
+/* Rich Text Content Styles for Assessment Preview */
+.rich-text-content {
+  font-weight: normal;
+  color: #1f2937;
+}
+
+.rich-text-content h1 {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.rich-text-content h2 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-top: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.rich-text-content h3 {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-top: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.rich-text-content p {
+  margin-bottom: 1rem;
+  line-height: 1.75;
+  font-weight: normal;
+  color: #1f2937;
+}
+
+.rich-text-content ul,
+.rich-text-content ol {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.rich-text-content li {
+  margin-bottom: 0.5rem;
+}
+
+.rich-text-content strong {
+  font-weight: 600;
+}
+
+.rich-text-content em {
+  font-style: italic;
+}
+
+.rich-text-content a {
+  color: #4f46e5;
+  text-decoration: underline;
+}
+
+.rich-text-content a:hover {
+  color: #4338ca;
+}

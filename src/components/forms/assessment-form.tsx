@@ -5,7 +5,8 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import RichTextEditor from '@/components/rich-text-editor'
-import { GripVertical } from 'lucide-react'
+import { GripVertical, Edit2, Trash2, ArrowUp, ArrowDown, ChevronsUp, ChevronsDown } from 'lucide-react'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 
 export interface Dimension {
   id: string
@@ -21,13 +22,172 @@ export interface Anchor {
   practice: boolean
 }
 
+// Question types matching legacy system
+export type QuestionType = 
+  | 'multiple_choice' | '1' | 'choice'  // Legacy type 1
+  | 'description' | '2' | 'desc'        // Legacy type 2
+  | 'text_input' | '3' | 'input'        // Legacy type 3
+  | 'letter_sequence' | '4' | 'ls'      // Legacy type 4
+  | 'math_equation' | '5' | 'eq'        // Legacy type 5
+  | 'math_letters' | '6' | 'eqls'       // Legacy type 6
+  | 'square_sequence' | '7' | 'sq'       // Legacy type 7
+  | 'symmetry' | '8' | 'sy'             // Legacy type 8
+  | 'symmetry_squares' | '9' | 'sysq'     // Legacy type 9
+  | 'instructions' | '10' | 'instruct'   // Legacy type 10
+  | 'slider' | '11'                       // Legacy type 11
+  | 'rich_text'                           // V2 alias for description
+
+export interface QuestionTypeInfo {
+  id: string
+  name: string
+  icon: string
+  description: string
+  default: string
+  showPage: boolean
+  showContent: boolean
+  requiresAnchors: boolean
+  isWMType: boolean
+}
+
+export const QUESTION_TYPES: Record<string, QuestionTypeInfo> = {
+  'multiple_choice': {
+    id: 'multiple_choice',
+    name: 'Multiple Choice',
+    icon: 'fa-list-ul',
+    description: 'A question with multiple answer options',
+    default: 'This is a sample question',
+    showPage: true,
+    showContent: true,
+    requiresAnchors: true,
+    isWMType: false,
+  },
+  'description': {
+    id: 'description',
+    name: 'Description',
+    icon: 'fa-align-left',
+    description: 'A descriptive text block (not a question)',
+    default: 'This is a description',
+    showPage: false,
+    showContent: true,
+    requiresAnchors: false,
+    isWMType: false,
+  },
+  'text_input': {
+    id: 'text_input',
+    name: 'Text Input',
+    icon: 'fa-square-o',
+    description: 'A question asking for text input',
+    default: 'This is a question asking for input',
+    showPage: true,
+    showContent: true,
+    requiresAnchors: false,
+    isWMType: false,
+  },
+  'slider': {
+    id: 'slider',
+    name: 'Slider',
+    icon: 'fa-sliders',
+    description: 'A slider question with range values',
+    default: 'This is a slider question',
+    showPage: true,
+    showContent: true,
+    requiresAnchors: true,
+    isWMType: false,
+  },
+  'instructions': {
+    id: 'instructions',
+    name: 'Instructions',
+    icon: 'fa-list-alt',
+    description: 'Instructional text with continue button',
+    default: '{"text":"Here are some instructions. Click HERE to edit this text.","next":"Continue"}',
+    showPage: false,
+    showContent: false,
+    requiresAnchors: false,
+    isWMType: true,
+  },
+  // WM types (for future implementation)
+  'letter_sequence': {
+    id: 'letter_sequence',
+    name: 'Letter Sequence',
+    icon: 'fa-font',
+    description: 'A sequence of letters (WM type)',
+    default: 'X,Y,Z',
+    showPage: false,
+    showContent: false,
+    requiresAnchors: false,
+    isWMType: true,
+  },
+  'math_equation': {
+    id: 'math_equation',
+    name: 'Math Equation',
+    icon: 'fa-superscript',
+    description: 'A math equation (WM type)',
+    default: '(2*2)+2=2',
+    showPage: false,
+    showContent: false,
+    requiresAnchors: false,
+    isWMType: true,
+  },
+  'math_letters': {
+    id: 'math_letters',
+    name: 'Math and Letters',
+    icon: 'fa-list-ol',
+    description: 'Letters with equations (WM type)',
+    default: 'X,Y,Z',
+    showPage: false,
+    showContent: false,
+    requiresAnchors: false,
+    isWMType: true,
+  },
+  'square_sequence': {
+    id: 'square_sequence',
+    name: 'Square Sequence',
+    icon: 'fa-th-large',
+    description: 'Square sequence pattern (WM type)',
+    default: '',
+    showPage: false,
+    showContent: false,
+    requiresAnchors: false,
+    isWMType: true,
+  },
+  'symmetry': {
+    id: 'symmetry',
+    name: 'Symmetry',
+    icon: 'fa-columns',
+    description: 'Symmetry pattern (WM type)',
+    default: '',
+    showPage: false,
+    showContent: false,
+    requiresAnchors: false,
+    isWMType: true,
+  },
+  'symmetry_squares': {
+    id: 'symmetry_squares',
+    name: 'Symmetry Squares',
+    icon: 'fa-th',
+    description: 'Symmetry squares pattern (WM type)',
+    default: '',
+    showPage: false,
+    showContent: false,
+    requiresAnchors: false,
+    isWMType: true,
+  },
+}
+
 export interface Field {
   id: string
-  type: 'rich_text' | 'multiple_choice' | 'slider'
+  type: QuestionType
   content: string
   dimension_id: string | null
   anchors: Anchor[]
   order: number
+  number?: number  // Question number (legacy compatibility)
+  practice?: boolean  // Practice question flag
+}
+
+export interface CustomField {
+  tag: string
+  default: string
 }
 
 export interface AssessmentFormData {
@@ -44,13 +204,15 @@ export interface AssessmentFormData {
   questions_per_page: number
   timed: boolean
   time_limit: number | null
-  target: string
+  target: 'self' | 'other_user' | 'group_leader' | ''  // Legacy: 0=self, 1=other_user, 2=group_leader
   is_360: boolean
+  use_custom_fields: boolean
+  custom_fields: CustomField[]
   
   // Dimensions
   dimensions: Dimension[]
   
-  // Fields
+  // Fields (Questions)
   fields: Field[]
 }
 
@@ -71,7 +233,17 @@ export default function AssessmentForm({
   existingLogoUrl,
   existingBackgroundUrl,
 }: AssessmentFormProps) {
-  const [activeTab, setActiveTab] = useState<'details' | 'settings' | 'dimensions' | 'fields'>('details')
+  // Define normalizeFieldOrders before using it in useState
+  const normalizeFieldOrders = (fields: Field[]): Field[] => {
+    // Preserve the array order and set order/number based on position
+    return fields.map((f, idx) => ({ 
+      ...f, 
+      order: idx + 1,  // Order is always based on array position
+      number: idx + 1  // Number should match order for consistency
+    }))
+  }
+
+  const [activeTab, setActiveTab] = useState<'details' | 'settings' | 'dimensions' | 'fields'>('fields')
   const [formData, setFormData] = useState<AssessmentFormData>({
     title: initialData?.title || '',
     description: initialData?.description || '',
@@ -83,38 +255,43 @@ export default function AssessmentForm({
     questions_per_page: initialData?.questions_per_page || 10,
     timed: initialData?.timed || false,
     time_limit: initialData?.time_limit || null,
-    target: initialData?.target || '',
+    target: (initialData?.target as 'self' | 'other_user' | 'group_leader') || '',
     is_360: initialData?.is_360 || false,
+    use_custom_fields: initialData?.use_custom_fields || false,
+    custom_fields: initialData?.custom_fields || [],
     dimensions: initialData?.dimensions || [],
-    fields: initialData?.fields || [],
+    // Normalize field orders on initialization to ensure they're sequential
+    fields: initialData?.fields ? normalizeFieldOrders(initialData.fields) : [],
   })
 
   const [logoPreview, setLogoPreview] = useState<string | null>(existingLogoUrl || null)
   const [backgroundPreview, setBackgroundPreview] = useState<string | null>(existingBackgroundUrl || null)
   const [draggedFieldId, setDraggedFieldId] = useState<string | null>(null)
+  const [editingFieldId, setEditingFieldId] = useState<string | null>(null)
 
   const handleInputChange = (field: keyof AssessmentFormData, value: string | number | boolean | File | null) => {
     setFormData(prev => ({ ...prev, [field]: value as never }))
   }
 
-  const normalizeFieldOrders = (fields: Field[]): Field[] => {
-    return fields.map((f, idx) => ({ ...f, order: idx + 1 }))
-  }
-
-  const createNewField = (type: 'rich_text' | 'multiple_choice' | 'slider', nextOrder: number): Field => {
+  const createNewField = (type: QuestionType, nextOrder: number): Field => {
+    const typeInfo = QUESTION_TYPES[type] || QUESTION_TYPES['multiple_choice']
+    const defaultContent = typeInfo.default || ''
+    
     return {
       id: `field-${Date.now()}`,
       type,
-      content: '',
+      content: defaultContent,
       dimension_id: null,
       anchors:
-        type === 'multiple_choice' || type === 'slider'
+        typeInfo.requiresAnchors
           ? [
               { id: `anchor-${Date.now()}-1`, name: '', value: 1, practice: false },
               { id: `anchor-${Date.now()}-2`, name: '', value: 2, practice: false },
             ]
           : [],
       order: nextOrder,
+      number: nextOrder,
+      practice: false,
     }
   }
 
@@ -299,14 +476,14 @@ export default function AssessmentForm({
     event.target.value = ''
   }
 
-  const handleAddField = (type: 'rich_text' | 'multiple_choice' | 'slider') => {
+  const handleAddField = (type: QuestionType) => {
     setFormData(prev => ({
       ...prev,
       fields: normalizeFieldOrders([...prev.fields, createNewField(type, prev.fields.length + 1)]),
     }))
   }
 
-  const handleInsertFieldAt = (insertAfterIndex: number, type: 'rich_text' | 'multiple_choice' | 'slider') => {
+  const handleInsertFieldAt = (insertAfterIndex: number, type: QuestionType) => {
     setFormData(prev => {
       const nextFields = [...prev.fields]
       nextFields.splice(insertAfterIndex + 1, 0, createNewField(type, insertAfterIndex + 2))
@@ -317,12 +494,35 @@ export default function AssessmentForm({
     })
   }
 
-  const handleUpdateField = (id: string, field: keyof Field, value: string | 'rich_text' | 'multiple_choice' | 'slider' | Anchor[] | number | null) => {
+  const handleUpdateField = (id: string, field: keyof Field, value: string | QuestionType | Anchor[] | number | boolean | null) => {
     setFormData(prev => ({
       ...prev,
       fields: prev.fields.map(f =>
         f.id === id ? { ...f, [field]: value } : f
       ),
+    }))
+  }
+  
+  const handleAddCustomField = () => {
+    setFormData(prev => ({
+      ...prev,
+      custom_fields: [...prev.custom_fields, { tag: '', default: '' }],
+    }))
+  }
+  
+  const handleUpdateCustomField = (index: number, field: 'tag' | 'default', value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      custom_fields: prev.custom_fields.map((cf, idx) =>
+        idx === index ? { ...cf, [field]: value } : cf
+      ),
+    }))
+  }
+  
+  const handleDeleteCustomField = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      custom_fields: prev.custom_fields.filter((_, idx) => idx !== index),
     }))
   }
 
@@ -352,6 +552,30 @@ export default function AssessmentForm({
     const toIndex = formData.fields.findIndex(f => f.id === dropTargetId)
     if (fromIndex === -1 || toIndex === -1) return
     reorderFields(fromIndex, toIndex)
+  }
+
+  const handleMoveFieldUp = (fieldId: string) => {
+    const currentIndex = formData.fields.findIndex(f => f.id === fieldId)
+    if (currentIndex <= 0) return
+    reorderFields(currentIndex, currentIndex - 1)
+  }
+
+  const handleMoveFieldDown = (fieldId: string) => {
+    const currentIndex = formData.fields.findIndex(f => f.id === fieldId)
+    if (currentIndex < 0 || currentIndex >= formData.fields.length - 1) return
+    reorderFields(currentIndex, currentIndex + 1)
+  }
+
+  const handleMoveFieldToTop = (fieldId: string) => {
+    const currentIndex = formData.fields.findIndex(f => f.id === fieldId)
+    if (currentIndex <= 0) return
+    reorderFields(currentIndex, 0)
+  }
+
+  const handleMoveFieldToBottom = (fieldId: string) => {
+    const currentIndex = formData.fields.findIndex(f => f.id === fieldId)
+    if (currentIndex < 0 || currentIndex >= formData.fields.length - 1) return
+    reorderFields(currentIndex, formData.fields.length - 1)
   }
 
   const handleAddAnchor = (fieldId: string) => {
@@ -388,26 +612,39 @@ export default function AssessmentForm({
     const fieldItem = formData.fields.find(f => f.id === fieldId)
     if (!fieldItem) return
 
-    const reversedAnchors = [...fieldItem.anchors].reverse().map((anchor, index) => ({
+    // Reverse only the values, keep names in original order
+    const maxValue = fieldItem.anchors.length
+    const reversedAnchors = fieldItem.anchors.map((anchor, index) => ({
       ...anchor,
-      value: index + 1,
+      value: maxValue - index,  // Reverse the values: first anchor gets highest value, last gets 1
     }))
     handleUpdateField(fieldId, 'anchors', reversedAnchors)
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSubmit(formData)
+    // Ensure all fields have correct order before submitting
+    // The array order is the source of truth - normalize based on current position
+    const normalizedData = {
+      ...formData,
+      fields: normalizeFieldOrders(formData.fields),
+    }
+    // Log the order being submitted for debugging
+    console.log('Submitting fields in order:', normalizedData.fields.map((f, idx) => ({
+      index: idx,
+      id: f.id,
+      order: f.order,
+      number: f.number,
+      content: f.content?.substring(0, 30)
+    })))
+    onSubmit(normalizedData)
   }
 
   const tabs = [
     { id: 'details', label: 'Details' },
-    // Settings hidden for now (Phase 1)
-    // { id: 'settings', label: 'Settings' },
-    // Dimensions are required for Benchmarks management
+    { id: 'settings', label: 'Settings' },
     { id: 'dimensions', label: 'Dimensions' },
-    // Fields tab hidden for Phase 1
-    // { id: 'fields', label: 'Fields' },
+    { id: 'fields', label: 'Questions' },
   ] as const
 
   return (
@@ -474,6 +711,91 @@ export default function AssessmentForm({
                   placeholder="Enter assessment description..."
                 />
               </div>
+
+              {/* Instructions Field */}
+              {(() => {
+                // Find the instructions field (type 'instructions' or '10')
+                const instructionsField = formData.fields.find(f => 
+                  f.type === 'instructions' || f.type === '10'
+                )
+                
+                // Parse instructions JSON
+                let instructionText = ''
+                let continueButtonText = 'Continue'
+                if (instructionsField) {
+                  try {
+                    const parsed = JSON.parse(instructionsField.content)
+                    instructionText = parsed.text || ''
+                    continueButtonText = parsed.next || 'Continue'
+                  } catch {
+                    instructionText = instructionsField.content
+                  }
+                }
+
+                return (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-sm font-medium text-gray-900">
+                        Instructions
+                      </label>
+                      {!instructionsField && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleAddField('instructions')}
+                        >
+                          + Add Instructions
+                        </Button>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-500 mb-3">
+                      Instructions shown at the beginning of the assessment. Supports rich text formatting.
+                    </p>
+                    {instructionsField ? (
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            Instruction Text
+                          </label>
+                          <RichTextEditor
+                            content={instructionText}
+                            onChange={(content) => {
+                              const updated = JSON.stringify({ text: content, next: continueButtonText })
+                              handleUpdateField(instructionsField.id, 'content', updated)
+                            }}
+                            placeholder="Enter instruction text..."
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            Continue Button Text
+                          </label>
+                          <input
+                            type="text"
+                            value={continueButtonText}
+                            onChange={(e) => {
+                              try {
+                                const parsed = JSON.parse(instructionsField.content)
+                                const updated = JSON.stringify({ ...parsed, next: e.target.value })
+                                handleUpdateField(instructionsField.id, 'content', updated)
+                              } catch {
+                                handleUpdateField(instructionsField.id, 'content', JSON.stringify({ text: '', next: e.target.value }))
+                              }
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="Continue"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-500 italic">
+                        No instructions field added yet. Click &quot;+ Add Instructions&quot; to create one.
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
             </CardContent>
           </Card>
 
@@ -495,7 +817,7 @@ export default function AssessmentForm({
                 </p>
                 {logoPreview && (
                   <div className="mb-3">
-                    <Image src={logoPreview} alt="Logo preview" width={80} height={80} className="h-20 w-auto rounded" />
+                    <Image src={logoPreview} alt="Logo preview" width={80} height={80} className="h-20 w-auto rounded" style={{ width: 'auto', height: '80px' }} />
                   </div>
                 )}
                 <input
@@ -517,7 +839,7 @@ export default function AssessmentForm({
                 </p>
                 {backgroundPreview && (
                   <div className="mb-3">
-                    <Image src={backgroundPreview} alt="Background preview" width={200} height={100} className="h-20 w-auto rounded" />
+                    <Image src={backgroundPreview} alt="Background preview" width={200} height={100} className="h-20 w-auto rounded" style={{ width: 'auto', height: '80px' }} />
                   </div>
                 )}
                 <input
@@ -676,19 +998,117 @@ export default function AssessmentForm({
             {/* Target */}
             <div>
               <label htmlFor="target" className="block text-sm font-medium text-gray-900 mb-2">
-                Target User
+                Assessment Target
               </label>
               <p className="text-sm text-gray-500 mb-3">
-                The target user for this assessment (optional).
+                The target is the User to which the scores of this assessment will apply to.
               </p>
-              <input
-                type="text"
+              <select
                 id="target"
                 value={formData.target}
-                onChange={(e) => handleInputChange('target', e.target.value)}
+                onChange={(e) => {
+                  const targetValue = e.target.value as 'self' | 'other_user' | 'group_leader' | ''
+                  handleInputChange('target', targetValue)
+                  // Auto-configure custom fields based on target
+                  if (targetValue === 'self') {
+                    setFormData(prev => ({ ...prev, use_custom_fields: false, custom_fields: [] }))
+                  } else if (targetValue === 'other_user') {
+                    setFormData(prev => ({
+                      ...prev,
+                      use_custom_fields: true,
+                      custom_fields: [
+                        { tag: 'name', default: '' },
+                        { tag: 'email', default: '' },
+                      ],
+                    }))
+                  } else if (targetValue === 'group_leader') {
+                    setFormData(prev => ({
+                      ...prev,
+                      use_custom_fields: true,
+                      custom_fields: [
+                        { tag: 'name', default: '' },
+                        { tag: 'email', default: '' },
+                        { tag: 'grouprole', default: '' },
+                      ],
+                    }))
+                  }
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
+              >
+                <option value="">Select target...</option>
+                <option value="self">Self</option>
+                <option value="other_user">Other User</option>
+                <option value="group_leader">Group Leader</option>
+              </select>
             </div>
+            
+            {/* Custom Fields */}
+            {formData.use_custom_fields && (
+              <div className="border-t border-gray-200 pt-6 mt-6">
+                <div className="flex justify-between items-center mb-4">
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900">Custom Fields</h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      You can use custom fields anywhere in the Assessment by using the tags you specify surrounded with square brackets. For example <code className="bg-gray-100 px-1 rounded">[name]</code>.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleAddCustomField}
+                  >
+                    + Add Custom Field
+                  </Button>
+                </div>
+                
+                {formData.custom_fields.length === 0 ? (
+                  <div className="text-center py-4 text-gray-500 text-sm">
+                    No custom fields yet. Add custom fields to use dynamic placeholders in your assessment.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {formData.custom_fields.map((customField, index) => (
+                      <div key={index} className="grid grid-cols-2 gap-4 items-end">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-900 mb-2">
+                            Tag
+                          </label>
+                          <input
+                            type="text"
+                            value={customField.tag}
+                            onChange={(e) => handleUpdateCustomField(index, 'tag', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="e.g., name"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-900 mb-2">
+                            Default Value
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={customField.default}
+                              onChange={(e) => handleUpdateCustomField(index, 'default', e.target.value)}
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                              placeholder="Default value"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => handleDeleteCustomField(index)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* 360 Assessment */}
             <div>
@@ -722,27 +1142,84 @@ export default function AssessmentForm({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex justify-between items-center">
-              <div className="flex space-x-2">
-                <Button variant="outline" type="button" onClick={handleDownloadDimensionsTemplate}>
-                  📥 Download Template
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <Button type="button" onClick={handleAddDimension}>
+                  + Add Dimension
                 </Button>
-                <label className="cursor-pointer">
-                  <input
-                    type="file"
-                    accept=".csv"
-                    onChange={handleUploadDimensionsCSV}
-                    className="hidden"
-                    id="dimensions-csv-upload-input"
-                  />
-                  <Button variant="outline" type="button" onClick={() => document.getElementById('dimensions-csv-upload-input')?.click()}>
-                    📤 Upload CSV
-                  </Button>
-                </label>
               </div>
-              <Button type="button" onClick={handleAddDimension}>
-                + Add Dimension
-              </Button>
+
+              {/* Template Download and Sample Table */}
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600">
+                  Use the template below to format your CSV file. Required fields are: <strong>Dimension Name</strong> and <strong>Dimension Code</strong>.
+                </p>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Download Button */}
+                  <div className="flex items-start">
+                    <div className="flex space-x-2">
+                      <Button variant="outline" type="button" onClick={handleDownloadDimensionsTemplate}>
+                        <span className="mr-2">📥</span>
+                        Download Template
+                      </Button>
+                      <label className="cursor-pointer">
+                        <input
+                          type="file"
+                          accept=".csv"
+                          onChange={handleUploadDimensionsCSV}
+                          className="hidden"
+                          id="dimensions-csv-upload-input"
+                        />
+                        <Button variant="outline" type="button" onClick={() => document.getElementById('dimensions-csv-upload-input')?.click()}>
+                          <span className="mr-2">📤</span>
+                          Upload CSV
+                        </Button>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Sample Table Preview */}
+                  <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="bg-gray-50 px-3 py-2 border-b border-gray-200">
+                      <p className="text-xs font-medium text-gray-700">CSV Format Preview</p>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200 text-xs">
+                        <thead className="bg-gray-100">
+                          <tr>
+                            <th className="px-3 py-2 text-left font-medium text-gray-700">Dimension Name</th>
+                            <th className="px-3 py-2 text-left font-medium text-gray-700">Dimension Code</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          <tr>
+                            <td className="px-3 py-2 text-gray-900">Leadership</td>
+                            <td className="px-3 py-2 text-gray-900">LEAD</td>
+                          </tr>
+                          <tr>
+                            <td className="px-3 py-2 text-gray-900">Communication</td>
+                            <td className="px-3 py-2 text-gray-900">COMM</td>
+                          </tr>
+                          <tr>
+                            <td className="px-3 py-2 text-gray-900">Problem Solving</td>
+                            <td className="px-3 py-2 text-gray-900">PROB</td>
+                          </tr>
+                          <tr>
+                            <td className="px-3 py-2 text-gray-900">Teamwork</td>
+                            <td className="px-3 py-2 text-gray-900">TEAM</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="bg-gray-50 px-3 py-2 border-t border-gray-200">
+                      <p className="text-xs text-gray-500">
+                        <span className="font-medium">Required:</span> Dimension Name, Dimension Code
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {formData.dimensions.length === 0 ? (
@@ -807,226 +1284,521 @@ export default function AssessmentForm({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex space-x-2">
-              <Button type="button" onClick={() => handleAddField('rich_text')}>
-                + Rich Text
-              </Button>
+            <div className="flex flex-wrap gap-2">
               <Button type="button" onClick={() => handleAddField('multiple_choice')}>
                 + Multiple Choice
               </Button>
+              <Button type="button" onClick={() => handleAddField('description')}>
+                + Description
+              </Button>
+              <Button type="button" onClick={() => handleAddField('text_input')}>
+                + Text Input
+              </Button>
               <Button type="button" onClick={() => handleAddField('slider')}>
                 + Slider
+              </Button>
+              <Button type="button" onClick={() => handleAddField('instructions')} variant="outline">
+                + Instructions
               </Button>
             </div>
 
             {formData.fields.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                No fields yet. Add your first field to get started.
+                No questions yet. Add your first question to get started.
               </div>
             ) : (
-              <div className="space-y-6">
-                {formData.fields.map((field, index) => (
-                  <div key={field.id} className="space-y-3">
-                    <div
-                      className={`border border-gray-200 rounded-lg p-4 ${draggedFieldId === field.id ? 'opacity-60' : ''}`}
-                      draggable
-                      onDragStart={(e) => {
-                        e.dataTransfer.effectAllowed = 'move'
-                        setDraggedFieldId(field.id)
-                      }}
-                      onDragEnd={() => setDraggedFieldId(null)}
-                      onDragOver={(e) => {
-                        // Required to allow drop
-                        e.preventDefault()
-                        e.dataTransfer.dropEffect = 'move'
-                      }}
-                      onDrop={(e) => {
-                        e.preventDefault()
-                        handleDropOnField(field.id)
-                        setDraggedFieldId(null)
-                      }}
-                    >
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex items-start gap-3">
-                          <div className="pt-0.5 text-gray-400" aria-hidden="true" title="Drag to reorder">
-                            <GripVertical className="h-4 w-4" />
+              <div className="space-y-2">
+                {formData.fields
+                  .filter(field => {
+                    // Filter out instructions field - it's shown in details tab
+                    const fieldType = field.type as string
+                    return fieldType !== 'instructions' && fieldType !== '10'
+                  })
+                  .map((field, index) => {
+                  const dimension = field.dimension_id 
+                    ? formData.dimensions.find(d => d.id === field.dimension_id)
+                    : null
+                  
+                  // Get a preview of the content (first 80 chars, strip HTML)
+                  const contentPreview = field.content
+                    ? field.content.replace(/<[^>]*>/g, '').substring(0, 80) + (field.content.length > 80 ? '...' : '')
+                    : 'No content'
+
+                  return (
+                    <div key={field.id}>
+                      {/* Compact Question Preview */}
+                      <div
+                        className={`border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors ${draggedFieldId === field.id ? 'opacity-60' : ''}`}
+                        draggable
+                        onDragStart={(e) => {
+                          e.dataTransfer.effectAllowed = 'move'
+                          setDraggedFieldId(field.id)
+                        }}
+                        onDragEnd={() => setDraggedFieldId(null)}
+                        onDragOver={(e) => {
+                          e.preventDefault()
+                          e.dataTransfer.dropEffect = 'move'
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault()
+                          handleDropOnField(field.id)
+                          setDraggedFieldId(null)
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          {/* Drag Handle */}
+                          <div className="text-gray-400 cursor-move" aria-hidden="true" title="Drag to reorder">
+                            <GripVertical className="h-5 w-5" />
                           </div>
-                          <div>
-                            <h3 className="text-sm font-medium text-gray-900">
-                              {field.type === 'rich_text'
-                                ? 'Rich Text'
-                                : field.type === 'multiple_choice'
-                                  ? 'Multiple Choice'
-                                  : 'Slider'}{' '}
-                              Field #{index + 1}
-                            </h3>
-                            <p className="text-xs text-gray-500 mt-1">
-                              Drag to reorder
+                          
+                          {/* Question Number */}
+                          {field.number && (
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-medium">
+                              {field.number}
+                            </div>
+                          )}
+                          
+                          {/* Question Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium text-gray-900">
+                                {QUESTION_TYPES[field.type]?.name || field.type}
+                              </span>
+                              {field.practice && (
+                                <span className="px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 rounded">
+                                  Practice
+                                </span>
+                              )}
+                              {dimension && (
+                                <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded">
+                                  {dimension.name}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-600 mt-1 truncate">
+                              {contentPreview}
                             </p>
+                            {QUESTION_TYPES[field.type]?.requiresAnchors && field.anchors.length > 0 && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                {field.anchors.length} anchor{field.anchors.length !== 1 ? 's' : ''}
+                              </p>
+                            )}
+                          </div>
+                          
+                          {/* Actions */}
+                          <div className="flex items-center gap-2">
+                            {/* Move Controls */}
+                            <div className="flex items-center gap-0.5 border-r border-gray-200 pr-3 mr-3">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleMoveFieldToTop(field.id)}
+                                disabled={index === 0}
+                                className="h-10 w-10 p-0"
+                                title="Move to top"
+                              >
+                                <ChevronsUp className="h-6 w-6 stroke-[2.5]" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleMoveFieldUp(field.id)}
+                                disabled={index === 0}
+                                className="h-10 w-10 p-0"
+                                title="Move up"
+                              >
+                                <ArrowUp className="h-6 w-6 stroke-[2.5]" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleMoveFieldDown(field.id)}
+                                disabled={index === formData.fields.length - 1}
+                                className="h-10 w-10 p-0"
+                                title="Move down"
+                              >
+                                <ArrowDown className="h-6 w-6 stroke-[2.5]" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleMoveFieldToBottom(field.id)}
+                                disabled={index === formData.fields.length - 1}
+                                className="h-10 w-10 p-0"
+                                title="Move to bottom"
+                              >
+                                <ChevronsDown className="h-6 w-6 stroke-[2.5]" />
+                              </Button>
+                            </div>
+                            
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setEditingFieldId(field.id)}
+                            >
+                              <Edit2 className="h-4 w-4 mr-1" />
+                              Edit
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteField(field.id)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
                         </div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => handleDeleteField(field.id)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          Delete
-                        </Button>
                       </div>
-
-                    {/* Dimension Selection */}
-                    {formData.dimensions.length > 0 && (
-                      <div className="mb-4">
+                      
+                      {/* Insert Question Below - Compact */}
+                      <div className="mt-2 flex items-center justify-center">
+                        <div className="flex gap-1">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleInsertFieldAt(index, 'multiple_choice')}
+                            className="text-xs"
+                          >
+                            + MC
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleInsertFieldAt(index, 'text_input')}
+                            className="text-xs"
+                          >
+                            + Text
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleInsertFieldAt(index, 'slider')}
+                            className="text-xs"
+                          >
+                            + Slider
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+                
+                {/* Add Question at End */}
+                <div className="pt-4 border-t border-gray-200">
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    <span className="text-xs text-gray-500 w-full text-center mb-2">
+                      Add question at end
+                    </span>
+                    <Button type="button" variant="outline" size="sm" onClick={() => handleAddField('multiple_choice')}>
+                      + Multiple Choice
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => handleAddField('description')}>
+                      + Description
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => handleAddField('text_input')}>
+                      + Text Input
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => handleAddField('slider')}>
+                      + Slider
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => handleAddField('instructions')}>
+                      + Instructions
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Edit Question Modal */}
+            {editingFieldId && (() => {
+              const field = formData.fields.find(f => f.id === editingFieldId)
+              if (!field) return null
+              
+              return (
+                <Dialog
+                  open={editingFieldId !== null}
+                  onOpenChange={(open) => !open && setEditingFieldId(null)}
+                >
+                  <DialogContent
+                    title={`Edit Question #${field.number || formData.fields.findIndex(f => f.id === editingFieldId) + 1}`}
+                    description={QUESTION_TYPES[field.type]?.description}
+                    onClose={() => setEditingFieldId(null)}
+                  >
+                    <div className="space-y-6">
+                      {/* Question Type Selector */}
+                      <div>
                         <label className="block text-sm font-medium text-gray-900 mb-2">
-                          Dimension
+                          Question Type
                         </label>
                         <select
-                          value={field.dimension_id || ''}
-                          onChange={(e) => handleUpdateField(field.id, 'dimension_id', e.target.value || null)}
+                          value={field.type}
+                          onChange={(e) => {
+                            const newType = e.target.value as QuestionType
+                            const typeInfo = QUESTION_TYPES[newType]
+                            handleUpdateField(field.id, 'type', newType)
+                            // Update anchors if type requires them
+                            if (typeInfo?.requiresAnchors && field.anchors.length === 0) {
+                              handleUpdateField(field.id, 'anchors', [
+                                { id: `anchor-${Date.now()}-1`, name: '', value: 1, practice: false },
+                                { id: `anchor-${Date.now()}-2`, name: '', value: 2, practice: false },
+                              ])
+                            } else if (!typeInfo?.requiresAnchors) {
+                              handleUpdateField(field.id, 'anchors', [])
+                            }
+                            // Update content to default if empty
+                            if (!field.content && typeInfo?.default) {
+                              handleUpdateField(field.id, 'content', typeInfo.default)
+                            }
+                          }}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                         >
-                          <option value="">None</option>
-                          {formData.dimensions.map((dim) => (
-                            <option key={dim.id} value={dim.id}>
-                              {dim.name} ({dim.code})
+                          {Object.values(QUESTION_TYPES).map((typeInfo) => (
+                            <option key={typeInfo.id} value={typeInfo.id}>
+                              {typeInfo.name} {typeInfo.isWMType ? '(WM)' : ''}
                             </option>
                           ))}
                         </select>
                       </div>
-                    )}
 
-                    {/* Content */}
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-900 mb-2">
-                        Content
-                      </label>
-                      {field.type === 'rich_text' ? (
-                        <RichTextEditor
-                          content={field.content}
-                          onChange={(content) => handleUpdateField(field.id, 'content', content)}
-                          placeholder="Enter rich text content..."
-                        />
-                      ) : (
-                        <textarea
-                          value={field.content}
-                          onChange={(e) => handleUpdateField(field.id, 'content', e.target.value)}
-                          rows={3}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                          placeholder="Enter field content or question text..."
-                        />
-                      )}
-                    </div>
-
-                    {/* Anchors for Multiple Choice and Slider */}
-                    {(field.type === 'multiple_choice' || field.type === 'slider') && (
-                      <div className="border-t border-gray-200 pt-4">
-                        <div className="flex justify-between items-center mb-3">
-                          <label className="block text-sm font-medium text-gray-900">
-                            Anchors
-                          </label>
-                          <div className="flex space-x-2">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleReverseAnchors(field.id)}
-                            >
-                              Reverse Values
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleAddAnchor(field.id)}
-                            >
-                              + Add Anchor
-                            </Button>
-                          </div>
+                      {/* Practice Question Toggle */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-900 mb-2">
+                          Question Type
+                        </label>
+                        <div className="flex items-center gap-4">
+                          <Button
+                            type="button"
+                            variant={field.practice ? "default" : "outline"}
+                            onClick={() => handleUpdateField(field.id, 'practice', !field.practice)}
+                          >
+                            {field.practice ? 'Practice Question' : 'Test Question'}
+                          </Button>
+                          <span className="text-sm text-gray-500">
+                            {field.practice ? 'This question will not be scored' : 'This question will be scored'}
+                          </span>
                         </div>
+                      </div>
 
-                        {field.anchors.length === 0 ? (
-                          <div className="text-sm text-gray-500 py-2">
-                            No anchors yet. Add anchors to define answer options.
+                      {/* Dimension Selection */}
+                      {formData.dimensions.length > 0 && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-900 mb-2">
+                            Dimension
+                          </label>
+                          <select
+                            value={field.dimension_id || ''}
+                            onChange={(e) => handleUpdateField(field.id, 'dimension_id', e.target.value || null)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                          >
+                            <option value="">None</option>
+                            {formData.dimensions.map((dim) => (
+                              <option key={dim.id} value={dim.id}>
+                                {dim.name} ({dim.code})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
+                      {/* Content */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-900 mb-2">
+                          Content
+                        </label>
+                        {field.type === 'description' || field.type === 'rich_text' || field.type === '2' ? (
+                          <RichTextEditor
+                            content={field.content}
+                            onChange={(content) => handleUpdateField(field.id, 'content', content)}
+                            placeholder="Enter question content or description..."
+                          />
+                        ) : field.type === 'instructions' || field.type === '10' ? (
+                          <div className="space-y-3">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                Instruction Text
+                              </label>
+                              <textarea
+                                value={(() => {
+                                  try {
+                                    const parsed = JSON.parse(field.content)
+                                    return parsed.text || ''
+                                  } catch {
+                                    return field.content
+                                  }
+                                })()}
+                                onChange={(e) => {
+                                  try {
+                                    const parsed = JSON.parse(field.content)
+                                    const updated = JSON.stringify({ ...parsed, text: e.target.value })
+                                    handleUpdateField(field.id, 'content', updated)
+                                  } catch {
+                                    handleUpdateField(field.id, 'content', JSON.stringify({ text: e.target.value, next: 'Continue' }))
+                                  }
+                                }}
+                                rows={4}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                placeholder="Enter instruction text..."
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                Continue Button Text
+                              </label>
+                              <input
+                                type="text"
+                                value={(() => {
+                                  try {
+                                    const parsed = JSON.parse(field.content)
+                                    return parsed.next || 'Continue'
+                                  } catch {
+                                    return 'Continue'
+                                  }
+                                })()}
+                                onChange={(e) => {
+                                  try {
+                                    const parsed = JSON.parse(field.content)
+                                    const updated = JSON.stringify({ ...parsed, next: e.target.value })
+                                    handleUpdateField(field.id, 'content', updated)
+                                  } catch {
+                                    handleUpdateField(field.id, 'content', JSON.stringify({ text: '', next: e.target.value }))
+                                  }
+                                }}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                placeholder="Continue"
+                              />
+                            </div>
                           </div>
                         ) : (
-                          <div className="space-y-3">
-                            {field.anchors.map((anchor) => (
-                              <div key={anchor.id} className="grid grid-cols-4 gap-3 items-center">
-                                <div>
-                                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                                    Name
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={anchor.name}
-                                    onChange={(e) => handleUpdateAnchor(field.id, anchor.id, 'name', e.target.value)}
-                                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                    placeholder="Anchor name"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                                    Value
-                                  </label>
-                                  <input
-                                    type="number"
-                                    value={anchor.value}
-                                    onChange={(e) => handleUpdateAnchor(field.id, anchor.id, 'value', parseInt(e.target.value) || 0)}
-                                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                                    Practice
-                                  </label>
-                                  <select
-                                    value={anchor.practice ? '1' : '0'}
-                                    onChange={(e) => handleUpdateAnchor(field.id, anchor.id, 'practice', e.target.value === '1')}
-                                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                  >
-                                    <option value="0">No</option>
-                                    <option value="1">Yes</option>
-                                  </select>
-                                </div>
-                                <div>
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleDeleteAnchor(field.id, anchor.id)}
-                                    className="text-red-600 hover:text-red-700"
-                                  >
-                                    Delete
-                                  </Button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
+                          <textarea
+                            value={field.content}
+                            onChange={(e) => handleUpdateField(field.id, 'content', e.target.value)}
+                            rows={4}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="Enter question content..."
+                          />
                         )}
                       </div>
-                    )}
-                    </div>
 
-                    {/* Add field "between" and "below" controls */}
-                    <div className="flex flex-wrap gap-2 justify-center rounded-md border border-dashed border-gray-300 p-3 bg-gray-50">
-                      <span className="text-xs text-gray-500 w-full text-center">
-                        Add a field below
-                      </span>
-                      <Button type="button" variant="outline" onClick={() => handleInsertFieldAt(index, 'rich_text')}>
-                        + Rich Text
-                      </Button>
-                      <Button type="button" variant="outline" onClick={() => handleInsertFieldAt(index, 'multiple_choice')}>
-                        + Multiple Choice
-                      </Button>
-                      <Button type="button" variant="outline" onClick={() => handleInsertFieldAt(index, 'slider')}>
-                        + Slider
-                      </Button>
+                      {/* Anchors for Multiple Choice and Slider */}
+                      {QUESTION_TYPES[field.type]?.requiresAnchors && (
+                        <div className="border-t border-gray-200 pt-4">
+                          <div className="flex justify-between items-center mb-3">
+                            <label className="block text-sm font-medium text-gray-900">
+                              Anchors
+                            </label>
+                            <div className="flex space-x-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleReverseAnchors(field.id)}
+                              >
+                                Reverse Values
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleAddAnchor(field.id)}
+                              >
+                                + Add Anchor
+                              </Button>
+                            </div>
+                          </div>
+
+                          {field.anchors.length === 0 ? (
+                            <div className="text-sm text-gray-500 py-2">
+                              No anchors yet. Add anchors to define answer options.
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              {field.anchors.map((anchor) => (
+                                <div key={anchor.id} className="grid grid-cols-4 gap-3 items-center">
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                                      Name
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={anchor.name}
+                                      onChange={(e) => handleUpdateAnchor(field.id, anchor.id, 'name', e.target.value)}
+                                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                      placeholder="Anchor name"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                                      Value
+                                    </label>
+                                    <input
+                                      type="number"
+                                      value={anchor.value}
+                                      onChange={(e) => handleUpdateAnchor(field.id, anchor.id, 'value', parseInt(e.target.value) || 0)}
+                                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                                      Practice
+                                    </label>
+                                    <select
+                                      value={anchor.practice ? '1' : '0'}
+                                      onChange={(e) => handleUpdateAnchor(field.id, anchor.id, 'practice', e.target.value === '1')}
+                                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                    >
+                                      <option value="0">No</option>
+                                      <option value="1">Yes</option>
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleDeleteAnchor(field.id, anchor.id)}
+                                      className="text-red-600 hover:text-red-700"
+                                    >
+                                      Delete
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Modal Actions */}
+                      <div className="flex justify-end gap-2 pt-4 border-t border-gray-200">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setEditingFieldId(null)}
+                        >
+                          Close
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={() => setEditingFieldId(null)}
+                        >
+                          Save Changes
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  </DialogContent>
+                </Dialog>
+              )
+            })()}
           </CardContent>
         </Card>
       )}

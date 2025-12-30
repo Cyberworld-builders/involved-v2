@@ -10,6 +10,8 @@ interface SendInviteButtonProps {
 }
 
 export default function SendInviteButton({ userId, userName, userEmail }: SendInviteButtonProps) {
+  // userName is part of the interface but not currently used in the component
+  void userName
   const [isSending, setIsSending] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 

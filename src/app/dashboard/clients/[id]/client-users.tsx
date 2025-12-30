@@ -326,7 +326,7 @@ export default function ClientUsers({ clientId }: ClientUsersProps) {
     }
   }
 
-  const handleSendInvite = async (userId: string, userName: string) => {
+  const handleSendInvite = async (userId: string) => {
     setInviteStatus(prev => ({ ...prev, [userId]: { status: 'sending' } }))
 
     try {
@@ -925,7 +925,7 @@ export default function ClientUsers({ clientId }: ClientUsersProps) {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex items-center space-x-3">
                             <button
-                              onClick={() => handleSendInvite(user.id, user.name)}
+                              onClick={() => handleSendInvite(user.id)}
                               disabled={inviteStatusForUser?.status === 'sending'}
                               className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ${
                                 inviteStatusForUser?.status === 'sending'

@@ -414,7 +414,7 @@ describe('API Auth Routes', () => {
 
   describe('POST /api/auth/signout', () => {
     // Mock implementation for signout route
-    const mockSignout = async (request: NextRequest) => {
+    const mockSignout = async () => {
       const supabase = mockSupabaseClient
       
       // Check if user is authenticated

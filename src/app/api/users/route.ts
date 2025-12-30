@@ -6,6 +6,7 @@ import { generateUsernameFromName, generateUsernameFromEmail, generateUniqueUser
 import { isValidEmail } from '@/lib/utils/email-validation'
 
 type ProfileInsert = Database['public']['Tables']['profiles']['Insert']
+type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
 
 const VALID_ROLES = ['admin', 'manager', 'client', 'user', 'unverified'] as const
 type ValidRole = (typeof VALID_ROLES)[number]

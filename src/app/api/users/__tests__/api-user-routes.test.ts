@@ -884,7 +884,7 @@ describe('API User Routes', () => {
         })
 
         const response = await createUser(request)
-        const data = await response.json()
+        await response.json()
 
         expect(response.status).toBe(201)
         expect(insertMock).toHaveBeenCalledWith(
@@ -944,7 +944,7 @@ describe('API User Routes', () => {
         })
 
         const response = await createUser(request)
-        const data = await response.json()
+        await response.json()
 
         expect(response.status).toBe(201)
         expect(insertMock).toHaveBeenCalledWith(
@@ -1064,7 +1064,7 @@ describe('API User Routes', () => {
         })
 
         const response = await createUser(request)
-        const data = await response.json()
+        await response.json()
 
         expect(response.status).toBe(201)
         expect(insertMock).toHaveBeenCalledWith(
@@ -1636,7 +1636,7 @@ describe('API User Routes', () => {
         })
         const params = Promise.resolve({ id: 'test-id' })
         const response = await updateUser(request, { params })
-        const data = await response.json()
+        await response.json()
 
         expect(response.status).toBe(200)
         expect(updateMock).toHaveBeenCalledWith(
@@ -2885,7 +2885,7 @@ describe('API User Routes', () => {
         })
 
         const response = await createUser(request)
-        const data = await response.json()
+        await response.json()
 
         expect(response.status).toBe(201)
         expect(data.user).toBeDefined()
@@ -2948,7 +2948,7 @@ describe('API User Routes', () => {
         })
 
         const response = await createUser(request)
-        const data = await response.json()
+        await response.json()
 
         expect(response.status).toBe(201)
         expect(data.user).toBeDefined()

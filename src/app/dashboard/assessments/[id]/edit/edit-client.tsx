@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import DashboardLayout from '@/components/layout/dashboard-layout'
-import AssessmentForm, { AssessmentFormData } from '@/components/forms/assessment-form'
+import AssessmentForm, { AssessmentFormData, QuestionType } from '@/components/forms/assessment-form'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+import { Eye } from 'lucide-react'
+import { Database } from '@/types/database'
 
 interface EditAssessmentClientProps {
   id: string
@@ -47,12 +49,26 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
           console.error('Error loading dimensions:', dimensionsError)
         }
 
-        // Load fields
+        // Load fields (questions) - order by the 'order' column which is the source of truth
         const { data: fields, error: fieldsError } = await supabase
           .from('fields')
           .select('*')
           .eq('assessment_id', id)
           .order('order', { ascending: true })
+        
+        // Log the loaded order for debugging
+        if (fields && fields.length > 0) {
+          type FieldRow = Database['public']['Tables']['fields']['Row']
+          console.log('Loaded fields order:', fields.map(f => ({ 
+            id: f.id, 
+            order: f.order, 
+            number: (f as FieldRow & { number?: number }).number, 
+            content: f.content?.substring(0, 30) 
+          })))
+        }
+        
+        // Don't re-sort - use the order from the database query
+        // The 'order' column is the source of truth for question sequence
 
         if (fieldsError) {
           console.error('Error loading fields:', fieldsError)
@@ -61,6 +77,29 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
         // Store existing image URLs
         setExistingLogoUrl(assessment.logo)
         setExistingBackgroundUrl(assessment.background)
+
+        // Parse custom_fields from JSON
+        let customFields: Array<{ tag: string; default: string }> = []
+        if (assessment.custom_fields) {
+          try {
+            const cf = assessment.custom_fields as { tag?: string[]; default?: string[] }
+            if (cf.tag && cf.default && cf.tag.length === cf.default.length) {
+              customFields = cf.tag.map((tag, idx) => ({
+                tag,
+                default: cf.default?.[idx] || '',
+              }))
+            }
+          } catch (e) {
+            console.error('Error parsing custom_fields:', e)
+          }
+        }
+        
+        // Convert target from legacy format (0=self, 1=other_user, 2=group_leader)
+        let targetValue: 'self' | 'other_user' | 'group_leader' | '' = ''
+        if (assessment.target === '0' || assessment.target === 0) targetValue = 'self'
+        else if (assessment.target === '1' || assessment.target === 1) targetValue = 'other_user'
+        else if (assessment.target === '2' || assessment.target === 2) targetValue = 'group_leader'
+        else if (assessment.target) targetValue = assessment.target as 'self' | 'other_user' | 'group_leader'
 
         // Convert to form data format
         setInitialData({
@@ -74,27 +113,39 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
           questions_per_page: assessment.questions_per_page || 10,
           timed: assessment.timed || false,
           time_limit: assessment.time_limit,
-          target: assessment.target || '',
+          target: targetValue,
           is_360: assessment.is_360 || false,
+          use_custom_fields: assessment.use_custom_fields || false,
+          custom_fields: customFields,
           dimensions: (dimensions || []).map(dim => ({
             id: dim.id,
             name: dim.name,
             code: dim.code,
             parent_id: dim.parent_id,
           })),
-          fields: (fields || []).map(field => ({
-            id: field.id,
-            type: field.type as 'rich_text' | 'multiple_choice' | 'slider',
-            content: field.content,
-            dimension_id: field.dimension_id,
-            anchors: (field.anchors || []) as Array<{
-              id: string
-              name: string
-              value: number
-              practice: boolean
-            }>,
-            order: field.order,
-          })),
+          // Map fields preserving the order from the database query
+          // The fields are already sorted by 'order' column, so we preserve that order
+          fields: (fields || []).map((field, index) => {
+            type FieldRow = Database['public']['Tables']['fields']['Row']
+            const fieldWithExtras = field as FieldRow & { number?: number; practice?: boolean }
+            return {
+              id: field.id,
+              type: field.type as QuestionType,
+              content: field.content,
+              dimension_id: field.dimension_id,
+              anchors: (field.anchors || []) as Array<{
+                id: string
+                name: string
+                value: number
+                practice: boolean
+              }>,
+              // Use the order from database, but ensure it matches array position
+              // This handles any inconsistencies
+              order: field.order || index + 1,
+              number: fieldWithExtras.number || field.order || index + 1,
+              practice: fieldWithExtras.practice || false,
+            }
+          }),
         })
       } catch (error) {
         setMessage(error instanceof Error ? error.message : 'Failed to load assessment')
@@ -123,8 +174,8 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
       }
 
       // Handle image uploads if changed
-      let logoUrl = existingLogoUrl || undefined
-      let backgroundUrl = existingBackgroundUrl || undefined
+      let logoUrl: string | null = existingLogoUrl || null
+      let backgroundUrl: string | null = existingBackgroundUrl || null
 
       if (data.logo) {
         const logoExt = data.logo.name.split('.').pop()
@@ -160,28 +211,83 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
         backgroundUrl = backgroundUrlData.publicUrl
       }
 
+      // Prepare custom_fields for database
+      let customFieldsJson: { tag: string[]; default: string[] } | null = null
+      if (data.use_custom_fields && data.custom_fields.length > 0) {
+        customFieldsJson = {
+          tag: data.custom_fields.map(cf => cf.tag),
+          default: data.custom_fields.map(cf => cf.default),
+        }
+      }
+      
+      // Convert target to legacy format (0=self, 1=other_user, 2=group_leader)
+      let targetValue: string | null = null
+      if (data.target === 'self') targetValue = '0'
+      else if (data.target === 'other_user') targetValue = '1'
+      else if (data.target === 'group_leader') targetValue = '2'
+
+      // Build update object with all fields
+      type AssessmentRow = Database['public']['Tables']['assessments']['Row']
+      type AssessmentUpdate = Partial<Omit<AssessmentRow, 'id' | 'created_at'>> & {
+        use_custom_fields?: boolean
+        custom_fields?: { tag: string[]; default: string[] } | null
+      }
+      
+      const updateData: AssessmentUpdate = {
+        title: data.title,
+        description: data.description || null,
+        primary_color: data.primary_color,
+        accent_color: data.accent_color,
+        split_questions: data.split_questions,
+        questions_per_page: data.questions_per_page,
+        timed: data.timed,
+        time_limit: data.time_limit ?? null,
+        is_360: data.is_360,
+        type: data.is_360 ? '360' : 'custom',
+        updated_at: new Date().toISOString(),
+      }
+      
+      // Always include logo/background (use existing if not changed)
+      updateData.logo = logoUrl
+      updateData.background = backgroundUrl
+      
+      // Always include target (can be null)
+      updateData.target = targetValue
+      
+      // Include custom_fields columns (will fail if migration 007 hasn't been run)
+      // Try with custom_fields first, fall back to without if columns don't exist
+      updateData.use_custom_fields = data.use_custom_fields || false
+      updateData.custom_fields = customFieldsJson
+
       // Update assessment record
-      const { error: assessmentError } = await supabase
+      let { error: assessmentError } = await supabase
         .from('assessments')
-        .update({
-          title: data.title,
-          description: data.description || null,
-          logo: logoUrl,
-          background: backgroundUrl,
-          primary_color: data.primary_color,
-          accent_color: data.accent_color,
-          split_questions: data.split_questions,
-          questions_per_page: data.questions_per_page,
-          timed: data.timed,
-          time_limit: data.time_limit,
-          target: data.target || null,
-          is_360: data.is_360,
-          type: data.is_360 ? '360' : 'custom',
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('id', id)
 
+      // If error is about missing custom_fields column, retry without it
+      if (assessmentError && assessmentError.message?.includes("custom_fields")) {
+        console.warn('custom_fields column not found - migration 007 may need to be applied. Retrying without custom_fields...')
+        const updateDataWithoutCustomFields = { ...updateData }
+        delete updateDataWithoutCustomFields.use_custom_fields
+        delete updateDataWithoutCustomFields.custom_fields
+        
+        const { error: retryError } = await supabase
+          .from('assessments')
+          .update(updateDataWithoutCustomFields)
+          .eq('id', id)
+        
+        if (retryError) {
+          assessmentError = retryError
+        } else {
+          assessmentError = null
+          setMessage('Assessment updated (custom_fields feature requires migration 007 to be applied)')
+        }
+      }
+
       if (assessmentError) {
+        console.error('Assessment update error:', assessmentError)
+        console.error('Update data:', updateData)
         throw new Error(`Failed to update assessment: ${assessmentError.message}`)
       }
 
@@ -241,6 +347,8 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
           dimensions?.map(d => [d.code, d.id]) || []
         )
 
+        // Preserve the exact order from the form data array
+        // The array order reflects the current visual order after drag-and-drop
         const fieldsToInsert = data.fields.map((field, index) => {
             let dimensionId = null
             if (field.dimension_id) {
@@ -250,6 +358,14 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
               }
             }
 
+            // Use the array index + 1 as the order to preserve the exact order from the form
+            // This ensures the visual order matches the saved order
+            const orderValue = index + 1
+            // Number should match order for consistency
+            const numberValue = orderValue
+
+            console.log(`Saving field ${field.id}: order=${orderValue}, arrayIndex=${index}, content="${field.content?.substring(0, 30)}..."`)
+
             return {
               assessment_id: id,
               dimension_id: dimensionId,
@@ -257,7 +373,9 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
               // Allow saving "empty" fields so users can scaffold lots of questions.
               // DB requires NOT NULL, so empty string is valid.
               content: field.content ?? '',
-              order: typeof field.order === 'number' ? field.order : index + 1,
+              order: orderValue,
+              number: numberValue,
+              practice: field.practice || false,
               anchors: field.anchors || [],
             }
           })
@@ -317,9 +435,18 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
             <h1 className="text-2xl font-bold text-gray-900">Edit Assessment</h1>
             <p className="text-gray-600">Update assessment details and settings.</p>
           </div>
-          <Link href="/dashboard/assessments">
-            <Button variant="outline">Back to Assessments</Button>
-          </Link>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => window.open(`/dashboard/assessments/${id}/preview`, '_blank')}
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Preview
+            </Button>
+            <Link href="/dashboard/assessments">
+              <Button variant="outline">Back to Assessments</Button>
+            </Link>
+          </div>
         </div>
 
         {/* Message */}

@@ -225,7 +225,6 @@ export async function POST(request: NextRequest) {
         const resolvedRole = typeof role === 'string' ? role : (resolvedAccessLevel === 'super_admin' ? 'admin' : resolvedAccessLevel === 'client_admin' ? 'manager' : 'user')
 
         // Create or get existing auth user
-        let authData
         let authUserId: string
         let isNewAuthUser = false
 
@@ -238,7 +237,6 @@ export async function POST(request: NextRequest) {
               password: password,
             })
           }
-          authData = { user: existingAuthUser }
         } else {
           // Create new auth user
           const { data: newAuthData, error: authError2 } = await adminClient.auth.admin.createUser({
@@ -269,7 +267,6 @@ export async function POST(request: NextRequest) {
               )
               if (foundUser) {
                 authUserId = foundUser.id
-                authData = { user: foundUser }
                 // Update password if provided
                 if (password) {
                   await adminClient.auth.admin.updateUserById(authUserId, {
@@ -302,7 +299,6 @@ export async function POST(request: NextRequest) {
             })
             continue
           } else {
-            authData = newAuthData
             authUserId = newAuthData.user.id
             isNewAuthUser = true
           }
