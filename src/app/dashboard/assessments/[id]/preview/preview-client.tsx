@@ -27,6 +27,7 @@ export default function AssessmentPreviewClient({ assessmentId }: PreviewClientP
   const [answers, setAnswers] = useState<Record<string, string | number>>({})
   const [logoError, setLogoError] = useState(false)
   const [backgroundError, setBackgroundError] = useState(false)
+  const [currentPage, setCurrentPage] = useState(0)
   const supabase = createClient()
 
   useEffect(() => {
@@ -123,24 +124,106 @@ export default function AssessmentPreviewClient({ assessmentId }: PreviewClientP
     if (fieldType === 'multiple_choice' || fieldType === '1') {
       if (fieldAnchors.length === 0) return null
 
+      // Parse insights table from field data
+      const insightsTable = (() => {
+        try {
+          const fieldWithExtras = field as FieldRow & { insights_table?: unknown }
+          if (fieldWithExtras.insights_table) {
+            if (typeof fieldWithExtras.insights_table === 'string') {
+              return JSON.parse(fieldWithExtras.insights_table)
+            }
+            if (Array.isArray(fieldWithExtras.insights_table)) {
+              return fieldWithExtras.insights_table as string[][]
+            }
+          }
+        } catch {
+          // Ignore parsing errors
+        }
+        return []
+      })()
+
       return (
-        <div className="flex flex-wrap gap-2 mt-4">
-          {fieldAnchors.map((anchor, index) => (
-            <label
-              key={anchor.id}
-              className="flex items-center px-4 py-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 transition-colors"
-            >
-              <input
-                type="radio"
-                name={`question-${field.id}`}
-                value={index}
-                checked={currentAnswer === index}
-                onChange={() => handleAnswerChange(field.id, index)}
-                className="mr-2"
-              />
-              <span>{anchor.name || `Option ${index + 1}`}</span>
-            </label>
-          ))}
+        <div className="mt-4">
+          {/* Insights Table with buttons as headers */}
+          {insightsTable.length > 0 ? (
+            <div className="border border-gray-300 rounded-lg overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full divide-y divide-gray-200 table-fixed">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      {fieldAnchors.map((anchor, index) => (
+                        <th
+                          key={anchor.id}
+                          className="p-0 text-center w-1/5"
+                        >
+                          <label
+                            className={`flex items-center justify-center px-3 py-2 border border-gray-300 cursor-pointer transition-colors w-full h-full whitespace-nowrap m-0 ${
+                              currentAnswer === index 
+                                ? 'bg-indigo-100 hover:bg-indigo-200' 
+                                : 'bg-white hover:bg-gray-50'
+                            }`}
+                            style={{ 
+                              borderRadius: index === 0 ? '0.375rem 0 0 0' : index === fieldAnchors.length - 1 ? '0 0.375rem 0 0' : '0',
+                              borderLeft: index === 0 ? '1px solid rgb(209 213 219)' : 'none',
+                              borderRight: '1px solid rgb(209 213 219)',
+                              borderTop: '1px solid rgb(209 213 219)',
+                              borderBottom: '1px solid rgb(209 213 219)'
+                            }}
+                          >
+                            <input
+                              type="radio"
+                              name={`question-${field.id}`}
+                              value={index}
+                              checked={currentAnswer === index}
+                              onChange={() => handleAnswerChange(field.id, index)}
+                              className="mr-2 flex-shrink-0"
+                            />
+                            <span className="text-sm font-medium text-gray-900">
+                              {anchor.name || `Option ${index + 1}`}
+                            </span>
+                          </label>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {insightsTable.map((row: string[], rowIndex: number) => (
+                      <tr key={rowIndex}>
+                        {fieldAnchors.map((anchor, colIndex) => (
+                          <td
+                            key={anchor.id}
+                            className="px-5 py-4 text-sm text-gray-900 whitespace-pre-wrap w-1/5 border-x border-gray-300"
+                          >
+                            {row[colIndex] || ''}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            /* Fallback: buttons only if no insights table */
+            <div className="flex flex-wrap gap-2">
+              {fieldAnchors.map((anchor, index) => (
+                <label
+                  key={anchor.id}
+                  className="flex items-center px-4 py-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 transition-colors"
+                >
+                  <input
+                    type="radio"
+                    name={`question-${field.id}`}
+                    value={index}
+                    checked={currentAnswer === index}
+                    onChange={() => handleAnswerChange(field.id, index)}
+                    className="mr-2"
+                  />
+                  <span>{anchor.name || `Option ${index + 1}`}</span>
+                </label>
+              ))}
+            </div>
+          )}
         </div>
       )
     }
@@ -270,7 +353,7 @@ export default function AssessmentPreviewClient({ assessmentId }: PreviewClientP
       </div>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Description */}
         {assessment.description && (
           <div className="mb-8 p-6 bg-white rounded-lg shadow-sm">
@@ -308,67 +391,186 @@ export default function AssessmentPreviewClient({ assessmentId }: PreviewClientP
           )
         })()}
 
-        {/* Questions */}
-        <div className="space-y-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Questions</h2>
-          
-          {(() => {
-            // Filter out instructions field from questions list
-            const questionFields = fields.filter(f => {
+        {/* Questions with Page Breaks */}
+        {(() => {
+          // Filter out instructions field
+          const allFields = [...fields]
+            .filter(f => {
               const fieldType = f.type as string
               return fieldType !== 'instructions' && fieldType !== '10'
             })
+            .sort((a, b) => (a.order || 0) - (b.order || 0))
 
-            if (questionFields.length === 0) {
-              return (
+          // Split fields into pages based on page_break fields
+          const pages: FieldRow[][] = []
+          let currentPageFields: FieldRow[] = []
+
+          allFields.forEach((field) => {
+            const fieldType = field.type as string
+            if (fieldType === 'page_break') {
+              // Save current page and start a new one
+              if (currentPageFields.length > 0) {
+                pages.push(currentPageFields)
+                currentPageFields = []
+              }
+            } else {
+              currentPageFields.push(field)
+            }
+          })
+
+          // Add the last page if it has fields
+          if (currentPageFields.length > 0) {
+            pages.push(currentPageFields)
+          }
+
+          // If no pages, show empty state
+          if (pages.length === 0) {
+            return (
+              <div className="space-y-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Questions</h2>
                 <div className="text-center py-12 text-gray-500">
                   No questions yet.
                 </div>
-              )
-            }
+              </div>
+            )
+          }
 
-            return questionFields.map((field) => {
-              // Skip practice questions in preview (or show them differently)
+          // Get current page fields
+          const currentPageFieldsList = pages[currentPage] || []
+          const isLastPage = currentPage === pages.length - 1
+          const isFirstPage = currentPage === 0
+
+          // Calculate sequential question numbers (only for actual questions, across all pages)
+          let questionNumber = 0
+          for (let pageIdx = 0; pageIdx <= currentPage; pageIdx++) {
+            const pageFields = pages[pageIdx] || []
+            pageFields.forEach((field) => {
               const fieldType = field.type as string
               const questionType = QUESTION_TYPES[fieldType] || QUESTION_TYPES['description']
+              const isActualQuestion = fieldType !== 'description' && fieldType !== 'rich_text' && fieldType !== '2' && fieldType !== 'page_break'
               
-              return (
-                <div key={field.id} className="bg-white rounded-lg shadow-sm p-6">
-                  {/* Question Number and Content */}
-                  <div className="mb-4">
-                    {(() => {
-                      const fieldWithExtras = field as FieldRow & { number?: number; practice?: boolean }
-                      return fieldWithExtras.number && questionType?.showPage && (
-                        <span className="text-lg font-semibold text-gray-900 mr-2">
-                          {fieldWithExtras.number}.
-                        </span>
-                      )
-                    })()}
-                    {questionType?.showContent && renderQuestionContent(field)}
-                  </div>
-
-                  {/* Question Input */}
-                  {renderQuestionInput(field)}
-                </div>
-              )
+              if (isActualQuestion && questionType?.showPage) {
+                questionNumber++
+              }
             })
-          })()}
-        </div>
+          }
 
-        {/* Submit Button */}
-        {(() => {
-          const questionFields = fields.filter(f => {
-            const fieldType = f.type as string
-            return fieldType !== 'instructions' && fieldType !== '10'
+          // Reset question number for current page display
+          let currentPageQuestionNumber = 0
+          currentPageFieldsList.forEach((field) => {
+            const fieldType = field.type as string
+            const questionType = QUESTION_TYPES[fieldType] || QUESTION_TYPES['description']
+            const isActualQuestion = fieldType !== 'description' && fieldType !== 'rich_text' && fieldType !== '2' && fieldType !== 'page_break'
+            
+            if (isActualQuestion && questionType?.showPage) {
+              currentPageQuestionNumber++
+            }
           })
-          return questionFields.length > 0
-        })() && (
-          <div className="mt-8 flex justify-end">
-            <button className="px-8 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-lg font-medium">
-              Submit Answers
-            </button>
-          </div>
-        )}
+
+          // Calculate starting question number for this page
+          let startingQuestionNumber = 0
+          for (let pageIdx = 0; pageIdx < currentPage; pageIdx++) {
+            const pageFields = pages[pageIdx] || []
+            pageFields.forEach((field) => {
+              const fieldType = field.type as string
+              const questionType = QUESTION_TYPES[fieldType] || QUESTION_TYPES['description']
+              const isActualQuestion = fieldType !== 'description' && fieldType !== 'rich_text' && fieldType !== '2' && fieldType !== 'page_break'
+              
+              if (isActualQuestion && questionType?.showPage) {
+                startingQuestionNumber++
+              }
+            })
+          }
+
+          let pageQuestionCounter = startingQuestionNumber
+
+          return (
+            <div className="space-y-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Questions</h2>
+              
+              {/* Current Page Fields */}
+              {currentPageFieldsList.map((field) => {
+                const fieldType = field.type as string
+                const questionType = QUESTION_TYPES[fieldType] || QUESTION_TYPES['description']
+                
+                // Skip page breaks (they're just markers)
+                if (fieldType === 'page_break') {
+                  return null
+                }
+                
+                // Check if this is an actual question (not a description)
+                const isActualQuestion = fieldType !== 'description' && fieldType !== 'rich_text' && fieldType !== '2'
+                
+                // Increment question number only for actual questions
+                if (isActualQuestion && questionType?.showPage) {
+                  pageQuestionCounter++
+                }
+                
+                return (
+                  <div key={field.id} className="bg-white rounded-lg shadow-sm p-6">
+                    {/* Question Number and Content */}
+                    <div className="mb-4">
+                      {questionType?.showContent && (
+                        <div className="flex items-start">
+                          {isActualQuestion && questionType?.showPage && pageQuestionCounter > 0 && (
+                            <span className="text-lg font-semibold text-gray-900 mr-2 flex-shrink-0">
+                              {pageQuestionCounter}.
+                            </span>
+                          )}
+                          <div className="flex-1">
+                            {renderQuestionContent(field)}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Question Input */}
+                    {renderQuestionInput(field)}
+                  </div>
+                )
+              })}
+
+              {/* Page Navigation */}
+              {pages.length > 1 && (
+                <div className="flex justify-between items-center pt-4 border-t border-gray-200">
+                  <button
+                    onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                    disabled={isFirstPage}
+                    className={`px-6 py-2 rounded-md font-medium ${
+                      isFirstPage
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    Previous
+                  </button>
+                  
+                  <span className="text-sm text-gray-600">
+                    Page {currentPage + 1} of {pages.length}
+                  </span>
+                  
+                  {!isLastPage && (
+                    <button
+                      onClick={() => setCurrentPage(Math.min(pages.length - 1, currentPage + 1))}
+                      className="px-6 py-2 rounded-md font-medium bg-indigo-600 text-white hover:bg-indigo-700"
+                    >
+                      Next
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Submit Button - Only on Final Page (or single page) */}
+              {(isLastPage || pages.length === 1) && (
+                <div className="flex justify-end pt-4 border-t border-gray-200">
+                  <button className="px-8 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-lg font-medium">
+                    Submit Answers
+                  </button>
+                </div>
+              )}
+            </div>
+          )
+        })()}
       </div>
     </div>
   )

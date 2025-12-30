@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import DashboardLayout from '@/components/layout/dashboard-layout'
 import AssessmentForm, { AssessmentFormData, QuestionType } from '@/components/forms/assessment-form'
@@ -21,7 +20,6 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
   const [initialData, setInitialData] = useState<Partial<AssessmentFormData> | null>(null)
   const [existingLogoUrl, setExistingLogoUrl] = useState<string | null>(null)
   const [existingBackgroundUrl, setExistingBackgroundUrl] = useState<string | null>(null)
-  const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
@@ -144,6 +142,22 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
               order: field.order || index + 1,
               number: fieldWithExtras.number || field.order || index + 1,
               practice: fieldWithExtras.practice || false,
+              insights_table: (() => {
+                const fieldWithInsights = field as FieldRow & { insights_table?: unknown }
+                if (fieldWithInsights.insights_table) {
+                  if (typeof fieldWithInsights.insights_table === 'string') {
+                    try {
+                      return JSON.parse(fieldWithInsights.insights_table) as string[][]
+                    } catch {
+                      return undefined
+                    }
+                  }
+                  if (Array.isArray(fieldWithInsights.insights_table)) {
+                    return fieldWithInsights.insights_table as string[][]
+                  }
+                }
+                return undefined
+              })(),
             }
           }),
         })
@@ -377,6 +391,7 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
               number: numberValue,
               practice: field.practice || false,
               anchors: field.anchors || [],
+              insights_table: field.insights_table || undefined,
             }
           })
 
@@ -392,9 +407,6 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
       }
 
       setMessage('Assessment updated successfully!')
-      setTimeout(() => {
-        router.push('/dashboard/assessments')
-      }, 1500)
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'An unexpected error occurred')
     } finally {

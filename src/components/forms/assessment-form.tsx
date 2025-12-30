@@ -36,6 +36,7 @@ export type QuestionType =
   | 'instructions' | '10' | 'instruct'   // Legacy type 10
   | 'slider' | '11'                       // Legacy type 11
   | 'rich_text'                           // V2 alias for description
+  | 'page_break'                          // Page break (not displayed to user)
 
 export interface QuestionTypeInfo {
   id: string
@@ -172,6 +173,17 @@ export const QUESTION_TYPES: Record<string, QuestionTypeInfo> = {
     requiresAnchors: false,
     isWMType: true,
   },
+  'page_break': {
+    id: 'page_break',
+    name: 'Page Break',
+    icon: 'fa-file-o',
+    description: 'Page break - splits assessment into separate pages',
+    default: '',
+    showPage: false,
+    showContent: false,
+    requiresAnchors: false,
+    isWMType: false,
+  },
 }
 
 export interface Field {
@@ -183,6 +195,7 @@ export interface Field {
   order: number
   number?: number  // Question number (legacy compatibility)
   practice?: boolean  // Practice question flag
+  insights_table?: string[][]  // Additional insights table: array of rows, each row is array of cell values (one per anchor)
 }
 
 export interface CustomField {
@@ -494,7 +507,7 @@ export default function AssessmentForm({
     })
   }
 
-  const handleUpdateField = (id: string, field: keyof Field, value: string | QuestionType | Anchor[] | number | boolean | null) => {
+  const handleUpdateField = (id: string, field: keyof Field, value: string | QuestionType | Anchor[] | number | boolean | string[][] | null) => {
     setFormData(prev => ({
       ...prev,
       fields: prev.fields.map(f =>
@@ -610,13 +623,20 @@ export default function AssessmentForm({
 
   const handleReverseAnchors = (fieldId: string) => {
     const fieldItem = formData.fields.find(f => f.id === fieldId)
-    if (!fieldItem) return
+    if (!fieldItem || fieldItem.anchors.length === 0) return
 
-    // Reverse only the values, keep names in original order
+    // Check if values are in descending order (already reversed)
+    const isDescending = fieldItem.anchors.every((anchor, index) => {
+      if (index === 0) return true
+      return anchor.value <= fieldItem.anchors[index - 1].value
+    })
+
+    // If descending, reverse back to ascending (1, 2, 3, ...)
+    // If ascending, reverse to descending (n, n-1, ..., 1)
     const maxValue = fieldItem.anchors.length
     const reversedAnchors = fieldItem.anchors.map((anchor, index) => ({
       ...anchor,
-      value: maxValue - index,  // Reverse the values: first anchor gets highest value, last gets 1
+      value: isDescending ? index + 1 : maxValue - index,
     }))
     handleUpdateField(fieldId, 'anchors', reversedAnchors)
   }
@@ -1297,8 +1317,8 @@ export default function AssessmentForm({
               <Button type="button" onClick={() => handleAddField('slider')}>
                 + Slider
               </Button>
-              <Button type="button" onClick={() => handleAddField('instructions')} variant="outline">
-                + Instructions
+              <Button type="button" onClick={() => handleAddField('page_break')} variant="outline">
+                + Page Break
               </Button>
             </div>
 
@@ -1311,6 +1331,7 @@ export default function AssessmentForm({
                 {formData.fields
                   .filter(field => {
                     // Filter out instructions field - it's shown in details tab
+                    // Show page breaks in the list so users can see and manage them
                     const fieldType = field.type as string
                     return fieldType !== 'instructions' && fieldType !== '10'
                   })
@@ -1364,6 +1385,11 @@ export default function AssessmentForm({
                               <span className="text-sm font-medium text-gray-900">
                                 {QUESTION_TYPES[field.type]?.name || field.type}
                               </span>
+                              {field.type === 'page_break' && (
+                                <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-800 rounded">
+                                  Page Break
+                                </span>
+                              )}
                               {field.practice && (
                                 <span className="px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 rounded">
                                   Practice
@@ -1511,8 +1537,8 @@ export default function AssessmentForm({
                     <Button type="button" variant="outline" size="sm" onClick={() => handleAddField('slider')}>
                       + Slider
                     </Button>
-                    <Button type="button" variant="outline" size="sm" onClick={() => handleAddField('instructions')}>
-                      + Instructions
+                    <Button type="button" variant="outline" size="sm" onClick={() => handleAddField('page_break')}>
+                      + Page Break
                     </Button>
                   </div>
                 </div>
@@ -1615,20 +1641,14 @@ export default function AssessmentForm({
                         <label className="block text-sm font-medium text-gray-900 mb-2">
                           Content
                         </label>
-                        {field.type === 'description' || field.type === 'rich_text' || field.type === '2' ? (
-                          <RichTextEditor
-                            content={field.content}
-                            onChange={(content) => handleUpdateField(field.id, 'content', content)}
-                            placeholder="Enter question content or description..."
-                          />
-                        ) : field.type === 'instructions' || field.type === '10' ? (
+                        {field.type === 'instructions' || field.type === '10' ? (
                           <div className="space-y-3">
                             <div>
                               <label className="block text-xs font-medium text-gray-700 mb-1">
                                 Instruction Text
                               </label>
-                              <textarea
-                                value={(() => {
+                              <RichTextEditor
+                                content={(() => {
                                   try {
                                     const parsed = JSON.parse(field.content)
                                     return parsed.text || ''
@@ -1636,17 +1656,15 @@ export default function AssessmentForm({
                                     return field.content
                                   }
                                 })()}
-                                onChange={(e) => {
+                                onChange={(content) => {
                                   try {
                                     const parsed = JSON.parse(field.content)
-                                    const updated = JSON.stringify({ ...parsed, text: e.target.value })
+                                    const updated = JSON.stringify({ ...parsed, text: content })
                                     handleUpdateField(field.id, 'content', updated)
                                   } catch {
-                                    handleUpdateField(field.id, 'content', JSON.stringify({ text: e.target.value, next: 'Continue' }))
+                                    handleUpdateField(field.id, 'content', JSON.stringify({ text: content, next: 'Continue' }))
                                   }
                                 }}
-                                rows={4}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                                 placeholder="Enter instruction text..."
                               />
                             </div>
@@ -1679,11 +1697,9 @@ export default function AssessmentForm({
                             </div>
                           </div>
                         ) : (
-                          <textarea
-                            value={field.content}
-                            onChange={(e) => handleUpdateField(field.id, 'content', e.target.value)}
-                            rows={4}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                          <RichTextEditor
+                            content={field.content}
+                            onChange={(content) => handleUpdateField(field.id, 'content', content)}
                             placeholder="Enter question content..."
                           />
                         )}
@@ -1773,6 +1789,101 @@ export default function AssessmentForm({
                                   </div>
                                 </div>
                               ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Insights Table for Multiple Choice */}
+                      {(field.type === 'multiple_choice' || field.type === '1') && (
+                        <div className="border-t border-gray-200 pt-4">
+                          <div className="flex justify-between items-center mb-3">
+                            <label className="block text-sm font-medium text-gray-900">
+                              Additional Insights Table
+                            </label>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const currentTable = field.insights_table || []
+                                const numColumns = field.anchors.length || 5
+                                const newRow = Array(numColumns).fill('')
+                                handleUpdateField(field.id, 'insights_table', [...currentTable, newRow])
+                              }}
+                            >
+                              + Add Row
+                            </Button>
+                          </div>
+                          <p className="text-xs text-gray-500 mb-3">
+                            Provide additional insight into what each selection means. Each row can contain descriptions for different aspects.
+                          </p>
+                          {field.anchors.length === 0 ? (
+                            <div className="text-sm text-gray-500 py-2">
+                              Add anchors first to create the insights table.
+                            </div>
+                          ) : (field.insights_table || []).length === 0 ? (
+                            <div className="text-sm text-gray-500 py-2">
+                              No insights table yet. Click &quot;+ Add Row&quot; to create one.
+                            </div>
+                          ) : (
+                            <div className="border border-gray-300 rounded-lg overflow-hidden">
+                              <div className="overflow-x-auto">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                  <thead className="bg-gray-100">
+                                    <tr>
+                                      {field.anchors.map((anchor, colIndex) => (
+                                        <th
+                                          key={anchor.id}
+                                          className="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider"
+                                        >
+                                          {anchor.name || `Option ${colIndex + 1}`}
+                                        </th>
+                                      ))}
+                                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-700 w-20"></th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="bg-white divide-y divide-gray-200">
+                                    {(field.insights_table || []).map((row, rowIndex) => (
+                                      <tr key={rowIndex}>
+                                        {field.anchors.map((anchor, colIndex) => (
+                                          <td key={anchor.id} className="px-3 py-2">
+                                            <textarea
+                                              value={row[colIndex] || ''}
+                                              onChange={(e) => {
+                                                const currentTable = field.insights_table || []
+                                                const updatedTable = [...currentTable]
+                                                const updatedRow = [...updatedTable[rowIndex]]
+                                                updatedRow[colIndex] = e.target.value
+                                                updatedTable[rowIndex] = updatedRow
+                                                handleUpdateField(field.id, 'insights_table', updatedTable)
+                                              }}
+                                              rows={3}
+                                              className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+                                              placeholder="Enter description..."
+                                            />
+                                          </td>
+                                        ))}
+                                        <td className="px-3 py-2">
+                                          <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                              const currentTable = field.insights_table || []
+                                              const updatedTable = currentTable.filter((_, idx) => idx !== rowIndex)
+                                              handleUpdateField(field.id, 'insights_table', updatedTable)
+                                            }}
+                                            className="text-red-600 hover:text-red-700"
+                                          >
+                                            Delete
+                                          </Button>
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
                             </div>
                           )}
                         </div>

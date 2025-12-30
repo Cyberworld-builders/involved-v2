@@ -34,3 +34,12 @@ COMMENT ON COLUMN fields.practice IS 'Whether this is a practice question (not s
 COMMENT ON COLUMN fields.number IS 'Question number/sequence (legacy compatibility, matches order)';
 COMMENT ON COLUMN assessments.custom_fields IS 'Custom fields for target user information (JSON: {tag: [], default: []})';
 COMMENT ON COLUMN assessments.use_custom_fields IS 'Whether to use custom fields in the assessment';
+
+-- Add insights_table column to fields table for multiple choice questions
+-- This stores additional insight descriptions for each anchor/option
+-- Format: JSONB array of arrays (rows of cells, one cell per anchor)
+-- Example: [["Below Expectations text", "Meets Expectations text", ...], ["Another row", ...]]
+ALTER TABLE fields
+  ADD COLUMN IF NOT EXISTS insights_table JSONB DEFAULT NULL;
+
+COMMENT ON COLUMN fields.insights_table IS 'Additional insights table for multiple choice questions. JSONB array of string arrays: each row is an array of cell values, one per anchor/option. Used to provide additional context about what each selection means.';
