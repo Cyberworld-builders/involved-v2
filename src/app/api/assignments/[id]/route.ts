@@ -134,11 +134,7 @@ export async function PATCH(
     const isSuperAdmin = actorProfile.access_level === 'super_admin'
     const isClientAdmin = actorProfile.access_level === 'client_admin'
 
-    if (!isSuperAdmin && !isClientAdmin) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
-
-    // Verify assignment exists
+    // Verify assignment exists first to check ownership
     const { data: assignment, error: assignmentError } = await supabase
       .from('assignments')
       .select('id, user_id')
@@ -152,8 +148,16 @@ export async function PATCH(
       )
     }
 
-    // Check client permissions for client admins
-    if (isClientAdmin && actorProfile.client_id) {
+    const isOwner = assignment.user_id === actorProfile.id
+
+    // Allow owners to update their own assignments (for started_at, etc.)
+    // Admins can update any assignment
+    if (!isSuperAdmin && !isClientAdmin && !isOwner) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    // Check client permissions for client admins (not needed for owners updating their own)
+    if (isClientAdmin && actorProfile.client_id && !isOwner) {
       const { data: assignmentUser } = await supabase
         .from('profiles')
         .select('client_id')
@@ -170,12 +174,19 @@ export async function PATCH(
 
     // Parse request body
     const body = await request.json()
-    const { expires, whitelabel, job_id } = body
+    const { expires, whitelabel, job_id, started_at } = body
 
     // Build update object
     const updateData: Record<string, unknown> = {}
 
     if (expires !== undefined) {
+      // Only admins can update expiration
+      if (!isSuperAdmin && !isClientAdmin) {
+        return NextResponse.json(
+          { error: 'Only administrators can update expiration date' },
+          { status: 403 }
+        )
+      }
       const expiresDate = new Date(expires)
       if (isNaN(expiresDate.getTime())) {
         return NextResponse.json(
@@ -187,11 +198,43 @@ export async function PATCH(
     }
 
     if (whitelabel !== undefined) {
+      // Only admins can update whitelabel
+      if (!isSuperAdmin && !isClientAdmin) {
+        return NextResponse.json(
+          { error: 'Only administrators can update whitelabel setting' },
+          { status: 403 }
+        )
+      }
       updateData.whitelabel = Boolean(whitelabel)
     }
 
     if (job_id !== undefined) {
+      // Only admins can update job_id
+      if (!isSuperAdmin && !isClientAdmin) {
+        return NextResponse.json(
+          { error: 'Only administrators can update job_id' },
+          { status: 403 }
+        )
+      }
       updateData.job_id = job_id || null
+    }
+
+    if (started_at !== undefined) {
+      // Owners can update started_at for their own assignments
+      if (!isOwner && !isSuperAdmin && !isClientAdmin) {
+        return NextResponse.json(
+          { error: 'Only assignment owners can update started_at' },
+          { status: 403 }
+        )
+      }
+      const startedDate = new Date(started_at)
+      if (isNaN(startedDate.getTime())) {
+        return NextResponse.json(
+          { error: 'started_at must be a valid date' },
+          { status: 400 }
+        )
+      }
+      updateData.started_at = startedDate.toISOString()
     }
 
     if (Object.keys(updateData).length === 0) {

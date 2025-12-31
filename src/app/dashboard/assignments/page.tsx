@@ -12,7 +12,7 @@ interface AssignmentWithAssessment extends Assignment {
   assessments: Assessment
 }
 
-export default async function MyAssignmentsPage() {
+export default async function AssignmentsPage() {
   const supabase = await createClient()
 
   const {
@@ -28,6 +28,19 @@ export default async function MyAssignmentsPage() {
   if (!profile) {
     redirect('/auth/login')
   }
+
+  // If user is admin (client_admin or super_admin), redirect to clients page
+  // Assignments are managed per-client, not globally
+  if (profile.access_level === 'client_admin' || profile.access_level === 'super_admin') {
+    if (profile.access_level === 'client_admin' && profile.client_id) {
+      redirect(`/dashboard/clients/${profile.client_id}?tab=assignments`)
+    } else {
+      // Super admin - redirect to clients list
+      redirect('/dashboard/clients')
+    }
+  }
+
+  // Otherwise, show user's own assignments (member view)
 
   // Get user's profile ID (not auth_user_id)
   const { data: userProfile } = await supabase

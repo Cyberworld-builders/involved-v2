@@ -95,6 +95,7 @@ export default function CreateAssessmentClient() {
             background: backgroundUrl,
             primary_color: data.primary_color,
             accent_color: data.accent_color,
+            status: data.status || 'draft',
             split_questions: data.split_questions,
             questions_per_page: data.questions_per_page,
             timed: data.timed,

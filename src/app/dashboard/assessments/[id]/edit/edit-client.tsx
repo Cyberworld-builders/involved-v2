@@ -107,6 +107,7 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
           background: null, // Will be set from URL preview if needed
           primary_color: assessment.primary_color || '#2D2E30',
           accent_color: assessment.accent_color || '#FFBA00',
+          status: (assessment.status as 'draft' | 'active' | 'completed' | 'archived') || 'draft',
           split_questions: assessment.split_questions || false,
           questions_per_page: assessment.questions_per_page || 10,
           timed: assessment.timed || false,
@@ -257,6 +258,7 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
         description: data.description || null,
         primary_color: data.primary_color,
         accent_color: data.accent_color,
+        status: data.status || 'draft',
         split_questions: data.split_questions,
         questions_per_page: data.questions_per_page,
         timed: data.timed,

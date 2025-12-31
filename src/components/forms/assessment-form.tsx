@@ -239,6 +239,7 @@ export interface AssessmentFormData {
   accent_color: string
   
   // Settings
+  status: 'draft' | 'active' | 'completed' | 'archived'
   split_questions: boolean
   questions_per_page: number
   timed: boolean
@@ -290,6 +291,7 @@ export default function AssessmentForm({
     background: initialData?.background || null,
     primary_color: initialData?.primary_color || '#2D2E30',
     accent_color: initialData?.accent_color || '#FFBA00',
+    status: (initialData?.status as 'draft' | 'active' | 'completed' | 'archived') || 'draft',
     split_questions: initialData?.split_questions || false,
     questions_per_page: initialData?.questions_per_page || 10,
     timed: initialData?.timed || false,
@@ -1341,6 +1343,41 @@ export default function AssessmentForm({
                 <option value="0">No</option>
                 <option value="1">Yes</option>
               </select>
+            </div>
+
+            {/* Status */}
+            <div className="border-t border-gray-200 pt-6 mt-6">
+              <label htmlFor="status" className="block text-sm font-medium text-gray-900 mb-2">
+                Assessment Status
+              </label>
+              <p className="text-sm text-gray-500 mb-3">
+                Only <strong>active</strong> assessments can be assigned to users. Draft assessments are not visible in assignment creation.
+              </p>
+              <select
+                id="status"
+                value={formData.status}
+                onChange={(e) => handleInputChange('status', e.target.value as 'draft' | 'active' | 'completed' | 'archived')}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              >
+                <option value="draft">Draft</option>
+                <option value="active">Active (Published)</option>
+                <option value="completed">Completed</option>
+                <option value="archived">Archived</option>
+              </select>
+              {formData.status === 'draft' && (
+                <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                  <p className="text-sm text-yellow-800">
+                    ⚠️ This assessment is in draft status. It will not appear in assignment creation until it is set to <strong>Active</strong>.
+                  </p>
+                </div>
+              )}
+              {formData.status === 'active' && (
+                <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-md">
+                  <p className="text-sm text-green-800">
+                    ✓ This assessment is active and can be assigned to users.
+                  </p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
