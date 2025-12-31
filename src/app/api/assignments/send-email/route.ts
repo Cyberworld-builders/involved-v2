@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
 
 interface SendEmailRequest {
   to: string
@@ -79,69 +80,149 @@ export async function POST(request: NextRequest) {
     // Note: processedBody is used directly in email (HTML conversion would happen in email service)
     // The body is already processed with template replacements above
 
-    // TODO: Integrate with email service (Resend, SendGrid, AWS SES, etc.)
-    // For now, we'll log the email and return success
-    // In production, replace this with actual email sending logic
+    // Check if email service is configured
+    // Prefer OIDC (AWS_ROLE_ARN) over access keys for security
+    const awsRoleArn = process.env.AWS_ROLE_ARN?.trim()
+    const awsAccessKeyId = (process.env.AWS_SES_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID)?.trim()
+    const awsSecretAccessKey = (process.env.AWS_SES_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY)?.trim()
+    const emailServiceConfigured = !!(
+      process.env.RESEND_API_KEY ||
+      process.env.SENDGRID_API_KEY ||
+      awsRoleArn ||
+      (awsAccessKeyId && awsSecretAccessKey) ||
+      process.env.SMTP_HOST
+    )
+
+    if (!emailServiceConfigured) {
+      console.warn('⚠️ Email service not configured. Email would be sent to:', to)
+      console.warn('Subject:', subject)
+      console.warn('Body preview:', processedBody.substring(0, 200) + '...')
+      console.warn('To configure email sending, set one of: RESEND_API_KEY, SENDGRID_API_KEY, AWS_SES_ACCESS_KEY_ID, or SMTP_HOST')
+      
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Email service not configured. Please configure an email service (Resend, SendGrid, AWS SES, or SMTP) in environment variables.',
+          message: 'Email service not configured',
+        },
+        { status: 503 }
+      )
+    }
     
-    console.log('📧 Email to send:')
+    console.log('📧 Sending email:')
     console.log('To:', to)
     console.log('Subject:', subject)
-    console.log('Body:', processedBody)
-    
-    // NOTE: In production, uncomment and configure one of the email services below
-    // The email is currently being logged but not actually sent
 
-    // Example: Using Resend (uncomment and configure when ready)
-    /*
-    const resend = new Resend(process.env.RESEND_API_KEY)
-    const { data, error } = await resend.emails.send({
-      from: process.env.EMAIL_FROM || 'noreply@example.com',
-      to: to,
-      subject: subject,
-      html: processedBody.replace(/\n/g, '<br>'),
-    })
+    // Try AWS SES - prefer OIDC (best practice) over access keys
+    if (awsRoleArn || (awsAccessKeyId && awsSecretAccessKey)) {
+      try {
+        let credentials
+        
+        // Use OIDC if AWS_ROLE_ARN is set (Vercel deployments - best practice)
+        if (awsRoleArn) {
+          try {
+            // Dynamic import to avoid errors in non-Vercel environments
+            const { awsCredentialsProvider } = await import('@vercel/functions/oidc')
+            credentials = awsCredentialsProvider({
+              roleArn: awsRoleArn,
+            })
+            console.log('✅ Using OIDC credentials (AWS_ROLE_ARN)')
+          } catch (oidcError) {
+            console.warn('⚠️ OIDC provider not available, falling back to access keys:', oidcError)
+            // Fallback to access keys if OIDC fails (e.g., local development)
+            if (awsAccessKeyId && awsSecretAccessKey) {
+              credentials = {
+                accessKeyId: awsAccessKeyId,
+                secretAccessKey: awsSecretAccessKey,
+              }
+            } else {
+              throw new Error('OIDC failed and no access keys available')
+            }
+          }
+        } else {
+          // Use access keys (fallback for local development)
+          credentials = {
+            accessKeyId: awsAccessKeyId!,
+            secretAccessKey: awsSecretAccessKey!,
+          }
+          console.log('⚠️ Using access keys (consider using AWS_ROLE_ARN for production)')
+        }
 
-    if (error) {
-      throw new Error(`Failed to send email: ${error.message}`)
-    }
-    */
+        const sesClient = new SESClient({
+          region: (process.env.AWS_SES_REGION || process.env.AWS_REGION || 'us-east-1').trim(),
+          credentials,
+        })
 
-    // Example: Using AWS SES (uncomment and configure when ready)
-    /*
-    const ses = new AWS.SES({
-      region: process.env.AWS_SES_REGION || 'us-east-1',
-      credentials: {
-        accessKeyId: process.env.AWS_SES_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SES_SECRET_ACCESS_KEY!,
-      },
-    })
+        const fromEmail = (process.env.EMAIL_FROM || process.env.AWS_SES_FROM_EMAIL || process.env.SMTP_FROM || 'noreply@example.com').trim()
+        const htmlBody = processedBody.replace(/\n/g, '<br>')
 
-    const params = {
-      Source: process.env.EMAIL_FROM || 'noreply@example.com',
-      Destination: {
-        ToAddresses: [to],
-      },
-      Message: {
-        Subject: {
-          Data: subject,
-          Charset: 'UTF-8',
-        },
-        Body: {
-          Html: {
-            Data: processedBody.replace(/\n/g, '<br>'),
-            Charset: 'UTF-8',
+        const sendCommand = new SendEmailCommand({
+          Source: fromEmail,
+          Destination: {
+            ToAddresses: [to],
           },
-        },
-      },
+          Message: {
+            Subject: {
+              Data: subject,
+              Charset: 'UTF-8',
+            },
+            Body: {
+              Html: {
+                Data: htmlBody,
+                Charset: 'UTF-8',
+              },
+              Text: {
+                Data: processedBody,
+                Charset: 'UTF-8',
+              },
+            },
+          },
+        })
+
+        const response = await sesClient.send(sendCommand)
+        console.log('✅ Email sent via AWS SES. Message ID:', response.MessageId)
+        
+        return NextResponse.json({
+          success: true,
+          message: 'Email sent successfully',
+          messageId: response.MessageId,
+        })
+      } catch (sesError) {
+        console.error('❌ AWS SES error:', sesError)
+        throw new Error(`Failed to send email via AWS SES: ${sesError instanceof Error ? sesError.message : 'Unknown error'}`)
+      }
     }
 
-    await ses.sendEmail(params).promise()
-    */
+    // Try Resend if configured
+    if (process.env.RESEND_API_KEY) {
+      try {
+        const { Resend } = await import('resend')
+        const resend = new Resend(process.env.RESEND_API_KEY)
+        const { data, error } = await resend.emails.send({
+          from: process.env.EMAIL_FROM || 'noreply@example.com',
+          to: to,
+          subject: subject,
+          html: processedBody.replace(/\n/g, '<br>'),
+        })
 
-    return NextResponse.json({
-      success: true,
-      message: 'Email sent successfully',
-    })
+        if (error) {
+          throw new Error(`Failed to send email via Resend: ${error.message}`)
+        }
+
+        console.log('✅ Email sent via Resend. Message ID:', data?.id)
+        return NextResponse.json({
+          success: true,
+          message: 'Email sent successfully',
+          messageId: data?.id,
+        })
+      } catch (resendError) {
+        console.error('❌ Resend error:', resendError)
+        throw new Error(`Failed to send email via Resend: ${resendError instanceof Error ? resendError.message : 'Unknown error'}`)
+      }
+    }
+
+    // If we get here, no email service was actually configured despite the check
+    throw new Error('Email service configuration error')
   } catch (error) {
     console.error('Error sending email:', error)
     return NextResponse.json(

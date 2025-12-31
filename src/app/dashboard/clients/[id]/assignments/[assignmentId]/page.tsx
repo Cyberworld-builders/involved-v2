@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import DashboardLayout from '@/components/layout/dashboard-layout'
 import { getUserProfile } from '@/lib/utils/get-user-profile'
 import { Database } from '@/types/database'
+import AssignmentResultsClient from './assignment-results-client'
 
 type Assessment = Database['public']['Tables']['assessments']['Row']
 type Profile = Database['public']['Tables']['profiles']['Row']
@@ -47,6 +48,8 @@ export default async function ClientAssignmentDetailPage({ params }: AssignmentD
         description,
         logo,
         background,
+        primary_color,
+        accent_color,
         timed,
         time_limit
       )
@@ -97,6 +100,51 @@ export default async function ClientAssignmentDetailPage({ params }: AssignmentD
   }
 
   const assignmentAssessment = assignment.assessment as Assessment
+
+  // Load answers and fields if assignment is completed
+  let answers: Array<{ field_id: string; value: string; time?: number | null }> = []
+  let fields: Array<{
+    id: string
+    type: string
+    label?: string
+    content: string
+    order: number
+    required: boolean
+    anchors?: unknown
+    insights_table?: unknown
+    [key: string]: unknown
+  }> = []
+
+  if (assignment.completed) {
+    // Use admin client to bypass RLS for loading answers and fields
+    const { createAdminClient } = await import('@/lib/supabase/admin')
+    const adminClient = createAdminClient()
+
+    // Load answers
+    const { data: answersData, error: answersError } = await adminClient
+      .from('answers')
+      .select('*')
+      .eq('assignment_id', assignmentId)
+
+    if (!answersError && answersData) {
+      answers = answersData.map((a: { field_id: string; value: string; time?: number | null }) => ({
+        field_id: a.field_id,
+        value: a.value,
+        time: a.time,
+      }))
+    }
+
+    // Load fields
+    const { data: fieldsData, error: fieldsError } = await adminClient
+      .from('fields')
+      .select('*')
+      .eq('assessment_id', assignment.assessment_id)
+      .order('order', { ascending: true })
+
+    if (!fieldsError && fieldsData) {
+      fields = fieldsData
+    }
+  }
 
   return (
     <DashboardLayout>
@@ -265,6 +313,44 @@ export default async function ClientAssignmentDetailPage({ params }: AssignmentD
             </a>
           )}
         </div>
+
+        {/* Assessment Results - Only show if completed */}
+        {assignment.completed && assignmentAssessment && fields.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Assessment Results</CardTitle>
+              <CardDescription>
+                View the completed assessment responses below
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AssignmentResultsClient
+                assessment={{
+                  id: assignmentAssessment.id,
+                  title: assignmentAssessment.title,
+                  description: assignmentAssessment.description,
+                  logo: assignmentAssessment.logo,
+                  background: assignmentAssessment.background,
+                  primary_color: assignmentAssessment.primary_color,
+                  accent_color: assignmentAssessment.accent_color,
+                }}
+                fields={fields}
+                answers={answers}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {assignment.completed && fields.length === 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Assessment Results</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600">No questions were found for this assessment.</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </DashboardLayout>
   )

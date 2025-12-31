@@ -403,10 +403,18 @@ Thank you.`)
         }
 
         // Send email to each user
-        const emailPromises = []
+        const emailPromises: Array<Promise<Response>> = []
+        const emailUserMap: Array<{ userId: string; email: string; name: string }> = []
+        
         for (const [userId, userAssignments] of assignmentsByUser.entries()) {
           const user = assignmentUsers.find(au => au.user_id === userId)
           if (!user) continue
+
+          emailUserMap.push({
+            userId,
+            email: user.user.email,
+            name: user.user.name,
+          })
 
           emailPromises.push(
             fetch('/api/assignments/send-email', {
@@ -427,12 +435,68 @@ Thank you.`)
           )
         }
 
-        // Send all emails (don't fail if email sending fails)
+        // Send all emails and track results
         try {
-          await Promise.allSettled(emailPromises)
+          const emailResults = await Promise.allSettled(emailPromises)
+          const emailErrors: string[] = []
+          let emailSuccessCount = 0
+          let emailFailureCount = 0
+
+          // Process email results sequentially to properly await JSON parsing
+          for (let i = 0; i < emailResults.length; i++) {
+            const result = emailResults[i]
+            const userInfo = emailUserMap[i]
+            const userLabel = userInfo ? `${userInfo.name} (${userInfo.email})` : `Email ${i + 1}`
+            
+            if (result.status === 'fulfilled') {
+              const response = result.value
+              try {
+                if (response.ok) {
+                  const data = await response.json().catch(() => ({}))
+                  if (data.success !== false && !data.error) {
+                    emailSuccessCount++
+                    console.log(`✅ Email sent successfully to ${userLabel}`)
+                  } else {
+                    emailFailureCount++
+                    const errorMsg = data.error || data.message || 'Failed to send'
+                    emailErrors.push(`${userLabel}: ${errorMsg}`)
+                    console.error(`❌ Email failed for ${userLabel}:`, errorMsg)
+                  }
+                } else {
+                  emailFailureCount++
+                  const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}` }))
+                  const errorMsg = errorData.error || errorData.message || `HTTP ${response.status}`
+                  emailErrors.push(`${userLabel}: ${errorMsg}`)
+                  console.error(`❌ Email HTTP error for ${userLabel}:`, errorMsg)
+                }
+              } catch (parseError) {
+                emailFailureCount++
+                emailErrors.push(`${userLabel}: Failed to parse response`)
+                console.error(`❌ Email parse error for ${userLabel}:`, parseError)
+              }
+            } else {
+              emailFailureCount++
+              const errorMsg = result.reason?.message || 'Failed to send'
+              emailErrors.push(`${userLabel}: ${errorMsg}`)
+              console.error(`❌ Email promise rejected for ${userLabel}:`, errorMsg)
+            }
+          }
+
+          // Update message with email results
+          if (emailFailureCount > 0) {
+            const emailMsg = `⚠️ Emails: ${emailSuccessCount} sent, ${emailFailureCount} failed. ${emailErrors.slice(0, 3).join('; ')}${emailErrors.length > 3 ? '...' : ''}`
+            console.warn('Email sending issues:', emailMsg)
+            setMessage(prev => prev + (prev ? ' ' : '') + emailMsg)
+          } else if (emailSuccessCount > 0) {
+            console.log(`✅ Successfully sent ${emailSuccessCount} email notification(s)`)
+            setMessage(prev => prev + (prev ? ' ' : '') + `✅ ${emailSuccessCount} email notification(s) sent.`)
+          } else {
+            console.warn('No emails were sent (no valid recipients or all failed)')
+          }
         } catch (emailError) {
-          console.error('Error sending emails:', emailError)
-          // Don't throw - assignments were created successfully
+          console.error('Error processing email results:', emailError)
+          const emailErrorMsg = `⚠️ Warning: Email sending encountered an error: ${emailError instanceof Error ? emailError.message : 'Unknown error'}`
+          setMessage(prev => prev + (prev ? ' ' : '') + emailErrorMsg)
         }
       }
 
