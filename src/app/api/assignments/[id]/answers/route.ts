@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { Database } from '@/types/database'
 
-type AnswerInsert = Database['public']['Tables']['answers']['Insert']
-type AnswerUpdate = Database['public']['Tables']['answers']['Update']
+// Define answer types manually until database types are regenerated
+type AnswerInsert = {
+  assignment_id: string
+  field_id: string
+  user_id: string
+  value: string
+  time?: number | null
+}
+
+type AnswerUpdate = Partial<AnswerInsert>
 
 /**
  * POST /api/assignments/[id]/answers
@@ -12,9 +19,10 @@ type AnswerUpdate = Database['public']['Tables']['answers']['Update']
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: assignmentId } = await params
     const supabase = await createClient()
     const adminClient = createAdminClient()
 
@@ -38,8 +46,6 @@ export async function POST(
     if (!actorProfile) {
       return NextResponse.json({ error: 'User profile not found' }, { status: 404 })
     }
-
-    const assignmentId = params.id
 
     // Verify assignment exists and belongs to user
     const { data: assignment, error: assignmentError } = await supabase
@@ -202,9 +208,10 @@ export async function POST(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: assignmentId } = await params
     const supabase = await createClient()
 
     // Verify user is authenticated
@@ -227,8 +234,6 @@ export async function GET(
     if (!actorProfile) {
       return NextResponse.json({ error: 'User profile not found' }, { status: 404 })
     }
-
-    const assignmentId = params.id
 
     // Verify assignment exists
     const { data: assignment, error: assignmentError } = await supabase

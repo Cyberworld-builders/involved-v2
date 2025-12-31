@@ -433,33 +433,6 @@ export default function AssessmentPreviewClient({ assessmentId }: PreviewClientP
           const isLastPage = currentPage === pages.length - 1
           const isFirstPage = currentPage === 0
 
-          // Calculate sequential question numbers (only for actual questions, across all pages)
-          let questionNumber = 0
-          for (let pageIdx = 0; pageIdx <= currentPage; pageIdx++) {
-            const pageFields = pages[pageIdx] || []
-            pageFields.forEach((field) => {
-              const fieldType = field.type as string
-              const questionType = QUESTION_TYPES[fieldType] || QUESTION_TYPES['description']
-              const isActualQuestion = fieldType !== 'description' && fieldType !== 'rich_text' && fieldType !== '2' && fieldType !== 'page_break'
-              
-              if (isActualQuestion && questionType?.showPage) {
-                questionNumber++
-              }
-            })
-          }
-
-          // Reset question number for current page display
-          let currentPageQuestionNumber = 0
-          currentPageFieldsList.forEach((field) => {
-            const fieldType = field.type as string
-            const questionType = QUESTION_TYPES[fieldType] || QUESTION_TYPES['description']
-            const isActualQuestion = fieldType !== 'description' && fieldType !== 'rich_text' && fieldType !== '2' && fieldType !== 'page_break'
-            
-            if (isActualQuestion && questionType?.showPage) {
-              currentPageQuestionNumber++
-            }
-          })
-
           // Calculate starting question number for this page
           let startingQuestionNumber = 0
           for (let pageIdx = 0; pageIdx < currentPage; pageIdx++) {

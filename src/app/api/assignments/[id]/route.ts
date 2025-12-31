@@ -7,9 +7,10 @@ import { createClient } from '@/lib/supabase/server'
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: assignmentId } = await params
     const supabase = await createClient()
 
     // Verify user is authenticated
@@ -32,8 +33,6 @@ export async function GET(
     if (!actorProfile) {
       return NextResponse.json({ error: 'User profile not found' }, { status: 404 })
     }
-
-    const assignmentId = params.id
 
     // Get assignment with related data
     const { data: assignment, error: assignmentError } = await supabase
@@ -103,9 +102,10 @@ export async function GET(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: assignmentId } = await params
     const supabase = await createClient()
     const { createAdminClient } = await import('@/lib/supabase/admin')
     const adminClient = createAdminClient()
@@ -137,8 +137,6 @@ export async function PATCH(
     if (!isSuperAdmin && !isClientAdmin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
-
-    const assignmentId = params.id
 
     // Verify assignment exists
     const { data: assignment, error: assignmentError } = await supabase
@@ -238,9 +236,10 @@ export async function PATCH(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: assignmentId } = await params
     const supabase = await createClient()
     const { createAdminClient } = await import('@/lib/supabase/admin')
     const adminClient = createAdminClient()
@@ -272,8 +271,6 @@ export async function DELETE(
     if (!isSuperAdmin && !isClientAdmin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
-
-    const assignmentId = params.id
 
     // Verify assignment exists
     const { data: assignment, error: assignmentError } = await supabase

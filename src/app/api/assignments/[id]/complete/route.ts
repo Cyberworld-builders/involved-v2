@@ -8,9 +8,10 @@ import { createAdminClient } from '@/lib/supabase/admin'
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: assignmentId } = await params
     const supabase = await createClient()
     const adminClient = createAdminClient()
 
@@ -34,8 +35,6 @@ export async function POST(
     if (!actorProfile) {
       return NextResponse.json({ error: 'User profile not found' }, { status: 404 })
     }
-
-    const assignmentId = params.id
 
     // Verify assignment exists and belongs to user
     const { data: assignment, error: assignmentError } = await supabase

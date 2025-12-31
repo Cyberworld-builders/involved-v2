@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     // Get user profile to check permissions
     const { data: actorProfile } = await supabase
       .from('profiles')
-      .select('access_level, role, client_id')
+      .select('id, access_level, role, client_id')
       .eq('auth_user_id', user.id)
       .single()
 
@@ -35,7 +35,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User profile not found' }, { status: 404 })
     }
 
-    const isSuperAdmin = actorProfile.access_level === 'super_admin'
     const isClientAdmin = actorProfile.access_level === 'client_admin'
     const isUser = actorProfile.access_level === 'member'
 

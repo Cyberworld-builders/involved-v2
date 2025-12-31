@@ -807,12 +807,6 @@ export default function AssessmentForm({
     e.preventDefault()
     // Ensure all fields have correct order before submitting
     // The array order is the source of truth - normalize based on current position
-    // Include remove flags in form data
-    const dataWithRemoveFlags = {
-      ...formData,
-      removeLogo,
-      removeBackground,
-    }
     const normalizedData = {
       ...formData,
       fields: normalizeFieldOrders(formData.fields),
