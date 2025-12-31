@@ -209,6 +209,8 @@ export interface AssessmentFormData {
   description: string
   logo: File | null
   background: File | null
+  removeLogo?: boolean  // Flag to indicate logo should be set to null
+  removeBackground?: boolean  // Flag to indicate background should be set to null
   primary_color: string
   accent_color: string
   
@@ -279,6 +281,8 @@ export default function AssessmentForm({
 
   const [logoPreview, setLogoPreview] = useState<string | null>(existingLogoUrl || null)
   const [backgroundPreview, setBackgroundPreview] = useState<string | null>(existingBackgroundUrl || null)
+  const [removeLogo, setRemoveLogo] = useState(false)
+  const [removeBackground, setRemoveBackground] = useState(false)
   const [draggedFieldId, setDraggedFieldId] = useState<string | null>(null)
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null)
 
@@ -311,6 +315,13 @@ export default function AssessmentForm({
   const handleFileChange = (field: 'logo' | 'background', file: File | null) => {
     setFormData(prev => ({ ...prev, [field]: file }))
     
+    // Clear remove flag when new file is selected
+    if (field === 'logo') {
+      setRemoveLogo(false)
+    } else {
+      setRemoveBackground(false)
+    }
+    
     if (file) {
       const reader = new FileReader()
       reader.onload = (e) => {
@@ -327,6 +338,24 @@ export default function AssessmentForm({
       } else {
         setBackgroundPreview(null)
       }
+    }
+  }
+
+  const handleRemoveImage = (field: 'logo' | 'background') => {
+    if (field === 'logo') {
+      setRemoveLogo(true)
+      setLogoPreview(null)
+      setFormData(prev => ({ ...prev, logo: null }))
+      // Clear file input
+      const logoInput = document.getElementById('logo') as HTMLInputElement
+      if (logoInput) logoInput.value = ''
+    } else {
+      setRemoveBackground(true)
+      setBackgroundPreview(null)
+      setFormData(prev => ({ ...prev, background: null }))
+      // Clear file input
+      const backgroundInput = document.getElementById('background') as HTMLInputElement
+      if (backgroundInput) backgroundInput.value = ''
     }
   }
 
@@ -645,9 +674,17 @@ export default function AssessmentForm({
     e.preventDefault()
     // Ensure all fields have correct order before submitting
     // The array order is the source of truth - normalize based on current position
+    // Include remove flags in form data
+    const dataWithRemoveFlags = {
+      ...formData,
+      removeLogo,
+      removeBackground,
+    }
     const normalizedData = {
       ...formData,
       fields: normalizeFieldOrders(formData.fields),
+      removeLogo,
+      removeBackground,
     }
     // Log the order being submitted for debugging
     console.log('Submitting fields in order:', normalizedData.fields.map((f, idx) => ({
@@ -835,9 +872,24 @@ export default function AssessmentForm({
                 <p className="text-sm text-gray-500 mb-3">
                   Assessment logo. This will show up in the header of the assessment.
                 </p>
-                {logoPreview && (
-                  <div className="mb-3">
-                    <Image src={logoPreview} alt="Logo preview" width={80} height={80} className="h-20 w-auto rounded" style={{ width: 'auto', height: '80px' }} />
+                {(logoPreview || existingLogoUrl) && !removeLogo && (
+                  <div className="mb-3 relative inline-block">
+                    <Image 
+                      src={logoPreview || existingLogoUrl || ''} 
+                      alt="Logo preview" 
+                      width={80} 
+                      height={80} 
+                      className="h-20 w-auto rounded" 
+                      style={{ width: 'auto', height: '80px' }} 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage('logo')}
+                      className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors shadow-sm"
+                      title="Remove logo"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
                 )}
                 <input
@@ -857,9 +909,24 @@ export default function AssessmentForm({
                 <p className="text-sm text-gray-500 mb-3">
                   Assessment background image. This will show up in the header of the assessment.
                 </p>
-                {backgroundPreview && (
-                  <div className="mb-3">
-                    <Image src={backgroundPreview} alt="Background preview" width={200} height={100} className="h-20 w-auto rounded" style={{ width: 'auto', height: '80px' }} />
+                {(backgroundPreview || existingBackgroundUrl) && !removeBackground && (
+                  <div className="mb-3 relative inline-block">
+                    <Image 
+                      src={backgroundPreview || existingBackgroundUrl || ''} 
+                      alt="Background preview" 
+                      width={200} 
+                      height={100} 
+                      className="h-20 w-auto rounded" 
+                      style={{ width: 'auto', height: '80px' }} 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage('background')}
+                      className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors shadow-sm"
+                      title="Remove background"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
                 )}
                 <input

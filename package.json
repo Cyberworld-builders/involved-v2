@@ -16,7 +16,13 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:brave": "playwright test --project=brave",
-    "test:e2e:duckduckgo": "playwright test --project=duckduckgo"
+    "test:e2e:duckduckgo": "playwright test --project=duckduckgo",
+    "db:migrate": "supabase migration up",
+    "db:migrate:refresh": "./scripts/apply-migration.sh",
+    "db:reset": "supabase db reset",
+    "db:status": "supabase migration list",
+    "db:push": "supabase db push",
+    "supabase:restart": "supabase stop && supabase start"
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.948.0",

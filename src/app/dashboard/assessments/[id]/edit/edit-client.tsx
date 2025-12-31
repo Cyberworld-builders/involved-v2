@@ -191,7 +191,10 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
       let logoUrl: string | null = existingLogoUrl || null
       let backgroundUrl: string | null = existingBackgroundUrl || null
 
-      if (data.logo) {
+      // Check if user wants to remove images
+      if (data.removeLogo) {
+        logoUrl = null
+      } else if (data.logo) {
         const logoExt = data.logo.name.split('.').pop()
         const logoFileName = `assessment-logo-${Date.now()}.${logoExt}`
         const { error: logoError } = await supabase.storage
@@ -208,7 +211,9 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
         logoUrl = logoUrlData.publicUrl
       }
 
-      if (data.background) {
+      if (data.removeBackground) {
+        backgroundUrl = null
+      } else if (data.background) {
         const backgroundExt = data.background.name.split('.').pop()
         const backgroundFileName = `assessment-background-${Date.now()}.${backgroundExt}`
         const { error: backgroundError } = await supabase.storage
@@ -261,7 +266,7 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
         updated_at: new Date().toISOString(),
       }
       
-      // Always include logo/background (use existing if not changed)
+      // Set logo/background (null if removed, new URL if uploaded, existing if unchanged)
       updateData.logo = logoUrl
       updateData.background = backgroundUrl
       
