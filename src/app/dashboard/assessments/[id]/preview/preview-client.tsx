@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import { Database } from '@/types/database'
@@ -28,6 +28,7 @@ export default function AssessmentPreviewClient({ assessmentId }: PreviewClientP
   const [logoError, setLogoError] = useState(false)
   const [backgroundError, setBackgroundError] = useState(false)
   const [currentPage, setCurrentPage] = useState(0)
+  const questionsSectionRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -354,16 +355,6 @@ export default function AssessmentPreviewClient({ assessmentId }: PreviewClientP
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Description */}
-        {assessment.description && (
-          <div className="mb-8 p-6 bg-white rounded-lg shadow-sm">
-            <div 
-              className="rich-text-content"
-              dangerouslySetInnerHTML={{ __html: assessment.description }}
-            />
-          </div>
-        )}
-
         {/* Instructions Field */}
         {(() => {
           const instructionsField = fields.find(f => {
@@ -427,7 +418,9 @@ export default function AssessmentPreviewClient({ assessmentId }: PreviewClientP
           if (pages.length === 0) {
             return (
               <div className="space-y-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Questions</h2>
+                <div ref={questionsSectionRef}>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Questions</h2>
+                </div>
                 <div className="text-center py-12 text-gray-500">
                   No questions yet.
                 </div>
@@ -486,7 +479,9 @@ export default function AssessmentPreviewClient({ assessmentId }: PreviewClientP
 
           return (
             <div className="space-y-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Questions</h2>
+              <div ref={questionsSectionRef}>
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Questions</h2>
+              </div>
               
               {/* Current Page Fields */}
               {currentPageFieldsList.map((field) => {
@@ -534,7 +529,13 @@ export default function AssessmentPreviewClient({ assessmentId }: PreviewClientP
               {pages.length > 1 && (
                 <div className="flex justify-between items-center pt-4 border-t border-gray-200">
                   <button
-                    onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                    onClick={() => {
+                      setCurrentPage(Math.max(0, currentPage - 1))
+                      // Scroll to questions section after page change
+                      setTimeout(() => {
+                        questionsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                      }, 100)
+                    }}
                     disabled={isFirstPage}
                     className={`px-6 py-2 rounded-md font-medium ${
                       isFirstPage
@@ -551,7 +552,13 @@ export default function AssessmentPreviewClient({ assessmentId }: PreviewClientP
                   
                   {!isLastPage && (
                     <button
-                      onClick={() => setCurrentPage(Math.min(pages.length - 1, currentPage + 1))}
+                      onClick={() => {
+                        setCurrentPage(Math.min(pages.length - 1, currentPage + 1))
+                        // Scroll to questions section after page change
+                        setTimeout(() => {
+                          questionsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                        }, 100)
+                      }}
                       className="px-6 py-2 rounded-md font-medium bg-indigo-600 text-white hover:bg-indigo-700"
                     >
                       Next

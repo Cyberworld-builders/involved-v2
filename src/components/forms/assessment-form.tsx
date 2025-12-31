@@ -22,6 +22,30 @@ export interface Anchor {
   practice: boolean
 }
 
+export interface AnchorTemplate {
+  id: string
+  name: string
+  description?: string
+  anchors: Omit<Anchor, 'id'>[]  // Anchors without IDs (will be generated)
+}
+
+// Anchor templates for quick population
+export const ANCHOR_TEMPLATES: AnchorTemplate[] = [
+  {
+    id: 'expectations',
+    name: 'Performance Expectations',
+    description: '5-level performance rating scale',
+    anchors: [
+      { name: 'Below Expectations', value: 1, practice: false },
+      { name: 'Slightly Below Expectations', value: 2, practice: false },
+      { name: 'Meets Expectations', value: 3, practice: false },
+      { name: 'Slightly Exceeds Expectations', value: 4, practice: false },
+      { name: 'Exceeds Expectations', value: 5, practice: false },
+    ],
+  },
+  // Additional templates can be added here in the future
+]
+
 // Question types matching legacy system
 export type QuestionType = 
   | 'multiple_choice' | '1' | 'choice'  // Legacy type 1
@@ -648,6 +672,115 @@ export default function AssessmentForm({
     if (!fieldItem) return
 
     handleUpdateField(fieldId, 'anchors', fieldItem.anchors.filter(a => a.id !== anchorId))
+  }
+
+  /**
+   * Apply an anchor template to a field
+   * Replaces existing anchors with the template's anchors
+   */
+  const handleApplyAnchorTemplate = (fieldId: string, template: AnchorTemplate) => {
+    const fieldItem = formData.fields.find(f => f.id === fieldId)
+    if (!fieldItem) return
+
+    // Generate new anchors from template with unique IDs
+    const newAnchors: Anchor[] = template.anchors.map((anchor, index) => ({
+      id: `anchor-${Date.now()}-${index}`,
+      name: anchor.name,
+      value: anchor.value,
+      practice: anchor.practice,
+    }))
+
+    handleUpdateField(fieldId, 'anchors', newAnchors)
+  }
+
+  /**
+   * Parse HTML table and extract comments to populate the insights_table
+   * Each row in the HTML table becomes a row in the insights_table
+   * Each column in the HTML table maps to an anchor (button)
+   */
+  const parseHtmlTableToAnchors = (fieldId: string, htmlContent: string) => {
+    const fieldItem = formData.fields.find(f => f.id === fieldId)
+    if (!fieldItem) return
+
+    // Ensure we have anchors to map columns to
+    if (!fieldItem.anchors || fieldItem.anchors.length === 0) {
+      console.warn('No anchors found. Please add anchors first before pasting the table.')
+      return
+    }
+
+    try {
+      // Create a temporary DOM element to parse HTML
+      const parser = new DOMParser()
+      const doc = parser.parseFromString(htmlContent, 'text/html')
+      const table = doc.querySelector('table')
+      
+      if (!table) {
+        console.warn('No table found in pasted HTML')
+        return
+      }
+
+      // Extract all rows
+      const rows = Array.from(table.querySelectorAll('tbody tr, tr'))
+      if (rows.length === 0) {
+        console.warn('No rows found in table')
+        return
+      }
+
+      // Find the maximum number of columns across all rows
+      let maxColumns = 0
+      rows.forEach(row => {
+        const cells = Array.from(row.querySelectorAll('td'))
+        maxColumns = Math.max(maxColumns, cells.length)
+      })
+
+      if (maxColumns === 0) {
+        console.warn('No columns found in table')
+        return
+      }
+
+      // Map HTML columns sequentially to anchors (preserving empty cells as placeholders)
+      // Column 0 -> Anchor 0, Column 1 -> Anchor 1, etc.
+      // Only map up to the number of anchors we have
+      const numAnchors = fieldItem.anchors.length
+      const columnsToMap = Math.min(maxColumns, numAnchors)
+
+      // Parse each row into an insights table row
+      // Each row in the HTML table becomes a row in insights_table
+      const insightsTableRows: string[][] = []
+      
+      rows.forEach((row) => {
+        const cells = Array.from(row.querySelectorAll('td'))
+        // Initialize row data with empty strings for all anchors
+        const rowData: string[] = new Array(numAnchors).fill('')
+        
+        // Map HTML columns sequentially to anchor positions (preserving empty cells)
+        for (let htmlColIndex = 0; htmlColIndex < columnsToMap; htmlColIndex++) {
+          const cell = cells[htmlColIndex]
+          if (cell) {
+            let text = cell.textContent || cell.innerText || ''
+            text = text.trim()
+            text = text.replace(/\u00A0/g, ' ').replace(/\s+/g, ' ').trim()
+            // Preserve empty cells as empty strings (don't skip them)
+            rowData[htmlColIndex] = text
+          }
+        }
+        
+        // Only add row if it has at least one non-empty cell
+        if (rowData.some(cell => cell && cell.length > 0)) {
+          insightsTableRows.push(rowData)
+        }
+      })
+
+      if (insightsTableRows.length === 0) {
+        console.warn('No valid rows found in table')
+        return
+      }
+
+      // Update the insights_table field
+      handleUpdateField(fieldId, 'insights_table', insightsTableRows)
+    } catch (error) {
+      console.error('Error parsing HTML table:', error)
+    }
   }
 
   const handleReverseAnchors = (fieldId: string) => {
@@ -1798,6 +1931,33 @@ export default function AssessmentForm({
                               </Button>
                             </div>
                           </div>
+                          
+                          {/* Anchor Templates */}
+                          {ANCHOR_TEMPLATES.length > 0 && (
+                            <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                              <label className="block text-xs font-medium text-gray-700 mb-2">
+                                Quick Templates
+                              </label>
+                              <p className="text-xs text-gray-500 mb-2">
+                                Apply a template to quickly populate anchors:
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {ANCHOR_TEMPLATES.map((template) => (
+                                  <Button
+                                    key={template.id}
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleApplyAnchorTemplate(field.id, template)}
+                                    className="text-xs"
+                                    title={template.description}
+                                  >
+                                    {template.name}
+                                  </Button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
 
                           {field.anchors.length === 0 ? (
                             <div className="text-sm text-gray-500 py-2">
@@ -1856,6 +2016,34 @@ export default function AssessmentForm({
                                   </div>
                                 </div>
                               ))}
+                            </div>
+                          )}
+                          
+                          {/* HTML Table Parser for Multiple Choice */}
+                          {(field.type === 'multiple_choice' || field.type === '1') && (
+                            <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                              <label className="block text-xs font-medium text-gray-700 mb-2">
+                                Paste HTML Table to Auto-Populate Insights Table
+                              </label>
+                              <textarea
+                                id={`html-table-paste-${field.id}`}
+                                placeholder="Paste HTML table here... (e.g., from Word/Excel)"
+                                className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 font-mono"
+                                rows={4}
+                                onPaste={async (e) => {
+                                  const pastedText = e.clipboardData.getData('text/html') || e.clipboardData.getData('text/plain')
+                                  if (pastedText.includes('<table') || pastedText.includes('<tr')) {
+                                    e.preventDefault()
+                                    parseHtmlTableToAnchors(field.id, pastedText)
+                                    // Clear the textarea after parsing
+                                    const textarea = document.getElementById(`html-table-paste-${field.id}`) as HTMLTextAreaElement
+                                    if (textarea) textarea.value = ''
+                                  }
+                                }}
+                              />
+                              <p className="text-xs text-gray-500 mt-1">
+                                Paste an HTML table to populate the insights table below. Each row becomes an insights row, and each column maps to an anchor button.
+                              </p>
                             </div>
                           )}
                         </div>
