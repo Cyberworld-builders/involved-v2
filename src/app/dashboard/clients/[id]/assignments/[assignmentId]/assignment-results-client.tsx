@@ -37,15 +37,41 @@ interface AssignmentResultsClientProps {
     value: string
     time?: number | null
   }>
+  target_user?: {
+    id: string
+    name: string
+    email: string
+  } | null
+  custom_fields?: {
+    type?: string[]
+    value?: string[]
+  } | null
 }
 
 export default function AssignmentResultsClient({
   assessment,
   fields,
   answers,
+  target_user,
+  custom_fields,
 }: AssignmentResultsClientProps) {
   const [logoError, setLogoError] = useState(false)
   const [backgroundError, setBackgroundError] = useState(false)
+
+  // Get target name from target_user or custom_fields
+  const targetName = (() => {
+    if (target_user?.name) {
+      return target_user.name
+    }
+    // Fallback to custom_fields if target_user is not loaded
+    if (custom_fields?.type && custom_fields?.value) {
+      const nameIndex = custom_fields.type.indexOf('name')
+      if (nameIndex >= 0 && custom_fields.value[nameIndex]) {
+        return custom_fields.value[nameIndex]
+      }
+    }
+    return null
+  })()
 
   // Create answer map for quick lookup
   const answerMap: Record<string, string | number> = {}
@@ -59,28 +85,37 @@ export default function AssignmentResultsClient({
     if (!field.content) return null
 
     const fieldType = field.type as string
+    
+    // Replace [name] placeholder with target name if available
+    let processedContent = field.content
+    if (targetName) {
+      processedContent = processedContent.replace(/\[name\]/g, targetName)
+    }
 
     // For rich text/description types, render HTML
     if (fieldType === 'description' || fieldType === 'rich_text' || fieldType === '2') {
-      return <div className="rich-text-content" dangerouslySetInnerHTML={{ __html: field.content }} />
+      return <div className="rich-text-content" dangerouslySetInnerHTML={{ __html: processedContent }} />
     }
 
     // For instructions type, parse JSON
     if (fieldType === 'instructions' || fieldType === '10') {
       try {
-        const parsed = JSON.parse(field.content)
+        const parsed = JSON.parse(processedContent)
+        const instructionText = parsed.text || ''
+        // Replace [name] in instruction text as well
+        const finalText = targetName ? instructionText.replace(/\[name\]/g, targetName) : instructionText
         return (
           <div className="rich-text-content">
-            <div dangerouslySetInnerHTML={{ __html: parsed.text || '' }} />
+            <div dangerouslySetInnerHTML={{ __html: finalText }} />
           </div>
         )
       } catch {
-        return <div className="rich-text-content">{field.content}</div>
+        return <div className="rich-text-content">{processedContent}</div>
       }
     }
 
     // For other types, render as plain text (but allow HTML)
-    return <div className="rich-text-content" dangerouslySetInnerHTML={{ __html: field.content }} />
+    return <div className="rich-text-content" dangerouslySetInnerHTML={{ __html: processedContent }} />
   }
 
   const renderAnswerDisplay = (field: typeof fields[0]) => {

@@ -17,6 +17,11 @@ interface AssessmentTakingClientProps {
     id: string
     expires: string
     started_at: string | null
+    target_id: string | null
+    custom_fields: {
+      type?: string[]
+      value?: string[]
+    } | null
     assessment: {
       id: string
       title: string
@@ -29,6 +34,13 @@ interface AssessmentTakingClientProps {
       questions_per_page: number
       timed: boolean
       time_limit: number | null
+      target: string | null
+      is_360: boolean
+    } | null
+    target_user?: {
+      id: string
+      name: string
+      email: string
     } | null
   }
   fields: Array<{
@@ -75,6 +87,21 @@ export default function AssessmentTakingClient({
   const [logoError, setLogoError] = useState(false)
   const [backgroundError, setBackgroundError] = useState(false)
   const questionsSectionRef = useRef<HTMLDivElement>(null)
+
+  // Get target name from target_user or custom_fields
+  const targetName = (() => {
+    if (assignment.target_user?.name) {
+      return assignment.target_user.name
+    }
+    // Fallback to custom_fields if target_user is not loaded
+    if (assignment.custom_fields?.type && assignment.custom_fields?.value) {
+      const nameIndex = assignment.custom_fields.type.indexOf('name')
+      if (nameIndex >= 0 && assignment.custom_fields.value[nameIndex]) {
+        return assignment.custom_fields.value[nameIndex]
+      }
+    }
+    return null
+  })()
 
   const assessment = assignment.assessment
   if (!assessment) {
@@ -128,28 +155,37 @@ export default function AssessmentTakingClient({
     if (!field.content) return null
 
     const fieldType = field.type as string
+    
+    // Replace [name] placeholder with target name if available
+    let processedContent = field.content
+    if (targetName) {
+      processedContent = processedContent.replace(/\[name\]/g, targetName)
+    }
 
     // For rich text/description types, render HTML
     if (fieldType === 'description' || fieldType === 'rich_text' || fieldType === '2') {
-      return <div className="rich-text-content" dangerouslySetInnerHTML={{ __html: field.content }} />
+      return <div className="rich-text-content" dangerouslySetInnerHTML={{ __html: processedContent }} />
     }
 
     // For instructions type, parse JSON
     if (fieldType === 'instructions' || fieldType === '10') {
       try {
-        const parsed = JSON.parse(field.content)
+        const parsed = JSON.parse(processedContent)
+        const instructionText = parsed.text || ''
+        // Replace [name] in instruction text as well
+        const finalText = targetName ? instructionText.replace(/\[name\]/g, targetName) : instructionText
         return (
           <div className="rich-text-content">
-            <div dangerouslySetInnerHTML={{ __html: parsed.text || '' }} />
+            <div dangerouslySetInnerHTML={{ __html: finalText }} />
           </div>
         )
       } catch {
-        return <div className="rich-text-content">{field.content}</div>
+        return <div className="rich-text-content">{processedContent}</div>
       }
     }
 
     // For other types, render as plain text (but allow HTML)
-    return <div className="rich-text-content" dangerouslySetInnerHTML={{ __html: field.content }} />
+    return <div className="rich-text-content" dangerouslySetInnerHTML={{ __html: processedContent }} />
   }
 
   const renderQuestionInput = (field: typeof fields[0]) => {

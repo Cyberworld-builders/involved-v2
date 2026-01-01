@@ -85,6 +85,11 @@ export default async function AssessmentTakingPage({ params, searchParams }: Ass
         time_limit,
         target,
         is_360
+      ),
+      target_user:profiles!assignments_target_id_fkey(
+        id,
+        name,
+        email
       )
     `)
     .eq('id', assignmentId)

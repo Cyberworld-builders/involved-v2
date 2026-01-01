@@ -52,6 +52,11 @@ export default async function ClientAssignmentDetailPage({ params }: AssignmentD
         accent_color,
         timed,
         time_limit
+      ),
+      target_user:profiles!assignments_target_id_fkey(
+        id,
+        name,
+        email
       )
     `)
     .eq('id', assignmentId)
@@ -336,6 +341,8 @@ export default async function ClientAssignmentDetailPage({ params }: AssignmentD
                 }}
                 fields={fields}
                 answers={answers}
+                target_user={assignment.target_user as { id: string; name: string; email: string } | null}
+                custom_fields={assignment.custom_fields as { type?: string[]; value?: string[] } | null}
               />
             </CardContent>
           </Card>
