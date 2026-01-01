@@ -56,9 +56,24 @@ export async function POST(request: NextRequest) {
     const body: SendEmailRequest = await request.json()
     const { to, toName, username: providedUsername, subject, body: emailBody, assignments, expirationDate } = body
 
-    // Format assessments list
+    // Format assessments list with clickable links (HTML format)
     const assessmentsList = assignments
-      .map((a) => `- ${a.assessmentTitle}`)
+      .map((a) => {
+        if (a.url) {
+          return `<li><a href="${a.url}" style="color: #4F46E5; text-decoration: underline;">${a.assessmentTitle}</a></li>`
+        }
+        return `<li>${a.assessmentTitle}</li>`
+      })
+      .join('\n')
+    
+    // Also create a plain text version for text/plain email body
+    const assessmentsListText = assignments
+      .map((a) => {
+        if (a.url) {
+          return `- ${a.assessmentTitle}: ${a.url}`
+        }
+        return `- ${a.assessmentTitle}`
+      })
       .join('\n')
 
     // Format expiration date
@@ -67,18 +82,25 @@ export async function POST(request: NextRequest) {
     // Use provided username or derive from email
     const username = providedUsername || to.split('@')[0]
 
-    // Replace shortcodes in email body
+    // Replace shortcodes in email body (use HTML version for assessments)
     const processedBody = replaceShortcodes(
       emailBody,
       toName,
       username,
       to,
-      assessmentsList,
+      `<ul>${assessmentsList}</ul>`,
       formattedExpiration
     )
-
-    // Note: processedBody is used directly in email (HTML conversion would happen in email service)
-    // The body is already processed with template replacements above
+    
+    // Create plain text version for text/plain email body
+    const processedBodyText = replaceShortcodes(
+      emailBody,
+      toName,
+      username,
+      to,
+      assessmentsListText,
+      formattedExpiration
+    )
 
     // Check if email service is configured
     // Priority: AWS SES with OIDC (AWS_ROLE_ARN) > AWS SES with access keys > Resend > SendGrid > SMTP
@@ -166,7 +188,11 @@ export async function POST(request: NextRequest) {
         })
 
         const fromEmail = (process.env.EMAIL_FROM || process.env.AWS_SES_FROM_EMAIL || process.env.SMTP_FROM || 'noreply@example.com').trim()
-        const htmlBody = processedBody.replace(/\n/g, '<br>')
+        // Convert newlines to <br> but preserve existing HTML structure
+        // If the body already contains HTML tags (like <ul>), preserve them
+        const htmlBody = processedBody.includes('<ul>') || processedBody.includes('<li>') || processedBody.includes('<a')
+          ? processedBody.replace(/\n/g, '<br>')
+          : `<p>${processedBody.replace(/\n/g, '<br>')}</p>`
 
         const sendCommand = new SendEmailCommand({
           Source: fromEmail,
@@ -184,7 +210,7 @@ export async function POST(request: NextRequest) {
                 Charset: 'UTF-8',
               },
               Text: {
-                Data: processedBody,
+                Data: processedBodyText,
                 Charset: 'UTF-8',
               },
             },

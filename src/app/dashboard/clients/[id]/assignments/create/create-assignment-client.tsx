@@ -67,8 +67,9 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
   const [expirationDate, setExpirationDate] = useState('')
   const [sendEmail, setSendEmail] = useState(false)
   const [emailSubject, setEmailSubject] = useState('New assessments have been assigned to you')
-  const [emailBody, setEmailBody] = useState('')
+  const [emailBody, setEmailBody] = useState('Hello {name}, you have been assigned the following assessments:\n\n{assessments}\n\nPlease complete them by {expiration-date}.')
   const [assignmentUsers, setAssignmentUsers] = useState<AssignmentUser[]>([])
+  const [isSubmitting, setIsSubmitting] = useState(false)
   
   // Available data for selection
   const [availableUsers, setAvailableUsers] = useState<User[]>([])
@@ -246,16 +247,22 @@ Thank you.`)
     e.preventDefault()
     e.stopPropagation()
     
-    console.log('Form submitted!', {
-      selectedAssessmentIds,
-      assignmentUsers: assignmentUsers.length,
-      expirationDate,
-    })
+    // Prevent duplicate submissions
+    if (isSubmitting || isLoading) {
+      console.warn('Form submission already in progress, ignoring duplicate submit')
+      return
+    }
     
+    setIsSubmitting(true)
     setIsLoading(true)
     setMessage('')
-
+    
     try {
+      console.log('Form submitted!', {
+        selectedAssessmentIds,
+        assignmentUsers: assignmentUsers.length,
+        expirationDate,
+      })
       // Clear any previous errors
       console.log('Starting assignment creation...')
 
@@ -510,6 +517,7 @@ Thank you.`)
       setMessage(`Error: ${errorMsg}. Check the browser console for detailed error information.`)
     } finally {
       setIsLoading(false)
+      setIsSubmitting(false)
     }
   }
 
@@ -834,8 +842,7 @@ Thank you.`)
                 if (form) {
                   const formEvent = new Event('submit', { bubbles: true, cancelable: true })
                   form.dispatchEvent(formEvent)
-                  // Also call handleSubmit directly as fallback
-                  handleSubmit(formEvent as unknown as React.FormEvent<HTMLFormElement>)
+                  // Form submission will be handled by the onSubmit handler
                 } else {
                   console.error('Form not found!')
                 }
