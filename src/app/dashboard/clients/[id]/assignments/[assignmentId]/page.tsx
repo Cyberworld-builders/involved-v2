@@ -139,14 +139,58 @@ export default async function ClientAssignmentDetailPage({ params }: AssignmentD
       }))
     }
 
-    // Load fields
-    const { data: fieldsData, error: fieldsError } = await adminClient
-      .from('fields')
-      .select('*')
-      .eq('assessment_id', assignment.assessment_id)
+    // Load fields - check if assignment has selected fields (for random question selection)
+    let fieldsData: Array<{
+      id: string
+      type: string
+      label?: string
+      content: string
+      order: number
+      required: boolean
+      anchors?: unknown
+      insights_table?: unknown
+      [key: string]: unknown
+    }> | null = null
+
+    // Check if this assignment has selected fields
+    const { data: assignmentFields, error: assignmentFieldsError } = await adminClient
+      .from('assignment_fields')
+      .select('field_id, order')
+      .eq('assignment_id', assignmentId)
       .order('order', { ascending: true })
 
-    if (!fieldsError && fieldsData) {
+    if (!assignmentFieldsError && assignmentFields && assignmentFields.length > 0) {
+      // Load only the selected fields for this assignment
+      const fieldIds = assignmentFields.map(af => af.field_id)
+      const { data: selectedFields, error: selectedFieldsError } = await adminClient
+        .from('fields')
+        .select('*')
+        .in('id', fieldIds)
+
+      if (!selectedFieldsError && selectedFields) {
+        // Sort by the order from assignment_fields
+        const orderMap = new Map(assignmentFields.map(af => [af.field_id, af.order]))
+        fieldsData = selectedFields
+          .map(field => ({
+            ...field,
+            order: orderMap.get(field.id) || field.order || 0,
+          }))
+          .sort((a, b) => (a.order || 0) - (b.order || 0))
+      }
+    } else {
+      // No assignment_fields found, load all fields from assessment (default behavior)
+      const { data: allFields, error: allFieldsError } = await adminClient
+        .from('fields')
+        .select('*')
+        .eq('assessment_id', assignment.assessment_id)
+        .order('order', { ascending: true })
+      
+      if (!allFieldsError) {
+        fieldsData = allFields
+      }
+    }
+
+    if (fieldsData) {
       fields = fieldsData
     }
   }

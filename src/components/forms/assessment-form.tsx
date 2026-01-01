@@ -246,6 +246,7 @@ export interface AssessmentFormData {
   time_limit: number | null
   target: 'self' | 'other_user' | 'group_leader' | ''  // Legacy: 0=self, 1=other_user, 2=group_leader
   is_360: boolean
+  number_of_questions: number | null  // For non-360 assessments: number of questions to randomly select
   use_custom_fields: boolean
   custom_fields: CustomField[]
   
@@ -298,6 +299,7 @@ export default function AssessmentForm({
     time_limit: initialData?.time_limit || null,
     target: (initialData?.target as 'self' | 'other_user' | 'group_leader') || '',
     is_360: initialData?.is_360 || false,
+    number_of_questions: initialData?.number_of_questions || null,
     use_custom_fields: initialData?.use_custom_fields || false,
     custom_fields: initialData?.custom_fields || [],
     dimensions: initialData?.dimensions || [],
@@ -1344,6 +1346,28 @@ export default function AssessmentForm({
                 <option value="1">Yes</option>
               </select>
             </div>
+
+            {/* Number of Questions (for non-360 assessments) */}
+            {!formData.is_360 && (
+              <div>
+                <label htmlFor="number_of_questions" className="block text-sm font-medium text-gray-900 mb-2">
+                  Number of Questions to Include
+                </label>
+                <p className="text-sm text-gray-500 mb-3">
+                  For non-360 assessments, specify how many questions to randomly select from the pool for each assignment. 
+                  Each participant will receive a unique random set of questions. Leave empty to include all questions.
+                </p>
+                <input
+                  type="number"
+                  id="number_of_questions"
+                  min="1"
+                  value={formData.number_of_questions || ''}
+                  onChange={(e) => handleInputChange('number_of_questions', e.target.value ? parseInt(e.target.value, 10) : null)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Leave empty to include all questions"
+                />
+              </div>
+            )}
 
             {/* Status */}
             <div className="border-t border-gray-200 pt-6 mt-6">

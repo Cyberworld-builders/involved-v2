@@ -210,10 +210,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Verify all assessments exist
+    // Verify all assessments exist and get their details
     const { data: assessments, error: assessmentsError } = await adminClient
       .from('assessments')
-      .select('id, title')
+      .select('id, title, is_360, number_of_questions')
       .in('id', assessment_ids)
 
     if (assessmentsError || !assessments || assessments.length !== assessment_ids.length) {
@@ -222,6 +222,15 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       )
     }
+
+    // Type assertion for assessments with the fields we need
+    type AssessmentWithDetails = {
+      id: string
+      title: string
+      is_360: boolean
+      number_of_questions: number | null
+    }
+    const typedAssessments = assessments as AssessmentWithDetails[]
 
     // Generate assignments
     const assignments: AssignmentInsert[] = []
@@ -256,6 +265,54 @@ export async function POST(request: NextRequest) {
         }
 
         assignments.push(assignment)
+
+        // For non-360 assessments with number_of_questions set, randomly select questions
+        const assessment = typedAssessments.find(a => a.id === assessmentId)
+        if (assessment && !assessment.is_360 && assessment.number_of_questions) {
+          // Load all questions for this assessment (excluding instructions and page breaks)
+          const { data: allFields, error: fieldsError } = await adminClient
+            .from('fields')
+            .select('id, order, type')
+            .eq('assessment_id', assessmentId)
+            .order('order', { ascending: true })
+
+          if (!fieldsError && allFields && allFields.length > 0) {
+            // Filter out instructions and page breaks
+            const questionFields = allFields.filter(field => {
+              const fieldType = field.type as string
+              return fieldType !== 'instructions' && 
+                     fieldType !== '10' && 
+                     fieldType !== 'page_break'
+            })
+
+            if (questionFields.length > 0) {
+              // Randomly select the specified number of questions
+              const shuffled = [...questionFields].sort(() => Math.random() - 0.5)
+              const selectedFields = shuffled.slice(0, Math.min(assessment.number_of_questions, questionFields.length))
+              
+              // Sort selected fields by original order to maintain question flow
+              selectedFields.sort((a, b) => (a.order || 0) - (b.order || 0))
+
+              // Create assignment_fields entries
+              if (selectedFields.length > 0) {
+                const assignmentFieldsToInsert = selectedFields.map((field, index) => ({
+                  assignment_id: assignment.id,
+                  field_id: field.id,
+                  order: index + 1,
+                }))
+
+                const { error: assignmentFieldsError } = await adminClient
+                  .from('assignment_fields')
+                  .insert(assignmentFieldsToInsert)
+
+                if (assignmentFieldsError) {
+                  console.error('Error creating assignment_fields:', assignmentFieldsError)
+                  // Continue anyway - assignment is created, just without field selection
+                }
+              }
+            }
+          }
+        }
 
         // Generate URL
         const url = generateAssignmentURL(

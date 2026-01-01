@@ -75,6 +75,7 @@ export async function POST(
           time_limit: originalAssessment.time_limit,
           target: originalAssessment.target,
           is_360: originalAssessment.is_360,
+          number_of_questions: originalAssessment.number_of_questions,
           type: originalAssessment.type,
           use_custom_fields: originalAssessment.use_custom_fields,
           custom_fields: originalAssessment.custom_fields,
