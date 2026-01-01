@@ -152,6 +152,8 @@ export async function POST(request: NextRequest) {
       custom_fields,
       whitelabel = false,
       job_id,
+      reminder = false,
+      reminder_frequency = null,
     } = body
 
     // Validate required fields
@@ -232,6 +234,23 @@ export async function POST(request: NextRequest) {
     }
     const typedAssessments = assessments as AssessmentWithDetails[]
 
+    // Calculate next_reminder from reminder_frequency if reminder is enabled
+    let nextReminderDate: Date | null = null
+    if (reminder && reminder_frequency) {
+      const now = new Date()
+      // Parse frequency string like "+1 week", "+2 weeks", "+3 weeks", "+1 month"
+      if (reminder_frequency === '+1 week') {
+        nextReminderDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+      } else if (reminder_frequency === '+2 weeks') {
+        nextReminderDate = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000)
+      } else if (reminder_frequency === '+3 weeks') {
+        nextReminderDate = new Date(now.getTime() + 21 * 24 * 60 * 60 * 1000)
+      } else if (reminder_frequency === '+1 month') {
+        nextReminderDate = new Date(now)
+        nextReminderDate.setMonth(nextReminderDate.getMonth() + 1)
+      }
+    }
+
     // Generate assignments
     const assignments: AssignmentInsert[] = []
     const assignmentUrls: Array<{ id: string; url: string }> = []
@@ -241,7 +260,11 @@ export async function POST(request: NextRequest) {
       if (!user) continue
 
       for (const assessmentId of assessment_ids) {
-        const assignmentData: AssignmentInsert = {
+        const assignmentData: AssignmentInsert & {
+          reminder?: boolean
+          reminder_frequency?: string | null
+          next_reminder?: string | null
+        } = {
           user_id: userId,
           assessment_id: assessmentId,
           expires: expiresDate.toISOString(),
@@ -250,6 +273,9 @@ export async function POST(request: NextRequest) {
           custom_fields: custom_fields || null,
           target_id: target_id || null,
           job_id: job_id || null,
+          reminder: reminder || false,
+          reminder_frequency: reminder ? reminder_frequency : null,
+          next_reminder: nextReminderDate ? nextReminderDate.toISOString() : null,
         }
 
         // Insert assignment

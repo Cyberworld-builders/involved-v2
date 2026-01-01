@@ -68,6 +68,8 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
   const [sendEmail, setSendEmail] = useState(false)
   const [emailSubject, setEmailSubject] = useState('New assessments have been assigned to you')
   const [emailBody, setEmailBody] = useState('Hello {name}, you have been assigned the following assessments:\n\n{assessments}\n\nPlease complete them by {expiration-date}.')
+  const [enableReminder, setEnableReminder] = useState(false)
+  const [reminderFrequency, setReminderFrequency] = useState('+1 week')
   const [assignmentUsers, setAssignmentUsers] = useState<AssignmentUser[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   
@@ -340,6 +342,8 @@ Thank you.`)
                 target_id: au.target_id || null,
                 custom_fields: customFields,
                 whitelabel: false,
+                reminder: enableReminder,
+                reminder_frequency: enableReminder ? reminderFrequency : null,
               }),
             })
 
@@ -696,6 +700,53 @@ Thank you.`)
                       Available shortcodes: <code>{'{name}'}</code>, <code>{'{username}'}</code>, <code>{'{email}'}</code>, <code>{'{assessments}'}</code>, <code>{'{expiration-date}'}</code>
                     </p>
                   </div>
+                </div>
+              )}
+
+              {/* Reminder Settings */}
+              {selectedAssessmentIds.length > 0 && (
+                <div className="pt-4 border-t border-gray-200">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Enable Email Reminders
+                    </label>
+                    <p className="text-sm text-gray-500 mb-3">
+                      Send automated reminder emails to users who have not completed their assignments.
+                    </p>
+                    <select
+                      value={enableReminder ? '1' : '0'}
+                      onChange={(e) => setEnableReminder(e.target.value === '1')}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                      <option value="0">No</option>
+                      <option value="1">Yes</option>
+                    </select>
+                  </div>
+
+                  {/* Reminder Frequency */}
+                  {enableReminder && (
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Reminder Frequency
+                      </label>
+                      <p className="text-sm text-gray-500 mb-3">
+                        How often to send reminder emails for incomplete assignments.
+                      </p>
+                      <select
+                        value={reminderFrequency}
+                        onChange={(e) => setReminderFrequency(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      >
+                        <option value="+1 week">1 Week</option>
+                        <option value="+2 weeks">2 Weeks</option>
+                        <option value="+3 weeks">3 Weeks</option>
+                        <option value="+1 month">Monthly</option>
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        The first reminder will be sent {reminderFrequency === '+1 week' ? '1 week' : reminderFrequency === '+2 weeks' ? '2 weeks' : reminderFrequency === '+3 weeks' ? '3 weeks' : '1 month'} after the assignment is created.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
