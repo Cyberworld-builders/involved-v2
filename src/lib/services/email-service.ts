@@ -536,20 +536,25 @@ export async function sendEmail(
     throw new Error('to must be a valid email address')
   }
   
-  // Priority order: Resend > AWS SES (OIDC preferred) > SMTP
-  const resendApiKey = process.env.RESEND_API_KEY?.trim()
+  // Priority order: AWS SES with OIDC (AWS_ROLE_ARN) > AWS SES with access keys > Resend > SMTP
+  // OIDC is preferred for production (Vercel deployments) as it follows AWS security best practices
   const awsRoleArn = process.env.AWS_ROLE_ARN?.trim()
   const awsAccessKeyId = process.env.AWS_ACCESS_KEY_ID?.trim()
   const awsSecretAccessKey = process.env.AWS_SECRET_ACCESS_KEY?.trim()
-  const useResend = !!resendApiKey
-  // Support both OIDC (preferred) and access keys for AWS SES
-  const useAwsSes = !!awsRoleArn || !!(awsAccessKeyId && awsSecretAccessKey)
+  const resendApiKey = process.env.RESEND_API_KEY?.trim()
+  const hasAwsSesOidc = !!awsRoleArn
+  const hasAwsSesAccessKeys = !!(awsAccessKeyId && awsSecretAccessKey)
+  const useAwsSes = hasAwsSesOidc || hasAwsSesAccessKeys
+  const useResend = !!resendApiKey && !useAwsSes // Only use Resend if AWS SES is not available
   const isLocal = process.env.NODE_ENV === 'development' || !process.env.SMTP_HOST
   
   // Log for debugging
   console.log('[Email Service] Configuration check:', {
-    useResend: !!resendApiKey,
+    priority: hasAwsSesOidc ? 'AWS SES (OIDC)' : hasAwsSesAccessKeys ? 'AWS SES (Access Keys)' : useResend ? 'Resend' : 'SMTP',
+    hasAwsSesOidc,
+    hasAwsSesAccessKeys,
     useAwsSes,
+    useResend,
     hasRoleArn: !!awsRoleArn,
     hasAccessKey: !!awsAccessKeyId,
     hasSecretKey: !!awsSecretAccessKey,
@@ -557,38 +562,10 @@ export async function sendEmail(
     smtpHost: process.env.SMTP_HOST ? 'set' : 'not set',
   })
   
-  // Use Resend if API key is available (preferred method)
-  if (useResend) {
-    console.log('[Email Service] Attempting to send via Resend')
-    try {
-      const result = await sendEmailViaResend(to, subject, htmlBody, textBody)
-      console.log('[Email Service] Resend send successful:', result.messageId)
-      return result
-    } catch (error) {
-      console.error('[Email Service] Resend failed:', error)
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      // If Resend fails, try AWS SES as fallback
-      if (useAwsSes) {
-        console.log('[Email Service] Falling back to AWS SES')
-        try {
-          return await sendEmailViaSES(to, subject, htmlBody, textBody)
-        } catch (sesError) {
-          return {
-            success: false,
-            error: `Resend failed: ${errorMessage}. AWS SES also failed: ${sesError instanceof Error ? sesError.message : String(sesError)}`,
-          }
-        }
-      }
-      return {
-        success: false,
-        error: `Resend failed: ${errorMessage}`,
-      }
-    }
-  }
-  
-  // Use AWS SES if credentials are available (fallback)
+  // Priority 1: AWS SES with OIDC (best practice for production)
+  // Priority 2: AWS SES with access keys (fallback for local dev)
   if (useAwsSes) {
-    console.log('[Email Service] Attempting to send via AWS SES SDK')
+    console.log('[Email Service] Attempting to send via AWS SES')
     try {
       const result = await sendEmailViaSES(to, subject, htmlBody, textBody)
       console.log('[Email Service] AWS SES send successful:', result.messageId)
@@ -596,12 +573,41 @@ export async function sendEmail(
     } catch (error) {
       console.error('[Email Service] AWS SES failed:', error)
       const errorMessage = error instanceof Error ? error.message : String(error)
+      // If AWS SES fails, try Resend as fallback (if configured)
+      if (useResend) {
+        console.log('[Email Service] Falling back to Resend')
+        try {
+          return await sendEmailViaResend(to, subject, htmlBody, textBody)
+        } catch (resendError) {
+          return {
+            success: false,
+            error: `AWS SES failed: ${errorMessage}. Resend also failed: ${resendError instanceof Error ? resendError.message : String(resendError)}`,
+          }
+        }
+      }
       return {
         success: false,
         error: `AWS SES failed: ${errorMessage}. Please verify your email address in AWS SES and check IAM permissions.`,
       }
     }
   }
+  
+  // Priority 3: Use Resend if API key is available (only if AWS SES is not configured)
+  if (useResend) {
+      console.log('[Email Service] Attempting to send via Resend')
+      try {
+        const result = await sendEmailViaResend(to, subject, htmlBody, textBody)
+        console.log('[Email Service] Resend send successful:', result.messageId)
+        return result
+      } catch (error) {
+        console.error('[Email Service] Resend failed:', error)
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        return {
+          success: false,
+          error: `Resend failed: ${errorMessage}`,
+        }
+      }
+    }
   
   // If we get here, neither Resend nor AWS SES are available
   console.warn('[Email Service] Resend and AWS SES not available, attempting SMTP fallback')

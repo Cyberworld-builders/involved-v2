@@ -81,15 +81,19 @@ export async function POST(request: NextRequest) {
     // The body is already processed with template replacements above
 
     // Check if email service is configured
-    // Prefer OIDC (AWS_ROLE_ARN) over access keys for security
+    // Priority: AWS SES with OIDC (AWS_ROLE_ARN) > AWS SES with access keys > Resend > SendGrid > SMTP
+    // OIDC is preferred for production (Vercel deployments) as it follows AWS security best practices
     const awsRoleArn = process.env.AWS_ROLE_ARN?.trim()
     const awsAccessKeyId = (process.env.AWS_SES_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID)?.trim()
     const awsSecretAccessKey = (process.env.AWS_SES_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY)?.trim()
+    const hasAwsSesOidc = !!awsRoleArn
+    const hasAwsSesAccessKeys = !!(awsAccessKeyId && awsSecretAccessKey)
+    const hasAwsSes = hasAwsSesOidc || hasAwsSesAccessKeys
+    
     const emailServiceConfigured = !!(
+      hasAwsSes ||
       process.env.RESEND_API_KEY ||
       process.env.SENDGRID_API_KEY ||
-      awsRoleArn ||
-      (awsAccessKeyId && awsSecretAccessKey) ||
       process.env.SMTP_HOST
     )
 
@@ -97,12 +101,12 @@ export async function POST(request: NextRequest) {
       console.warn('⚠️ Email service not configured. Email would be sent to:', to)
       console.warn('Subject:', subject)
       console.warn('Body preview:', processedBody.substring(0, 200) + '...')
-      console.warn('To configure email sending, set one of: RESEND_API_KEY, SENDGRID_API_KEY, AWS_SES_ACCESS_KEY_ID, or SMTP_HOST')
+      console.warn('To configure email sending, set one of: AWS_ROLE_ARN (preferred), AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY, RESEND_API_KEY, SENDGRID_API_KEY, or SMTP_HOST')
       
       return NextResponse.json(
         {
           success: false,
-          error: 'Email service not configured. Please configure an email service (Resend, SendGrid, AWS SES, or SMTP) in environment variables.',
+          error: 'Email service not configured. Please configure an email service (AWS SES with OIDC preferred, Resend, SendGrid, or SMTP) in environment variables.',
           message: 'Email service not configured',
         },
         { status: 503 }
@@ -112,9 +116,17 @@ export async function POST(request: NextRequest) {
     console.log('📧 Sending email:')
     console.log('To:', to)
     console.log('Subject:', subject)
+    console.log('Email service priority check:', {
+      hasAwsSesOidc,
+      hasAwsSesAccessKeys,
+      hasResend: !!process.env.RESEND_API_KEY,
+      hasSendGrid: !!process.env.SENDGRID_API_KEY,
+      hasSmtp: !!process.env.SMTP_HOST,
+    })
 
-    // Try AWS SES - prefer OIDC (best practice) over access keys
-    if (awsRoleArn || (awsAccessKeyId && awsSecretAccessKey)) {
+    // Priority 1: AWS SES with OIDC (best practice for production)
+    // Priority 2: AWS SES with access keys (fallback for local dev)
+    if (hasAwsSes) {
       try {
         let credentials
         
@@ -193,8 +205,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Try Resend if configured
-    if (process.env.RESEND_API_KEY) {
+    // Priority 3: Try Resend if configured (only if AWS SES is not available)
+    if (process.env.RESEND_API_KEY && !hasAwsSes) {
       try {
         const { Resend } = await import('resend')
         const resend = new Resend(process.env.RESEND_API_KEY)
