@@ -1361,7 +1361,7 @@ export default function AssessmentForm({
                   type="number"
                   id="number_of_questions"
                   min="1"
-                  value={formData.number_of_questions || ''}
+                  value={formData.number_of_questions ?? ''}
                   onChange={(e) => handleInputChange('number_of_questions', e.target.value ? parseInt(e.target.value, 10) : null)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="Leave empty to include all questions"

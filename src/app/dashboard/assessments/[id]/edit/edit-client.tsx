@@ -26,6 +26,7 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
     const loadAssessment = async () => {
       try {
         // Load assessment with dimensions and fields
+        // Explicitly select all columns including number_of_questions
         const { data: assessment, error: assessmentError } = await supabase
           .from('assessments')
           .select('*')
@@ -35,6 +36,9 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
         if (assessmentError || !assessment) {
           throw new Error(`Failed to load assessment: ${assessmentError?.message || 'Assessment not found'}`)
         }
+
+        // Debug: Log the number_of_questions value from database
+        console.log('Loaded assessment number_of_questions:', assessment.number_of_questions, typeof assessment.number_of_questions)
 
         // Load dimensions
         const { data: dimensions, error: dimensionsError } = await supabase
@@ -113,9 +117,9 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
           timed: assessment.timed || false,
           time_limit: assessment.time_limit,
           target: targetValue,
-          is_360: assessment.is_360 || false,
-          number_of_questions: assessment.number_of_questions || null,
-          use_custom_fields: assessment.use_custom_fields || false,
+          is_360: assessment.is_360 ?? false,
+          number_of_questions: assessment.number_of_questions ?? null,
+          use_custom_fields: assessment.use_custom_fields ?? false,
           custom_fields: customFields,
           dimensions: (dimensions || []).map(dim => ({
             id: dim.id,
