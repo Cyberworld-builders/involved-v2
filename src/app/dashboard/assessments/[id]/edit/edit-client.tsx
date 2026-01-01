@@ -281,7 +281,7 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
       // Always include target (can be null)
       updateData.target = targetValue
       updateData.is_360 = data.is_360
-      updateData.number_of_questions = data.number_of_questions || null
+      updateData.number_of_questions = data.number_of_questions ?? null
       
       // Include custom_fields columns (will fail if migration 007 hasn't been run)
       // Try with custom_fields first, fall back to without if columns don't exist
