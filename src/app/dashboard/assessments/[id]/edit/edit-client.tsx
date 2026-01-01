@@ -290,30 +290,56 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
         .update(updateData)
         .eq('id', id)
 
-      // If error is about missing custom_fields column, retry without it
-      if (assessmentError && assessmentError.message?.includes("custom_fields")) {
-        console.warn('custom_fields column not found - migration 007 may need to be applied. Retrying without custom_fields...')
-        const updateDataWithoutCustomFields = { ...updateData }
-        delete updateDataWithoutCustomFields.use_custom_fields
-        delete updateDataWithoutCustomFields.custom_fields
+      // If error is about missing columns, retry without them
+      if (assessmentError) {
+        const errorMessage = assessmentError.message || JSON.stringify(assessmentError)
+        const errorCode = (assessmentError as any)?.code || ''
         
-        const { error: retryError } = await supabase
-          .from('assessments')
-          .update(updateDataWithoutCustomFields)
-          .eq('id', id)
+        // Check if error is about missing columns
+        const isMissingColumnError = 
+          errorMessage.includes("custom_fields") ||
+          errorMessage.includes("number_of_questions") ||
+          errorCode === '42703' // PostgreSQL undefined column error code
         
-        if (retryError) {
-          assessmentError = retryError
-        } else {
-          assessmentError = null
-          setMessage('Assessment updated (custom_fields feature requires migration 007 to be applied)')
+        if (isMissingColumnError) {
+          console.warn('Some columns may not exist - migrations may need to be applied. Retrying without optional columns...')
+          const updateDataWithoutOptionalFields = { ...updateData }
+          
+          // Remove optional fields that might not exist
+          if (errorMessage.includes("custom_fields") || errorCode === '42703') {
+            delete updateDataWithoutOptionalFields.use_custom_fields
+            delete updateDataWithoutOptionalFields.custom_fields
+          }
+          if (errorMessage.includes("number_of_questions") || errorCode === '42703') {
+            delete updateDataWithoutOptionalFields.number_of_questions
+          }
+          
+          const { error: retryError } = await supabase
+            .from('assessments')
+            .update(updateDataWithoutOptionalFields)
+            .eq('id', id)
+          
+          if (retryError) {
+            assessmentError = retryError
+          } else {
+            assessmentError = null
+            setMessage('Assessment updated (some optional features require migrations to be applied)')
+          }
         }
       }
 
       if (assessmentError) {
         console.error('Assessment update error:', assessmentError)
+        console.error('Error details:', {
+          message: assessmentError.message,
+          code: (assessmentError as any)?.code,
+          details: (assessmentError as any)?.details,
+          hint: (assessmentError as any)?.hint,
+          fullError: JSON.stringify(assessmentError, null, 2)
+        })
         console.error('Update data:', updateData)
-        throw new Error(`Failed to update assessment: ${assessmentError.message}`)
+        const errorMessage = assessmentError.message || 'Unknown error occurred'
+        throw new Error(`Failed to update assessment: ${errorMessage}`)
       }
 
       // Delete existing dimensions and fields, then recreate
