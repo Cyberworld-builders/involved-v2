@@ -91,10 +91,9 @@ export async function POST(
     }
 
     // Create dimensions for the duplicate
+    const dimensionIdMap = new Map<string, string>()
+    
     if (originalDimensions && originalDimensions.length > 0) {
-      // Create a map of old dimension IDs to new dimension IDs for parent relationships
-      const dimensionIdMap = new Map<string, string>()
-      
       // First pass: create all dimensions without parent_id
       const dimensionsWithoutParent = originalDimensions.filter(d => !d.parent_id)
       const dimensionsWithParent = originalDimensions.filter(d => d.parent_id)
@@ -114,7 +113,13 @@ export async function POST(
 
         if (dimError) {
           console.error('Error creating dimensions:', dimError)
-        } else if (insertedDimensions) {
+          return NextResponse.json(
+            { error: `Failed to create duplicate dimensions: ${dimError.message}` },
+            { status: 500 }
+          )
+        }
+        
+        if (insertedDimensions) {
           // Map old IDs to new IDs
           dimensionsWithoutParent.forEach((oldDim, idx) => {
             if (insertedDimensions[idx]) {
@@ -140,7 +145,13 @@ export async function POST(
 
         if (dimError) {
           console.error('Error creating dimensions with parent:', dimError)
-        } else if (insertedDimensions) {
+          return NextResponse.json(
+            { error: `Failed to create duplicate dimensions with parent: ${dimError.message}` },
+            { status: 500 }
+          )
+        }
+        
+        if (insertedDimensions) {
           // Map old IDs to new IDs for parent dimensions
           dimensionsWithParent.forEach((oldDim, idx) => {
             if (insertedDimensions[idx]) {
@@ -149,66 +160,43 @@ export async function POST(
           })
         }
       }
+    }
 
-      // Create fields (questions) for the duplicate
-      if (originalFields && originalFields.length > 0) {
+    // Create fields (questions) for the duplicate (regardless of whether dimensions exist)
+    if (originalFields && originalFields.length > 0) {
+      let dimensionCodeMap = new Map<string, string>()
+      let oldDimensionMap = new Map<string, string>()
+
+      // Only get dimension mapping if dimensions exist
+      if (originalDimensions && originalDimensions.length > 0) {
         // Get new dimension IDs for mapping
         const { data: newDimensions } = await supabase
           .from('dimensions')
           .select('id, code')
           .eq('assessment_id', newAssessment.id)
 
-        const dimensionCodeMap = new Map(
+        dimensionCodeMap = new Map(
           newDimensions?.map(d => [d.code, d.id]) || []
         )
 
         // Create a map from old dimension IDs to new dimension codes
-        const oldDimensionMap = new Map(
-          originalDimensions?.map(d => [d.id, d.code]) || []
+        oldDimensionMap = new Map(
+          originalDimensions.map(d => [d.id, d.code])
         )
+      }
 
-        const fieldsToInsert = originalFields.map((field, index) => {
-          let dimensionId = null
-          if (field.dimension_id) {
-            const oldDimensionCode = oldDimensionMap.get(field.dimension_id)
-            if (oldDimensionCode) {
-              dimensionId = dimensionCodeMap.get(oldDimensionCode) || null
-            }
-          }
-
-          return {
-            assessment_id: newAssessment.id,
-            dimension_id: dimensionId,
-            type: field.type,
-            content: field.content ?? '',
-            order: field.order ?? index + 1,
-            number: field.number ?? index + 1,
-            practice: field.practice ?? false,
-            anchors: field.anchors || [],
-            insights_table: field.insights_table || null,
-          }
-        })
-
-        if (fieldsToInsert.length > 0) {
-          const { error: fieldsInsertError } = await supabase
-            .from('fields')
-            .insert(fieldsToInsert)
-
-          if (fieldsInsertError) {
-            console.error('Error creating fields:', fieldsInsertError)
-            return NextResponse.json(
-              { error: `Failed to create duplicate fields: ${fieldsInsertError.message}` },
-              { status: 500 }
-            )
+      const fieldsToInsert = originalFields.map((field, index) => {
+        let dimensionId = null
+        if (field.dimension_id && oldDimensionMap.size > 0) {
+          const oldDimensionCode = oldDimensionMap.get(field.dimension_id)
+          if (oldDimensionCode) {
+            dimensionId = dimensionCodeMap.get(oldDimensionCode) || null
           }
         }
-      }
-    } else {
-      // No dimensions, but still create fields if they exist
-      if (originalFields && originalFields.length > 0) {
-        const fieldsToInsert = originalFields.map((field, index) => ({
+
+        return {
           assessment_id: newAssessment.id,
-          dimension_id: null,
+          dimension_id: dimensionId,
           type: field.type,
           content: field.content ?? '',
           order: field.order ?? index + 1,
@@ -216,8 +204,10 @@ export async function POST(
           practice: field.practice ?? false,
           anchors: field.anchors || [],
           insights_table: field.insights_table || null,
-        }))
+        }
+      })
 
+      if (fieldsToInsert.length > 0) {
         const { error: fieldsInsertError } = await supabase
           .from('fields')
           .insert(fieldsToInsert)
