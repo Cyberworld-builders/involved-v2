@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS assignment_fields (
 -- Create indexes for better query performance
 CREATE INDEX IF NOT EXISTS idx_assignment_fields_assignment_id ON assignment_fields(assignment_id);
 CREATE INDEX IF NOT EXISTS idx_assignment_fields_field_id ON assignment_fields(field_id);
-CREATE INDEX IF NOT EXISTS idx_assignment_fields_order ON assignment_fields(assignment_id, order);
+CREATE INDEX IF NOT EXISTS idx_assignment_fields_order ON assignment_fields(assignment_id, "order");
 
 -- Enable Row Level Security
 ALTER TABLE assignment_fields ENABLE ROW LEVEL SECURITY;
