@@ -383,7 +383,8 @@ async function sendEmailViaSES(
   htmlBody: string,
   textBody: string
 ): Promise<EmailDeliveryResult> {
-  // Get and trim credentials to prevent issues with trailing spaces or newlines
+  // Prefer OIDC (AWS_ROLE_ARN) over access keys for security (AWS best practice)
+  const awsRoleArn = process.env.AWS_ROLE_ARN?.trim()
   const awsAccessKeyId = process.env.AWS_ACCESS_KEY_ID?.trim()
   const awsSecretAccessKey = process.env.AWS_SECRET_ACCESS_KEY?.trim()
   // Trim whitespace from region to prevent SDK errors
@@ -395,23 +396,54 @@ async function sendEmailViaSES(
   // Log the sender email for debugging
   console.log('[Email Service] Using sender email:', fromEmail)
   
-  if (!awsAccessKeyId || !awsSecretAccessKey) {
-    throw new Error('AWS credentials not configured (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)')
+  // Check for OIDC or access keys
+  if (!awsRoleArn && (!awsAccessKeyId || !awsSecretAccessKey)) {
+    throw new Error('AWS credentials not configured. Set AWS_ROLE_ARN (preferred) or AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY')
   }
   
-  // Validate credentials don't contain invalid characters
-  if (awsAccessKeyId.length < 16 || awsSecretAccessKey.length < 20) {
-    throw new Error('AWS credentials appear to be invalid (too short)')
+  // Validate access keys if using them (not needed for OIDC)
+  if (!awsRoleArn && awsAccessKeyId && awsSecretAccessKey) {
+    if (awsAccessKeyId.length < 16 || awsSecretAccessKey.length < 20) {
+      throw new Error('AWS credentials appear to be invalid (too short)')
+    }
   }
   
-  // Create SES client with trimmed credentials
-  // Note: AWS SDK handles special characters in credentials, but we ensure they're trimmed
+  // Get credentials - prefer OIDC over access keys
+  let credentials
+  if (awsRoleArn) {
+    try {
+      // Dynamic import to avoid errors in non-Vercel environments
+      const { awsCredentialsProvider } = await import('@vercel/functions/oidc')
+      credentials = awsCredentialsProvider({
+        roleArn: awsRoleArn,
+      })
+      console.log('[Email Service] ✅ Using OIDC credentials (AWS_ROLE_ARN)')
+    } catch (oidcError) {
+      console.warn('[Email Service] ⚠️ OIDC provider not available, falling back to access keys:', oidcError)
+      // Fallback to access keys if OIDC fails (e.g., local development)
+      if (awsAccessKeyId && awsSecretAccessKey) {
+        credentials = {
+          accessKeyId: awsAccessKeyId,
+          secretAccessKey: awsSecretAccessKey,
+        }
+        console.log('[Email Service] Using access keys as fallback')
+      } else {
+        throw new Error('OIDC failed and no access keys available')
+      }
+    }
+  } else {
+    // Use access keys (fallback for local development)
+    credentials = {
+      accessKeyId: awsAccessKeyId!,
+      secretAccessKey: awsSecretAccessKey!,
+    }
+    console.log('[Email Service] ⚠️ Using access keys (consider using AWS_ROLE_ARN for production)')
+  }
+  
+  // Create SES client with credentials (OIDC or access keys)
   const sesClient = new SESClient({
     region: awsRegion,
-    credentials: {
-      accessKeyId: awsAccessKeyId,
-      secretAccessKey: awsSecretAccessKey,
-    },
+    credentials,
     // Add request handler to help with debugging
     requestHandler: {
       requestTimeout: 10000,
@@ -504,18 +536,21 @@ export async function sendEmail(
     throw new Error('to must be a valid email address')
   }
   
-  // Priority order: Resend > AWS SES > SMTP
+  // Priority order: Resend > AWS SES (OIDC preferred) > SMTP
   const resendApiKey = process.env.RESEND_API_KEY?.trim()
+  const awsRoleArn = process.env.AWS_ROLE_ARN?.trim()
   const awsAccessKeyId = process.env.AWS_ACCESS_KEY_ID?.trim()
   const awsSecretAccessKey = process.env.AWS_SECRET_ACCESS_KEY?.trim()
   const useResend = !!resendApiKey
-  const useAwsSes = !!(awsAccessKeyId && awsSecretAccessKey)
+  // Support both OIDC (preferred) and access keys for AWS SES
+  const useAwsSes = !!awsRoleArn || !!(awsAccessKeyId && awsSecretAccessKey)
   const isLocal = process.env.NODE_ENV === 'development' || !process.env.SMTP_HOST
   
   // Log for debugging
   console.log('[Email Service] Configuration check:', {
     useResend: !!resendApiKey,
     useAwsSes,
+    hasRoleArn: !!awsRoleArn,
     hasAccessKey: !!awsAccessKeyId,
     hasSecretKey: !!awsSecretAccessKey,
     nodeEnv: process.env.NODE_ENV,
