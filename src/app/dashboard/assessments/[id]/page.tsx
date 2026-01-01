@@ -4,6 +4,7 @@ import Link from 'next/link'
 import DashboardLayout from '@/components/layout/dashboard-layout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import DuplicateButton from './duplicate-button'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -57,6 +58,7 @@ export default async function AssessmentPage({
             <p className="text-gray-600">Assessment details and actions</p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <DuplicateButton assessmentId={assessment.id} />
             <Link href={`/dashboard/benchmarks/manage/${assessment.id}`}>
               <Button>Manage Benchmarks</Button>
             </Link>
