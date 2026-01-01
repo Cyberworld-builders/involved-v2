@@ -293,7 +293,10 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
       // If error is about missing columns, retry without them
       if (assessmentError) {
         const errorMessage = assessmentError.message || JSON.stringify(assessmentError)
-        const errorCode = (assessmentError as any)?.code || ''
+        // Type guard for Supabase error with code property
+        type SupabaseError = { code?: string; details?: string; hint?: string }
+        const supabaseError = assessmentError as SupabaseError
+        const errorCode = supabaseError?.code || ''
         
         // Check if error is about missing columns
         const isMissingColumnError = 
@@ -330,11 +333,14 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
 
       if (assessmentError) {
         console.error('Assessment update error:', assessmentError)
+        // Type guard for Supabase error with code property
+        type SupabaseError = { code?: string; details?: string; hint?: string }
+        const supabaseError = assessmentError as SupabaseError
         console.error('Error details:', {
           message: assessmentError.message,
-          code: (assessmentError as any)?.code,
-          details: (assessmentError as any)?.details,
-          hint: (assessmentError as any)?.hint,
+          code: supabaseError?.code,
+          details: supabaseError?.details,
+          hint: supabaseError?.hint,
           fullError: JSON.stringify(assessmentError, null, 2)
         })
         console.error('Update data:', updateData)
