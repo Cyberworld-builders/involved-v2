@@ -324,6 +324,10 @@ export default function AssignmentResultsClient({
     } catch {
       instructionText = instructionsField.content
     }
+    // Replace [name] placeholder with target name if available
+    if (targetName) {
+      instructionText = instructionText.replace(/\[name\]/g, targetName)
+    }
   }
 
   let questionCounter = 0

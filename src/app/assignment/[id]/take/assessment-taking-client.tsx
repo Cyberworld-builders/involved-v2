@@ -475,6 +475,10 @@ export default function AssessmentTakingClient({
     } catch {
       instructionText = instructionsField.content
     }
+    // Replace [name] placeholder with target name if available
+    if (targetName) {
+      instructionText = instructionText.replace(/\[name\]/g, targetName)
+    }
   }
 
   return (
