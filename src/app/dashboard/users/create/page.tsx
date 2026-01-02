@@ -3,7 +3,6 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 import UserForm from '@/components/forms/user-form'
 
 interface UserFormData {
@@ -230,8 +229,7 @@ function CreateUserContent() {
         ]
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Page Header */}
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Create User</h1>
@@ -267,23 +265,20 @@ function CreateUserContent() {
           accessLevelOptions={accessLevelOptions}
         />
       </div>
-    </DashboardLayout>
   )
 }
 
 export default function CreateUserPage() {
   return (
     <Suspense fallback={
-      <DashboardLayout>
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">Create New User</h1>
-          </div>
-          <div className="text-center py-12">
-            <p className="text-gray-500">Loading...</p>
-          </div>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-gray-900">Create New User</h1>
         </div>
-      </DashboardLayout>
+        <div className="text-center py-12">
+          <p className="text-gray-500">Loading...</p>
+        </div>
+      </div>
     }>
       <CreateUserContent />
     </Suspense>

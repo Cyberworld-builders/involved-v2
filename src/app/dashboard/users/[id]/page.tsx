@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 import SendInviteButton from './send-invite-button'
 
 interface UserPageProps {
@@ -82,8 +81,7 @@ export default async function UserPage({ params }: UserPageProps) {
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Page Header */}
         <div className="flex justify-between items-center">
           <div>
@@ -193,7 +191,6 @@ export default async function UserPage({ params }: UserPageProps) {
           </Card>
         </div>
       </div>
-    </DashboardLayout>
   )
 }
 

@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 import ProfileInformationUpdateClient from './profile-information-update-client'
 import ProfilePasswordUpdateClient from './profile-password-update-client'
 
@@ -66,19 +65,17 @@ export default async function ProfilePage() {
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Profile Settings</h1>
-          <p className="text-gray-600">Manage your account settings and password</p>
-        </div>
-
-        {/* Profile Information Update */}
-        <ProfileInformationUpdateClient initialProfile={initialProfile} />
-
-        {/* Password Update */}
-        <ProfilePasswordUpdateClient />
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Profile Settings</h1>
+        <p className="text-gray-600">Manage your account settings and password</p>
       </div>
-    </DashboardLayout>
+
+      {/* Profile Information Update */}
+      <ProfileInformationUpdateClient initialProfile={initialProfile} />
+
+      {/* Password Update */}
+      <ProfilePasswordUpdateClient />
+    </div>
   )
 }

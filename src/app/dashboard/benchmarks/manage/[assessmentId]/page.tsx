@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 
 interface BenchmarksIndustryPageProps {
   params: Promise<{
@@ -32,15 +31,13 @@ export default async function BenchmarksIndustryPage({ params }: BenchmarksIndus
 
   if (assessmentError || !assessment) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Assessment Not Found</h1>
-          <p className="text-gray-600 mb-4">The assessment you&apos;re looking for doesn&apos;t exist.</p>
-          <Link href="/dashboard/benchmarks">
-            <Button>Back to Benchmarks</Button>
-          </Link>
-        </div>
-      </DashboardLayout>
+      <div className="text-center py-12">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">Assessment Not Found</h1>
+        <p className="text-gray-600 mb-4">The assessment you&apos;re looking for doesn&apos;t exist.</p>
+        <Link href="/dashboard/benchmarks">
+          <Button>Back to Benchmarks</Button>
+        </Link>
+      </div>
     )
   }
 
@@ -55,8 +52,7 @@ export default async function BenchmarksIndustryPage({ params }: BenchmarksIndus
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Page Header */}
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Benchmarks</h1>
@@ -126,7 +122,6 @@ export default async function BenchmarksIndustryPage({ params }: BenchmarksIndus
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
   )
 }
 

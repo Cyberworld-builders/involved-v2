@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { parseUserSpreadsheet } from '@/lib/utils/spreadsheet-parsing'
@@ -402,6 +401,5 @@ export default function BulkUploadPage() {
           </Card>
         )}
       </div>
-    </DashboardLayout>
   )
 }

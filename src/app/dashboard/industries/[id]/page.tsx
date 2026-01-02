@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 
 interface IndustryPageProps {
   params: Promise<{
@@ -45,8 +44,7 @@ export default async function IndustryPage({ params }: IndustryPageProps) {
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Page Header */}
         <div className="flex justify-between items-center">
           <div>
@@ -84,6 +82,5 @@ export default async function IndustryPage({ params }: IndustryPageProps) {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
   )
 }

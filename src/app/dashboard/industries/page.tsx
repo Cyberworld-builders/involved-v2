@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 import IndustriesListClient from './industries-list-client'
 
 export default async function IndustriesPage() {
@@ -28,8 +27,7 @@ export default async function IndustriesPage() {
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Page Header */}
         <div className="flex justify-between items-center">
           <div>
@@ -106,6 +104,5 @@ export default async function IndustriesPage() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
   )
 }

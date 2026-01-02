@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 import UsersListClient from './users-list-client'
 
 // Force dynamic rendering to prevent caching/redirect loops
@@ -69,8 +68,7 @@ export default async function UsersPage() {
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
           <div>
@@ -175,6 +173,5 @@ export default async function UsersPage() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
   )
 }

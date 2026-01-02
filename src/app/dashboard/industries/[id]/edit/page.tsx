@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 import IndustryForm from '@/components/forms/industry-form'
 import { Database } from '@/types/database'
 
@@ -166,6 +165,5 @@ export default function EditIndustryPage() {
           submitText="Update Industry"
         />
       </div>
-    </DashboardLayout>
   )
 }
