@@ -96,50 +96,43 @@ export default function EditIndustryPage() {
 
   if (isLoadingAuth) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-            <p className="mt-2 text-gray-600">Checking authentication...</p>
-          </div>
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Checking authentication...</p>
         </div>
-      </DashboardLayout>
+      </div>
     )
   }
 
   if (isLoadingIndustry) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-            <p className="mt-2 text-gray-600">Loading industry...</p>
-          </div>
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading industry...</p>
         </div>
-      </DashboardLayout>
+      </div>
     )
   }
 
   if (!industry) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-12">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Industry not found</h3>
-          <p className="text-gray-500 mb-4">The industry you&apos;re looking for doesn&apos;t exist.</p>
-          <button
-            onClick={() => router.push('/dashboard/industries')}
-            className="text-indigo-600 hover:text-indigo-500"
-          >
-            Back to Industries
-          </button>
-        </div>
-      </DashboardLayout>
+      <div className="text-center py-12">
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Industry not found</h3>
+        <p className="text-gray-500 mb-4">The industry you&apos;re looking for doesn&apos;t exist.</p>
+        <button
+          onClick={() => router.push('/dashboard/industries')}
+          className="text-indigo-600 hover:text-indigo-500"
+        >
+          Back to Industries
+        </button>
+      </div>
     )
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Page Header */}
         <div className="flex justify-between items-center">
           <div>
