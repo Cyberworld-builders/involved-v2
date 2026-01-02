@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getResourcePostBySlug } from '@/lib/resources/resources'
@@ -30,19 +29,17 @@ export default async function ResourceDetailPage({
 
   if (!post) {
     return (
-      <DashboardLayout>
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">Resources</h1>
-            <Link href="/dashboard/resources">
-              <Button variant="outline">Back</Button>
-            </Link>
-          </div>
-          <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
-            Resource not found.
-          </div>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-900">Resources</h1>
+          <Link href="/dashboard/resources">
+            <Button variant="outline">Back</Button>
+          </Link>
         </div>
-      </DashboardLayout>
+        <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
+          Resource not found.
+        </div>
+      </div>
     )
   }
 
@@ -164,7 +161,6 @@ export default async function ResourceDetailPage({
           </Card>
         ) : null}
       </div>
-    </DashboardLayout>
   )
 }
 

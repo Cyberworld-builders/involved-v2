@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { RESOURCE_POSTS } from '@/lib/resources/resources'
@@ -25,8 +24,7 @@ export default async function ResourcesPage() {
   )
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Resources</h1>
@@ -74,7 +72,6 @@ export default async function ResourcesPage() {
           </div>
         )}
       </div>
-    </DashboardLayout>
   )
 }
 
