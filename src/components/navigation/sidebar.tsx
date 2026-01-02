@@ -13,9 +13,11 @@ export default function Sidebar({ className, isOpen = true, onClose }: SidebarPr
   const [accessLevel, setAccessLevel] = useState<'member' | 'client_admin' | 'super_admin' | null>(null)
   const [userEmail, setUserEmail] = useState<string>('')
   const [userName, setUserName] = useState<string>('')
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const loadUserProfile = async () => {
+      setIsLoading(true)
       const supabase = createClient()
       const {
         data: { user },
@@ -29,6 +31,7 @@ export default function Sidebar({ className, isOpen = true, onClose }: SidebarPr
           setUserName(profile.name || user.email || '')
         }
       }
+      setIsLoading(false)
     }
 
     loadUserProfile()
@@ -95,8 +98,10 @@ export default function Sidebar({ className, isOpen = true, onClose }: SidebarPr
   ]
 
   // Determine which navigation items to show
-  const navigation: NavigationItem[] =
-    accessLevel === 'member'
+  // Only calculate navigation after access level is loaded to prevent race condition
+  const navigation: NavigationItem[] = isLoading || accessLevel === null
+    ? [] // Don't show any navigation items until access level is determined
+    : accessLevel === 'member'
       ? [...assignmentsNavigation, ...profileNavigation] // Members see My Assignments and Profile
       : [...adminNavigation, ...assignmentsNavigation, ...profileNavigation] // Admins see admin items + My Assignments (if not super_admin) + Profile
 
@@ -115,7 +120,7 @@ export default function Sidebar({ className, isOpen = true, onClose }: SidebarPr
         {/* Logo */}
         <div className="flex h-16 items-center justify-between px-4 border-b border-gray-700">
           <Link
-            href={accessLevel === 'member' ? '/dashboard/assignments' : '/dashboard'}
+            href={isLoading || accessLevel === null || accessLevel === 'member' ? '/dashboard/assignments' : '/dashboard'}
             className="flex items-center space-x-2"
             onClick={() => onClose?.()}
           >
@@ -142,23 +147,36 @@ export default function Sidebar({ className, isOpen = true, onClose }: SidebarPr
 
         {/* Navigation */}
         <nav className="flex-1 space-y-1 px-2 py-4" role="navigation" aria-label="Dashboard navigation">
-          {navigation.map((item) => {
-            const isActive = pathname === item.href
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                onClick={() => onClose?.()}
-                className={cn(
-                  'group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors',
-                  isActive ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                )}
-              >
-                <span className="mr-3 text-lg">{item.icon}</span>
-                {item.name}
-              </Link>
-            )
-          })}
+          {isLoading ? (
+            // Show loading skeleton while checking access
+            <div className="space-y-1">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="h-10 bg-gray-800 rounded-md animate-pulse"
+                  aria-hidden="true"
+                />
+              ))}
+            </div>
+          ) : (
+            navigation.map((item) => {
+              const isActive = pathname === item.href
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  onClick={() => onClose?.()}
+                  className={cn(
+                    'group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors',
+                    isActive ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                  )}
+                >
+                  <span className="mr-3 text-lg">{item.icon}</span>
+                  {item.name}
+                </Link>
+              )
+            })
+          )}
         </nav>
 
         {/* User section */}
