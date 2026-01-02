@@ -36,6 +36,8 @@ export default async function ResourceDetailPage({
     )
   }
 
+  // Note: Auth check is done in layout.tsx, but we still need supabase client for storage
+  const supabase = await createClient()
   const { data: signed, error: signedError } = await supabase.storage
     .from(post.video.bucket)
     .createSignedUrl(post.video.path, 60 * 60) // 1 hour
