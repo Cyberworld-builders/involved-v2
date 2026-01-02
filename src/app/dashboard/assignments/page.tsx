@@ -50,13 +50,11 @@ export default async function AssignmentsPage() {
 
   if (!userProfile) {
     return (
-      <DashboardLayout>
-        <div className="space-y-6">
-          <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
-            Profile not found. Please contact support.
-          </div>
+      <div className="space-y-6">
+        <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
+          Profile not found. Please contact support.
         </div>
-      </DashboardLayout>
+      </div>
     )
   }
 
@@ -86,8 +84,7 @@ export default async function AssignmentsPage() {
   )
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">My Assignments</h1>
           <p className="text-gray-600">View and complete your assigned assessments</p>
