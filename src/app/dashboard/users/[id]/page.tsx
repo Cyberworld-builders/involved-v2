@@ -63,15 +63,13 @@ export default async function UserPage({ params }: UserPageProps) {
 
   if (error || !profile) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">User Not Found</h1>
-          <p className="text-gray-600 mb-4">The user you&apos;re looking for doesn&apos;t exist.</p>
-          <Link href="/dashboard/users">
-            <Button>Back to Users</Button>
-          </Link>
-        </div>
-      </DashboardLayout>
+      <div className="text-center py-12">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">User Not Found</h1>
+        <p className="text-gray-600 mb-4">The user you&apos;re looking for doesn&apos;t exist.</p>
+        <Link href="/dashboard/users">
+          <Button>Back to Users</Button>
+        </Link>
+      </div>
     )
   }
 

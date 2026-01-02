@@ -174,27 +174,23 @@ function CreateUserContent() {
 
   if (isLoadingAuth) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-            <p className="mt-2 text-gray-600">Checking authentication...</p>
-          </div>
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Checking authentication...</p>
         </div>
-      </DashboardLayout>
+      </div>
     )
   }
 
   if (isLoadingData) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-            <p className="mt-2 text-gray-600">Loading form data...</p>
-          </div>
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading form data...</p>
         </div>
-      </DashboardLayout>
+      </div>
     )
   }
 
@@ -204,12 +200,10 @@ function CreateUserContent() {
     currentUserAccessLevel !== 'client_admin'
   ) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Restricted</h1>
-          <p className="text-gray-600">You don&apos;t have permission to create users.</p>
-        </div>
-      </DashboardLayout>
+      <div className="text-center py-12">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Restricted</h1>
+        <p className="text-gray-600">You don&apos;t have permission to create users.</p>
+      </div>
     )
   }
 
