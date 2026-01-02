@@ -1,11 +1,10 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getResourcePostBySlug } from '@/lib/resources/resources'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { createClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -18,14 +17,8 @@ export default async function ResourceDetailPage({
   const { slug } = await params
   const post = getResourcePostBySlug(slug)
 
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/auth/login')
-  }
+  // Note: Auth check is done in layout.tsx, so we can skip it here
+  // This eliminates a duplicate getUserProfile() call, improving performance
 
   if (!post) {
     return (

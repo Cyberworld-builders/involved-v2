@@ -1,5 +1,3 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -9,16 +7,9 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export default async function ResourcesPage() {
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/auth/login')
-  }
-
+  // Note: Auth check is done in layout.tsx, so we can skip it here
+  // This eliminates a duplicate getUserProfile() call, improving performance
+  
   const posts = [...RESOURCE_POSTS].sort((a, b) =>
     (b.publishedAt || '').localeCompare(a.publishedAt || '')
   )
