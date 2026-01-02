@@ -6,52 +6,44 @@ CREATE EXTENSION IF NOT EXISTS pg_cron;
 -- This is needed to call our Edge Function
 CREATE EXTENSION IF NOT EXISTS pg_net;
 
--- Store project URL in Vault for secure access
--- Note: Replace 'YOUR_PROJECT_REF' with your actual Supabase project reference
--- The project URL format is: https://YOUR_PROJECT_REF.supabase.co
--- You can find this in your Supabase dashboard under Settings > API
-DO $$
-DECLARE
-  project_url TEXT;
-BEGIN
-  -- Get project URL from Supabase settings or use environment variable
-  -- For now, we'll use a placeholder that needs to be updated
-  project_url := current_setting('app.settings.supabase_url', true);
-  
-  -- If not set, use a default pattern (will need manual update)
-  IF project_url IS NULL OR project_url = '' THEN
-    -- This will need to be updated with your actual project URL
-    -- You can update it later via: UPDATE vault.secrets SET secret = 'https://your-project.supabase.co' WHERE name = 'project_url';
-    project_url := 'https://YOUR_PROJECT_REF.supabase.co';
-  END IF;
-  
-  -- Store in Vault (will create if doesn't exist, update if exists)
-  INSERT INTO vault.secrets (name, secret)
-  VALUES ('reminder_project_url', project_url)
-  ON CONFLICT (name) DO UPDATE SET secret = EXCLUDED.secret;
-END $$;
-
--- Store service role key in Vault for secure access
--- Note: This should be set via Supabase Dashboard > Settings > API > service_role key
--- Or via: UPDATE vault.secrets SET secret = 'your-service-role-key' WHERE name = 'service_role_key';
--- IMPORTANT: Never commit the service role key to version control
-DO $$
-BEGIN
-  -- Check if service role key is already stored
-  IF NOT EXISTS (SELECT 1 FROM vault.secrets WHERE name = 'reminder_service_role_key') THEN
-    -- Insert placeholder (must be updated manually)
-    INSERT INTO vault.secrets (name, secret)
-    VALUES ('reminder_service_role_key', 'YOUR_SERVICE_ROLE_KEY_HERE');
-    
-    RAISE NOTICE '⚠️  Please update the service_role_key in vault.secrets:';
-    RAISE NOTICE '    UPDATE vault.secrets SET secret = ''your-actual-key'' WHERE name = ''reminder_service_role_key'';';
-  END IF;
-END $$;
+-- Note: Vault setup requires manual configuration
+-- After running this migration, you need to manually set up Vault secrets:
+-- 1. Go to Supabase Dashboard > Settings > Vault
+-- 2. Create secrets:
+--    - Name: 'reminder_project_url'
+--      Value: 'https://YOUR_PROJECT_REF.supabase.co' (replace with your actual project URL)
+--    - Name: 'reminder_service_role_key'
+--      Value: 'YOUR_SERVICE_ROLE_KEY' (get from Settings > API > service_role key)
+--
+-- Or use SQL (requires Vault permissions):
+--   INSERT INTO vault.secrets (name, secret)
+--   VALUES ('reminder_project_url', 'https://cbpomvoxtxvsatkozhng.supabase.co')
+--   ON CONFLICT (name) DO UPDATE SET secret = EXCLUDED.secret;
+--
+--   INSERT INTO vault.secrets (name, secret)
+--   VALUES ('reminder_service_role_key', 'your-service-role-key-here')
+--   ON CONFLICT (name) DO UPDATE SET secret = EXCLUDED.secret;
 
 -- Schedule reminder job to run daily at 9 AM UTC
 -- Cron syntax: minute hour day-of-month month day-of-week
 -- '0 9 * * *' means: at 9:00 AM UTC every day
 -- To change the schedule, update the cron expression below
+--
+-- IMPORTANT: Before this cron job will work, you must set up Vault secrets:
+-- 1. Go to Supabase Dashboard > Settings > Vault
+-- 2. Create two secrets:
+--    - Name: 'reminder_project_url'
+--      Value: 'https://cbpomvoxtxvsatkozhng.supabase.co' (your project URL)
+--    - Name: 'reminder_service_role_key'
+--      Value: (your service_role key from Settings > API)
+--
+-- Or use SQL Editor (requires appropriate permissions):
+--   INSERT INTO vault.secrets (name, secret)
+--   VALUES 
+--     ('reminder_project_url', 'https://cbpomvoxtxvsatkozhng.supabase.co'),
+--     ('reminder_service_role_key', 'your-service-role-key-here')
+--   ON CONFLICT (name) DO UPDATE SET secret = EXCLUDED.secret;
+--
 SELECT cron.schedule(
   'send-assignment-reminders',
   '0 9 * * *', -- 9 AM UTC every day
