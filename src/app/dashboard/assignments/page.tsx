@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getUserProfile } from '@/lib/utils/get-user-profile'
 import { Database } from '@/types/database'
@@ -268,6 +267,5 @@ export default async function AssignmentsPage() {
           </Card>
         )}
       </div>
-    </DashboardLayout>
   )
 }

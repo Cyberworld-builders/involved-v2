@@ -8,14 +8,26 @@ import { cn } from '@/lib/utils'
 import { NavigationItem, SidebarProps } from './types'
 import { getUserProfile } from '@/lib/utils/get-user-profile'
 
-export default function Sidebar({ className, isOpen = true, onClose }: SidebarProps) {
+export default function Sidebar({ className, isOpen = true, onClose, userProfile }: SidebarProps) {
   const pathname = usePathname()
-  const [accessLevel, setAccessLevel] = useState<'member' | 'client_admin' | 'super_admin' | null>(null)
-  const [userEmail, setUserEmail] = useState<string>('')
-  const [userName, setUserName] = useState<string>('')
-  const [isLoading, setIsLoading] = useState(true)
+  const [accessLevel, setAccessLevel] = useState<'member' | 'client_admin' | 'super_admin' | null>(
+    userProfile?.access_level || null
+  )
+  const [userEmail, setUserEmail] = useState<string>(userProfile?.email || '')
+  const [userName, setUserName] = useState<string>(userProfile?.name || '')
+  const [isLoading, setIsLoading] = useState(!userProfile) // Only load if profile not provided
 
   useEffect(() => {
+    // Skip fetching if profile is provided as prop (performance optimization)
+    if (userProfile) {
+      setAccessLevel(userProfile.access_level)
+      setUserEmail(userProfile.email)
+      setUserName(userProfile.name)
+      setIsLoading(false)
+      return
+    }
+
+    // Fallback: fetch profile if not provided (backward compatibility)
     const loadUserProfile = async () => {
       setIsLoading(true)
       const supabase = createClient()
@@ -35,7 +47,7 @@ export default function Sidebar({ className, isOpen = true, onClose }: SidebarPr
     }
 
     loadUserProfile()
-  }, [])
+  }, [userProfile])
 
   // Base navigation items (available to all users)
   const profileNavigation: NavigationItem[] = [

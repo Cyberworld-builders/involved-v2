@@ -28,8 +28,7 @@ export default async function AssessmentsPage() {
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
@@ -116,7 +115,6 @@ export default async function AssessmentsPage() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
   )
 }
 

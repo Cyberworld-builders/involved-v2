@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 import ClientsTable from './clients-table'
 
 export default async function ClientsPage() {
@@ -86,8 +85,7 @@ export default async function ClientsPage() {
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
@@ -183,6 +181,5 @@ export default async function ClientsPage() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
   )
 }

@@ -2,12 +2,14 @@
 
 import { ReactNode, useState } from 'react'
 import Sidebar from '@/components/navigation/sidebar'
+import { UserProfile } from '@/components/navigation/types'
 
 interface DashboardLayoutProps {
   children: ReactNode
+  userProfile?: UserProfile // Optional: pass profile from server layout
 }
 
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
+export default function DashboardLayout({ children, userProfile }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
@@ -15,6 +17,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <Sidebar 
         isOpen={sidebarOpen} 
         onClose={() => setSidebarOpen(false)}
+        userProfile={userProfile}
       />
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top navigation bar */}
