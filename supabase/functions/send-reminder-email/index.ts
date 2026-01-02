@@ -141,11 +141,74 @@ serve(async (req) => {
     }
 
     // Prepare AWS SES credentials
+    // Priority: AssumeRole (if ROLE_ARN + EXTERNAL_ID) > Access Keys
     let credentials
+    
     if (awsRoleArn) {
-      // For OIDC, we'd need to use Vercel's OIDC provider
-      // In Edge Functions, we'll use access keys as fallback
-      // Note: OIDC in Edge Functions requires additional setup
+      // Try to assume role using STS (requires initial credentials or OIDC)
+      const awsExternalId = Deno.env.get('AWS_EXTERNAL_ID')
+      
+      if (awsExternalId) {
+        try {
+          // Import STS client for role assumption
+          const { STSClient, AssumeRoleCommand } = await import('https://esm.sh/@aws-sdk/client-sts@3')
+          
+          // Create STS client with initial credentials (if available) or use default chain
+          const stsClient = new STSClient({
+            region: awsRegion,
+            // If we have access keys, use them to assume the role
+            // Otherwise, rely on default credential chain (e.g., from environment)
+            credentials: (awsAccessKeyId && awsSecretAccessKey) ? {
+              accessKeyId: awsAccessKeyId,
+              secretAccessKey: awsSecretAccessKey,
+            } : undefined,
+          })
+          
+          // Assume the role
+          const assumeRoleResponse = await stsClient.send(new AssumeRoleCommand({
+            RoleArn: awsRoleArn,
+            RoleSessionName: `supabase-edge-function-${Date.now()}`,
+            ExternalId: awsExternalId,
+            DurationSeconds: 3600, // 1 hour
+          }))
+          
+          if (assumeRoleResponse.Credentials) {
+            credentials = {
+              accessKeyId: assumeRoleResponse.Credentials.AccessKeyId!,
+              secretAccessKey: assumeRoleResponse.Credentials.SecretAccessKey!,
+              sessionToken: assumeRoleResponse.Credentials.SessionToken!,
+            }
+            console.log('✅ Assumed AWS IAM role via STS')
+          } else {
+            throw new Error('Failed to assume role: No credentials returned')
+          }
+        } catch (stsError) {
+          console.warn('⚠️ Failed to assume role, falling back to access keys:', stsError)
+          // Fallback to access keys if role assumption fails
+          if (awsAccessKeyId && awsSecretAccessKey) {
+            credentials = {
+              accessKeyId: awsAccessKeyId,
+              secretAccessKey: awsSecretAccessKey,
+            }
+            console.log('✅ Using AWS SES access keys (fallback)')
+          } else {
+            throw new Error(`Failed to assume role and no access keys available: ${stsError instanceof Error ? stsError.message : 'Unknown error'}`)
+          }
+        }
+      } else {
+        // No external ID, use access keys directly
+        if (awsAccessKeyId && awsSecretAccessKey) {
+          credentials = {
+            accessKeyId: awsAccessKeyId,
+            secretAccessKey: awsSecretAccessKey,
+          }
+          console.log('✅ Using AWS SES access keys (no EXTERNAL_ID provided)')
+        } else {
+          throw new Error('AWS_ROLE_ARN set but no AWS_EXTERNAL_ID or access keys available')
+        }
+      }
+    } else {
+      // No role ARN, use access keys directly
       if (awsAccessKeyId && awsSecretAccessKey) {
         credentials = {
           accessKeyId: awsAccessKeyId,
@@ -153,14 +216,8 @@ serve(async (req) => {
         }
         console.log('✅ Using AWS SES access keys')
       } else {
-        throw new Error('AWS_ROLE_ARN set but no access keys available for fallback')
+        throw new Error('No AWS credentials configured (need AWS_ROLE_ARN+EXTERNAL_ID or access keys)')
       }
-    } else {
-      credentials = {
-        accessKeyId: awsAccessKeyId!,
-        secretAccessKey: awsSecretAccessKey!,
-      }
-      console.log('✅ Using AWS SES access keys')
     }
 
     // Create SES client
