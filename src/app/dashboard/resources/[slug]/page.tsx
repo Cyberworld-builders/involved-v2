@@ -58,8 +58,7 @@ export default async function ResourceDetailPage({
   const signedUrl = signed?.signedUrl || null
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <nav className="flex" aria-label="Breadcrumb">
           <ol className="flex items-center space-x-2 text-sm">
             <li>
