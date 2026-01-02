@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 import CreateAssignmentClient from './create-assignment-client'
 
 interface CreateAssignmentPageProps {
@@ -45,8 +44,6 @@ export default async function CreateAssignmentPage({ params }: CreateAssignmentP
   }
 
   return (
-    <DashboardLayout>
-      <CreateAssignmentClient clientId={clientId} />
-    </DashboardLayout>
+    <CreateAssignmentClient clientId={clientId} />
   )
 }

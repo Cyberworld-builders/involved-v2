@@ -123,3 +123,4 @@ After cleanup and redeploy, check the logs for:
 ⚠️ RESEND_API_KEY (all environments) - OPTIONAL (remove if using AWS SES exclusively)
 ⚠️ SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_SECURE (Preview, Production) - OPTIONAL (remove if using AWS SES exclusively)
 ```
+

@@ -109,3 +109,4 @@ After deploying, check the logs to verify which email service is being used:
 
 - [Terraform OIDC Setup](../../legacy/infrastructure/vercel-oidc.tf)
 - [AWS SES Production Configuration](../../legacy/infrastructure/ses-production.tf)
+

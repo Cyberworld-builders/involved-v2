@@ -60,3 +60,4 @@ CREATE POLICY "Only system can update assignment fields" ON assignment_fields
 -- Only system can delete assignment_fields (via API with admin client)
 CREATE POLICY "Only system can delete assignment fields" ON assignment_fields
   FOR DELETE USING (false);
+

@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 import AssessmentsTable from './assessments-table'
 
 export default async function AssessmentsPage() {

@@ -111,3 +111,4 @@ WHERE j.jobname = 'send-assignment-reminders';
 
 -- Add helpful comments
 COMMENT ON VIEW reminder_job_status IS 'Monitor the status of the reminder cron job. Check this view to see if reminders are running successfully.';
+

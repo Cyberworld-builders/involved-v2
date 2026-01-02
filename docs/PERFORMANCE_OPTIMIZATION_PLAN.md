@@ -155,3 +155,4 @@ Pages that need profile data for business logic (keep fetch, but optimize):
 - `src/app/dashboard/assignments/page.tsx` - needs access_level for redirect
 - `src/app/dashboard/clients/page.tsx` - needs access_level and client_id
 - `src/app/dashboard/page.tsx` - needs access_level for redirect
+

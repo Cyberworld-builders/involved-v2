@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 import { Database } from '@/types/database'
 import { parseBenchmarkSpreadsheet } from '@/lib/utils/spreadsheet-parsing'
 
@@ -359,31 +358,26 @@ export default function BenchmarksManageClient({ assessmentId, industryId }: Ben
 
   if (isLoading) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-12">
-          <p className="text-gray-600">Loading benchmarks...</p>
-        </div>
-      </DashboardLayout>
+      <div className="text-center py-12">
+        <p className="text-gray-600">Loading benchmarks...</p>
+      </div>
     )
   }
 
   if (!assessment || !industry) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Not Found</h1>
-          <p className="text-gray-600 mb-4">Assessment or industry not found.</p>
-          <Link href="/dashboard/benchmarks">
-            <Button>Back to Benchmarks</Button>
-          </Link>
-        </div>
-      </DashboardLayout>
+      <div className="text-center py-12">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">Not Found</h1>
+        <p className="text-gray-600 mb-4">Assessment or industry not found.</p>
+        <Link href="/dashboard/benchmarks">
+          <Button>Back to Benchmarks</Button>
+        </Link>
+      </div>
     )
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Page Header */}
         <div className="flex justify-between items-start">
           <div>
@@ -542,7 +536,6 @@ export default function BenchmarksManageClient({ assessmentId, industryId }: Ben
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
   )
 }
 

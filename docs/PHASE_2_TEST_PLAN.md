@@ -51,8 +51,6 @@ Admins can create new assessments with comprehensive configuration options inclu
   - Background Image (image upload, optional)
   - Primary Color (color picker, optional)
   - Accent Color (color picker, optional)
-  - Split Questions into Pages (boolean)
-  - Number of Questions per Page (number, shown when split enabled)
   - 360 Assessment (boolean)
   - Number of Questions (number, shown when 360 is false)
 - ✅ Rich text fields render with formatting on assessment page
@@ -93,14 +91,6 @@ Admins can create new assessments with comprehensive configuration options inclu
 3. Verify "Number of Questions" field is hidden
 4. Save assessment
 5. Verify assessment is marked as 360 type
-
-**Scenario 1.1.4: Create Assessment with Page Splitting**
-1. Create new assessment
-2. Enable "Split Questions into Pages"
-3. Verify "Number of Questions per Page" field appears
-4. Set value to 5
-5. Save assessment
-6. Verify pagination settings are saved
 
 **Demo Article Outline:**
 - Title: "Creating Your First Assessment"
@@ -326,15 +316,7 @@ Admins can preview assessments before publishing to see exactly how they will ap
 5. Verify navigation works
 6. Verify styling matches preview
 
-**Scenario 1.5.2: Preview with Pagination**
-1. Assessment with page splitting enabled
-2. Preview assessment
-3. Verify questions split across pages
-4. Click "Next" button
-5. Verify scrolls to top of questions section
-6. Verify pagination controls work
-
-**Scenario 1.5.3: Preview with Branding**
+**Scenario 1.5.2: Preview with Branding**
 1. Assessment with logo and colors
 2. Preview assessment
 3. Verify logo displays
@@ -1141,3 +1123,4 @@ After Phase 2 testing:
 **Last Updated:** January 2, 2026  
 **Author:** Development Team  
 **Status:** Draft for Review
+

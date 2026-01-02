@@ -95,3 +95,4 @@ export default async function AssignmentCompletePage({ params, searchParams }: A
 
   return <AssignmentCompleteClient assignment={assignment} username={username} />
 }
+

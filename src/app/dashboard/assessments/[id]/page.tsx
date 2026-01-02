@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import DuplicateButton from './duplicate-button'
@@ -33,25 +32,22 @@ export default async function AssessmentPage({
 
   if (error || !assessment) {
     return (
-      <DashboardLayout>
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">Assessment</h1>
-            <Link href="/dashboard/assessments">
-              <Button variant="outline">Back to Assessments</Button>
-            </Link>
-          </div>
-          <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
-            Failed to load assessment.
-          </div>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-900">Assessment</h1>
+          <Link href="/dashboard/assessments">
+            <Button variant="outline">Back to Assessments</Button>
+          </Link>
         </div>
-      </DashboardLayout>
+        <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
+          Failed to load assessment.
+        </div>
+      </div>
     )
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{assessment.title}</h1>
@@ -108,6 +104,5 @@ export default async function AssessmentPage({
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
   )
 }

@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 import ClientForm from '@/components/forms/client-form'
 
 interface ClientFormData {
@@ -112,37 +111,32 @@ export default function EditClientPage() {
 
   if (isLoadingClient) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-            <p className="mt-2 text-gray-600">Loading client...</p>
-          </div>
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading client...</p>
         </div>
-      </DashboardLayout>
+      </div>
     )
   }
 
   if (!client) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Client Not Found</h1>
-          <p className="text-gray-600 mb-4">The client you&apos;re looking for doesn&apos;t exist.</p>
-          <button
-            onClick={() => router.push('/dashboard/clients')}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
-          >
-            Back to Clients
-          </button>
-        </div>
-      </DashboardLayout>
+      <div className="text-center py-12">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">Client Not Found</h1>
+        <p className="text-gray-600 mb-4">The client you&apos;re looking for doesn&apos;t exist.</p>
+        <button
+          onClick={() => router.push('/dashboard/clients')}
+          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+        >
+          Back to Clients
+        </button>
+      </div>
     )
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Page Header */}
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{client.name}: Edit</h1>
@@ -176,6 +170,5 @@ export default function EditClientPage() {
           submitText="Save Changes"
         />
       </div>
-    </DashboardLayout>
   )
 }

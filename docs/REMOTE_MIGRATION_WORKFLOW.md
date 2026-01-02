@@ -116,3 +116,4 @@ supabase db push
 ```
 
 This will apply all three migrations to staging. PostgREST will automatically refresh its schema cache.
+

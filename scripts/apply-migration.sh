@@ -17,3 +17,4 @@ supabase migration list
 
 echo ""
 echo "💡 Tip: If you still see schema cache errors, wait a few seconds for PostgREST to fully initialize."
+

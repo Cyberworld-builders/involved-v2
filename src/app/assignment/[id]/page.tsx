@@ -171,3 +171,4 @@ export default async function AssignmentStagePage({ params, searchParams }: Assi
 
   return <AssignmentStageClient assignment={assignment} username={username} />
 }
+

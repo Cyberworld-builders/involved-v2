@@ -1135,45 +1135,6 @@ export default function AssessmentForm({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Split Questions */}
-            <div>
-              <label htmlFor="split_questions" className="block text-sm font-medium text-gray-900 mb-2">
-                Split Questions into Pages?
-              </label>
-              <p className="text-sm text-gray-500 mb-3">
-                If enabled, questions will be split across multiple pages.
-              </p>
-              <select
-                id="split_questions"
-                value={formData.split_questions ? '1' : '0'}
-                onChange={(e) => handleInputChange('split_questions', e.target.value === '1')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              >
-                <option value="0">No</option>
-                <option value="1">Yes</option>
-              </select>
-            </div>
-
-            {/* Questions Per Page */}
-            {formData.split_questions && (
-              <div>
-                <label htmlFor="questions_per_page" className="block text-sm font-medium text-gray-900 mb-2">
-                  Number of Questions per Page
-                </label>
-                <p className="text-sm text-gray-500 mb-3">
-                  How many questions to show on each page.
-                </p>
-                <input
-                  type="number"
-                  id="questions_per_page"
-                  value={formData.questions_per_page}
-                  onChange={(e) => handleInputChange('questions_per_page', parseInt(e.target.value) || 10)}
-                  min={1}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-            )}
-
             {/* Timed */}
             <div>
               <label htmlFor="timed" className="block text-sm font-medium text-gray-900 mb-2">

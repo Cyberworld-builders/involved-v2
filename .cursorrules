@@ -35,3 +35,4 @@ PostgREST caches the database schema. After migrations add columns/tables, the c
 - Never skip migration numbers
 
 See `docs/MIGRATION_WORKFLOW.md` for complete guide.
+

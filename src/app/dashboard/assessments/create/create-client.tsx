@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 import AssessmentForm, { AssessmentFormData } from '@/components/forms/assessment-form'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
@@ -200,8 +199,7 @@ export default function CreateAssessmentClient() {
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Page Header */}
         <div className="flex justify-between items-center">
           <div>
@@ -231,6 +229,5 @@ export default function CreateAssessmentClient() {
           submitText="Create Assessment"
         />
       </div>
-    </DashboardLayout>
   )
 }

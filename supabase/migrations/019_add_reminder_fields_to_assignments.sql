@@ -21,3 +21,4 @@ CREATE INDEX IF NOT EXISTS idx_assignments_next_reminder ON assignments(next_rem
 COMMENT ON COLUMN assignments.reminder IS 'Whether email reminders are enabled for this assignment';
 COMMENT ON COLUMN assignments.reminder_frequency IS 'Frequency string for reminders (e.g., "+1 week", "+2 weeks", "+3 weeks", "+1 month")';
 COMMENT ON COLUMN assignments.next_reminder IS 'Timestamp for when the next reminder email should be sent. Calculated from reminder_frequency when assignment is created.';
+

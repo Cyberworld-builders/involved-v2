@@ -32,3 +32,4 @@ CREATE INDEX IF NOT EXISTS idx_profiles_status ON profiles(status);
 
 -- Update existing profiles to have 'active' status
 UPDATE profiles SET status = 'active' WHERE status IS NULL;
+

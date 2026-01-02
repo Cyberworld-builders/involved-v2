@@ -116,3 +116,4 @@ After implementing fixes:
 3. Check that profile is only fetched once
 4. Monitor network tab for redundant requests
 5. Verify navigation items appear immediately (no flash)
+

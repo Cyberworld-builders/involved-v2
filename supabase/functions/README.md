@@ -216,3 +216,4 @@ curl -X POST http://localhost:54321/functions/v1/send-reminders \
 - Use AWS IAM roles (OIDC) instead of access keys when possible
 - Regularly rotate credentials
 - Monitor function logs for suspicious activity
+

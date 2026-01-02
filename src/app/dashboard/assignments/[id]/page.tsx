@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 import { getUserProfile } from '@/lib/utils/get-user-profile'
 import { Database } from '@/types/database'
 
@@ -55,15 +54,13 @@ export default async function AssignmentDetailPage({ params }: AssignmentPagePro
 
   if (assignmentError || !assignment) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Assignment Not Found</h1>
-          <p className="text-gray-600 mb-4">The assignment you&apos;re looking for doesn&apos;t exist.</p>
-          <Link href="/dashboard/assignments">
-            <Button>Back to Assignments</Button>
-          </Link>
-        </div>
-      </DashboardLayout>
+      <div className="text-center py-12">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">Assignment Not Found</h1>
+        <p className="text-gray-600 mb-4">The assignment you&apos;re looking for doesn&apos;t exist.</p>
+        <Link href="/dashboard/assignments">
+          <Button>Back to Assignments</Button>
+        </Link>
+      </div>
     )
   }
 
@@ -83,15 +80,13 @@ export default async function AssignmentDetailPage({ params }: AssignmentPagePro
 
   if (!canAccess) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
-          <p className="text-gray-600 mb-4">You don&apos;t have permission to view this assignment.</p>
-          <Link href="/dashboard/assignments">
-            <Button>Back to Assignments</Button>
-          </Link>
-        </div>
-      </DashboardLayout>
+      <div className="text-center py-12">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
+        <p className="text-gray-600 mb-4">You don&apos;t have permission to view this assignment.</p>
+        <Link href="/dashboard/assignments">
+          <Button>Back to Assignments</Button>
+        </Link>
+      </div>
     )
   }
 
@@ -99,8 +94,7 @@ export default async function AssignmentDetailPage({ params }: AssignmentPagePro
   const assignmentAssessment = assignment.assessment as Assessment
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Page Header */}
         <div className="flex justify-between items-center">
           <div>
@@ -273,6 +267,6 @@ export default async function AssignmentDetailPage({ params }: AssignmentPagePro
           )}
         </div>
       </div>
-    </DashboardLayout>
   )
 }
+

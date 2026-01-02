@@ -57,3 +57,4 @@ CREATE POLICY "Admins can view answers for their clients" ON answers
 
 -- Note: Additional admin policies can be added based on business logic
 -- For now, admins can view answers through the client relationship policy above
+

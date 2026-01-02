@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 import AssessmentForm, { AssessmentFormData, QuestionType } from '@/components/forms/assessment-form'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
@@ -463,31 +462,26 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
 
   if (isLoadingData) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-12">
-          <p className="text-gray-600">Loading assessment...</p>
-        </div>
-      </DashboardLayout>
+      <div className="text-center py-12">
+        <p className="text-gray-600">Loading assessment...</p>
+      </div>
     )
   }
 
   if (!initialData) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Assessment Not Found</h1>
-          <p className="text-gray-600 mb-4">The assessment you&apos;re looking for doesn&apos;t exist.</p>
-          <Link href="/dashboard/assessments">
-            <Button>Back to Assessments</Button>
-          </Link>
-        </div>
-      </DashboardLayout>
+      <div className="text-center py-12">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">Assessment Not Found</h1>
+        <p className="text-gray-600 mb-4">The assessment you&apos;re looking for doesn&apos;t exist.</p>
+        <Link href="/dashboard/assessments">
+          <Button>Back to Assessments</Button>
+        </Link>
+      </div>
     )
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Page Header */}
         <div className="flex justify-between items-center">
           <div>
@@ -529,7 +523,6 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
           existingBackgroundUrl={existingBackgroundUrl}
         />
       </div>
-    </DashboardLayout>
   )
 }
 

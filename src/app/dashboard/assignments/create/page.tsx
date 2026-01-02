@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 import { getUserProfile } from '@/lib/utils/get-user-profile'
 import CreateAssignmentClient from './create-assignment-client'
 
@@ -27,8 +26,7 @@ export default async function CreateAssignmentPage() {
   }
 
   return (
-    <DashboardLayout>
-      <CreateAssignmentClient />
-    </DashboardLayout>
+    <CreateAssignmentClient />
   )
 }
+

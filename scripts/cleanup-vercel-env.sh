@@ -40,3 +40,4 @@ echo "1. Verify AWS_ROLE_ARN is set correctly in Vercel Dashboard"
 echo "   Expected: arn:aws:iam::068732175988:role/talent-assessment-vercel-ses-role"
 echo "2. Redeploy your application"
 echo "3. Check logs to confirm OIDC is being used (look for 'Using OIDC credentials')"
+
