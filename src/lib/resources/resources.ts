@@ -1200,6 +1200,510 @@ The list is sorted alphabetically by name for easy browsing.
 `,
     video: { bucket: 'resources-videos', path: 'phase-1/industries.mp4' },
   },
+  {
+    slug: 'create-360-assessment',
+    title: 'Creating a 360 Assessment: Dimensions, Fields, and Anchors',
+    description:
+      'Complete guide to creating a 360 assessment from scratch: setting up dimensions, adding questions with anchors, and configuring assessment settings.',
+    publishedAt: '2026-01-01',
+    tags: ['Assessments', 'Phase 2', '360 Assessment', 'Fields', 'Dimensions', 'Anchors'],
+    bodyMarkdown: `
+## Overview
+
+This guide walks you through creating a complete **360 assessment** from start to finish:
+
+- Create a new assessment and configure it as a 360 assessment
+- Add and organize **dimensions** (assessment categories)
+- Add **fields** (questions) of different types
+- Configure **anchors** (rating options) for multiple choice and slider questions
+- Use anchor templates for quick setup
+- Preview and publish your assessment
+
+> **360 Assessment**:** A 360 assessment collects feedback from multiple raters (peers, managers, direct reports, self) about a target individual. All questions are shown to all participants.
+
+---
+
+## Prerequisites
+
+- You are signed in as a user with permission to create assessments (typically a super admin or client admin).
+- You understand the difference between:
+  - **360 Assessment**: All questions shown to all participants
+  - **Non-360 Assessment**: Random subset of questions shown to each participant
+- You have a plan for:
+  - Assessment structure (dimensions/categories)
+  - Question types and content
+  - Rating scales (anchors)
+
+---
+
+## Step 1: Create the Assessment
+
+### Navigate to Assessment Creation
+
+1. Go to **Dashboard → Assessments**
+2. Click **Create Assessment** (top right button)
+
+### Fill in Assessment Details
+
+On the **Details** tab, configure:
+
+**Title** (required)
+- Enter a clear, descriptive name
+- Example: "Leadership 360 Assessment", "Manager Performance Review"
+- This appears in assessment lists and assignment screens
+
+**Description** (optional but recommended)
+- Use the rich text editor to add formatted content
+- Explain what the assessment measures and who it's for
+- Can include instructions, context, or background information
+- Supports formatting: bold, italic, lists, links, etc.
+
+**360 Assessment** (required)
+- Select **Yes** to create a 360 assessment
+- When set to Yes:
+  - All questions are shown to all participants
+  - No "Number of Questions" field appears (all questions are included)
+- When set to No:
+  - A "Number of Questions" field appears
+  - Each participant gets a random subset of questions
+
+**Logo** (optional)
+- Upload a logo image for the assessment header
+- Accepted formats: PNG, JPG, SVG, etc.
+- Best practices:
+  - Use high-resolution image (at least 200x200 pixels)
+  - Transparent background (PNG) works best
+  - Keep file size reasonable (under 2MB)
+
+**Background Image** (optional)
+- Upload a background image for the assessment header
+- Accepted formats: PNG, JPG, etc.
+- Best practices:
+  - Use high-resolution image (recommended: 1920x1080)
+  - Consider how it looks with logo overlaid
+  - Keep file size reasonable (under 5MB)
+
+**Primary Color** (optional)
+- Set the primary brand color (default: #2D2E30)
+- Use color picker or enter hex code directly
+- Affects assessment appearance and branding
+
+**Accent Color** (optional)
+- Set the secondary brand color (default: #FFBA00)
+- Use color picker or enter hex code directly
+- Used for highlights and accents
+
+### Save the Assessment
+
+1. Click **Save Assessment** (or **Create Assessment** button)
+2. You'll be redirected to the assessment edit page
+3. The assessment is now created but not yet published
+
+---
+
+## Step 2: Add Dimensions
+
+Dimensions are the high-level categories that organize your assessment questions. Examples: "Leadership", "Communication", "Technical Skills", "Team Collaboration".
+
+### Navigate to Dimensions Tab
+
+1. On the assessment edit page, click the **Dimensions** tab
+2. You'll see an empty list (or existing dimensions if editing)
+
+### Add Your First Dimension
+
+1. Click **Add Dimension** button
+2. Fill in:
+   - **Name**: The dimension name (e.g., "Leadership", "Communication")
+   - **Code**: A short code for the dimension (e.g., "LEAD", "COMM")
+     - Used for benchmarks and reporting
+     - Should be unique within the assessment
+     - Typically 3-5 uppercase letters
+3. Click **Save** or press Enter
+
+### Add Additional Dimensions
+
+Repeat the process for each dimension you need:
+
+- **Leadership** (code: LEAD)
+- **Communication** (code: COMM)
+- **Technical Skills** (code: TECH)
+- **Team Collaboration** (code: TEAM)
+- **Problem Solving** (code: PROB)
+
+### Reorder Dimensions
+
+1. Use the **drag handle** (⋮⋮ icon) to drag dimensions up or down
+2. Or use the **arrow buttons** (↑ ↓) to move dimensions
+3. The order you set here determines how dimensions appear in:
+   - The assessment preview
+   - The actual assessment when taken
+   - Reports and results
+
+### Edit or Delete Dimensions
+
+- **Edit**: Click into the name or code field and update
+- **Delete**: Click the **trash icon** (confirm deletion when prompted)
+  - ⚠️ **Warning**: Deleting a dimension may affect associated fields and benchmarks
+
+### Best Practices for Dimensions
+
+- **Keep it focused**: 4-8 dimensions is typically ideal
+- **Clear names**:** Use names that raters will understand
+- **Consistent codes**: Use a consistent format (all uppercase, 3-5 letters)
+- **Logical order**: Arrange dimensions in a logical flow
+
+---
+
+## Step 3: Add Fields (Questions)
+
+Fields are the actual questions or content items in your assessment. You can add different types of fields:
+
+- **Rich Text**: Instructions, context, or formatted content
+- **Multiple Choice**: Questions with predefined answer options (anchors)
+- **Slider**: Questions with a sliding scale (anchors)
+- **Text Input**: Free-form text responses
+- **Page Break**: Visual separator between pages
+
+### Navigate to Fields Tab
+
+1. On the assessment edit page, click the **Fields** tab
+2. You'll see an empty list (or existing fields if editing)
+
+### Add a Rich Text Field (Instructions)
+
+Rich text fields are great for section headers, instructions, or context.
+
+1. Click **+ Text** button (or use the "Add Field" dropdown)
+2. Select **Rich Text** type
+3. In the rich text editor:
+   - Enter your content (instructions, context, etc.)
+   - Use formatting tools: bold, italic, lists, links
+   - Example: "Please rate the following leadership behaviors on a scale from 1-5."
+4. **Assign to Dimension**: Select a dimension from the dropdown (optional)
+5. Click **Save Field**
+
+### Add a Multiple Choice Field
+
+Multiple choice fields are the core of most 360 assessments. They include a question and rating options (anchors).
+
+1. Click **+ MC** button (Multiple Choice)
+2. Enter the **question text** in the rich text editor
+   - Example: "How would you rate this person's ability to communicate clearly?"
+   - Supports formatting: bold, italic, lists
+3. **Assign to Dimension**: Select the dimension this question belongs to
+4. **Configure Anchors** (see Step 4 below for detailed anchor setup)
+5. Click **Save Field**
+
+### Add a Slider Field
+
+Slider fields provide a visual sliding scale for ratings.
+
+1. Click **+ Slider** button
+2. Enter the **question text**
+3. **Assign to Dimension**: Select the dimension
+4. **Configure Anchors** (same as multiple choice - see Step 4)
+5. Click **Save Field**
+
+### Add a Text Input Field
+
+Text input fields allow free-form written responses.
+
+1. Click **+ Text** button and select **Text Input**
+2. Enter the **question or prompt**
+3. **Assign to Dimension**: Select the dimension
+4. Click **Save Field**
+
+### Reorder Fields
+
+1. Use the **drag handle** (⋮⋮ icon) to drag fields up or down
+2. Or use the **arrow buttons** (↑ ↓) to move fields
+3. Fields can be reordered within dimensions or across dimensions
+
+### Add Page Breaks
+
+To split your assessment into multiple pages:
+
+1. Click **Add Field** → **Page Break**
+2. The page break will appear in the field list
+3. When participants take the assessment, they'll see a new page after the page break
+
+### Edit or Delete Fields
+
+- **Edit**: Click the **Edit** button on a field card
+- **Delete**: Click the **trash icon** (confirm deletion when prompted)
+
+---
+
+## Step 4: Configure Anchors
+
+Anchors are the rating options for multiple choice and slider questions. Examples: "Below Expectations", "Meets Expectations", "Exceeds Expectations".
+
+### Understanding Anchors
+
+- **Anchors define the rating scale** for a question
+- Each anchor has:
+  - **Name**: The label shown to raters (e.g., "Meets Expectations")
+  - **Value**: The numeric value used in scoring (e.g., 1, 2, 3, 4, 5)
+- Anchors are **ordered** (first anchor = lowest value, last anchor = highest value)
+- Values can be **reversed** with one click (useful if you want highest = best)
+
+### Add Anchors Manually
+
+1. When editing a **Multiple Choice** or **Slider** field, scroll to the **Anchors** section
+2. Click **Add Anchor** button
+3. For each anchor, enter:
+   - **Name**: The label (e.g., "Below Expectations")
+   - **Value**: The numeric value (typically 1, 2, 3, 4, 5)
+4. Repeat for all anchors
+5. Anchors are automatically ordered by value (lowest to highest)
+
+### Use Anchor Templates
+
+For quick setup, use a pre-built anchor template:
+
+1. In the **Anchors** section, find the **Anchor Templates** dropdown
+2. Select a template (e.g., "Standard 5-Point Scale")
+3. Click **Apply Template**
+4. The template anchors will populate automatically
+5. You can edit individual anchors after applying the template
+
+**Available Templates:**
+- **Standard 5-Point Scale**: "Below Expectations", "Slightly Below Expectations", "Meets Expectations", "Slightly Exceeds Expectations", "Exceeds Expectations"
+- More templates can be added as needed
+
+### Reverse Anchor Values
+
+If you want to flip the scale (highest = best instead of lowest = best):
+
+1. In the **Anchors** section, click **Reverse Values** button
+2. Anchor values will be reversed automatically
+3. Example: If anchors were 1, 2, 3, 4, 5, they become 5, 4, 3, 2, 1
+
+### Parse HTML Table for Insights
+
+If you have anchor data in an HTML table format:
+
+1. In the **Anchors** section, find the **Parse HTML Table** text area
+2. Paste your HTML table (with anchor names in cells)
+3. Click **Parse Table**
+4. The system will extract anchor names from the table cells
+5. Review and adjust the parsed anchors as needed
+
+### Best Practices for Anchors
+
+- **Consistent scales**: Use the same anchor set across related questions
+- **Clear labels**: Use labels that are unambiguous
+- **Appropriate number**: 3-7 anchors is typically ideal (5 is most common)
+- **Order matters**: Ensure anchors are in logical order (worst to best, or best to worst)
+
+---
+
+## Step 5: Preview Your Assessment
+
+Before publishing, preview how your assessment will look to participants.
+
+### Access Preview
+
+1. On the assessment edit page, click **Preview** button (top right)
+2. Or navigate to the assessment detail page and click **Preview**
+
+### Review in Preview
+
+- **Header**: Check logo, background image, and colors display correctly
+- **Instructions**: Review description and any rich text fields
+- **Dimensions**: Verify dimensions appear in the correct order
+- **Questions**: Check that all fields display properly
+- **Anchors**: Verify anchor options appear correctly for multiple choice/slider questions
+- **Page breaks**: Confirm pages split at the right locations
+
+### Navigate Through Preview
+
+- Use **Next** and **Previous** buttons to move between pages
+- The view will scroll to the questions section when navigating
+- Review the entire assessment flow
+
+---
+
+## Step 6: Publish Your Assessment
+
+Once your assessment is complete and previewed, publish it so it can be assigned.
+
+### Publish from Edit Page
+
+1. On the assessment edit page, find the **Status** section
+2. Toggle **Draft** to **Published** (or click **Publish** button)
+3. The assessment status will update
+4. Published assessments can now be assigned to users
+
+### Verify Publication
+
+1. Go to **Dashboard → Assessments**
+2. Find your assessment in the list
+3. Verify it shows as **Published** (not Draft)
+4. The assessment is now ready for assignment
+
+---
+
+## Step 7: Assign the Assessment
+
+After publishing, assign the assessment to users or groups.
+
+### Navigate to Assignment
+
+1. Go to **Dashboard → Clients**
+2. Select a client
+3. Click the **Assignments** tab
+4. Click **Create Assignment**
+
+### Configure Assignment
+
+1. **Select Assessment**: Choose your newly created 360 assessment
+2. **Select Target**: Choose the person being assessed
+3. **Select Raters**: Choose users or groups who will provide feedback
+4. **Set Due Date**: Optional deadline for completion
+5. **Send Notifications**: Check to send email invites
+6. Click **Create Assignment**
+
+### Verify Assignment
+
+- Raters will receive email notifications (if enabled)
+- Assignment appears in the assignments list
+- Raters can access the assessment via their assignment link
+
+---
+
+## Recommended Workflow
+
+1. **Plan your assessment**:
+   - Define dimensions
+   - List questions for each dimension
+   - Decide on rating scales (anchors)
+
+2. **Create the assessment**:
+   - Fill in details (title, description, 360 setting)
+   - Upload branding (logo, background, colors)
+
+3. **Set up dimensions**:
+   - Add all dimensions
+   - Order them logically
+   - Verify codes are unique
+
+4. **Add fields**:
+   - Start with rich text instructions
+   - Add questions for each dimension
+   - Use consistent anchor sets
+
+5. **Configure anchors**:
+   - Use templates for speed
+   - Ensure consistency across questions
+   - Verify values are correct
+
+6. **Preview and refine**:
+   - Review the entire assessment
+   - Check formatting and flow
+   - Make adjustments as needed
+
+7. **Publish and assign**:
+   - Publish the assessment
+   - Assign to target and raters
+   - Monitor completion
+
+---
+
+## Troubleshooting
+
+### "Assessment not showing in assignment list"
+
+- **Cause**: Assessment may still be in Draft status
+- **Solution**: Go to assessment edit page and publish it
+
+### "Anchors not appearing on questions"
+
+- **Cause**: Anchors may not be saved, or field type doesn't support anchors
+- **Solution**: 
+  - Ensure you're editing a Multiple Choice or Slider field
+  - Verify anchors are saved (check the Anchors section)
+  - Refresh the page and try again
+
+### "Dimensions not appearing in field assignment"
+
+- **Cause**: Dimensions may not be saved
+- **Solution**: 
+  - Go to Dimensions tab and verify dimensions exist
+  - Save the assessment
+  - Return to Fields tab and try again
+
+### "Preview not showing correctly"
+
+- **Cause**: Images may not be loading, or there's a formatting issue
+- **Solution**:
+  - Check that images uploaded successfully
+  - Verify image file formats are supported
+  - Check browser console for errors
+
+### "Can't reorder fields"
+
+- **Cause**: Drag-and-drop may not be working, or fields aren't saved
+- **Solution**:
+  - Try using the arrow buttons instead
+  - Ensure fields are saved before reordering
+  - Refresh the page and try again
+
+---
+
+## Best Practices
+
+### Assessment Structure
+
+- **Start with instructions**: Use rich text fields to provide context
+- **Group by dimension**: Organize questions within their dimensions
+- **Use page breaks**: Split long assessments into manageable pages
+- **Consistent formatting**: Use the same anchor sets for similar questions
+
+### Dimensions
+
+- **4-8 dimensions**: Keep it focused and manageable
+- **Clear names**: Use names that are self-explanatory
+- **Logical order**: Arrange dimensions in a flow that makes sense
+
+### Questions
+
+- **Clear and specific**: Write questions that are unambiguous
+- **One concept per question**: Avoid compound questions
+- **Appropriate type**: Choose the right field type for each question
+
+### Anchors
+
+- **Consistent scales**: Use the same anchor set across related questions
+- **5-point scale**: Most common and effective
+- **Clear labels**: Avoid ambiguous terms
+
+### Branding
+
+- **Test images**: Preview how logo and background look together
+- **Contrast**: Ensure text is readable over background images
+- **File sizes**: Keep images optimized for fast loading
+
+---
+
+## Next Steps
+
+After creating your 360 assessment:
+
+1. **Set up benchmarks** (optional): Go to Benchmarks to set industry-specific target values
+2. **Test the assessment**: Assign it to yourself or a test user
+3. **Gather feedback**: Have a colleague review the assessment
+4. **Refine as needed**: Make adjustments based on feedback
+5. **Assign to real users**: Once finalized, assign to actual participants
+
+For more information on:
+- **Assigning assessments**: See the "Assignment Management" resource
+- **Viewing results**: See the "Assessment Results" resource
+- **Setting benchmarks**: See the "Benchmarks" resource (Phase 1)
+`,
+    video: { bucket: 'resources-videos', path: 'phase-2/create-360-assessment.mp4' },
+  },
 ]
 
 export function getResourcePostBySlug(slug: string) {

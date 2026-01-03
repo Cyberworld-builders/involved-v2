@@ -553,10 +553,14 @@ export default function AssessmentForm({
     }))
   }
 
-  const handleInsertFieldAt = (insertAfterIndex: number, type: QuestionType) => {
+  const handleInsertFieldAt = (insertBeforeIndex: number, type: QuestionType) => {
     setFormData(prev => {
       const nextFields = [...prev.fields]
-      nextFields.splice(insertAfterIndex + 1, 0, createNewField(type, insertAfterIndex + 2))
+      // Button is positioned above field at insertBeforeIndex (0-based array index)
+      // To insert BEFORE that field, we insert at insertBeforeIndex
+      // This will place the new field at the current field's position, pushing it down
+      const insertPosition = insertBeforeIndex
+      nextFields.splice(insertPosition, 0, createNewField(type, insertPosition))
       return {
         ...prev,
         fields: normalizeFieldOrders(nextFields),
@@ -1551,7 +1555,11 @@ export default function AssessmentForm({
                     const fieldType = field.type as string
                     return fieldType !== 'instructions' && fieldType !== '10'
                   })
-                  .map((field, index) => {
+                  .map((field) => {
+                  // Find the actual index in the original array (not the filtered array)
+                  // This is important because page breaks and other filtered fields affect the index
+                  const actualIndex = formData.fields.findIndex(f => f.id === field.id)
+                  
                   const dimension = field.dimension_id 
                     ? formData.dimensions.find(d => d.id === field.dimension_id)
                     : null
@@ -1563,6 +1571,39 @@ export default function AssessmentForm({
 
                   return (
                     <div key={field.id}>
+                      {/* Insert Question Above - Compact */}
+                      <div className="mb-2 flex items-center justify-center">
+                        <div className="flex gap-1">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleInsertFieldAt(actualIndex, 'multiple_choice')}
+                            className="text-xs"
+                          >
+                            + MC
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleInsertFieldAt(actualIndex, 'text_input')}
+                            className="text-xs"
+                          >
+                            + Text
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleInsertFieldAt(actualIndex, 'slider')}
+                            className="text-xs"
+                          >
+                            + Slider
+                          </Button>
+                        </div>
+                      </div>
+                      
                       {/* Compact Question Preview */}
                       <div
                         className={`border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors ${draggedFieldId === field.id ? 'opacity-60' : ''}`}
@@ -1636,7 +1677,7 @@ export default function AssessmentForm({
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleMoveFieldToTop(field.id)}
-                                disabled={index === 0}
+                                disabled={actualIndex === 0}
                                 className="h-10 w-10 p-0"
                                 title="Move to top"
                               >
@@ -1647,7 +1688,7 @@ export default function AssessmentForm({
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleMoveFieldUp(field.id)}
-                                disabled={index === 0}
+                                disabled={actualIndex === 0}
                                 className="h-10 w-10 p-0"
                                 title="Move up"
                               >
@@ -1658,7 +1699,7 @@ export default function AssessmentForm({
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleMoveFieldDown(field.id)}
-                                disabled={index === formData.fields.length - 1}
+                                disabled={actualIndex === formData.fields.length - 1}
                                 className="h-10 w-10 p-0"
                                 title="Move down"
                               >
@@ -1669,7 +1710,7 @@ export default function AssessmentForm({
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleMoveFieldToBottom(field.id)}
-                                disabled={index === formData.fields.length - 1}
+                                disabled={actualIndex === formData.fields.length - 1}
                                 className="h-10 w-10 p-0"
                                 title="Move to bottom"
                               >
@@ -1696,39 +1737,6 @@ export default function AssessmentForm({
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
-                        </div>
-                      </div>
-                      
-                      {/* Insert Question Below - Compact */}
-                      <div className="mt-2 flex items-center justify-center">
-                        <div className="flex gap-1">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleInsertFieldAt(index, 'multiple_choice')}
-                            className="text-xs"
-                          >
-                            + MC
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleInsertFieldAt(index, 'text_input')}
-                            className="text-xs"
-                          >
-                            + Text
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleInsertFieldAt(index, 'slider')}
-                            className="text-xs"
-                          >
-                            + Slider
-                          </Button>
                         </div>
                       </div>
                     </div>

@@ -33,6 +33,11 @@ export default function ClientUsers({ clientId }: ClientUsersProps) {
     industries: { name: string } | null
     last_login_at: string | null
     created_at: string
+    latest_invite: {
+      status: 'pending' | 'accepted' | 'expired' | 'revoked'
+      created_at: string
+      expires_at: string
+    } | null
   }
   const [existingUsers, setExistingUsers] = useState<UserWithIndustry[]>([])
   const [isLoadingUsers, setIsLoadingUsers] = useState(true)
@@ -90,20 +95,36 @@ export default function ClientUsers({ clientId }: ClientUsersProps) {
       if (error) {
         console.error('Error loading users:', error)
       } else {
-        // Transform data to handle industries as single object
-        const transformedData = (data || []).map((user: {
-          id: string
-          name: string
-          email: string
-          username: string
-          last_login_at: string | null
-          created_at: string
-          industries: Array<{ name: string }> | { name: string } | null
-        }) => ({
-          ...user,
-          industries: Array.isArray(user.industries) ? user.industries[0] || null : user.industries
-        })) as UserWithIndustry[]
-        setExistingUsers(transformedData)
+        // Fetch invite status for each user
+        const usersWithInvites = await Promise.all(
+          (data || []).map(async (user: {
+            id: string
+            name: string
+            email: string
+            username: string
+            last_login_at: string | null
+            created_at: string
+            industries: Array<{ name: string }> | { name: string } | null
+          }) => {
+            // Get the most recent invite for this user
+            const { data: invitesData } = await supabase
+              .from('user_invites')
+              .select('status, created_at, expires_at')
+              .eq('profile_id', user.id)
+              .order('created_at', { ascending: false })
+              .limit(1)
+            
+            const invites = invitesData && invitesData.length > 0 ? invitesData[0] : null
+
+            return {
+              ...user,
+              industries: Array.isArray(user.industries) ? user.industries[0] || null : user.industries,
+              latest_invite: invites || null
+            }
+          })
+        )
+
+        setExistingUsers(usersWithInvites as UserWithIndustry[])
       }
     } catch (error) {
       console.error('Error loading users:', error)
@@ -355,6 +376,9 @@ export default function ClientUsers({ clientId }: ClientUsersProps) {
         },
       }))
 
+      // Reload users to update invite status
+      await loadUsers()
+
       // Clear status after 3 seconds
       setTimeout(() => {
         setInviteStatus(prev => {
@@ -439,6 +463,9 @@ export default function ClientUsers({ clientId }: ClientUsersProps) {
       `Invites sent: ${successCount} successful, ${failCount} failed.`
     )
     setSelectedInviteUserIds([])
+
+    // Reload users to update invite status
+    await loadUsers()
 
     // Clear status messages after 5 seconds
     setTimeout(() => {
@@ -924,28 +951,108 @@ export default function ClientUsers({ clientId }: ClientUsersProps) {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex items-center space-x-3">
-                            <button
-                              onClick={() => handleSendInvite(user.id)}
-                              disabled={inviteStatusForUser?.status === 'sending'}
-                              className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ${
-                                inviteStatusForUser?.status === 'sending'
-                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                  : inviteStatusForUser?.status === 'success'
-                                    ? 'bg-green-100 text-green-700'
-                                    : inviteStatusForUser?.status === 'error'
-                                      ? 'bg-red-100 text-red-700'
-                                      : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
-                              }`}
-                              title="Send invite email"
-                            >
-                              {inviteStatusForUser?.status === 'sending'
-                                ? '⏳ Sending...'
-                                : inviteStatusForUser?.status === 'success'
-                                  ? '✓ Sent'
-                                  : inviteStatusForUser?.status === 'error'
-                                    ? '✗ Failed'
-                                    : '📧 Invite'}
-                            </button>
+                            {(() => {
+                              // Check if there's a temporary status (from recent action)
+                              if (inviteStatusForUser?.status === 'sending') {
+                                return (
+                                  <button
+                                    disabled
+                                    className="inline-flex items-center px-2 py-1 text-xs font-medium rounded bg-gray-100 text-gray-400 cursor-not-allowed"
+                                    title="Sending invite..."
+                                  >
+                                    ⏳ Sending...
+                                  </button>
+                                )
+                              }
+                              
+                              if (inviteStatusForUser?.status === 'success') {
+                                return (
+                                  <button
+                                    disabled
+                                    className="inline-flex items-center px-2 py-1 text-xs font-medium rounded bg-green-100 text-green-700"
+                                    title="Invite sent successfully"
+                                  >
+                                    ✓ Sent
+                                  </button>
+                                )
+                              }
+                              
+                              if (inviteStatusForUser?.status === 'error') {
+                                return (
+                                  <button
+                                    onClick={() => handleSendInvite(user.id)}
+                                    className="inline-flex items-center px-2 py-1 text-xs font-medium rounded bg-red-100 text-red-700 hover:bg-red-200"
+                                    title={`Failed to send invite. Click to retry. ${inviteStatusForUser.message || ''}`}
+                                  >
+                                    ✗ Failed
+                                  </button>
+                                )
+                              }
+                              
+                              // Check persistent invite status from database
+                              const latestInvite = user.latest_invite
+                              if (latestInvite) {
+                                const isExpired = new Date(latestInvite.expires_at) < new Date()
+                                
+                                if (latestInvite.status === 'pending' && !isExpired) {
+                                  return (
+                                    <button
+                                      onClick={() => handleSendInvite(user.id)}
+                                      className="inline-flex items-center px-2 py-1 text-xs font-medium rounded bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
+                                      title={`Invite sent on ${new Date(latestInvite.created_at).toLocaleDateString()}. Expires ${new Date(latestInvite.expires_at).toLocaleDateString()}. Click to send a new invite.`}
+                                    >
+                                      📧 Invite Sent
+                                    </button>
+                                  )
+                                }
+                                
+                                if (latestInvite.status === 'accepted') {
+                                  return (
+                                    <span
+                                      className="inline-flex items-center px-2 py-1 text-xs font-medium rounded bg-green-100 text-green-700"
+                                      title={`Invite accepted on ${new Date(latestInvite.created_at).toLocaleDateString()}`}
+                                    >
+                                      ✓ Accepted
+                                    </span>
+                                  )
+                                }
+                                
+                                if (latestInvite.status === 'expired' || isExpired) {
+                                  return (
+                                    <button
+                                      onClick={() => handleSendInvite(user.id)}
+                                      className="inline-flex items-center px-2 py-1 text-xs font-medium rounded bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                      title="Previous invite expired. Click to send a new invite."
+                                    >
+                                      ⏰ Expired
+                                    </button>
+                                  )
+                                }
+                                
+                                if (latestInvite.status === 'revoked') {
+                                  return (
+                                    <button
+                                      onClick={() => handleSendInvite(user.id)}
+                                      className="inline-flex items-center px-2 py-1 text-xs font-medium rounded bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                      title="Previous invite was revoked. Click to send a new invite."
+                                    >
+                                      🔄 Revoked
+                                    </button>
+                                  )
+                                }
+                              }
+                              
+                              // No invite sent yet
+                              return (
+                                <button
+                                  onClick={() => handleSendInvite(user.id)}
+                                  className="inline-flex items-center px-2 py-1 text-xs font-medium rounded bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
+                                  title="Send invite email"
+                                >
+                                  📧 Invite
+                                </button>
+                              )
+                            })()}
                             <button
                               onClick={() => handleResetPasswordClick(user.id)}
                               className="inline-flex items-center px-2 py-1 text-xs font-medium rounded bg-orange-100 text-orange-700 hover:bg-orange-200"
