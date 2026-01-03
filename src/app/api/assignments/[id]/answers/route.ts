@@ -50,7 +50,8 @@ export async function POST(
     }
 
     // Verify assignment exists and belongs to user
-    const { data: assignment, error: assignmentError } = await supabase
+    // Use adminClient to bypass RLS for assignment lookup
+    const { data: assignment, error: assignmentError } = await adminClient
       .from('assignments')
       .select('id, user_id, assessment_id, completed')
       .eq('id', assignmentId)
@@ -115,18 +116,34 @@ export async function POST(
     }
 
     // Verify field belongs to the assessment
-    const { data: field, error: fieldError } = await supabase
+    // Use adminClient to bypass RLS for field lookup
+    const { data: field, error: fieldError } = await adminClient
       .from('fields')
       .select('id, assessment_id')
       .eq('id', field_id)
       .single()
 
-    if (fieldError || !field) {
+    if (fieldError) {
+      console.error(`[POST /api/assignments/${assignmentId}/answers] Field lookup error:`, fieldError)
+      return NextResponse.json(
+        { error: 'Field not found', details: fieldError.message },
+        { status: 404 }
+      )
+    }
+
+    if (!field) {
+      console.error(`[POST /api/assignments/${assignmentId}/answers] Field not found for ID:`, field_id)
       return NextResponse.json(
         { error: 'Field not found' },
         { status: 404 }
       )
     }
+
+    console.log(`[POST /api/assignments/${assignmentId}/answers] Field found:`, { 
+      field_id: field.id, 
+      assessment_id: field.assessment_id,
+      assignment_assessment_id: assignment.assessment_id
+    })
 
     if (field.assessment_id !== assignment.assessment_id) {
       return NextResponse.json(
