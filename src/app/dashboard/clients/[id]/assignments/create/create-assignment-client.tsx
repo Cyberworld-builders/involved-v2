@@ -604,7 +604,7 @@ Thank you.`)
                         const selected = Array.from(e.target.selectedOptions, option => option.value)
                         setSelectedAssessmentIds(selected)
                       }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
                       size={Math.min(assessments.length, 10)}
                       required
                     >
@@ -648,7 +648,7 @@ Thank you.`)
                     onChange={(e) => setExpirationDate(e.target.value)}
                     required
                     min={new Date().toISOString().split('T')[0]}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
                   />
                 </div>
               )}
@@ -659,11 +659,11 @@ Thank you.`)
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Send Email Notification
                   </label>
-                  <select
-                    value={sendEmail ? '1' : '0'}
-                    onChange={(e) => setSendEmail(e.target.value === '1')}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  >
+                    <select
+                      value={sendEmail ? '1' : '0'}
+                      onChange={(e) => setSendEmail(e.target.value === '1')}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
+                    >
                     <option value="0">No</option>
                     <option value="1">Yes</option>
                   </select>
@@ -681,7 +681,7 @@ Thank you.`)
                       type="text"
                       value={emailSubject}
                       onChange={(e) => setEmailSubject(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
                       placeholder="New assessments have been assigned to you"
                     />
                   </div>
@@ -693,7 +693,7 @@ Thank you.`)
                       value={emailBody}
                       onChange={(e) => setEmailBody(e.target.value)}
                       rows={8}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
                       placeholder="Hello {name}, you have been assigned {assessments}. Please complete by {expiration-date}."
                     />
                     <p className="text-xs text-gray-500 mt-1">
@@ -716,7 +716,7 @@ Thank you.`)
                     <select
                       value={enableReminder ? '1' : '0'}
                       onChange={(e) => setEnableReminder(e.target.value === '1')}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
                     >
                       <option value="0">No</option>
                       <option value="1">Yes</option>
@@ -735,7 +735,7 @@ Thank you.`)
                       <select
                         value={reminderFrequency}
                         onChange={(e) => setReminderFrequency(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
                       >
                         <option value="+1 week">1 Week</option>
                         <option value="+2 weeks">2 Weeks</option>
@@ -829,7 +829,7 @@ Thank you.`)
                                   value={au.target_id || ''}
                                   onChange={(e) => handleSetTarget(index, e.target.value)}
                                   required={requiresTarget}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
                                 >
                                   <option value="">Select target...</option>
                                   {availableUsers
@@ -853,7 +853,7 @@ Thank you.`)
                                   value={au.role}
                                   onChange={(e) => handleSetRole(index, e.target.value)}
                                   placeholder="e.g., Manager, Peer, Direct Report"
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
                                 />
                                 <p className="text-xs text-gray-500 mt-1">
                                   The relationship/role of the assessor to the target
@@ -942,7 +942,7 @@ Thank you.`)
                     const selected = Array.from(e.target.selectedOptions, option => option.value)
                     setSelectedUserIds(selected)
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
                   size={Math.min(availableUsers.length, 10)}
                 >
                   {availableUsers.map((user) => (
@@ -1013,7 +1013,7 @@ Thank you.`)
                         const selected = Array.from(e.target.selectedOptions, option => option.value)
                         setSelectedGroupIds(selected)
                       }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
                       size={Math.min(availableGroups.length, 10)}
                     >
                       {availableGroups.map((group) => (

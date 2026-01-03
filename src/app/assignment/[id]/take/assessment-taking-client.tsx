@@ -374,7 +374,45 @@ export default function AssessmentTakingClient({
     setIsSubmitting(true)
 
     try {
-      // Mark assignment as complete
+      // First, save all answers before completing
+      // This ensures all answers are persisted even if user didn't interact with every field
+      const answerEntries = Object.entries(answers)
+        .filter(([_, value]) => value !== undefined && value !== null && value !== '')
+      
+      if (answerEntries.length > 0) {
+        const answerPromises = answerEntries.map(([fieldId, value]) => {
+          return fetch(`/api/assignments/${assignment.id}/answers`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              field_id: fieldId,
+              value: String(value),
+            }),
+          }).then(async (response) => {
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({}))
+              console.error(`Failed to save answer for field ${fieldId}:`, errorData)
+            }
+            return { fieldId, success: response.ok }
+          }).catch((error) => {
+            console.error(`Error saving answer for field ${fieldId}:`, error)
+            return { fieldId, success: false }
+          })
+        })
+
+        // Wait for all answers to be saved (using allSettled to continue even if some fail)
+        const answerResults = await Promise.allSettled(answerPromises)
+        const failedAnswers = answerResults.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.success))
+        
+        if (failedAnswers.length > 0) {
+          console.warn(`Some answers failed to save: ${failedAnswers.length} of ${answerEntries.length}`)
+          // Continue anyway - individual saves may have already succeeded via handleAnswerChange
+        }
+      }
+
+      // Now mark assignment as complete
       const response = await fetch(`/api/assignments/${assignment.id}/complete`, {
         method: 'POST',
       })

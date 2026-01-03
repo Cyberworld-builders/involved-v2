@@ -8,7 +8,7 @@ type Assignment = Database['public']['Tables']['assignments']['Row']
 type Assessment = Database['public']['Tables']['assessments']['Row']
 
 interface AssignmentWithAssessment extends Assignment {
-  assessments: Assessment
+  assessment: Assessment | null
 }
 
 export default async function AssignmentsPage() {
@@ -63,7 +63,11 @@ export default async function AssignmentsPage() {
     .from('assignments')
     .select(`
       *,
-      assessments (*)
+      assessment:assessments!assignments_assessment_id_fkey (
+        id,
+        title,
+        description
+      )
     `)
     .eq('user_id', userProfile.id)
     .order('created_at', { ascending: false })
@@ -143,14 +147,14 @@ export default async function AssignmentsPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <h3 className="font-semibold text-gray-900">
-                          {assignment.assessments?.title || 'Untitled Assessment'}
+                          {assignment.assessment?.title || 'Untitled Assessment'}
                         </h3>
                         <p className="text-sm text-gray-600 mt-1">
                           Due: {new Date(assignment.expires).toLocaleDateString()}
                         </p>
-                        {assignment.assessments?.description && (
+                        {assignment.assessment?.description && (
                           <p className="text-sm text-gray-500 mt-2">
-                            {assignment.assessments.description}
+                            {assignment.assessment.description}
                           </p>
                         )}
                       </div>
@@ -195,7 +199,7 @@ export default async function AssignmentsPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <h3 className="font-semibold text-gray-900">
-                          {assignment.assessments?.title || 'Untitled Assessment'}
+                          {assignment.assessment?.title || 'Untitled Assessment'}
                         </h3>
                         <p className="text-sm text-gray-600 mt-1">
                           Completed: {assignment.completed_at ? new Date(assignment.completed_at).toLocaleDateString() : 'N/A'}
@@ -231,7 +235,7 @@ export default async function AssignmentsPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <h3 className="font-semibold text-gray-900">
-                          {assignment.assessments?.title || 'Untitled Assessment'}
+                          {assignment.assessment?.title || 'Untitled Assessment'}
                         </h3>
                         <p className="text-sm text-red-600 mt-1">
                           Expired: {new Date(assignment.expires).toLocaleDateString()}

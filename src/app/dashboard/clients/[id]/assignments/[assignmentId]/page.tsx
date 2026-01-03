@@ -126,12 +126,19 @@ export default async function ClientAssignmentDetailPage({ params }: AssignmentD
       .select('*')
       .eq('assignment_id', assignmentId)
 
-    if (!answersError && answersData) {
+    if (answersError) {
+      console.error('Error loading answers:', answersError)
+    }
+
+    if (answersData) {
+      console.log(`Loaded ${answersData.length} answers for assignment ${assignmentId}`)
       answers = answersData.map((a: { field_id: string; value: string; time?: number | null }) => ({
         field_id: a.field_id,
         value: a.value,
         time: a.time,
       }))
+    } else {
+      console.warn(`No answers found for assignment ${assignmentId}`)
     }
 
     // Load fields - check if assignment has selected fields (for random question selection)

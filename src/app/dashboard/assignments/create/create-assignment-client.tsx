@@ -454,7 +454,7 @@ Thank you.`)
                       const selected = Array.from(e.target.selectedOptions, option => option.value)
                       setSelectedAssessmentIds(selected)
                     }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
                     size={Math.min(assessments.length, 10)}
                   >
                     {assessments.map((assessment) => (
@@ -484,7 +484,7 @@ Thank you.`)
                   value={expirationDate}
                   onChange={(e) => setExpirationDate(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
                 />
               </div>
             )}
@@ -498,7 +498,7 @@ Thank you.`)
                 <select
                   value={sendEmail ? '1' : '0'}
                   onChange={(e) => setSendEmail(e.target.value === '1')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
                 >
                   <option value="0">No</option>
                   <option value="1">Yes</option>
@@ -517,7 +517,7 @@ Thank you.`)
                     type="text"
                     value={emailSubject}
                     onChange={(e) => setEmailSubject(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
                     placeholder="New assessments have been assigned to you"
                   />
                 </div>
@@ -529,7 +529,7 @@ Thank you.`)
                     value={emailBody}
                     onChange={(e) => setEmailBody(e.target.value)}
                     rows={6}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
                     placeholder="Hello {name}, you have been assigned {assessments}. Please complete by {expiration-date}."
                   />
                   <p className="text-xs text-gray-500 mt-1">
@@ -617,7 +617,7 @@ Thank you.`)
                                 value={au.target_id || ''}
                                 onChange={(e) => handleSetTarget(index, e.target.value)}
                                 required
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
                               >
                                 <option value="">Select target...</option>
                                 {availableUsers
@@ -638,7 +638,7 @@ Thank you.`)
                                 value={au.role}
                                 onChange={(e) => handleSetRole(index, e.target.value)}
                                 placeholder="e.g., Manager, Peer, Direct Report"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
                               />
                             </div>
                           </div>
@@ -693,7 +693,7 @@ Thank you.`)
                   const selected = Array.from(e.target.selectedOptions, option => option.value)
                   setSelectedUserIds(selected)
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
                 size={Math.min(availableUsers.length, 10)}
               >
                 {availableUsers.map((user) => (
@@ -757,7 +757,7 @@ Thank you.`)
                   const selected = Array.from(e.target.selectedOptions, option => option.value)
                   setSelectedGroupIds(selected)
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
                 size={Math.min(availableGroups.length, 10)}
               >
                 {availableGroups.map((group) => (
