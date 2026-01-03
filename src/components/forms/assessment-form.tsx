@@ -1596,10 +1596,28 @@ export default function AssessmentForm({
                             type="button"
                             variant="outline"
                             size="sm"
+                            onClick={() => handleInsertFieldAt(actualIndex, 'description')}
+                            className="text-xs"
+                          >
+                            + Description
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
                             onClick={() => handleInsertFieldAt(actualIndex, 'slider')}
                             className="text-xs"
                           >
                             + Slider
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleInsertFieldAt(actualIndex, 'page_break')}
+                            className="text-xs"
+                          >
+                            + Page
                           </Button>
                         </div>
                       </div>
@@ -1762,7 +1780,7 @@ export default function AssessmentForm({
                       + Slider
                     </Button>
                     <Button type="button" variant="outline" size="sm" onClick={() => handleAddField('page_break')}>
-                      + Page Break
+                      + Page
                     </Button>
                   </div>
                 </div>

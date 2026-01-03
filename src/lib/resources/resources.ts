@@ -1704,6 +1704,474 @@ For more information on:
 `,
     video: { bucket: 'resources-videos', path: 'phase-2/create-360-assessment.mp4' },
   },
+  {
+    slug: 'assign-assessments',
+    title: 'Assigning Assessments: Creating and Managing Assignments',
+    description:
+      'Complete guide to assigning assessments to users and groups, configuring notifications and reminders, tracking progress, and viewing results.',
+    publishedAt: '2026-01-01',
+    tags: ['Assignments', 'Phase 2', 'Assessment Management', 'Notifications', 'Reminders'],
+    bodyMarkdown: `
+## Overview
+
+This guide covers the complete assignment workflow:
+
+- **Create assignments** for individual users or groups
+- **Configure assignment settings** (expiration, notifications, reminders)
+- **Understand assignment URLs** and how users access assessments
+- **Track assignment progress** and completion status
+- **View assessment results** after completion
+- **Manage email notifications** and automated reminders
+
+> **Assignments** connect assessments to users, allowing them to take assessments and provide feedback. Assignments can be created for individual users or entire groups, with flexible configuration options.
+
+---
+
+## Prerequisites
+
+- You are signed in as a user with permission to create assignments (typically a client admin or super admin).
+- You have at least one **published assessment** ready to assign.
+- You have **users** or **groups** set up in the system.
+- For 360 assessments, you understand the concept of **target users** (the person being assessed).
+
+---
+
+## Step 1: Access Assignment Creation
+
+### Navigate to Assignments
+
+1. Go to **Dashboard → Clients**
+2. Select the client you want to create assignments for
+3. Click the **Assignments** tab (beside Details, Users, and Groups)
+4. Click **Create Assignment** button (top right)
+
+You're now on the assignment creation form.
+
+---
+
+## Step 2: Select Assessment
+
+### Choose a Published Assessment
+
+1. In the **Assessment** dropdown, select the assessment you want to assign
+   - **Only published assessments** appear in this list
+   - Draft assessments cannot be assigned
+   - If your assessment doesn't appear, go back and publish it first
+
+2. After selecting an assessment:
+   - The assessment details will display
+   - If it's a **360 assessment**, a **Target** field will appear
+   - If it's a **non-360 assessment**, you may see a "Number of Questions" indicator
+
+### Understanding Assessment Types
+
+- **360 Assessment**: All questions shown to all participants. Requires selecting a **target user** (the person being assessed).
+- **Non-360 Assessment**: Each participant gets a random subset of questions. No target required.
+
+---
+
+## Step 3: Select Recipients
+
+You can assign to **individual users** or **groups**.
+
+### Option A: Assign to Individual Users
+
+1. In the **Recipients** section, select **Individual Users**
+2. Use the user selector to choose one or more users
+   - Type to search for users by name or email
+   - Select multiple users if needed
+   - All selected users will receive the assignment
+
+### Option B: Assign to Groups
+
+1. In the **Recipients** section, select **Groups**
+2. Use the group selector to choose one or more groups
+   - All members of selected groups will receive the assignment
+   - Separate assignment records are created for each group member
+   - Useful for bulk assignments
+
+### Best Practices
+
+- **Use groups** for bulk assignments (e.g., all managers, all team members)
+- **Use individual users** for one-off assignments or specific people
+- **Verify group membership** before assigning to ensure the right people receive it
+
+---
+
+## Step 4: Configure Assignment Settings
+
+### Set Target User (360 Assessments Only)
+
+If you selected a **360 assessment**, you must select a **target user**:
+
+1. In the **Target** field, select the user being assessed
+2. This is the person that all raters will provide feedback about
+3. The target's name will appear in:
+   - Assignment emails
+   - Assessment instructions (replaces [name] shortcode)
+   - Assessment taking interface
+
+### Set Expiration Date (Optional)
+
+1. In the **Expiration Date** field, select a date
+2. After this date, users cannot access or complete the assignment
+3. Leave blank for no expiration
+4. **Best practice**: Set expiration 2-4 weeks from assignment date
+
+### Enable Email Notifications
+
+1. Check **Send Email Notification** to send invite emails
+2. When enabled:
+   - Users receive an email with assignment details
+   - Email includes direct link to the assessment
+   - Email includes expiration date and instructions
+3. When disabled:
+   - Assignment is created but no email sent
+   - You can share the assignment URL manually
+   - Assignment appears in user's dashboard (if they have one)
+
+### Configure Email Reminders (Optional)
+
+For incomplete assignments, you can set up automated reminders:
+
+1. Check **Enable Email Reminders**
+2. Select **Reminder Frequency**:
+   - **1 Week**: Reminder sent every week until completed
+   - **2 Weeks**: Reminder sent every 2 weeks
+   - **3 Weeks**: Reminder sent every 3 weeks
+   - **Monthly**: Reminder sent once per month
+3. Reminders are sent automatically by the system
+4. Reminders stop automatically when the assignment is completed
+
+### Understanding Reminders
+
+- **Automatic**: Reminders are sent by a scheduled background job
+- **Stops on completion**: No reminders sent after user completes assessment
+- **Includes link**: Each reminder email includes the assignment link
+- **Respects expiration**: No reminders sent after expiration date
+
+---
+
+## Step 5: Create the Assignment
+
+### Review and Submit
+
+1. Review all selections:
+   - Assessment is correct
+   - Recipients are correct
+   - Target is set (if 360 assessment)
+   - Expiration date is appropriate
+   - Email settings are configured as desired
+
+2. Click **Create Assignment** (or **Create Assignments** for multiple recipients)
+
+3. Wait for confirmation:
+   - Success message will appear
+   - Assignment(s) will be created
+   - Emails will be sent (if enabled)
+   - You'll be redirected to the assignments list
+
+### What Happens After Creation
+
+- **Assignment records created**: One per recipient
+- **Assignment URLs generated**: Secure, signed URLs for each assignment
+- **Emails sent** (if enabled): Users receive notification emails
+- **Reminders scheduled** (if enabled): First reminder scheduled based on frequency
+- **Assignment appears in list**: Visible in the Assignments tab
+
+---
+
+## Step 6: View and Manage Assignments
+
+### Access the Assignments List
+
+1. Go to **Dashboard → Clients**
+2. Select a client
+3. Click the **Assignments** tab
+4. You'll see a list of all assignments for that client
+
+### Understanding the Assignments List
+
+The list shows:
+- **User**: Who the assignment is for
+- **Assessment**: Which assessment was assigned
+- **Target**: Target user (for 360 assessments)
+- **Status**: Current status (Pending, In Progress, Completed)
+- **Assigned Date**: When the assignment was created
+- **Expiration Date**: When the assignment expires
+- **Completed Date**: When the assignment was completed (if applicable)
+- **Actions**: View details, view results, etc.
+
+### Filter Assignments
+
+You can filter assignments by status:
+- **All**: Show all assignments
+- **Pending**: Not yet started
+- **In Progress**: Started but not completed
+- **Completed**: Finished assessments
+
+### View Assignment Details
+
+1. Click on an assignment in the list
+2. You'll see:
+   - Full assignment details
+   - Assignment URL (for sharing)
+   - Current status and progress
+   - Answers (if completed)
+
+### View Assessment Results
+
+For completed assignments:
+1. Click **View Results** on the assignment
+2. You'll see:
+   - All questions from the assessment
+   - All answers provided by the user
+   - Answers displayed in the same format as the assessment preview
+   - Organized by dimensions (if applicable)
+
+---
+
+## Step 7: Understanding Assignment URLs
+
+### How Assignment URLs Work
+
+- **Secure and signed**: URLs are cryptographically signed for security
+- **Token-based access**: Users don't need to log in to access assignments
+- **Expiration handling**: Expired URLs show appropriate error messages
+- **One-time use**: URLs are designed for secure, direct access
+
+### Sharing Assignment URLs
+
+1. From the assignment details page, copy the assignment URL
+2. Share via:
+   - Email (if notifications disabled)
+   - Slack/Teams message
+   - Direct link sharing
+3. Users can click the link to access their assignment
+
+### URL Security Features
+
+- **Signed tokens**: Prevent URL tampering
+- **Expiration validation**: Expired assignments cannot be accessed
+- **Assignment-specific**: Each assignment has a unique URL
+- **No login required**: Users access directly via URL
+
+---
+
+## Step 8: Track Assignment Progress
+
+### Monitor Completion Status
+
+1. In the assignments list, check the **Status** column:
+   - **Pending**: Assignment created but not started
+   - **In Progress**: User has started but not completed
+   - **Completed**: Assessment finished
+
+2. View **Completion Percentage** (if displayed):
+   - Shows how much of the assessment is complete
+   - Updates as user progresses
+
+### Check Assignment Activity
+
+- **Assigned Date**: When assignment was created
+- **Started Date**: When user first accessed the assignment
+- **Completed Date**: When user submitted the assessment
+- **Last Activity**: Last time user interacted with assignment
+
+### Send Reminders Manually
+
+If reminders are enabled but you want to send one immediately:
+1. View assignment details
+2. Use the reminder option (if available)
+3. Or resend the assignment email
+
+---
+
+## Step 9: View Assessment Results
+
+### Access Results
+
+1. Go to **Assignments** tab
+2. Find a **completed** assignment
+3. Click **View Results** (or click on the assignment)
+
+### Understanding Results Display
+
+Results show:
+- **All questions**: Every question from the assessment
+- **All answers**: User's responses to each question
+- **Answer format**: Answers displayed correctly by type:
+  - Multiple Choice: Selected option shown
+  - Slider: Selected value shown
+  - Text Input: Free-form text shown
+- **Organization**: Results organized by dimensions (if applicable)
+
+### Export Results (if available)
+
+Some systems allow exporting results:
+1. View results page
+2. Click **Export** button (if available)
+3. Choose format (CSV, PDF, etc.)
+4. Download the file
+
+---
+
+## Recommended Workflow
+
+1. **Prepare assessments**:
+   - Create and publish assessments
+   - Test assessments in preview mode
+   - Verify all questions and settings are correct
+
+2. **Prepare recipients**:
+   - Ensure users exist in the system
+   - Create groups if needed for bulk assignments
+   - Verify user email addresses are correct
+
+3. **Create assignments**:
+   - Select published assessment
+   - Choose recipients (individual or group)
+   - Set target (for 360 assessments)
+   - Configure expiration date
+   - Enable email notifications
+   - Set up reminders (if desired)
+
+4. **Monitor progress**:
+   - Check assignments list regularly
+   - Filter by status to see pending/in-progress/completed
+   - Send reminders if needed
+
+5. **Review results**:
+   - View completed assessment results
+   - Export results if needed
+   - Use results for reporting or analysis
+
+---
+
+## Troubleshooting
+
+### "Assessment not appearing in dropdown"
+
+- **Cause**: Assessment may be in Draft status
+- **Solution**: Go to Assessments, edit the assessment, and publish it
+
+### "User not receiving email"
+
+- **Cause**: Email notifications may be disabled, or email may be in spam
+- **Solutions**:
+  - Check that "Send Email Notification" was enabled
+  - Verify user's email address is correct
+  - Check spam/junk folder
+  - Manually share the assignment URL
+
+### "Assignment URL not working"
+
+- **Cause**: Assignment may be expired, or URL may be invalid
+- **Solutions**:
+  - Check expiration date on assignment
+  - Verify URL was copied correctly
+  - Try generating a new assignment URL (if option available)
+
+### "Reminders not being sent"
+
+- **Cause**: Reminders may not be enabled, or assignment may be completed
+- **Solutions**:
+  - Verify "Enable Email Reminders" was checked
+  - Check that assignment is not completed (reminders stop on completion)
+  - Verify reminder frequency is set correctly
+  - Check that assignment hasn't expired
+
+### "Cannot assign to group"
+
+- **Cause**: Group may not exist or may have no members
+- **Solutions**:
+  - Verify group exists in the system
+  - Check that group has members
+  - Create group and add members if needed
+
+### "Target field not appearing"
+
+- **Cause**: Assessment may not be a 360 assessment
+- **Solution**: Verify the selected assessment is marked as "360 Assessment" in its settings
+
+---
+
+## Best Practices
+
+### Assignment Creation
+
+- **Set expiration dates**: Prevents assignments from lingering indefinitely
+- **Use groups for bulk**: More efficient than individual assignments
+- **Enable notifications**: Ensures users know about assignments
+- **Set reminders**: Helps improve completion rates
+
+### Email Configuration
+
+- **Test email delivery**: Send a test assignment to yourself first
+- **Verify email content**: Check that links and information are correct
+- **Monitor email delivery**: Check for bounce-backs or delivery issues
+
+### Progress Tracking
+
+- **Check regularly**: Monitor assignments list for pending/incomplete items
+- **Send reminders**: Don't hesitate to send manual reminders if needed
+- **Follow up**: Contact users directly if assignments are overdue
+
+### Results Management
+
+- **Review promptly**: Check results soon after completion
+- **Export for backup**: Download results for record-keeping
+- **Use for reporting**: Aggregate results for analysis
+
+### Security
+
+- **Share URLs securely**: Don't share assignment URLs publicly
+- **Respect expiration**: Don't extend expiration dates unnecessarily
+- **Monitor access**: Check assignment activity for unusual patterns
+
+---
+
+## Understanding Assignment Status
+
+### Pending
+
+- Assignment created but user hasn't accessed it yet
+- No answers submitted
+- Can still be accessed via URL
+
+### In Progress
+
+- User has started the assessment
+- Some answers may be saved
+- Assessment not yet submitted
+- Can continue where left off
+
+### Completed
+
+- User has submitted the assessment
+- All answers are final
+- Results are available for viewing
+- No further edits allowed
+
+---
+
+## Next Steps
+
+After creating assignments:
+
+1. **Monitor completion**: Check assignments list regularly
+2. **Send reminders**: Use automated or manual reminders as needed
+3. **Review results**: View completed assessment results
+4. **Export data**: Download results for analysis or reporting
+5. **Follow up**: Contact users about incomplete assignments if needed
+
+For more information on:
+- **Creating assessments**: See the "Creating a 360 Assessment" resource
+- **User management**: See the "User Onboarding" resource (Phase 1)
+- **Group management**: See the "Groups" resource (if available)
+`,
+    video: { bucket: 'resources-videos', path: 'phase-2/assign-assessments.mp4' },
+  },
 ]
 
 export function getResourcePostBySlug(slug: string) {
