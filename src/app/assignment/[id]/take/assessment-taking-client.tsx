@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { QUESTION_TYPES } from '@/components/forms/assessment-form'
@@ -87,6 +87,15 @@ export default function AssessmentTakingClient({
   const [logoError, setLogoError] = useState(false)
   const [backgroundError, setBackgroundError] = useState(false)
   const questionsSectionRef = useRef<HTMLDivElement>(null)
+  const saveTimeoutRef = useRef<Record<string, NodeJS.Timeout>>({})
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      const timeouts = saveTimeoutRef.current
+      Object.values(timeouts).forEach(timeout => clearTimeout(timeout))
+    }
+  }, [])
 
   // Get target name from target_user or custom_fields
   const targetName = (() => {
@@ -127,10 +136,8 @@ export default function AssessmentTakingClient({
     )
   }
 
-  const handleAnswerChange = async (fieldId: string, value: string | number) => {
-    setAnswers((prev) => ({ ...prev, [fieldId]: value }))
-
-    // Auto-save answer
+  // Save answer to database
+  const saveAnswerToDatabase = async (fieldId: string, value: string | number) => {
     if (!assignment?.id) {
       console.warn('Cannot save answer: assignment.id is not available', { assignment })
       return
@@ -138,7 +145,7 @@ export default function AssessmentTakingClient({
 
     try {
       const url = `/api/assignments/${assignment.id}/answers`
-      console.log('Saving answer:', { url, fieldId, value: String(value) })
+      console.log('Saving answer to database:', { url, fieldId, value: String(value) })
       
       const response = await fetch(url, {
         method: 'POST',
@@ -169,6 +176,29 @@ export default function AssessmentTakingClient({
         assignmentId: assignment.id,
         error: error instanceof Error ? error.message : String(error),
       })
+    }
+  }
+
+  const handleAnswerChange = (fieldId: string, value: string | number, isTextInput: boolean = false) => {
+    // Update local state immediately for responsive UI
+    setAnswers((prev) => ({ ...prev, [fieldId]: value }))
+
+    // For text inputs, debounce the database save (wait 1 second after user stops typing)
+    // For other inputs (multiple choice, slider), save immediately
+    if (isTextInput) {
+      // Clear existing timeout for this field
+      if (saveTimeoutRef.current[fieldId]) {
+        clearTimeout(saveTimeoutRef.current[fieldId])
+      }
+      
+      // Set new timeout to save after user stops typing
+      saveTimeoutRef.current[fieldId] = setTimeout(() => {
+        saveAnswerToDatabase(fieldId, value)
+        delete saveTimeoutRef.current[fieldId]
+      }, 1000) // 1 second debounce
+    } else {
+      // Save immediately for non-text inputs
+      saveAnswerToDatabase(fieldId, value)
     }
   }
 
@@ -343,7 +373,7 @@ export default function AssessmentTakingClient({
           className="w-full mt-4 px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
           rows={7}
           value={(currentAnswer as string) || ''}
-          onChange={(e) => handleAnswerChange(field.id, e.target.value)}
+          onChange={(e) => handleAnswerChange(field.id, e.target.value, true)}
           placeholder="Enter your answer here..."
         />
       )
