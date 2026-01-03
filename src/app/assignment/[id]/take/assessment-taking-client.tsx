@@ -131,8 +131,16 @@ export default function AssessmentTakingClient({
     setAnswers((prev) => ({ ...prev, [fieldId]: value }))
 
     // Auto-save answer
+    if (!assignment?.id) {
+      console.warn('Cannot save answer: assignment.id is not available', { assignment })
+      return
+    }
+
     try {
-      const response = await fetch(`/api/assignments/${assignment.id}/answers`, {
+      const url = `/api/assignments/${assignment.id}/answers`
+      console.log('Saving answer:', { url, fieldId, value: String(value) })
+      
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -144,10 +152,23 @@ export default function AssessmentTakingClient({
       })
 
       if (!response.ok) {
-        console.error('Failed to save answer')
+        const errorText = await response.text()
+        console.error(`Failed to save answer for field ${fieldId}:`, {
+          status: response.status,
+          statusText: response.statusText,
+          url,
+          error: errorText,
+        })
+      } else {
+        console.log(`Successfully saved answer for field ${fieldId}`)
       }
     } catch (error) {
-      console.error('Error saving answer:', error)
+      console.error('Error saving answer:', {
+        fieldId,
+        value: String(value),
+        assignmentId: assignment.id,
+        error: error instanceof Error ? error.message : String(error),
+      })
     }
   }
 
@@ -380,8 +401,16 @@ export default function AssessmentTakingClient({
         .filter(([_, value]) => value !== undefined && value !== null && value !== '')
       
       if (answerEntries.length > 0) {
+        if (!assignment?.id) {
+          console.error('Cannot save answers: assignment.id is not available', { assignment })
+          throw new Error('Assignment ID is not available')
+        }
+
+        const url = `/api/assignments/${assignment.id}/answers`
+        console.log(`Saving ${answerEntries.length} answers before completion:`, { url, assignmentId: assignment.id })
+        
         const answerPromises = answerEntries.map(([fieldId, value]) => {
-          return fetch(`/api/assignments/${assignment.id}/answers`, {
+          return fetch(url, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -392,12 +421,26 @@ export default function AssessmentTakingClient({
             }),
           }).then(async (response) => {
             if (!response.ok) {
-              const errorData = await response.json().catch(() => ({}))
-              console.error(`Failed to save answer for field ${fieldId}:`, errorData)
+              const errorText = await response.text()
+              const errorData = await JSON.parse(errorText).catch(() => ({}))
+              console.error(`Failed to save answer for field ${fieldId}:`, {
+                status: response.status,
+                statusText: response.statusText,
+                url,
+                error: errorData,
+                errorText,
+              })
+            } else {
+              console.log(`Successfully saved answer for field ${fieldId}`)
             }
             return { fieldId, success: response.ok }
           }).catch((error) => {
-            console.error(`Error saving answer for field ${fieldId}:`, error)
+            console.error(`Error saving answer for field ${fieldId}:`, {
+              fieldId,
+              value: String(value),
+              url,
+              error: error instanceof Error ? error.message : String(error),
+            })
             return { fieldId, success: false }
           })
         })

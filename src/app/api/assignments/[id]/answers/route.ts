@@ -21,8 +21,10 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id: assignmentId } = await params
   try {
-    const { id: assignmentId } = await params
+    console.log(`[POST /api/assignments/${assignmentId}/answers] Request received`)
+    
     const supabase = await createClient()
     const adminClient = createAdminClient()
 
@@ -54,12 +56,27 @@ export async function POST(
       .eq('id', assignmentId)
       .single()
 
-    if (assignmentError || !assignment) {
+    if (assignmentError) {
+      console.error(`[POST /api/assignments/${assignmentId}/answers] Assignment lookup error:`, assignmentError)
+      return NextResponse.json(
+        { error: 'Assignment not found', details: assignmentError.message },
+        { status: 404 }
+      )
+    }
+
+    if (!assignment) {
+      console.error(`[POST /api/assignments/${assignmentId}/answers] Assignment not found for ID:`, assignmentId)
       return NextResponse.json(
         { error: 'Assignment not found' },
         { status: 404 }
       )
     }
+
+    console.log(`[POST /api/assignments/${assignmentId}/answers] Assignment found:`, { 
+      id: assignment.id, 
+      user_id: assignment.user_id, 
+      completed: assignment.completed 
+    })
 
     // Check ownership (users can only answer their own assignments, admins can view)
     if (assignment.user_id !== actorProfile.id && actorProfile.access_level === 'member') {
@@ -80,6 +97,7 @@ export async function POST(
     // Parse request body
     const body = await request.json()
     const { field_id, value, complete = false, time } = body
+    console.log(`[POST /api/assignments/${assignmentId}/answers] Body:`, { field_id, value, complete, time })
 
     // Validate required fields
     if (!field_id) {
@@ -164,12 +182,13 @@ export async function POST(
       if (insertError) {
         console.error('Error creating answer:', insertError)
         return NextResponse.json(
-          { error: 'Failed to create answer' },
+          { error: 'Failed to create answer', details: insertError.message },
           { status: 500 }
         )
       }
 
       answer = newAnswer
+      console.log(`[POST /api/assignments/${assignmentId}/answers] Answer created:`, answer.id)
     }
 
     // If complete flag is set, mark assignment as completed
@@ -188,15 +207,16 @@ export async function POST(
       }
     }
 
+    console.log(`[POST /api/assignments/${assignmentId}/answers] Success`)
     return NextResponse.json({
       success: true,
       answer,
       completed: complete,
     })
   } catch (error) {
-    console.error('Unexpected error:', error)
+    console.error(`[POST /api/assignments/${assignmentId}/answers] Unexpected error:`, error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }
