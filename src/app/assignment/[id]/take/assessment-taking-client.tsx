@@ -295,10 +295,10 @@ export default function AssessmentTakingClient({
                           className="p-0 text-center w-1/5"
                         >
                           <label
-                            className={`flex items-center justify-center px-3 py-2 border border-gray-300 cursor-pointer transition-colors w-full h-full whitespace-nowrap m-0 ${
+                            className={`flex items-center justify-center px-3 py-6 border cursor-pointer transition-colors w-full h-full whitespace-nowrap m-0 ${
                               currentAnswer === index 
-                                ? 'bg-indigo-100 hover:bg-indigo-200' 
-                                : 'bg-white hover:bg-gray-50'
+                                ? 'bg-orange-100 hover:bg-orange-200 border-orange-500' 
+                                : 'bg-white hover:bg-gray-50 border-gray-300'
                             }`}
                             style={{ 
                               borderRadius: index === 0 ? '0.375rem 0 0 0' : index === fieldAnchors.length - 1 ? '0 0.375rem 0 0' : '0',
@@ -314,7 +314,8 @@ export default function AssessmentTakingClient({
                               value={index}
                               checked={currentAnswer === index}
                               onChange={() => handleAnswerChange(field.id, index)}
-                              className="mr-2 flex-shrink-0"
+                              className="sr-only"
+                              aria-label={anchor.name || `Option ${index + 1}`}
                             />
                             <span className="text-sm font-medium text-gray-900">
                               {anchor.name || `Option ${index + 1}`}
@@ -347,7 +348,11 @@ export default function AssessmentTakingClient({
               {fieldAnchors.map((anchor, index) => (
                 <label
                   key={anchor.id || index}
-                  className="flex items-center px-4 py-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 transition-colors"
+                  className={`flex items-center justify-center px-4 py-6 border rounded-md cursor-pointer transition-colors ${
+                    currentAnswer === index
+                      ? 'bg-orange-100 border-orange-500 hover:bg-orange-200'
+                      : 'border-gray-300 hover:bg-gray-50'
+                  }`}
                 >
                   <input
                     type="radio"
@@ -355,7 +360,8 @@ export default function AssessmentTakingClient({
                     value={index}
                     checked={currentAnswer === index}
                     onChange={() => handleAnswerChange(field.id, index)}
-                    className="mr-2"
+                    className="sr-only"
+                    aria-label={anchor.name || `Option ${index + 1}`}
                   />
                   <span>{anchor.name || `Option ${index + 1}`}</span>
                 </label>
