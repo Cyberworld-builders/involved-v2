@@ -3,6 +3,7 @@
 import { ReactNode, useState } from 'react'
 import Sidebar from '@/components/navigation/sidebar'
 import { UserProfile } from '@/components/navigation/types'
+import SignOutButton from '@/app/dashboard/sign-out-button'
 
 interface DashboardLayoutProps {
   children: ReactNode
@@ -37,7 +38,10 @@ export default function DashboardLayout({ children, userProfile }: DashboardLayo
               </button>
               <h1 className="text-xl md:text-2xl font-semibold text-gray-900">Dashboard</h1>
             </div>
-
+            
+            <div className="flex items-center">
+              <SignOutButton />
+            </div>
           </div>
         </header>
 

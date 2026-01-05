@@ -1,8 +1,11 @@
-import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
+  // Supabase magic links use hash fragments (#access_token=...) which are not sent to the server
+  // We need to handle this client-side, so redirect to a client component
   const requestUrl = new URL(request.url)
+  
+  // Check for query parameters (code-based flow)
   const code = requestUrl.searchParams.get('code')
   const error = requestUrl.searchParams.get('error')
   const errorDescription = requestUrl.searchParams.get('error_description')
@@ -20,6 +23,8 @@ export async function GET(request: NextRequest) {
   }
 
   if (code) {
+    // Server-side code exchange flow
+    const { createClient } = await import('@/lib/supabase/server')
     const supabase = await createClient()
     const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
     
@@ -32,7 +37,6 @@ export async function GET(request: NextRequest) {
 
     if (data?.session) {
       // Successfully authenticated - redirect to dashboard
-      // Users can access their assignments from there or click the original assignment email link
       console.log('Auth callback successful, redirecting to dashboard')
       return NextResponse.redirect(new URL('/dashboard', requestUrl.origin))
     } else {
@@ -43,20 +47,12 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Check if there's a token_hash (used by some Supabase auth flows)
-  const tokenHash = requestUrl.searchParams.get('token_hash')
-  const type = requestUrl.searchParams.get('type')
-  
-  if (tokenHash && type === 'magiclink') {
-    // This is a magic link with token_hash - we need to verify it client-side
-    // Redirect to a client component that can handle this
-    const url = new URL('/auth/callback/verify', requestUrl.origin)
-    url.searchParams.set('token_hash', tokenHash)
-    url.searchParams.set('type', type)
-    return NextResponse.redirect(url)
-  }
-
-  // No code or token_hash provided - redirect to login
-  console.warn('Auth callback called without code or token_hash parameter. All params:', allParams)
-  return NextResponse.redirect(new URL('/auth/login', requestUrl.origin))
+  // No code parameter - this is likely a hash fragment-based magic link
+  // Redirect to client-side handler that can read hash fragments
+  const url = new URL('/auth/callback/handle', requestUrl.origin)
+  // Preserve any query params that might be there
+  requestUrl.searchParams.forEach((value, key) => {
+    url.searchParams.set(key, value)
+  })
+  return NextResponse.redirect(url)
 }

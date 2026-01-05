@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
@@ -10,12 +10,19 @@ import { getUserProfile } from '@/lib/utils/get-user-profile'
 
 export default function Sidebar({ className, isOpen = true, onClose, userProfile }: SidebarProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const [accessLevel, setAccessLevel] = useState<'member' | 'client_admin' | 'super_admin' | null>(
     userProfile?.access_level || null
   )
   const [userEmail, setUserEmail] = useState<string>(userProfile?.email || '')
   const [userName, setUserName] = useState<string>(userProfile?.name || '')
   const [isLoading, setIsLoading] = useState(!userProfile) // Only load if profile not provided
+
+  const handleSignOut = async () => {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/auth/login')
+  }
 
   useEffect(() => {
     // Skip fetching if profile is provided as prop (performance optimization)
@@ -193,15 +200,24 @@ export default function Sidebar({ className, isOpen = true, onClose, userProfile
 
         {/* User section */}
         <div className="border-t border-gray-700 p-4">
-          <div className="flex items-center">
+          <div className="flex items-center mb-3">
             <div className="h-8 w-8 rounded-full bg-gray-600 flex items-center justify-center">
               <span className="text-white text-sm">👤</span>
             </div>
-            <div className="ml-3">
+            <div className="ml-3 flex-1">
               <p className="text-sm font-medium text-white">{userName || 'User'}</p>
               <p className="text-xs text-gray-400">{userEmail || ''}</p>
             </div>
           </div>
+          <button
+            onClick={handleSignOut}
+            className="w-full flex items-center justify-center px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
+          >
+            <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            Sign Out
+          </button>
         </div>
       </div>
 
