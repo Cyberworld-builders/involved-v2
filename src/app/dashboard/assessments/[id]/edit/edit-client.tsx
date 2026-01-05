@@ -118,6 +118,7 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
           target: targetValue,
           is_360: assessment.is_360 ?? false,
           number_of_questions: assessment.number_of_questions ?? null,
+          dimension_question_counts: (assessment.dimension_question_counts as Record<string, number> | null) || {},
           show_question_numbers: assessment.show_question_numbers !== undefined ? assessment.show_question_numbers : true,
           use_custom_fields: assessment.use_custom_fields ?? false,
           custom_fields: customFields,
@@ -258,6 +259,7 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
         use_custom_fields?: boolean
         custom_fields?: { tag: string[]; default: string[] } | null
         number_of_questions?: number | null
+        dimension_question_counts?: Record<string, number> | null
         show_question_numbers?: boolean
       }
       
@@ -284,6 +286,7 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
       updateData.target = targetValue
       updateData.is_360 = data.is_360
       updateData.number_of_questions = data.number_of_questions ?? null
+      updateData.dimension_question_counts = data.dimension_question_counts && Object.keys(data.dimension_question_counts).length > 0 ? data.dimension_question_counts : null
       updateData.show_question_numbers = data.show_question_numbers !== undefined ? data.show_question_numbers : true
       
       // Include custom_fields columns (will fail if migration 007 hasn't been run)

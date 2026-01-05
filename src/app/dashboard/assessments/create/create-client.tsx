@@ -102,6 +102,7 @@ export default function CreateAssessmentClient() {
             target: targetValue,
             is_360: data.is_360,
             number_of_questions: data.number_of_questions || null,
+            dimension_question_counts: data.dimension_question_counts && Object.keys(data.dimension_question_counts).length > 0 ? data.dimension_question_counts : null,
             show_question_numbers: data.show_question_numbers !== undefined ? data.show_question_numbers : true,
             type: data.is_360 ? '360' : 'custom',
             use_custom_fields: data.use_custom_fields,

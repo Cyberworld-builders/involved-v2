@@ -271,6 +271,7 @@ export interface AssessmentFormData {
   target: 'self' | 'other_user' | 'group_leader' | ''  // Legacy: 0=self, 1=other_user, 2=group_leader
   is_360: boolean
   number_of_questions: number | null  // For non-360 assessments: number of questions to randomly select
+  dimension_question_counts: Record<string, number>  // For non-360 assessments: number of questions per dimension (dimension_id -> count)
   show_question_numbers: boolean  // Whether to display question numbers on the assessment
   use_custom_fields: boolean
   custom_fields: CustomField[]
@@ -325,6 +326,7 @@ export default function AssessmentForm({
     target: (initialData?.target as 'self' | 'other_user' | 'group_leader') || '',
     is_360: initialData?.is_360 || false,
     number_of_questions: initialData?.number_of_questions || null,
+    dimension_question_counts: initialData?.dimension_question_counts || {},
     show_question_numbers: initialData?.show_question_numbers !== undefined ? initialData.show_question_numbers : true,
     use_custom_fields: initialData?.use_custom_fields || false,
     custom_fields: initialData?.custom_fields || [],
@@ -503,6 +505,39 @@ export default function AssessmentForm({
       roots: sortDimensions(rootDimensions),
       getChildren: (parentId: string) => sortDimensions(childrenMap.get(parentId) || []),
     }
+  }
+
+  // Calculate the number of questions per dimension (excluding instructions and page breaks)
+  const getQuestionCountPerDimension = (dimensionId: string | null): number => {
+    return formData.fields.filter(field => {
+      const fieldType = field.type as string
+      const isQuestion = fieldType !== 'instructions' && 
+                         fieldType !== '10' && 
+                         fieldType !== 'page_break'
+      return isQuestion && field.dimension_id === dimensionId
+    }).length
+  }
+
+  // Handle dimension question count change
+  const handleDimensionQuestionCountChange = (dimensionId: string, value: string) => {
+    const numValue = value === '' ? 0 : parseInt(value, 10)
+    if (isNaN(numValue) || numValue < 0) return
+
+    const maxCount = getQuestionCountPerDimension(dimensionId)
+    const clampedValue = Math.min(numValue, maxCount)
+
+    setFormData(prev => ({
+      ...prev,
+      dimension_question_counts: {
+        ...(prev.dimension_question_counts || {}),
+        [dimensionId]: clampedValue,
+      },
+    }))
+  }
+
+  // Get dimension question count safely
+  const getDimensionQuestionCount = (dimensionId: string): number => {
+    return formData.dimension_question_counts?.[dimensionId] ?? 0
   }
 
   const handleDownloadDimensionsTemplate = () => {
@@ -1643,6 +1678,33 @@ export default function AssessmentForm({
                               </select>
                             </div>
                           </div>
+                          {/* Question Count Input (only for non-360 assessments) */}
+                          {!formData.is_360 && (
+                            <div className="mt-4 border-t border-gray-200 pt-4">
+                              <label className="block text-sm font-medium text-gray-900 mb-2">
+                                Questions to Select from This Dimension
+                              </label>
+                              <div className="flex items-center gap-4">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max={getQuestionCountPerDimension(dimension.id)}
+                                  value={getDimensionQuestionCount(dimension.id)}
+                                  onChange={(e) => handleDimensionQuestionCountChange(dimension.id, e.target.value)}
+                                  className="w-24 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
+                                  placeholder="0"
+                                />
+                                <span className="text-sm text-gray-600">
+                                  (Max: {getQuestionCountPerDimension(dimension.id)} questions available)
+                                </span>
+                              </div>
+                              {getDimensionQuestionCount(dimension.id) > getQuestionCountPerDimension(dimension.id) && (
+                                <p className="text-xs text-red-600 mt-1">
+                                  Cannot exceed {getQuestionCountPerDimension(dimension.id)} available questions
+                                </p>
+                              )}
+                            </div>
+                          )}
                           <div className="mt-4 flex justify-between items-center">
                             {children.length > 0 && (
                               <div className="text-sm text-gray-600">

@@ -155,7 +155,17 @@ export async function POST(request: NextRequest) {
       job_id,
       reminder = false,
       reminder_frequency = null,
-    } = body
+    } = body as {
+      user_ids: string[]
+      assessment_ids: string[]
+      expires: string
+      target_id?: string | null
+      custom_fields?: Record<string, unknown> | null
+      whitelabel?: boolean
+      job_id?: string | null
+      reminder?: boolean
+      reminder_frequency?: string | null
+    }
 
     // Validate required fields
     if (!user_ids || !Array.isArray(user_ids) || user_ids.length === 0) {
@@ -216,7 +226,7 @@ export async function POST(request: NextRequest) {
     // Verify all assessments exist and get their details
     const { data: assessments, error: assessmentsError } = await adminClient
       .from('assessments')
-      .select('id, title, is_360, number_of_questions')
+      .select('id, title, is_360, number_of_questions, dimension_question_counts')
       .in('id', assessment_ids)
 
     if (assessmentsError || !assessments || assessments.length !== assessment_ids.length) {
@@ -232,6 +242,7 @@ export async function POST(request: NextRequest) {
       title: string
       is_360: boolean
       number_of_questions: number | null
+      dimension_question_counts: Record<string, number> | null
     }
     const typedAssessments = assessments as AssessmentWithDetails[]
 
@@ -330,11 +341,11 @@ export async function POST(request: NextRequest) {
     const assignments: AssignmentInsert[] = []
     const assignmentUrls: Array<{ id: string; url: string }> = []
 
-    for (const userId of user_ids) {
-      const user = users.find((u) => u.id === userId)
-      if (!user) continue
+      for (const userId of user_ids) {
+        const user = users.find((u) => u.id === userId)
+        if (!user) continue
 
-      for (const assessmentId of assessment_ids) {
+        for (const assessmentId of assessment_ids) {
         const assignmentData: AssignmentInsert & {
           reminder?: boolean
           reminder_frequency?: string | null
@@ -367,13 +378,13 @@ export async function POST(request: NextRequest) {
 
         assignments.push(assignment)
 
-        // For non-360 assessments with number_of_questions set, randomly select questions
+        // For non-360 assessments, select questions based on dimension_question_counts or number_of_questions
         const assessment = typedAssessments.find(a => a.id === assessmentId)
-        if (assessment && !assessment.is_360 && assessment.number_of_questions) {
+        if (assessment && !assessment.is_360) {
           // Load all questions for this assessment (excluding instructions and page breaks)
           const { data: allFields, error: fieldsError } = await adminClient
             .from('fields')
-            .select('id, order, type')
+            .select('id, order, type, dimension_id')
             .eq('assessment_id', assessmentId)
             .order('order', { ascending: true })
 
@@ -387,10 +398,51 @@ export async function POST(request: NextRequest) {
             })
 
             if (questionFields.length > 0) {
-              // Randomly select the specified number of questions
-              const shuffled = [...questionFields].sort(() => Math.random() - 0.5)
-              const selectedFields = shuffled.slice(0, Math.min(assessment.number_of_questions, questionFields.length))
-              
+              let selectedFields: typeof questionFields = []
+
+              // Check if dimension_question_counts is set and has values
+              const dimensionCounts = assessment.dimension_question_counts
+              const hasDimensionCounts = dimensionCounts && 
+                                         typeof dimensionCounts === 'object' && 
+                                         Object.keys(dimensionCounts).length > 0 &&
+                                         Object.values(dimensionCounts).some((count: unknown) => typeof count === 'number' && count > 0)
+
+              if (hasDimensionCounts) {
+                // Select questions per dimension based on dimension_question_counts
+                const selectedByDimension: typeof questionFields = []
+                
+                for (const [dimensionId, count] of Object.entries(dimensionCounts)) {
+                  if (typeof count !== 'number' || count <= 0) continue
+                  
+                  // Get questions for this dimension
+                  const dimensionFields = questionFields.filter(field => field.dimension_id === dimensionId)
+                  
+                  if (dimensionFields.length > 0) {
+                    // Randomly select the specified number of questions from this dimension
+                    const shuffled = [...dimensionFields].sort(() => Math.random() - 0.5)
+                    const selected = shuffled.slice(0, Math.min(count, dimensionFields.length))
+                    selectedByDimension.push(...selected)
+                  }
+                }
+                
+                // Also handle questions with no dimension (dimension_id is null)
+                const nullDimensionCount = dimensionCounts['null'] || dimensionCounts[''] || 0
+                if (nullDimensionCount > 0) {
+                  const nullDimensionFields = questionFields.filter(field => !field.dimension_id)
+                  if (nullDimensionFields.length > 0) {
+                    const shuffled = [...nullDimensionFields].sort(() => Math.random() - 0.5)
+                    const selected = shuffled.slice(0, Math.min(nullDimensionCount, nullDimensionFields.length))
+                    selectedByDimension.push(...selected)
+                  }
+                }
+                
+                selectedFields = selectedByDimension
+              } else if (assessment.number_of_questions) {
+                // Fall back to random selection using number_of_questions
+                const shuffled = [...questionFields].sort(() => Math.random() - 0.5)
+                selectedFields = shuffled.slice(0, Math.min(assessment.number_of_questions, questionFields.length))
+              }
+
               // Sort selected fields by original order to maintain question flow
               selectedFields.sort((a, b) => (a.order || 0) - (b.order || 0))
 
