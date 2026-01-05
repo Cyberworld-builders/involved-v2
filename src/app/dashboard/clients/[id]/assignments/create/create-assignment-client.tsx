@@ -36,6 +36,7 @@ interface Group {
   members?: Array<{
     profile_id: string
     profile?: User
+    role?: string | null
   }>
 }
 
@@ -72,6 +73,8 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
   const [emailSubject, setEmailSubject] = useState('New assessments have been assigned to you')
   const [emailBody, setEmailBody] = useState('Hello {name}, you have been assigned the following assessments:\n\n{assessments}\n\nPlease complete them by {expiration-date}.')
   const [enableReminder, setEnableReminder] = useState(false)
+  const [firstReminderDate, setFirstReminderDate] = useState('')
+  const [firstReminderTime, setFirstReminderTime] = useState('09:00')
   const [reminderFrequency, setReminderFrequency] = useState('+3 days')
   const [reminderBody, setReminderBody] = useState('Hello {name}, this is a reminder that you have incomplete assignments:\n\n{assessments}\n\nPlease complete them by {expiration-date}.')
   const [assignmentUsers, setAssignmentUsers] = useState<AssignmentUser[]>([])
@@ -122,6 +125,7 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
             target:profiles!groups_target_id_fkey(id, name, email, username),
             group_members(
               profile_id,
+              role,
               profiles(id, name, email, username)
             )
           `)
@@ -137,6 +141,7 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
             target?: User | null
             group_members?: Array<{
               profile_id: string
+              role?: string | null
               profiles?: User | null
             }>
           }) => ({
@@ -148,6 +153,7 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
             members: group.group_members?.map((gm) => ({
               profile_id: gm.profile_id,
               profile: gm.profiles || undefined,
+              role: gm.role || null,
             })) || [],
           }))
           setAvailableGroups(transformedGroups)
@@ -157,6 +163,11 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
         const defaultExpiration = new Date()
         defaultExpiration.setDate(defaultExpiration.getDate() + 30)
         setExpirationDate(defaultExpiration.toISOString().split('T')[0])
+        
+        // Set default first reminder date (3 days from now)
+        const defaultFirstReminder = new Date()
+        defaultFirstReminder.setDate(defaultFirstReminder.getDate() + 3)
+        setFirstReminderDate(defaultFirstReminder.toISOString().split('T')[0])
 
         // Set default email body
         setEmailBody(`Hello {name},
@@ -219,12 +230,15 @@ Thank you.`)
         const targetId = group.target_id || null
         const target = group.target || null
 
+        // Get role from group member
+        const role = member.role || ''
+
         newUsers.push({
           user_id: member.profile.id,
           user: member.profile,
           target_id: targetId,
           target: target,
-          role: '',
+          role: role,
           source: 'group',
           groupId: group.id,
           groupName: group.name,
@@ -248,11 +262,6 @@ Thank you.`)
     ))
   }
 
-  const handleSetRole = (index: number, role: string) => {
-    setAssignmentUsers(prev => prev.map((au, i) => 
-      i === index ? { ...au, role } : au
-    ))
-  }
 
   // Returns true if target is REQUIRED (360s and assessments with target='1' or '2')
   const getRequiresTarget = (assessment: Assessment): boolean => {
@@ -364,6 +373,7 @@ Thank you.`)
                 custom_fields: customFields,
                 whitelabel: false,
                 reminder: enableReminder,
+                first_reminder_date: enableReminder && firstReminderDate ? `${firstReminderDate}T${firstReminderTime}:00` : null,
                 reminder_frequency: enableReminder ? reminderFrequency : null,
               }),
             })
@@ -758,15 +768,47 @@ Thank you.`)
                     </select>
                   </div>
 
-                  {/* Reminder Frequency */}
+                  {/* Reminder Settings */}
                   {enableReminder && (
                     <>
+                      {/* First Reminder Date & Time */}
+                      <div className="mt-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          First Reminder Date & Time
+                        </label>
+                        <p className="text-sm text-gray-500 mb-3">
+                          The date and time when the first reminder should be sent.
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <input
+                              type="date"
+                              value={firstReminderDate}
+                              onChange={(e) => setFirstReminderDate(e.target.value)}
+                              required
+                              min={new Date().toISOString().split('T')[0]}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
+                            />
+                          </div>
+                          <div>
+                            <input
+                              type="time"
+                              value={firstReminderTime}
+                              onChange={(e) => setFirstReminderTime(e.target.value)}
+                              required
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Reminder Frequency */}
                       <div className="mt-4">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Reminder Frequency
                         </label>
                         <p className="text-sm text-gray-500 mb-3">
-                          How often to send reminder emails for incomplete assignments.
+                          How often reminders should be sent after the first one.
                         </p>
                         <select
                           value={reminderFrequency}
@@ -792,23 +834,6 @@ Thank you.`)
                             <option value="+3 months">Every 3 Months</option>
                           </optgroup>
                         </select>
-                        <p className="text-xs text-gray-500 mt-1">
-                          The first reminder will be sent {(() => {
-                            if (reminderFrequency.startsWith('+1 day')) return '1 day'
-                            if (reminderFrequency.startsWith('+2 days')) return '2 days'
-                            if (reminderFrequency.startsWith('+3 days')) return '3 days'
-                            if (reminderFrequency.startsWith('+4 days')) return '4 days'
-                            if (reminderFrequency.startsWith('+5 days')) return '5 days'
-                            if (reminderFrequency.startsWith('+6 days')) return '6 days'
-                            if (reminderFrequency === '+1 week') return '1 week'
-                            if (reminderFrequency === '+2 weeks') return '2 weeks'
-                            if (reminderFrequency === '+3 weeks') return '3 weeks'
-                            if (reminderFrequency === '+1 month') return '1 month'
-                            if (reminderFrequency === '+2 months') return '2 months'
-                            if (reminderFrequency === '+3 months') return '3 months'
-                            return 'at the specified interval'
-                          })()} after the assignment is created.
-                        </p>
                       </div>
                       <div className="mt-4">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -920,21 +945,6 @@ Thank you.`)
                                   {requiresTarget 
                                     ? 'The person being assessed in this 360/development assessment. Select the same user for a self-assessment.'
                                     : 'Optional: The person being assessed. Used for [name] shortcode replacement in questions.'}
-                                </p>
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                  Role
-                                </label>
-                                <input
-                                  type="text"
-                                  value={au.role}
-                                  onChange={(e) => handleSetRole(index, e.target.value)}
-                                  placeholder="e.g., Manager, Peer, Direct Report"
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
-                                />
-                                <p className="text-xs text-gray-500 mt-1">
-                                  The relationship/role of the assessor to the target
                                 </p>
                               </div>
                             </div>
@@ -1169,12 +1179,15 @@ Thank you.`)
                             const targetId = group.target_id || null
                             const target = group.target || null
 
+                            // Get role from group member
+                            const role = member.role || ''
+
                             newUsers.push({
                               user_id: member.profile.id,
                               user: member.profile,
                               target_id: targetId,
                               target: target,
-                              role: '',
+                              role: role,
                               source: 'group',
                               groupId: group.id,
                               groupName: group.name,

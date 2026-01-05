@@ -154,6 +154,7 @@ export async function POST(request: NextRequest) {
       whitelabel = false,
       job_id,
       reminder = false,
+      first_reminder_date = null,
       reminder_frequency = null,
     } = body as {
       user_ids: string[]
@@ -164,6 +165,7 @@ export async function POST(request: NextRequest) {
       whitelabel?: boolean
       job_id?: string | null
       reminder?: boolean
+      first_reminder_date?: string | null
       reminder_frequency?: string | null
     }
 
@@ -246,38 +248,44 @@ export async function POST(request: NextRequest) {
     }
     const typedAssessments = assessments as AssessmentWithDetails[]
 
-    // Calculate next_reminder from reminder_frequency if reminder is enabled
+    // Calculate next_reminder from first_reminder_date if provided, otherwise calculate from reminder_frequency
     let nextReminderDate: Date | null = null
-    if (reminder && reminder_frequency) {
-      const now = new Date()
-      // Parse frequency string like "+1 day", "+2 days", "+1 week", "+2 weeks", "+1 month", etc.
-      if (reminder_frequency === '+1 day') {
-        nextReminderDate = new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000)
-      } else if (reminder_frequency === '+2 days') {
-        nextReminderDate = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000)
-      } else if (reminder_frequency === '+3 days') {
-        nextReminderDate = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000)
-      } else if (reminder_frequency === '+4 days') {
-        nextReminderDate = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000)
-      } else if (reminder_frequency === '+5 days') {
-        nextReminderDate = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000)
-      } else if (reminder_frequency === '+6 days') {
-        nextReminderDate = new Date(now.getTime() + 6 * 24 * 60 * 60 * 1000)
-      } else if (reminder_frequency === '+1 week') {
-        nextReminderDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
-      } else if (reminder_frequency === '+2 weeks') {
-        nextReminderDate = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000)
-      } else if (reminder_frequency === '+3 weeks') {
-        nextReminderDate = new Date(now.getTime() + 21 * 24 * 60 * 60 * 1000)
-      } else if (reminder_frequency === '+1 month') {
-        nextReminderDate = new Date(now)
-        nextReminderDate.setMonth(nextReminderDate.getMonth() + 1)
-      } else if (reminder_frequency === '+2 months') {
-        nextReminderDate = new Date(now)
-        nextReminderDate.setMonth(nextReminderDate.getMonth() + 2)
-      } else if (reminder_frequency === '+3 months') {
-        nextReminderDate = new Date(now)
-        nextReminderDate.setMonth(nextReminderDate.getMonth() + 3)
+    if (reminder) {
+      if (first_reminder_date) {
+        // Use the specified first reminder date
+        nextReminderDate = new Date(first_reminder_date)
+      } else if (reminder_frequency) {
+        // Fallback: Calculate from frequency if no first reminder date is provided
+        const now = new Date()
+        // Parse frequency string like "+1 day", "+2 days", "+1 week", "+2 weeks", "+1 month", etc.
+        if (reminder_frequency === '+1 day') {
+          nextReminderDate = new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000)
+        } else if (reminder_frequency === '+2 days') {
+          nextReminderDate = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000)
+        } else if (reminder_frequency === '+3 days') {
+          nextReminderDate = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000)
+        } else if (reminder_frequency === '+4 days') {
+          nextReminderDate = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000)
+        } else if (reminder_frequency === '+5 days') {
+          nextReminderDate = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000)
+        } else if (reminder_frequency === '+6 days') {
+          nextReminderDate = new Date(now.getTime() + 6 * 24 * 60 * 60 * 1000)
+        } else if (reminder_frequency === '+1 week') {
+          nextReminderDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+        } else if (reminder_frequency === '+2 weeks') {
+          nextReminderDate = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000)
+        } else if (reminder_frequency === '+3 weeks') {
+          nextReminderDate = new Date(now.getTime() + 21 * 24 * 60 * 60 * 1000)
+        } else if (reminder_frequency === '+1 month') {
+          nextReminderDate = new Date(now)
+          nextReminderDate.setMonth(nextReminderDate.getMonth() + 1)
+        } else if (reminder_frequency === '+2 months') {
+          nextReminderDate = new Date(now)
+          nextReminderDate.setMonth(nextReminderDate.getMonth() + 2)
+        } else if (reminder_frequency === '+3 months') {
+          nextReminderDate = new Date(now)
+          nextReminderDate.setMonth(nextReminderDate.getMonth() + 3)
+        }
       }
     }
 

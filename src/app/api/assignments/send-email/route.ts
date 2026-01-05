@@ -87,6 +87,12 @@ export async function POST(request: NextRequest) {
         return `- ${a.assessmentTitle}`
       })
       .join('\n')
+    
+    // Create fallback plain text links at the bottom (in case HTML links are blocked)
+    const fallbackLinks = assignments
+      .filter((a) => a.url)
+      .map((a) => `${a.assessmentTitle}: ${a.url}`)
+      .join('\n')
 
     // Format expiration date
     const formattedExpiration = formatExpirationDate(expirationDate)
@@ -95,7 +101,7 @@ export async function POST(request: NextRequest) {
     const username = providedUsername || to.split('@')[0]
 
     // Replace shortcodes in email body (use HTML version for assessments)
-    const processedBody = replaceShortcodes(
+    let processedBody = replaceShortcodes(
       emailBody,
       toName,
       username,
@@ -105,8 +111,13 @@ export async function POST(request: NextRequest) {
       password
     )
     
+    // Add fallback plain text links at the bottom of HTML body (in case HTML links are blocked)
+    if (fallbackLinks) {
+      processedBody += `\n\n---\n\nIf the links above don't work, copy and paste these URLs into your browser:\n\n${fallbackLinks}`
+    }
+    
     // Create plain text version for text/plain email body
-    const processedBodyText = replaceShortcodes(
+    let processedBodyText = replaceShortcodes(
       emailBody,
       toName,
       username,
@@ -115,6 +126,11 @@ export async function POST(request: NextRequest) {
       formattedExpiration,
       password
     )
+    
+    // Add fallback plain text links at the bottom of plain text body
+    if (fallbackLinks) {
+      processedBodyText += `\n\n---\n\nIf the links above don't work, copy and paste these URLs into your browser:\n\n${fallbackLinks}`
+    }
 
     // Check if email service is configured
     // Priority: AWS SES with OIDC (AWS_ROLE_ARN) > AWS SES with access keys > Resend > SendGrid > SMTP
@@ -204,9 +220,21 @@ export async function POST(request: NextRequest) {
         const fromEmail = (process.env.EMAIL_FROM || process.env.AWS_SES_FROM_EMAIL || process.env.SMTP_FROM || 'noreply@example.com').trim()
         // Convert newlines to <br> but preserve existing HTML structure
         // If the body already contains HTML tags (like <ul>), preserve them
-        const htmlBody = processedBody.includes('<ul>') || processedBody.includes('<li>') || processedBody.includes('<a')
-          ? processedBody.replace(/\n/g, '<br>')
-          : `<p>${processedBody.replace(/\n/g, '<br>')}</p>`
+        // Handle the fallback links section separately to preserve line breaks
+        let htmlBody = processedBody
+        // Convert newlines to <br> for the main body, but preserve the fallback links section formatting
+        if (htmlBody.includes('---')) {
+          const parts = htmlBody.split('---')
+          const mainPart = parts[0].includes('<ul>') || parts[0].includes('<li>') || parts[0].includes('<a')
+            ? parts[0].replace(/\n/g, '<br>')
+            : `<p>${parts[0].replace(/\n/g, '<br>')}</p>`
+          const fallbackPart = parts.slice(1).join('---').replace(/\n/g, '<br>')
+          htmlBody = mainPart + '<br>---<br><br>' + fallbackPart
+        } else {
+          htmlBody = processedBody.includes('<ul>') || processedBody.includes('<li>') || processedBody.includes('<a')
+            ? processedBody.replace(/\n/g, '<br>')
+            : `<p>${processedBody.replace(/\n/g, '<br>')}</p>`
+        }
 
         const sendCommand = new SendEmailCommand({
           Source: fromEmail,
@@ -250,11 +278,24 @@ export async function POST(request: NextRequest) {
       try {
         const { Resend } = await import('resend')
         const resend = new Resend(process.env.RESEND_API_KEY)
+        // Format HTML body similar to AWS SES
+        let resendHtmlBody = processedBody
+        if (resendHtmlBody.includes('---')) {
+          const parts = resendHtmlBody.split('---')
+          const mainPart = parts[0].includes('<ul>') || parts[0].includes('<li>') || parts[0].includes('<a')
+            ? parts[0].replace(/\n/g, '<br>')
+            : `<p>${parts[0].replace(/\n/g, '<br>')}</p>`
+          const fallbackPart = parts.slice(1).join('---').replace(/\n/g, '<br>')
+          resendHtmlBody = mainPart + '<br>---<br><br>' + fallbackPart
+        } else {
+          resendHtmlBody = processedBody.replace(/\n/g, '<br>')
+        }
         const { data, error } = await resend.emails.send({
           from: process.env.EMAIL_FROM || 'noreply@example.com',
           to: to,
           subject: subject,
-          html: processedBody.replace(/\n/g, '<br>'),
+          html: resendHtmlBody,
+          text: processedBodyText,
         })
 
         if (error) {

@@ -160,7 +160,7 @@ export default function AssessmentPreviewClient({ assessmentId }: PreviewClientP
                           <label
                             className={`flex items-center justify-center px-3 py-6 border cursor-pointer transition-colors w-full h-full whitespace-nowrap m-0 ${
                               currentAnswer === index 
-                                ? 'bg-orange-100 hover:bg-orange-200 border-orange-500' 
+                                ? 'bg-[#da7327] hover:bg-[#c8651f] border-[#da7327] text-white' 
                                 : 'bg-white hover:bg-gray-50 border-gray-300'
                             }`}
                             style={{ 
@@ -180,7 +180,7 @@ export default function AssessmentPreviewClient({ assessmentId }: PreviewClientP
                               className="sr-only"
                               aria-label={anchor.name || `Option ${index + 1}`}
                             />
-                            <span className="text-sm font-medium text-gray-900">
+                            <span className={`text-sm font-medium ${currentAnswer === index ? 'text-white' : 'text-gray-900'}`}>
                               {anchor.name || `Option ${index + 1}`}
                             </span>
                           </label>
@@ -213,7 +213,7 @@ export default function AssessmentPreviewClient({ assessmentId }: PreviewClientP
                   key={anchor.id}
                   className={`flex items-center justify-center px-4 py-6 border rounded-md cursor-pointer transition-colors ${
                     currentAnswer === index
-                      ? 'bg-orange-100 border-orange-500 hover:bg-orange-200'
+                      ? 'bg-[#da7327] border-[#da7327] hover:bg-[#c8651f] text-white'
                       : 'border-gray-300 hover:bg-gray-50'
                   }`}
                 >

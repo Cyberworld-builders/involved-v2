@@ -1323,7 +1323,7 @@ export default function ClientUsers({ clientId }: ClientUsersProps) {
                   type="button"
                   onClick={handleResetPasswordSubmit}
                   disabled={isResettingPassword || !newPassword || !confirmPassword}
-                  className="bg-orange-600 hover:bg-orange-700"
+                  className="bg-[#da7327] hover:bg-[#c8651f]"
                 >
                   {isResettingPassword ? 'Resetting...' : 'Reset Password'}
                 </Button>
