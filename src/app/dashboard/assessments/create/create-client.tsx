@@ -115,47 +115,94 @@ export default function CreateAssessmentClient() {
       }
 
       // Create dimensions if any
+      // Map temporary dimension IDs to database UUIDs (will be populated as we insert dimensions)
+      const tempIdToDbIdMap = new Map<string, string>()
+      
       if (data.dimensions.length > 0) {
-        const dimensionsToInsert = data.dimensions
+        // Build a map of temporary IDs to dimension data
+        const tempIdMap = new Map<string, { name: string; code: string; parent_id: string | null }>()
+        data.dimensions
           .filter(dim => dim.name && dim.code)
-          .map(dim => ({
-            assessment_id: assessment.id,
-            name: dim.name,
-            code: dim.code,
-            parent_id: dim.parent_id || null,
-          }))
+          .forEach(dim => {
+            tempIdMap.set(dim.id, {
+              name: dim.name,
+              code: dim.code,
+              parent_id: dim.parent_id,
+            })
+          })
 
-        if (dimensionsToInsert.length > 0) {
-          const { error: dimensionsError } = await supabase
+        // Organize dimensions into levels (parents first, then children)
+        const getDimensionLevel = (dimId: string, visited = new Set<string>()): number => {
+          if (visited.has(dimId)) return 0 // Circular reference protection
+          visited.add(dimId)
+          const dim = tempIdMap.get(dimId)
+          if (!dim || !dim.parent_id || !tempIdMap.has(dim.parent_id)) return 0
+          return 1 + getDimensionLevel(dim.parent_id, visited)
+        }
+
+        // Sort dimensions by level (parents first)
+        const sortedDimensions = Array.from(tempIdMap.entries())
+          .sort(([idA], [idB]) => getDimensionLevel(idA) - getDimensionLevel(idB))
+
+        // Insert dimensions level by level, mapping temporary IDs to database UUIDs
+        for (const [tempId, dimData] of sortedDimensions) {
+          // Map parent_id from temporary ID to database UUID if it exists
+          let parentId: string | null = null
+          if (dimData.parent_id && tempIdToDbIdMap.has(dimData.parent_id)) {
+            parentId = tempIdToDbIdMap.get(dimData.parent_id)!
+          } else if (dimData.parent_id) {
+            // Parent not yet inserted - this shouldn't happen with proper sorting, but handle gracefully
+            console.warn(`Parent dimension ${dimData.parent_id} not found for ${tempId}, setting to null`)
+            parentId = null
+          }
+
+          const { data: insertedDimension, error: insertError } = await supabase
             .from('dimensions')
-            .insert(dimensionsToInsert)
+            .insert({
+              assessment_id: assessment.id,
+              name: dimData.name,
+              code: dimData.code,
+              parent_id: parentId,
+            })
+            .select('id')
+            .single()
 
-          if (dimensionsError) {
-            throw new Error(`Failed to create dimensions: ${dimensionsError.message}`)
+          if (insertError) {
+            throw new Error(`Failed to create dimensions: ${insertError.message}`)
+          }
+
+          // Map temporary ID to database UUID
+          if (insertedDimension) {
+            tempIdToDbIdMap.set(tempId, insertedDimension.id)
           }
         }
       }
 
       // Create fields (questions) if any
       if (data.fields.length > 0) {
-        // Get dimension IDs for mapping
-        const { data: dimensions } = await supabase
-          .from('dimensions')
-          .select('id, code')
-          .eq('assessment_id', assessment.id)
+        // Use the tempIdToDbIdMap we created when inserting dimensions
+        // If it's empty (no dimensions were inserted), rebuild it from database
+        if (tempIdToDbIdMap.size === 0 && data.dimensions.length > 0) {
+          const { data: dimensions } = await supabase
+            .from('dimensions')
+            .select('id, code')
+            .eq('assessment_id', assessment.id)
 
-        const dimensionMap = new Map(
-          dimensions?.map(d => [d.code, d.id]) || []
-        )
+          dimensions?.forEach(dbDim => {
+            // Find the matching dimension in form data by code (since code is unique)
+            const formDim = data.dimensions.find(d => d.code === dbDim.code)
+            if (formDim) {
+              tempIdToDbIdMap.set(formDim.id, dbDim.id)
+            }
+          })
+        }
 
         // Preserve the exact order from the form data array
         const fieldsToInsert = data.fields.map((field, index) => {
           let dimensionId = null
           if (field.dimension_id) {
-            const dimension = data.dimensions.find(d => d.id === field.dimension_id)
-            if (dimension) {
-              dimensionId = dimensionMap.get(dimension.code) || null
-            }
+            // Map temporary dimension ID to database UUID
+            dimensionId = tempIdToDbIdMap.get(field.dimension_id) || null
           }
 
           // Use the array index + 1 as the order to preserve the exact order from the form
