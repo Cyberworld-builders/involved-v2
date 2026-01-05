@@ -6,6 +6,10 @@ export async function GET(request: NextRequest) {
   const code = requestUrl.searchParams.get('code')
   const error = requestUrl.searchParams.get('error')
   const errorDescription = requestUrl.searchParams.get('error_description')
+  
+  // Log all query parameters for debugging
+  const allParams = Object.fromEntries(requestUrl.searchParams.entries())
+  console.log('Auth callback received with params:', allParams)
 
   // Handle errors from Supabase
   if (error) {
@@ -39,7 +43,20 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // No code provided - redirect to login
-  console.warn('Auth callback called without code parameter')
+  // Check if there's a token_hash (used by some Supabase auth flows)
+  const tokenHash = requestUrl.searchParams.get('token_hash')
+  const type = requestUrl.searchParams.get('type')
+  
+  if (tokenHash && type === 'magiclink') {
+    // This is a magic link with token_hash - we need to verify it client-side
+    // Redirect to a client component that can handle this
+    const url = new URL('/auth/callback/verify', requestUrl.origin)
+    url.searchParams.set('token_hash', tokenHash)
+    url.searchParams.set('type', type)
+    return NextResponse.redirect(url)
+  }
+
+  // No code or token_hash provided - redirect to login
+  console.warn('Auth callback called without code or token_hash parameter. All params:', allParams)
   return NextResponse.redirect(new URL('/auth/login', requestUrl.origin))
 }
