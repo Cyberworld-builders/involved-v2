@@ -254,8 +254,14 @@ Thank you.`)
     ))
   }
 
+  // Returns true if target is REQUIRED (360s and assessments with target='1' or '2')
   const getRequiresTarget = (assessment: Assessment): boolean => {
     return assessment.target === '1' || assessment.target === '2' || assessment.is_360 === true
+  }
+
+  // Returns true if target selection should be shown (any assessment with target field set or is_360)
+  const getShowsTarget = (assessment: Assessment): boolean => {
+    return assessment.target !== null && assessment.target !== '' || assessment.is_360 === true
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -302,11 +308,11 @@ Thank you.`)
         throw new Error(errorMsg)
       }
 
-      // Check if any selected assessments require targets
+      // Check if any selected assessments require targets (360s and target='1' or '2')
       const requiresTarget = selectedAssessments.some(a => getRequiresTarget(a))
 
       if (requiresTarget) {
-        // Validate that all users have targets set
+        // Validate that all users have targets set (required for 360s and target='1'/'2')
         for (const au of assignmentUsers) {
           if (!au.target_id) {
             const errorMsg = `Target must be set for ${au.user.name} when assigning 360/development assessments`
@@ -315,6 +321,7 @@ Thank you.`)
           }
         }
       }
+      // Note: For non-360 assessments with optional targets (like leadership), target_id can be null
 
       console.log(`Creating assignments for ${assignmentUsers.length} users and ${selectedAssessmentIds.length} assessments...`)
 
@@ -332,9 +339,9 @@ Thank you.`)
           const assessment = assessments.find(a => a.id === assessmentId)
           if (!assessment) continue
 
-          // Prepare custom_fields for 360 assessments
+          // Prepare custom_fields for assessments with targets (360s and others with targets)
           let customFields = null
-          if (au.target && getRequiresTarget(assessment)) {
+          if (au.target && (getRequiresTarget(assessment) || au.target_id)) {
             customFields = {
               type: ['name', 'email', 'role'],
               value: [au.target.name, au.target.email, au.role || ''],
@@ -565,6 +572,7 @@ Thank you.`)
 
   const selectedAssessments = assessments.filter(a => selectedAssessmentIds.includes(a.id))
   const requiresTarget = selectedAssessments.some(a => getRequiresTarget(a))
+  const showsTarget = selectedAssessments.some(a => getShowsTarget(a))
   const totalAssignmentsToCreate = assignmentUsers.length * selectedAssessmentIds.length
 
   return (
@@ -889,11 +897,11 @@ Thank you.`)
                             </Button>
                           </div>
 
-                          {requiresTarget && (
+                          {showsTarget && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-200">
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                  Target User <span className="text-red-500">*</span>
+                                  Target User {requiresTarget && <span className="text-red-500">*</span>}
                                 </label>
                                 <select
                                   value={au.target_id || ''}
@@ -909,7 +917,9 @@ Thank you.`)
                                   ))}
                                 </select>
                                 <p className="text-xs text-gray-500 mt-1">
-                                  The person being assessed in this 360/development assessment. Select the same user for a self-assessment.
+                                  {requiresTarget 
+                                    ? 'The person being assessed in this 360/development assessment. Select the same user for a self-assessment.'
+                                    : 'Optional: The person being assessed. Used for [name] shortcode replacement in questions.'}
                                 </p>
                               </div>
                               <div>
