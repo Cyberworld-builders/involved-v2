@@ -174,9 +174,10 @@ export default async function AssignmentsPage() {
                           Due: {new Date(assignment.expires).toLocaleDateString()}
                         </p>
                         {assignment.assessment?.description && (
-                          <p className="text-sm text-gray-500 mt-2">
-                            {assignment.assessment.description}
-                          </p>
+                          <div 
+                            className="text-sm text-gray-500 mt-2 rich-text-content"
+                            dangerouslySetInnerHTML={{ __html: assignment.assessment.description }}
+                          />
                         )}
                       </div>
                       <div className="ml-4">
