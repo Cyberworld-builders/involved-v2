@@ -36,7 +36,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // If user is not authenticated and trying to access protected routes
-  // Exclude /assignment routes - they handle their own authentication flow
+  // Exclude /assignment routes and /auth/callback - they handle their own authentication flow
   if (
     !user &&
     !request.nextUrl.pathname.startsWith('/auth') &&

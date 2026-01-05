@@ -83,11 +83,16 @@ export async function POST(request: NextRequest) {
     // However, admin client doesn't have signInWithOtp, so we'll use generateLink
     // and then manually send the email via our email service
     
+    // Magic links need to go through the auth callback route first
+    // Build the callback URL with the final destination as a parameter
+    const callbackUrl = new URL('/auth/callback', baseUrl)
+    callbackUrl.searchParams.set('next', redirectTo)
+    
     const { data, error } = await adminClient.auth.admin.generateLink({
       type: 'magiclink',
       email: email,
       options: {
-        redirectTo: `${baseUrl}${redirectTo}`,
+        redirectTo: callbackUrl.toString(),
       },
     })
 
