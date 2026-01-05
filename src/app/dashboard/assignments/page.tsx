@@ -181,16 +181,35 @@ export default async function AssignmentsPage() {
                         )}
                       </div>
                       <div className="ml-4">
-                        {assignment.url ? (
-                          <a
-                            href={assignment.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700"
-                          >
-                            Start Assessment
-                          </a>
-                        ) : (
+                        {assignment.url ? (() => {
+                          // Extract just the path and query from the URL to avoid double base URL prepending
+                          let url = assignment.url
+                          try {
+                            // If it's a full URL, extract just the path and query
+                            if (url.startsWith('http://') || url.startsWith('https://')) {
+                              const urlObj = new URL(url)
+                              url = urlObj.pathname + urlObj.search
+                            } else if (!url.startsWith('/')) {
+                              // Ensure relative paths start with /
+                              url = `/${url}`
+                            }
+                          } catch {
+                            // If URL parsing fails, use as-is but ensure it starts with /
+                            if (!url.startsWith('/')) {
+                              url = `/${url}`
+                            }
+                          }
+                          return (
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700"
+                            >
+                              Start Assessment
+                            </a>
+                          )
+                        })() : (
                           <span className="inline-flex items-center px-4 py-2 bg-gray-300 text-gray-600 text-sm font-medium rounded-md cursor-not-allowed">
                             Not Available
                           </span>
