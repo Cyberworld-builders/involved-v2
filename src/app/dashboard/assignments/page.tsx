@@ -8,7 +8,7 @@ type Assignment = Database['public']['Tables']['assignments']['Row']
 type Assessment = Database['public']['Tables']['assessments']['Row']
 
 interface AssignmentWithAssessment extends Assignment {
-  assessment: Assessment | null
+  assessment: Pick<Assessment, 'id' | 'title' | 'description'> | null
 }
 
 export default async function AssignmentsPage() {
@@ -61,14 +61,7 @@ export default async function AssignmentsPage() {
   // Get assignments for this user
   const { data: assignments, error } = await supabase
     .from('assignments')
-    .select(`
-      *,
-      assessment:assessments!assignments_assessment_id_fkey (
-        id,
-        title,
-        description
-      )
-    `)
+    .select('*')
     .eq('user_id', userProfile.id)
     .order('created_at', { ascending: false })
 
@@ -76,7 +69,35 @@ export default async function AssignmentsPage() {
     console.error('Error fetching assignments:', error)
   }
 
-  const assignmentsList = (assignments as AssignmentWithAssessment[]) || []
+  // Get unique assessment IDs
+  const assessmentIds = [...new Set((assignments || []).map(a => a.assessment_id).filter(Boolean))]
+
+  // Fetch assessments separately
+  const assessmentsMap = new Map<string, Pick<Assessment, 'id' | 'title' | 'description'>>()
+  if (assessmentIds.length > 0) {
+    const { data: assessments, error: assessmentsError } = await supabase
+      .from('assessments')
+      .select('id, title, description')
+      .in('id', assessmentIds)
+
+    if (assessmentsError) {
+      console.error('Error fetching assessments:', assessmentsError)
+    } else if (assessments) {
+      for (const assessment of assessments) {
+        assessmentsMap.set(assessment.id, {
+          id: assessment.id,
+          title: assessment.title,
+          description: assessment.description
+        })
+      }
+    }
+  }
+
+  // Join assignments with assessments
+  const assignmentsList: AssignmentWithAssessment[] = (assignments || []).map(assignment => ({
+    ...assignment,
+    assessment: assessmentsMap.get(assignment.assessment_id) || null
+  }))
 
   // Separate assignments by status
   const pendingAssignments = assignmentsList.filter(
