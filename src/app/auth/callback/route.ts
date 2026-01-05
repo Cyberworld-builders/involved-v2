@@ -4,7 +4,6 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
-  const next = requestUrl.searchParams.get('next') || '/dashboard'
   const error = requestUrl.searchParams.get('error')
   const errorDescription = requestUrl.searchParams.get('error_description')
 
@@ -28,11 +27,10 @@ export async function GET(request: NextRequest) {
     }
 
     if (data?.session) {
-      // Successfully authenticated - redirect to the next URL or dashboard
-      // Ensure next is a valid path
-      const redirectPath = next.startsWith('/') ? next : `/${next}`
-      console.log('Auth callback successful, redirecting to:', redirectPath)
-      return NextResponse.redirect(new URL(redirectPath, requestUrl.origin))
+      // Successfully authenticated - redirect to dashboard
+      // Users can access their assignments from there or click the original assignment email link
+      console.log('Auth callback successful, redirecting to dashboard')
+      return NextResponse.redirect(new URL('/dashboard', requestUrl.origin))
     } else {
       console.error('No session created after code exchange. Data:', data)
       const url = new URL('/auth/login', requestUrl.origin)

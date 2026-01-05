@@ -66,6 +66,12 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
+  // Allow auth callback to proceed without redirect (it handles its own redirect)
+  // This must come before the authenticated user redirect check
+  if (request.nextUrl.pathname === '/auth/callback') {
+    return supabaseResponse
+  }
+
   // If user is authenticated and on auth pages, redirect to dashboard
   if (
     user &&

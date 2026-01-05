@@ -5,7 +5,6 @@ interface SendMagicLinkEmailRequest {
   to: string
   toName: string
   magicLink: string
-  returnUrl?: string
 }
 
 export async function POST(request: NextRequest) {

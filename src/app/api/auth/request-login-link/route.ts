@@ -35,23 +35,8 @@ export async function POST(request: NextRequest) {
       baseUrl = `https://${baseUrl}`
     }
     
-    // Ensure returnUrl is a relative path or same origin
-    let redirectTo = returnUrl
-    try {
-      const returnUrlObj = new URL(returnUrl)
-      const baseUrlObj = new URL(baseUrl)
-      
-      // If returnUrl is same origin, use it; otherwise use just the path
-      if (returnUrlObj.origin === baseUrlObj.origin) {
-        redirectTo = returnUrlObj.pathname + returnUrlObj.search
-      } else {
-        // Extract path from returnUrl if it's a full URL
-        redirectTo = returnUrlObj.pathname + returnUrlObj.search
-      }
-    } catch {
-      // If returnUrl is already a relative path, use it as-is
-      redirectTo = returnUrl.startsWith('/') ? returnUrl : `/${returnUrl}`
-    }
+    // Use a clean callback URL without query parameters to avoid issues with Supabase redirect URL validation
+    const callbackUrl = new URL('/auth/callback', baseUrl).toString()
 
     const adminClient = createAdminClient()
 
@@ -83,16 +68,11 @@ export async function POST(request: NextRequest) {
     // However, admin client doesn't have signInWithOtp, so we'll use generateLink
     // and then manually send the email via our email service
     
-    // Magic links need to go through the auth callback route first
-    // Build the callback URL with the final destination as a parameter
-    const callbackUrl = new URL('/auth/callback', baseUrl)
-    callbackUrl.searchParams.set('next', redirectTo)
-    
     const { data, error } = await adminClient.auth.admin.generateLink({
       type: 'magiclink',
       email: email,
       options: {
-        redirectTo: callbackUrl.toString(),
+        redirectTo: callbackUrl,
       },
     })
 
@@ -122,7 +102,6 @@ export async function POST(request: NextRequest) {
           to: email,
           toName: user.user_metadata?.name || email.split('@')[0],
           magicLink: magicLink,
-          returnUrl: redirectTo,
         }),
       })
 
