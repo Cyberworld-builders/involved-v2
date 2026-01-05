@@ -43,7 +43,30 @@ export const ANCHOR_TEMPLATES: AnchorTemplate[] = [
       { name: 'Exceeds Expectations', value: 5, practice: false },
     ],
   },
-  // Additional templates can be added here in the future
+  {
+    id: 'frequency',
+    name: 'Frequency Scale',
+    description: '5-level frequency rating scale',
+    anchors: [
+      { name: 'Rarely', value: 1, practice: false },
+      { name: 'Sometimes', value: 2, practice: false },
+      { name: 'Most of the Time', value: 3, practice: false },
+      { name: 'Almost All of the Time', value: 4, practice: false },
+      { name: 'Always', value: 5, practice: false },
+    ],
+  },
+  {
+    id: 'agreement',
+    name: 'Agreement Scale',
+    description: '5-level agreement rating scale (Likert)',
+    anchors: [
+      { name: 'Strongly Disagree', value: 1, practice: false },
+      { name: 'Disagree', value: 2, practice: false },
+      { name: 'Neither Agree Nor Disagree', value: 3, practice: false },
+      { name: 'Agree', value: 4, practice: false },
+      { name: 'Strongly Agree', value: 5, practice: false },
+    ],
+  },
 ]
 
 // Question types matching legacy system
