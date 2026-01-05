@@ -28,7 +28,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the base URL for redirect
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    let baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    
+    // Ensure baseUrl has a protocol
+    if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+      baseUrl = `https://${baseUrl}`
+    }
     
     // Ensure returnUrl is a relative path or same origin
     let redirectTo = returnUrl
@@ -100,7 +105,10 @@ export async function POST(request: NextRequest) {
 
     // Send the magic link email
     try {
-      const emailResponse = await fetch(`${baseUrl}/api/assignments/send-magic-link-email`, {
+      // Construct the full URL for the email service endpoint
+      const emailServiceUrl = new URL('/api/assignments/send-magic-link-email', baseUrl).toString()
+      
+      const emailResponse = await fetch(emailServiceUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
