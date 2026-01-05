@@ -182,23 +182,27 @@ export default async function AssignmentsPage() {
                       </div>
                       <div className="ml-4">
                         {assignment.url ? (() => {
-                          // Extract just the path and query from the URL to avoid double base URL prepending
-                          let url = assignment.url
+                          let url = assignment.url.trim()
+                          
+                          // If it's a full URL, extract just the path to avoid double base URL prepending
+                          // This matches how email links work - they use full URLs in email context
+                          // but in Next.js, we should use relative paths to avoid issues
                           try {
-                            // If it's a full URL, extract just the path and query
                             if (url.startsWith('http://') || url.startsWith('https://')) {
                               const urlObj = new URL(url)
+                              // Extract just the pathname and search params
                               url = urlObj.pathname + urlObj.search
                             } else if (!url.startsWith('/')) {
                               // Ensure relative paths start with /
                               url = `/${url}`
                             }
-                          } catch {
-                            // If URL parsing fails, use as-is but ensure it starts with /
+                          } catch (e) {
+                            // If URL parsing fails, ensure it starts with /
                             if (!url.startsWith('/')) {
                               url = `/${url}`
                             }
                           }
+                          
                           return (
                             <a
                               href={url}
