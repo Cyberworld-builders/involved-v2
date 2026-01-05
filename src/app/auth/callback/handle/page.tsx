@@ -15,59 +15,83 @@ function HandleMagicLinkClient() {
       const supabase = createClient()
 
       try {
-        // Supabase magic links use hash fragments (#access_token=...)
-        // The Supabase client automatically processes these, but we need to wait for it
-        // Use onAuthStateChange to detect when the session is ready
-        
-        let sessionFound = false
-        let attempts = 0
-        const maxAttempts = 10 // Try for up to 5 seconds (10 * 500ms)
+        // Check if there are hash fragments in the URL
+        const hash = window.location.hash
+        const hasHashFragments = hash && hash.length > 1
 
-        const checkSession = async () => {
-          const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        console.log('Hash fragments in URL:', hasHashFragments ? 'Yes' : 'No', hash.substring(0, 100))
 
-          if (sessionError) {
-            console.error('Error getting session:', sessionError)
-            setStatus('error')
-            setMessage('Failed to authenticate. Please try requesting a new login link.')
-            return
-          }
-
-          if (session) {
-            sessionFound = true
-            setStatus('success')
-            setMessage('Successfully logged in! Redirecting to dashboard...')
-            
-            // Redirect to dashboard after a brief delay
-            setTimeout(() => {
-              router.push('/dashboard')
-            }, 1500)
-          } else if (attempts < maxAttempts) {
-            // Wait a bit and try again - Supabase might still be processing hash fragments
-            attempts++
-            setTimeout(checkSession, 500)
-          } else {
-            // Give up after max attempts
-            setStatus('error')
-            setMessage('No authentication tokens found. The link may have expired. Please request a new login link.')
-          }
+        if (!hasHashFragments) {
+          setStatus('error')
+          setMessage('No authentication tokens found. Please request a new login link.')
+          return
         }
 
-        // Also listen for auth state changes in case Supabase processes the hash asynchronously
+        // Parse hash fragments manually
+        // Format: #access_token=...&refresh_token=...&expires_in=...
+        const hashParams = new URLSearchParams(hash.substring(1)) // Remove the #
+        const accessToken = hashParams.get('access_token')
+        const refreshToken = hashParams.get('refresh_token')
+        const expiresIn = hashParams.get('expires_in')
+        const tokenType = hashParams.get('type') || 'bearer'
+
+        if (!accessToken) {
+          setStatus('error')
+          setMessage('Invalid authentication token format. Please request a new login link.')
+          return
+        }
+
+        // Set up auth state change listener to catch when session is set
+        let sessionFound = false
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-          if (event === 'SIGNED_IN' && session && !sessionFound) {
+          console.log('Auth state changed:', event, session ? 'Session exists' : 'No session')
+          if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session && !sessionFound) {
             sessionFound = true
+            subscription.unsubscribe()
             setStatus('success')
             setMessage('Successfully logged in! Redirecting to dashboard...')
+            // Clear hash from URL
+            window.history.replaceState(null, '', window.location.pathname + window.location.search)
             setTimeout(() => {
               router.push('/dashboard')
             }, 1500)
-            subscription.unsubscribe()
           }
         })
 
-        // Start checking for session
-        checkSession()
+        // Set the session using setSession method
+        const { data: sessionData, error: setSessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken || '',
+        })
+
+        if (setSessionError) {
+          console.error('Error setting session:', setSessionError)
+          subscription.unsubscribe()
+          setStatus('error')
+          setMessage('Failed to authenticate. Please try requesting a new login link.')
+          return
+        }
+
+        if (sessionData?.session) {
+          sessionFound = true
+          subscription.unsubscribe()
+          setStatus('success')
+          setMessage('Successfully logged in! Redirecting to dashboard...')
+          // Clear hash from URL
+          window.history.replaceState(null, '', window.location.pathname + window.location.search)
+          setTimeout(() => {
+            router.push('/dashboard')
+          }, 1500)
+        } else {
+          // Wait a moment for auth state change to fire
+          setTimeout(() => {
+            if (!sessionFound) {
+              subscription.unsubscribe()
+              setStatus('error')
+              setMessage('Failed to create session. Please try requesting a new login link.')
+            }
+          }, 2000)
+        }
 
         // Cleanup subscription on unmount
         return () => {
