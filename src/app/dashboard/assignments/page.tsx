@@ -184,23 +184,28 @@ export default async function AssignmentsPage() {
                         {assignment.url ? (() => {
                           let url = assignment.url.trim()
                           
-                          // If it's a full URL, extract just the path to avoid double base URL prepending
-                          // This matches how email links work - they use full URLs in email context
-                          // but in Next.js, we should use relative paths to avoid issues
-                          try {
-                            if (url.startsWith('http://') || url.startsWith('https://')) {
-                              const urlObj = new URL(url)
-                              // Extract just the pathname and search params
-                              url = urlObj.pathname + urlObj.search
-                            } else if (!url.startsWith('/')) {
-                              // Ensure relative paths start with /
+                          // URLs are stored with domain but no protocol (e.g., "involved-v2.cyberworldbuilders.dev/assignment/...")
+                          // Strip the domain and keep only the path so React/Next.js can add the domain automatically
+                          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || ''
+                          const baseUrlWithoutProtocol = baseUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')
+                          
+                          // Remove the domain part if it matches our base URL
+                          if (baseUrlWithoutProtocol && url.startsWith(baseUrlWithoutProtocol)) {
+                            url = url.substring(baseUrlWithoutProtocol.length)
+                          } else {
+                            // Fallback: find the first slash and take everything from there
+                            const firstSlashIndex = url.indexOf('/')
+                            if (firstSlashIndex !== -1) {
+                              url = url.substring(firstSlashIndex)
+                            } else {
+                              // No slash found, ensure it starts with /
                               url = `/${url}`
                             }
-                          } catch (e) {
-                            // If URL parsing fails, ensure it starts with /
-                            if (!url.startsWith('/')) {
-                              url = `/${url}`
-                            }
+                          }
+                          
+                          // Ensure it starts with /
+                          if (!url.startsWith('/')) {
+                            url = `/${url}`
                           }
                           
                           return (
