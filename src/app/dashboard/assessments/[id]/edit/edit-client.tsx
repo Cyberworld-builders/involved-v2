@@ -38,6 +38,7 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
 
         // Debug: Log the number_of_questions value from database
         console.log('Loaded assessment number_of_questions:', assessment.number_of_questions, typeof assessment.number_of_questions)
+        console.log('Loaded assessment dimension_question_counts:', assessment.dimension_question_counts, typeof assessment.dimension_question_counts)
 
         // Load dimensions
         const { data: dimensions, error: dimensionsError } = await supabase
@@ -118,7 +119,52 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
           target: targetValue,
           is_360: assessment.is_360 ?? false,
           number_of_questions: assessment.number_of_questions ?? null,
-          dimension_question_counts: (assessment.dimension_question_counts as Record<string, number> | null) || {},
+          dimension_question_counts: (() => {
+            const counts = assessment.dimension_question_counts
+            // Handle null, undefined, or empty
+            if (!counts || counts === null) {
+              console.log('dimension_question_counts is null/undefined, returning empty object')
+              return {}
+            }
+            
+            // Handle JSONB - it might be a string that needs parsing, or already an object
+            if (typeof counts === 'string') {
+              try {
+                const parsed = JSON.parse(counts)
+                // Ensure it's an object with string keys and number values
+                if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+                  const result: Record<string, number> = {}
+                  for (const [key, value] of Object.entries(parsed)) {
+                    if (typeof value === 'number') {
+                      result[key] = value
+                    }
+                  }
+                  console.log('Parsed dimension_question_counts from string:', result)
+                  return result
+                }
+                console.log('Parsed dimension_question_counts is not a valid object')
+                return {}
+              } catch (e) {
+                console.error('Error parsing dimension_question_counts string:', e)
+                return {}
+              }
+            }
+            
+            // Already an object
+            if (typeof counts === 'object' && counts !== null && !Array.isArray(counts)) {
+              const result: Record<string, number> = {}
+              for (const [key, value] of Object.entries(counts)) {
+                if (typeof value === 'number') {
+                  result[key] = value
+                }
+              }
+              console.log('Parsed dimension_question_counts from object:', result)
+              return result
+            }
+            
+            console.log('dimension_question_counts is in unexpected format:', typeof counts, counts)
+            return {}
+          })(),
           show_question_numbers: assessment.show_question_numbers !== undefined ? assessment.show_question_numbers : true,
           use_custom_fields: assessment.use_custom_fields ?? false,
           custom_fields: customFields,
@@ -286,7 +332,8 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
       updateData.target = targetValue
       updateData.is_360 = data.is_360
       updateData.number_of_questions = data.number_of_questions ?? null
-      updateData.dimension_question_counts = data.dimension_question_counts && Object.keys(data.dimension_question_counts).length > 0 ? data.dimension_question_counts : null
+      // Store dimension_question_counts temporarily - will be mapped after dimensions are created
+      const originalDimensionCounts = data.dimension_question_counts || {}
       updateData.show_question_numbers = data.show_question_numbers !== undefined ? data.show_question_numbers : true
       
       // Include custom_fields columns (will fail if migration 007 hasn't been run)
@@ -506,6 +553,80 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
           if (fieldsError) {
             throw new Error(`Failed to update fields: ${fieldsError.message}`)
           }
+        }
+      }
+
+      // Map dimension_question_counts from temporary IDs to database UUIDs
+      if (Object.keys(originalDimensionCounts).length > 0) {
+        // Rebuild tempIdToDbIdMap if needed (in case no new dimensions were created)
+        if (tempIdToDbIdMap.size === 0 && data.dimensions.length > 0) {
+          const { data: dimensions } = await supabase
+            .from('dimensions')
+            .select('id, code')
+            .eq('assessment_id', id)
+
+          dimensions?.forEach(dbDim => {
+            // Find the matching dimension in form data by code (since code is unique)
+            const formDim = data.dimensions.find(d => d.code === dbDim.code)
+            if (formDim) {
+              tempIdToDbIdMap.set(formDim.id, dbDim.id)
+            }
+          })
+        }
+
+        // Map dimension_question_counts keys from temporary IDs to database UUIDs
+        const mappedDimensionCounts: Record<string, number> = {}
+        for (const [tempId, count] of Object.entries(originalDimensionCounts)) {
+          if (typeof count === 'number' && count > 0) {
+            const dbId = tempIdToDbIdMap.get(tempId)
+            if (dbId) {
+              mappedDimensionCounts[dbId] = count
+            } else {
+              // If temp ID not found in map, it might already be a database UUID
+              // (e.g., when editing existing assessment without changing dimensions)
+              // Check if it's a valid UUID format
+              const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+              if (uuidRegex.test(tempId)) {
+                // Already a UUID, use it directly
+                mappedDimensionCounts[tempId] = count
+              } else {
+                console.warn(`Dimension ID ${tempId} not found in tempIdToDbIdMap and is not a UUID, skipping`)
+              }
+            }
+          }
+        }
+
+        // Update assessment with mapped dimension_question_counts
+        if (Object.keys(mappedDimensionCounts).length > 0) {
+          const { error: updateCountsError } = await supabase
+            .from('assessments')
+            .update({ dimension_question_counts: mappedDimensionCounts })
+            .eq('id', id)
+
+          if (updateCountsError) {
+            console.error('Error updating dimension_question_counts:', updateCountsError)
+            // Don't throw - this is not critical, assessment is already saved
+          }
+        } else {
+          // No valid counts, set to null
+          const { error: updateCountsError } = await supabase
+            .from('assessments')
+            .update({ dimension_question_counts: null })
+            .eq('id', id)
+
+          if (updateCountsError) {
+            console.error('Error clearing dimension_question_counts:', updateCountsError)
+          }
+        }
+      } else {
+        // No dimension counts in form data, clear it
+        const { error: updateCountsError } = await supabase
+          .from('assessments')
+          .update({ dimension_question_counts: null })
+          .eq('id', id)
+
+        if (updateCountsError) {
+          console.error('Error clearing dimension_question_counts:', updateCountsError)
         }
       }
 
