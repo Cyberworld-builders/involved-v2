@@ -29,7 +29,20 @@ interface ReminderAssignment {
 function calculateNextReminder(now: Date, frequency: string): Date {
   const next = new Date(now)
   
-  if (frequency === '+1 week') {
+  // Parse frequency string like "+1 day", "+2 days", "+1 week", "+2 weeks", "+1 month", etc.
+  if (frequency === '+1 day') {
+    next.setDate(next.getDate() + 1)
+  } else if (frequency === '+2 days') {
+    next.setDate(next.getDate() + 2)
+  } else if (frequency === '+3 days') {
+    next.setDate(next.getDate() + 3)
+  } else if (frequency === '+4 days') {
+    next.setDate(next.getDate() + 4)
+  } else if (frequency === '+5 days') {
+    next.setDate(next.getDate() + 5)
+  } else if (frequency === '+6 days') {
+    next.setDate(next.getDate() + 6)
+  } else if (frequency === '+1 week') {
     next.setDate(next.getDate() + 7)
   } else if (frequency === '+2 weeks') {
     next.setDate(next.getDate() + 14)
@@ -37,6 +50,10 @@ function calculateNextReminder(now: Date, frequency: string): Date {
     next.setDate(next.getDate() + 21)
   } else if (frequency === '+1 month') {
     next.setMonth(next.getMonth() + 1)
+  } else if (frequency === '+2 months') {
+    next.setMonth(next.getMonth() + 2)
+  } else if (frequency === '+3 months') {
+    next.setMonth(next.getMonth() + 3)
   } else {
     // Default to 1 week if unknown frequency
     console.warn(`Unknown reminder frequency: ${frequency}, defaulting to 1 week`)

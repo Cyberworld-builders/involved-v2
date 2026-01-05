@@ -264,7 +264,8 @@ Thank you.`)
         url?: string | null
       }
       const createdAssignments: CreatedAssignment[] = []
-      const assignmentPromises: Promise<CreatedAssignment[]>[] = []
+      const assignmentPromises: Promise<{ assignments: CreatedAssignment[]; userPasswords?: Record<string, string> }>[] = []
+      const userPasswords = new Map<string, string>() // userId -> temporary password
 
       for (const au of assignmentUsers) {
         // Prepare custom_fields for this user (if any assessment requires it)
@@ -300,10 +301,18 @@ Thank you.`)
         }).then(async (response) => {
           const data = await response.json()
           if (response.ok && data.assignments) {
-            return data.assignments as CreatedAssignment[]
+            // Collect passwords from response
+            if (data.userPasswords && typeof data.userPasswords === 'object') {
+              for (const [userId, password] of Object.entries(data.userPasswords)) {
+                if (typeof password === 'string') {
+                  userPasswords.set(userId, password)
+                }
+              }
+            }
+            return { assignments: data.assignments as CreatedAssignment[], userPasswords: data.userPasswords }
           } else {
             console.error('Error creating assignments:', data.error)
-            return []
+            return { assignments: [], userPasswords: undefined }
           }
         })
 
@@ -313,7 +322,7 @@ Thank you.`)
       // Wait for all assignments to be created
       const results = await Promise.all(assignmentPromises)
       for (const result of results) {
-        createdAssignments.push(...result)
+        createdAssignments.push(...result.assignments)
       }
 
       if (createdAssignments.length === 0) {
@@ -348,6 +357,9 @@ Thank you.`)
           const user = assignmentUsers.find(au => au.user_id === userId)
           if (!user) continue
 
+          // Get password for this user if available
+          const password = userPasswords.get(userId) || undefined
+
           emailPromises.push(
             fetch('/api/assignments/send-email', {
               method: 'POST',
@@ -362,6 +374,7 @@ Thank you.`)
                 body: emailBody || 'Hello {name}, you have been assigned {assessments}. Please complete by {expiration-date}.',
                 assignments: userAssignments,
                 expirationDate: expirationDate,
+                password: password,
               }),
             })
           )
@@ -532,7 +545,7 @@ Thank you.`)
                     placeholder="Hello {name}, you have been assigned {assessments}. Please complete by {expiration-date}."
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Available shortcodes: {'{name}'}, {'{username}'}, {'{email}'}, {'{assessments}'}, {'{expiration-date}'}
+                    Available shortcodes: {'{name}'}, {'{username}'}, {'{email}'}, {'{assessments}'}, {'{expiration-date}'}, {'{password}'}
                   </p>
                 </div>
               </div>

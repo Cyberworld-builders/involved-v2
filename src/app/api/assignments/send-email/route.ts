@@ -12,6 +12,7 @@ interface SendEmailRequest {
     url?: string | null
   }>
   expirationDate: string
+  password?: string
 }
 
 /**
@@ -23,14 +24,25 @@ function replaceShortcodes(
   username: string,
   email: string,
   assessments: string,
-  expirationDate: string
+  expirationDate: string,
+  password?: string
 ): string {
-  return body
+  let processed = body
     .replace(/{name}/g, name)
     .replace(/{username}/g, username)
     .replace(/{email}/g, email)
     .replace(/{assessments}/g, assessments)
     .replace(/{expiration-date}/g, expirationDate)
+  
+  // Replace password if provided
+  if (password) {
+    processed = processed.replace(/{password}/g, password)
+  } else {
+    // Remove password placeholder if no password provided
+    processed = processed.replace(/{password}/g, '')
+  }
+  
+  return processed
 }
 
 /**
@@ -54,7 +66,7 @@ function formatExpirationDate(dateString: string): string {
 export async function POST(request: NextRequest) {
   try {
     const body: SendEmailRequest = await request.json()
-    const { to, toName, username: providedUsername, subject, body: emailBody, assignments, expirationDate } = body
+    const { to, toName, username: providedUsername, subject, body: emailBody, assignments, expirationDate, password } = body
 
     // Format assessments list with clickable links (HTML format)
     const assessmentsList = assignments
@@ -89,7 +101,8 @@ export async function POST(request: NextRequest) {
       username,
       to,
       `<ul>${assessmentsList}</ul>`,
-      formattedExpiration
+      formattedExpiration,
+      password
     )
     
     // Create plain text version for text/plain email body
@@ -99,7 +112,8 @@ export async function POST(request: NextRequest) {
       username,
       to,
       assessmentsListText,
-      formattedExpiration
+      formattedExpiration,
+      password
     )
 
     // Check if email service is configured

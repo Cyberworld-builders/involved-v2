@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { generateAssignmentURL } from '@/lib/assignments/url-generator'
+import { generateTemporaryPassword } from '@/lib/utils/generate-temporary-password'
 import { Database } from '@/types/database'
 
 type AssignmentInsert = Database['public']['Tables']['assignments']['Insert']
@@ -189,7 +190,7 @@ export async function POST(request: NextRequest) {
     // Verify all users exist and belong to the actor's client (if client admin)
     const { data: users, error: usersError } = await adminClient
       .from('profiles')
-      .select('id, username, email, client_id')
+      .select('id, username, email, client_id, auth_user_id')
       .in('id', user_ids)
 
     if (usersError || !users || users.length !== user_ids.length) {
@@ -238,8 +239,20 @@ export async function POST(request: NextRequest) {
     let nextReminderDate: Date | null = null
     if (reminder && reminder_frequency) {
       const now = new Date()
-      // Parse frequency string like "+1 week", "+2 weeks", "+3 weeks", "+1 month"
-      if (reminder_frequency === '+1 week') {
+      // Parse frequency string like "+1 day", "+2 days", "+1 week", "+2 weeks", "+1 month", etc.
+      if (reminder_frequency === '+1 day') {
+        nextReminderDate = new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000)
+      } else if (reminder_frequency === '+2 days') {
+        nextReminderDate = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000)
+      } else if (reminder_frequency === '+3 days') {
+        nextReminderDate = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000)
+      } else if (reminder_frequency === '+4 days') {
+        nextReminderDate = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000)
+      } else if (reminder_frequency === '+5 days') {
+        nextReminderDate = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000)
+      } else if (reminder_frequency === '+6 days') {
+        nextReminderDate = new Date(now.getTime() + 6 * 24 * 60 * 60 * 1000)
+      } else if (reminder_frequency === '+1 week') {
         nextReminderDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
       } else if (reminder_frequency === '+2 weeks') {
         nextReminderDate = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000)
@@ -248,6 +261,68 @@ export async function POST(request: NextRequest) {
       } else if (reminder_frequency === '+1 month') {
         nextReminderDate = new Date(now)
         nextReminderDate.setMonth(nextReminderDate.getMonth() + 1)
+      } else if (reminder_frequency === '+2 months') {
+        nextReminderDate = new Date(now)
+        nextReminderDate.setMonth(nextReminderDate.getMonth() + 2)
+      } else if (reminder_frequency === '+3 months') {
+        nextReminderDate = new Date(now)
+        nextReminderDate.setMonth(nextReminderDate.getMonth() + 3)
+      }
+    }
+
+    // Ensure all users have auth accounts and generate temporary passwords
+    const userPasswords = new Map<string, string>() // userId -> temporary password
+    
+    for (const user of users) {
+      let authUserId = user.auth_user_id
+      
+      // Create auth account if it doesn't exist
+      if (!authUserId) {
+        try {
+          // Generate temporary password
+          const tempPassword = generateTemporaryPassword(12)
+          
+          // Create auth user
+          const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
+            email: user.email,
+            password: tempPassword,
+            email_confirm: true,
+            user_metadata: {
+              full_name: user.username || user.email,
+              username: user.username || user.email.split('@')[0],
+            },
+          })
+
+          if (authError || !authData?.user) {
+            console.error(`Error creating auth account for user ${user.id}:`, authError)
+            // Continue without auth account - user can still access via signed URL
+            continue
+          }
+
+          authUserId = authData.user.id
+          
+          // Update profile with auth_user_id
+          const { error: updateError } = await adminClient
+            .from('profiles')
+            .update({ auth_user_id: authUserId })
+            .eq('id', user.id)
+
+          if (updateError) {
+            console.error(`Error updating profile with auth_user_id for user ${user.id}:`, updateError)
+          }
+
+          // Store password for email
+          userPasswords.set(user.id, tempPassword)
+        } catch (error) {
+          console.error(`Unexpected error creating auth account for user ${user.id}:`, error)
+          // Continue without auth account
+        }
+      } else {
+        // User already has auth account - don't reset their password
+        // They can use their existing password or access via signed URL
+        // Resetting passwords for existing users could cause issues if they receive
+        // multiple assignments (password would be overwritten multiple times)
+        console.log(`User ${user.id} already has auth account - skipping password generation`)
       }
     }
 
@@ -372,6 +447,7 @@ export async function POST(request: NextRequest) {
           url: assignmentUrls.find((au) => au.id === a.id)?.url,
         })),
         count: assignments.length,
+        userPasswords: Object.fromEntries(userPasswords), // Convert Map to object for JSON
       },
       { status: 201 }
     )

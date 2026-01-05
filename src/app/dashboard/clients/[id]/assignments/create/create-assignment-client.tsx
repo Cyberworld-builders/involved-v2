@@ -31,6 +31,8 @@ interface Group {
   id: string
   name: string
   description: string | null
+  target_id?: string | null
+  target?: User
   members?: Array<{
     profile_id: string
     profile?: User
@@ -70,7 +72,7 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
   const [emailSubject, setEmailSubject] = useState('New assessments have been assigned to you')
   const [emailBody, setEmailBody] = useState('Hello {name}, you have been assigned the following assessments:\n\n{assessments}\n\nPlease complete them by {expiration-date}.')
   const [enableReminder, setEnableReminder] = useState(false)
-  const [reminderFrequency, setReminderFrequency] = useState('+1 week')
+  const [reminderFrequency, setReminderFrequency] = useState('+3 days')
   const [reminderBody, setReminderBody] = useState('Hello {name}, this is a reminder that you have incomplete assignments:\n\n{assessments}\n\nPlease complete them by {expiration-date}.')
   const [assignmentUsers, setAssignmentUsers] = useState<AssignmentUser[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -112,11 +114,12 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
           .order('name', { ascending: true })
         setAvailableUsers(usersData || [])
 
-        // Load groups with members
+        // Load groups with members and target
         const { data: groupsData, error: groupsError } = await supabase
           .from('groups')
           .select(`
             *,
+            target:profiles!groups_target_id_fkey(id, name, email, username),
             group_members(
               profile_id,
               profiles(id, name, email, username)
@@ -130,6 +133,8 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
             id: string
             name: string
             description: string | null
+            target_id: string | null
+            target?: User | null
             group_members?: Array<{
               profile_id: string
               profiles?: User | null
@@ -138,6 +143,8 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
             id: group.id,
             name: group.name,
             description: group.description,
+            target_id: group.target_id,
+            target: group.target || undefined,
             members: group.group_members?.map((gm) => ({
               profile_id: gm.profile_id,
               profile: gm.profiles || undefined,
@@ -208,11 +215,15 @@ Thank you.`)
         // Skip if user is already in assignmentUsers
         if (assignmentUsers.some(au => au.user_id === member.profile!.id)) continue
 
+        // Automatically set target from group's designated target if available
+        const targetId = group.target_id || null
+        const target = group.target || null
+
         newUsers.push({
           user_id: member.profile.id,
           user: member.profile,
-          target_id: null,
-          target: null,
+          target_id: targetId,
+          target: target,
           role: '',
           source: 'group',
           groupId: group.id,
@@ -314,6 +325,7 @@ Thank you.`)
       // This allows per-user custom_fields and target_id
       const createdAssignments: CreatedAssignment[] = []
       const errors: string[] = []
+      const userPasswords = new Map<string, string>() // userId -> temporary password
 
       for (const au of assignmentUsers) {
         for (const assessmentId of selectedAssessmentIds) {
@@ -362,6 +374,17 @@ Thank you.`)
             if (data.assignments && data.assignments.length > 0) {
               console.log(`Successfully created assignment:`, data.assignments[0])
               createdAssignments.push(...data.assignments)
+              
+              // Collect passwords from response
+              // Only update if we don't already have a password for this user
+              // This prevents overwriting passwords when a user gets multiple assignments
+              if (data.userPasswords && typeof data.userPasswords === 'object') {
+                for (const [userId, password] of Object.entries(data.userPasswords)) {
+                  if (typeof password === 'string' && !userPasswords.has(userId)) {
+                    userPasswords.set(userId, password)
+                  }
+                }
+              }
             } else {
               const errorMsg = `No assignment returned for ${au.user.name} - ${assessment.title}`
               console.error('API warning:', errorMsg, data)
@@ -429,6 +452,9 @@ Thank you.`)
             name: user.user.name,
           })
 
+          // Get password for this user if available
+          const password = userPasswords.get(userId) || undefined
+
           emailPromises.push(
             fetch('/api/assignments/send-email', {
               method: 'POST',
@@ -443,6 +469,7 @@ Thank you.`)
                 body: emailBody || 'Hello {name}, you have been assigned {assessments}. Please complete by {expiration-date}.',
                 assignments: userAssignments,
                 expirationDate: expirationDate,
+                password: password,
               }),
             })
           )
@@ -697,7 +724,7 @@ Thank you.`)
                       placeholder="Hello {name}, you have been assigned {assessments}. Please complete by {expiration-date}."
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Available shortcodes: <code>{'{name}'}</code>, <code>{'{username}'}</code>, <code>{'{email}'}</code>, <code>{'{assessments}'}</code>, <code>{'{expiration-date}'}</code>
+                      Available shortcodes: <code>{'{name}'}</code>, <code>{'{username}'}</code>, <code>{'{email}'}</code>, <code>{'{assessments}'}</code>, <code>{'{expiration-date}'}</code>, <code>{'{password}'}</code>
                     </p>
                   </div>
                 </div>
@@ -738,13 +765,41 @@ Thank you.`)
                           onChange={(e) => setReminderFrequency(e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
                         >
-                          <option value="+1 week">1 Week</option>
-                          <option value="+2 weeks">2 Weeks</option>
-                          <option value="+3 weeks">3 Weeks</option>
-                          <option value="+1 month">Monthly</option>
+                          <optgroup label="Daily">
+                            <option value="+1 day">Every Day</option>
+                            <option value="+2 days">Every 2 Days</option>
+                            <option value="+3 days">Every 3 Days</option>
+                            <option value="+4 days">Every 4 Days</option>
+                            <option value="+5 days">Every 5 Days</option>
+                            <option value="+6 days">Every 6 Days</option>
+                          </optgroup>
+                          <optgroup label="Weekly">
+                            <option value="+1 week">Every Week</option>
+                            <option value="+2 weeks">Every 2 Weeks</option>
+                            <option value="+3 weeks">Every 3 Weeks</option>
+                          </optgroup>
+                          <optgroup label="Monthly">
+                            <option value="+1 month">Every Month</option>
+                            <option value="+2 months">Every 2 Months</option>
+                            <option value="+3 months">Every 3 Months</option>
+                          </optgroup>
                         </select>
                         <p className="text-xs text-gray-500 mt-1">
-                          The first reminder will be sent {reminderFrequency === '+1 week' ? '1 week' : reminderFrequency === '+2 weeks' ? '2 weeks' : reminderFrequency === '+3 weeks' ? '3 weeks' : '1 month'} after the assignment is created.
+                          The first reminder will be sent {(() => {
+                            if (reminderFrequency.startsWith('+1 day')) return '1 day'
+                            if (reminderFrequency.startsWith('+2 days')) return '2 days'
+                            if (reminderFrequency.startsWith('+3 days')) return '3 days'
+                            if (reminderFrequency.startsWith('+4 days')) return '4 days'
+                            if (reminderFrequency.startsWith('+5 days')) return '5 days'
+                            if (reminderFrequency.startsWith('+6 days')) return '6 days'
+                            if (reminderFrequency === '+1 week') return '1 week'
+                            if (reminderFrequency === '+2 weeks') return '2 weeks'
+                            if (reminderFrequency === '+3 weeks') return '3 weeks'
+                            if (reminderFrequency === '+1 month') return '1 month'
+                            if (reminderFrequency === '+2 months') return '2 months'
+                            if (reminderFrequency === '+3 months') return '3 months'
+                            return 'at the specified interval'
+                          })()} after the assignment is created.
                         </p>
                       </div>
                       <div className="mt-4">
@@ -757,7 +812,7 @@ Thank you.`)
                           placeholder="Hello {name}, this is a reminder that you have incomplete assignments:\n\n{assessments}\n\nPlease complete them by {expiration-date}."
                         />
                         <p className="text-xs text-gray-500 mt-1">
-                          Available shortcodes: <code>{'{name}'}</code>, <code>{'{username}'}</code>, <code>{'{email}'}</code>, <code>{'{assessments}'}</code>, <code>{'{expiration-date}'}</code>
+                          Available shortcodes: <code>{'{name}'}</code>, <code>{'{username}'}</code>, <code>{'{email}'}</code>, <code>{'{assessments}'}</code>, <code>{'{expiration-date}'}</code>, <code>{'{password}'}</code>
                         </p>
                       </div>
                     </>
@@ -847,16 +902,14 @@ Thank you.`)
                                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
                                 >
                                   <option value="">Select target...</option>
-                                  {availableUsers
-                                    .filter(u => u.id !== au.user_id)
-                                    .map((user) => (
-                                      <option key={user.id} value={user.id}>
-                                        {user.name} ({user.email})
-                                      </option>
-                                    ))}
+                                  {availableUsers.map((user) => (
+                                    <option key={user.id} value={user.id}>
+                                      {user.name} ({user.email}){user.id === au.user_id ? ' - Self Assessment' : ''}
+                                    </option>
+                                  ))}
                                 </select>
                                 <p className="text-xs text-gray-500 mt-1">
-                                  The person being assessed in this 360/development assessment
+                                  The person being assessed in this 360/development assessment. Select the same user for a self-assessment.
                                 </p>
                               </div>
                               <div>
@@ -1011,9 +1064,28 @@ Thank you.`)
                 </button>
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Groups
-                </label>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Select Groups
+                  </label>
+                  {availableGroups.length > 0 && (
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (selectedGroupIds.length === availableGroups.length) {
+                            setSelectedGroupIds([])
+                          } else {
+                            setSelectedGroupIds(availableGroups.map(g => g.id))
+                          }
+                        }}
+                        className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+                      >
+                        {selectedGroupIds.length === availableGroups.length ? 'Deselect All' : 'Select All'}
+                      </button>
+                    </div>
+                  )}
+                </div>
                 {availableGroups.length === 0 ? (
                   <div className="p-4 bg-gray-50 border border-gray-200 rounded-md">
                     <p className="text-sm text-gray-600">No groups available for this client.</p>
@@ -1021,25 +1093,33 @@ Thank you.`)
                   </div>
                 ) : (
                   <>
-                    <select
-                      multiple
-                      value={selectedGroupIds}
-                      onChange={(e) => {
-                        const selected = Array.from(e.target.selectedOptions, option => option.value)
-                        setSelectedGroupIds(selected)
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
-                      size={Math.min(availableGroups.length, 10)}
-                    >
+                    <div className="max-h-64 overflow-y-auto border border-gray-300 rounded-md p-2">
                       {availableGroups.map((group) => (
-                        <option key={group.id} value={group.id}>
-                          {group.name} ({group.members?.length || 0} members)
-                        </option>
+                        <label
+                          key={group.id}
+                          className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedGroupIds.includes(group.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedGroupIds([...selectedGroupIds, group.id])
+                              } else {
+                                setSelectedGroupIds(selectedGroupIds.filter(id => id !== group.id))
+                              }
+                            }}
+                            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                          />
+                          <span className="text-sm text-gray-900 font-medium flex-1">
+                            {group.name}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            ({group.members?.length || 0} {group.members?.length === 1 ? 'member' : 'members'})
+                          </span>
+                        </label>
                       ))}
-                    </select>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Hold Ctrl/Cmd to select multiple groups. All members of selected groups will be added.
-                    </p>
+                    </div>
                     {selectedGroupIds.length > 0 && (
                       <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
                         <p className="text-xs text-blue-800">
@@ -1052,24 +1132,75 @@ Thank you.`)
                   </>
                 )}
               </div>
-              <div className="flex justify-end space-x-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setShowAddGroupModal(false)
-                    setSelectedGroupIds([])
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleAddGroups}
-                  disabled={selectedGroupIds.length === 0}
-                >
-                  Add Groups ({selectedGroupIds.length})
-                </Button>
+              <div className="flex justify-between items-center">
+                {availableGroups.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      // Add all groups
+                      const allGroupIds = availableGroups.map(g => g.id)
+                      setSelectedGroupIds(allGroupIds)
+                      // Automatically trigger handleAddGroups with all groups
+                      setTimeout(() => {
+                        const allGroups = availableGroups
+                        const newUsers: AssignmentUser[] = []
+
+                        for (const group of allGroups) {
+                          if (!group.members || group.members.length === 0) continue
+
+                          for (const member of group.members) {
+                            if (!member.profile) continue
+                            
+                            // Skip if user is already in assignmentUsers
+                            if (assignmentUsers.some(au => au.user_id === member.profile!.id)) continue
+
+                            // Automatically set target from group's designated target if available
+                            const targetId = group.target_id || null
+                            const target = group.target || null
+
+                            newUsers.push({
+                              user_id: member.profile.id,
+                              user: member.profile,
+                              target_id: targetId,
+                              target: target,
+                              role: '',
+                              source: 'group',
+                              groupId: group.id,
+                              groupName: group.name,
+                            })
+                          }
+                        }
+
+                        setAssignmentUsers(prev => [...prev, ...newUsers])
+                        setSelectedGroupIds([])
+                        setShowAddGroupModal(false)
+                      }, 0)
+                    }}
+                    className="bg-indigo-600 text-white hover:bg-indigo-700"
+                  >
+                    Add All Groups ({availableGroups.length})
+                  </Button>
+                )}
+                <div className="flex gap-2 ml-auto">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowAddGroupModal(false)
+                      setSelectedGroupIds([])
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleAddGroups}
+                    disabled={selectedGroupIds.length === 0}
+                  >
+                    Add Selected ({selectedGroupIds.length})
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
