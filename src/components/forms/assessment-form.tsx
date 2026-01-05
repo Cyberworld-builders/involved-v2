@@ -412,9 +412,71 @@ export default function AssessmentForm({
   const handleDeleteDimension = (id: string) => {
     setFormData(prev => ({
       ...prev,
-      dimensions: prev.dimensions.filter(dim => dim.id !== id),
+      dimensions: prev.dimensions
+        .filter(dim => dim.id !== id)
+        .map(dim => dim.parent_id === id ? { ...dim, parent_id: null } : dim), // Remove parent reference if parent is deleted
       fields: prev.fields.filter(field => field.dimension_id !== id),
     }))
+  }
+
+  const handleMoveDimension = (dimensionId: string, newParentId: string | null) => {
+    // Prevent circular reference: a dimension can't be its own parent or ancestor
+    if (newParentId === dimensionId) {
+      return
+    }
+    
+    // Check if newParentId would create a circular reference
+    const wouldCreateCycle = (() => {
+      if (!newParentId) return false
+      let currentParentId: string | null = newParentId
+      while (currentParentId) {
+        if (currentParentId === dimensionId) return true
+        const parent = formData.dimensions.find(d => d.id === currentParentId)
+        currentParentId = parent?.parent_id || null
+      }
+      return false
+    })()
+    
+    if (wouldCreateCycle) {
+      alert('Cannot move dimension: This would create a circular reference.')
+      return
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      dimensions: prev.dimensions.map(dim =>
+        dim.id === dimensionId ? { ...dim, parent_id: newParentId } : dim
+      ),
+    }))
+  }
+
+  // Organize dimensions hierarchically for display
+  const getDimensionTree = () => {
+    const dimensionMap = new Map(formData.dimensions.map(d => [d.id, d]))
+    const rootDimensions: Dimension[] = []
+    const childrenMap = new Map<string, Dimension[]>()
+
+    // Build children map
+    formData.dimensions.forEach(dim => {
+      if (dim.parent_id) {
+        if (!childrenMap.has(dim.parent_id)) {
+          childrenMap.set(dim.parent_id, [])
+        }
+        childrenMap.get(dim.parent_id)!.push(dim)
+      } else {
+        rootDimensions.push(dim)
+      }
+    })
+
+    // Sort dimensions
+    const sortDimensions = (dims: Dimension[]) => {
+      return dims.sort((a, b) => a.name.localeCompare(b.name))
+    }
+
+    return {
+      roots: sortDimensions(rootDimensions),
+      getChildren: (parentId: string) => sortDimensions(childrenMap.get(parentId) || []),
+    }
   }
 
   const handleDownloadDimensionsTemplate = () => {
@@ -1468,46 +1530,123 @@ export default function AssessmentForm({
               </div>
             ) : (
               <div className="space-y-4">
-                {formData.dimensions.map((dimension) => (
-                  <div key={dimension.id} className="border border-gray-200 rounded-lg p-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-900 mb-2">
-                          Name
-                        </label>
-                        <input
-                          type="text"
-                          value={dimension.name}
-                          onChange={(e) => handleUpdateDimension(dimension.id, 'name', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                          placeholder="e.g., Leadership"
-                        />
+                {(() => {
+                  const tree = getDimensionTree()
+                  
+                  const renderDimension = (dimension: Dimension, level: number = 0) => {
+                    const children = tree.getChildren(dimension.id)
+                    const indentStyle = level > 0 ? { marginLeft: `${level * 1.5}rem` } : {}
+                    
+                    // Get available parent options (exclude self and descendants)
+                    const getAvailableParents = () => {
+                      const excludeIds = new Set([dimension.id])
+                      // Add all descendants
+                      const addDescendants = (parentId: string) => {
+                        tree.getChildren(parentId).forEach(child => {
+                          excludeIds.add(child.id)
+                          addDescendants(child.id)
+                        })
+                      }
+                      addDescendants(dimension.id)
+                      
+                      return formData.dimensions.filter(d => !excludeIds.has(d.id))
+                    }
+
+                    return (
+                      <div key={dimension.id} style={indentStyle} className={level > 0 ? 'border-l-2 border-indigo-200 pl-4 ml-4' : ''}>
+                        <div className="border border-gray-200 rounded-lg p-4 bg-white">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-900 mb-2">
+                                Name {level > 0 && <span className="text-xs text-gray-500">(Child)</span>}
+                              </label>
+                              <input
+                                type="text"
+                                value={dimension.name}
+                                onChange={(e) => handleUpdateDimension(dimension.id, 'name', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
+                                placeholder="e.g., Leadership"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-900 mb-2">
+                                Code
+                              </label>
+                              <input
+                                type="text"
+                                value={dimension.code}
+                                onChange={(e) => handleUpdateDimension(dimension.id, 'code', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
+                                placeholder="e.g., LEAD"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-900 mb-2">
+                                Parent Dimension
+                              </label>
+                              <select
+                                value={dimension.parent_id || ''}
+                                onChange={(e) => handleMoveDimension(dimension.id, e.target.value || null)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
+                              >
+                                <option value="">None (Top Level)</option>
+                                {getAvailableParents().map(parent => (
+                                  <option key={parent.id} value={parent.id}>
+                                    {parent.name} ({parent.code})
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                          <div className="mt-4 flex justify-between items-center">
+                            {children.length > 0 && (
+                              <div className="text-sm text-gray-600">
+                                {children.length} child dimension{children.length !== 1 ? 's' : ''}
+                              </div>
+                            )}
+                            <div className="flex gap-2 ml-auto">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const newChild: Dimension = {
+                                    id: `dim-${Date.now()}`,
+                                    name: '',
+                                    code: '',
+                                    parent_id: dimension.id,
+                                  }
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    dimensions: [...prev.dimensions, newChild],
+                                  }))
+                                }}
+                                className="text-indigo-600 hover:text-indigo-700"
+                              >
+                                + Add Child
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => handleDeleteDimension(dimension.id)}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                Delete
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                        {children.length > 0 && (
+                          <div className="mt-2 space-y-2">
+                            {children.map(child => renderDimension(child, level + 1))}
+                          </div>
+                        )}
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-900 mb-2">
-                          Code
-                        </label>
-                        <input
-                          type="text"
-                          value={dimension.code}
-                          onChange={(e) => handleUpdateDimension(dimension.id, 'code', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                          placeholder="e.g., LEAD"
-                        />
-                      </div>
-                    </div>
-                    <div className="mt-4 flex justify-end">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => handleDeleteDimension(dimension.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                    )
+                  }
+                  
+                  return tree.roots.map(root => renderDimension(root, 0))
+                })()}
               </div>
             )}
           </CardContent>
