@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import RichTextEditor from '@/components/rich-text-editor'
 
 interface CreateAssignmentClientProps {
   clientId: string
@@ -70,6 +71,7 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
   const [emailBody, setEmailBody] = useState('Hello {name}, you have been assigned the following assessments:\n\n{assessments}\n\nPlease complete them by {expiration-date}.')
   const [enableReminder, setEnableReminder] = useState(false)
   const [reminderFrequency, setReminderFrequency] = useState('+1 week')
+  const [reminderBody, setReminderBody] = useState('Hello {name}, this is a reminder that you have incomplete assignments:\n\n{assessments}\n\nPlease complete them by {expiration-date}.')
   const [assignmentUsers, setAssignmentUsers] = useState<AssignmentUser[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   
@@ -689,11 +691,9 @@ Thank you.`)
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Email Body
                     </label>
-                    <textarea
-                      value={emailBody}
-                      onChange={(e) => setEmailBody(e.target.value)}
-                      rows={8}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
+                    <RichTextEditor
+                      content={emailBody}
+                      onChange={setEmailBody}
                       placeholder="Hello {name}, you have been assigned {assessments}. Please complete by {expiration-date}."
                     />
                     <p className="text-xs text-gray-500 mt-1">
@@ -725,27 +725,42 @@ Thank you.`)
 
                   {/* Reminder Frequency */}
                   {enableReminder && (
-                    <div className="mt-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Reminder Frequency
-                      </label>
-                      <p className="text-sm text-gray-500 mb-3">
-                        How often to send reminder emails for incomplete assignments.
-                      </p>
-                      <select
-                        value={reminderFrequency}
-                        onChange={(e) => setReminderFrequency(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
-                      >
-                        <option value="+1 week">1 Week</option>
-                        <option value="+2 weeks">2 Weeks</option>
-                        <option value="+3 weeks">3 Weeks</option>
-                        <option value="+1 month">Monthly</option>
-                      </select>
-                      <p className="text-xs text-gray-500 mt-1">
-                        The first reminder will be sent {reminderFrequency === '+1 week' ? '1 week' : reminderFrequency === '+2 weeks' ? '2 weeks' : reminderFrequency === '+3 weeks' ? '3 weeks' : '1 month'} after the assignment is created.
-                      </p>
-                    </div>
+                    <>
+                      <div className="mt-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Reminder Frequency
+                        </label>
+                        <p className="text-sm text-gray-500 mb-3">
+                          How often to send reminder emails for incomplete assignments.
+                        </p>
+                        <select
+                          value={reminderFrequency}
+                          onChange={(e) => setReminderFrequency(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
+                        >
+                          <option value="+1 week">1 Week</option>
+                          <option value="+2 weeks">2 Weeks</option>
+                          <option value="+3 weeks">3 Weeks</option>
+                          <option value="+1 month">Monthly</option>
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">
+                          The first reminder will be sent {reminderFrequency === '+1 week' ? '1 week' : reminderFrequency === '+2 weeks' ? '2 weeks' : reminderFrequency === '+3 weeks' ? '3 weeks' : '1 month'} after the assignment is created.
+                        </p>
+                      </div>
+                      <div className="mt-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Reminder Email Body
+                        </label>
+                        <RichTextEditor
+                          content={reminderBody}
+                          onChange={setReminderBody}
+                          placeholder="Hello {name}, this is a reminder that you have incomplete assignments:\n\n{assessments}\n\nPlease complete them by {expiration-date}."
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Available shortcodes: <code>{'{name}'}</code>, <code>{'{username}'}</code>, <code>{'{email}'}</code>, <code>{'{assessments}'}</code>, <code>{'{expiration-date}'}</code>
+                        </p>
+                      </div>
+                    </>
                   )}
                 </div>
               )}

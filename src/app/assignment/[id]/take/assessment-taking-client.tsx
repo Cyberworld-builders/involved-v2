@@ -514,71 +514,6 @@ export default function AssessmentTakingClient({
   const logoUrl = assessment.logo
   const backgroundUrl = assessment.background
 
-  // Filter out instructions field and sort by order
-  const allFields = [...fields]
-    .filter(f => {
-      const fieldType = f.type as string
-      return fieldType !== 'instructions' && fieldType !== '10'
-    })
-    .sort((a, b) => (a.order || 0) - (b.order || 0))
-
-  // Split fields into pages based on page_break fields
-  const pages: typeof fields[] = []
-  let currentPageFields: typeof fields = []
-
-  allFields.forEach((field) => {
-    const fieldType = field.type as string
-    if (fieldType === 'page_break') {
-      // Save current page and start a new one
-      if (currentPageFields.length > 0) {
-        pages.push(currentPageFields)
-        currentPageFields = []
-      }
-    } else {
-      currentPageFields.push(field)
-    }
-  })
-
-  // Add the last page if it has fields
-  if (currentPageFields.length > 0) {
-    pages.push(currentPageFields)
-  }
-
-  // If no pages, show empty state
-  if (pages.length === 0) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="text-center py-12 text-gray-500">
-            No questions available for this assessment.
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // Get current page fields
-  const currentPageFieldsList = pages[currentPage] || []
-  const isLastPage = currentPage === pages.length - 1
-  const isFirstPage = currentPage === 0
-
-  // Calculate starting question number for this page
-  let startingQuestionNumber = 0
-  for (let pageIdx = 0; pageIdx < currentPage; pageIdx++) {
-    const pageFields = pages[pageIdx] || []
-    pageFields.forEach((field) => {
-      const fieldType = field.type as string
-      const questionType = QUESTION_TYPES[fieldType] || QUESTION_TYPES['description']
-      const isActualQuestion = fieldType !== 'description' && fieldType !== 'rich_text' && fieldType !== '2' && fieldType !== 'page_break'
-      
-      if (isActualQuestion && questionType?.showPage) {
-        startingQuestionNumber++
-      }
-    })
-  }
-
-  let pageQuestionCounter = startingQuestionNumber
-
   // Get instructions field
   const instructionsField = fields.find(f => {
     const fieldType = f.type as string
@@ -586,6 +521,7 @@ export default function AssessmentTakingClient({
   })
 
   let instructionText = ''
+  const hasInstructions = !!instructionsField
   if (instructionsField) {
     try {
       const parsed = JSON.parse(instructionsField.content)
@@ -598,6 +534,68 @@ export default function AssessmentTakingClient({
       instructionText = instructionText.replace(/\[name\]/g, targetName)
     }
   }
+
+  // Filter out instructions field and sort by order
+  const allFields = [...fields]
+    .filter(f => {
+      const fieldType = f.type as string
+      return fieldType !== 'instructions' && fieldType !== '10'
+    })
+    .sort((a, b) => (a.order || 0) - (b.order || 0))
+
+  // Split fields into pages based on page_break fields
+  const questionPages: typeof fields[] = []
+  let currentPageFields: typeof fields = []
+
+  allFields.forEach((field) => {
+    const fieldType = field.type as string
+    if (fieldType === 'page_break') {
+      // Save current page and start a new one
+      if (currentPageFields.length > 0) {
+        questionPages.push(currentPageFields)
+        currentPageFields = []
+      }
+    } else {
+      currentPageFields.push(field)
+    }
+  })
+
+  // Add the last page if it has fields
+  if (currentPageFields.length > 0) {
+    questionPages.push(currentPageFields)
+  }
+
+  // Calculate total pages: instructions page (if exists) + question pages
+  const totalPages = hasInstructions ? questionPages.length + 1 : questionPages.length
+  const instructionsPageIndex = 0
+  const firstQuestionPageIndex = hasInstructions ? 1 : 0
+
+  // Determine if we're on instructions page or a question page
+  const isInstructionsPage = hasInstructions && currentPage === instructionsPageIndex
+  const questionPageIndex = hasInstructions ? currentPage - 1 : currentPage
+  const currentPageFieldsList = isInstructionsPage ? [] : (questionPages[questionPageIndex] || [])
+  const isLastPage = currentPage === totalPages - 1
+  const isFirstPage = currentPage === 0
+
+  // Calculate starting question number for this page
+  // Only count questions from question pages (skip instructions page)
+  let startingQuestionNumber = 0
+  if (!isInstructionsPage) {
+    for (let pageIdx = 0; pageIdx < questionPageIndex; pageIdx++) {
+      const pageFields = questionPages[pageIdx] || []
+      pageFields.forEach((field) => {
+        const fieldType = field.type as string
+        const questionType = QUESTION_TYPES[fieldType] || QUESTION_TYPES['description']
+        const isActualQuestion = fieldType !== 'description' && fieldType !== 'rich_text' && fieldType !== '2' && fieldType !== 'page_break'
+        
+        if (isActualQuestion && questionType?.showPage) {
+          startingQuestionNumber++
+        }
+      })
+    }
+  }
+
+  let pageQuestionCounter = startingQuestionNumber
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -645,24 +643,27 @@ export default function AssessmentTakingClient({
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Instructions Field */}
-        {instructionText && (
-          <div className="mb-8 p-6 bg-white rounded-lg shadow-sm">
-            <div 
-              className="rich-text-content"
-              dangerouslySetInnerHTML={{ __html: instructionText }}
-            />
+        {/* Instructions Page */}
+        {isInstructionsPage && instructionText && (
+          <div className="space-y-8">
+            <div className="p-6 bg-white rounded-lg shadow-sm">
+              <div 
+                className="rich-text-content"
+                dangerouslySetInnerHTML={{ __html: instructionText }}
+              />
+            </div>
           </div>
         )}
 
         {/* Questions with Page Breaks */}
-        <div className="space-y-8">
-          <div ref={questionsSectionRef} className="sr-only">
-            {/* Hidden ref point for scrolling */}
-          </div>
-          
-          {/* Current Page Fields */}
-          {currentPageFieldsList.map((field) => {
+        {!isInstructionsPage && (
+          <div className="space-y-8">
+            <div ref={questionsSectionRef} className="sr-only">
+              {/* Hidden ref point for scrolling */}
+            </div>
+            
+            {/* Current Page Fields */}
+            {currentPageFieldsList.map((field) => {
             const fieldType = field.type as string
             const questionType = QUESTION_TYPES[fieldType] || QUESTION_TYPES['description']
             
@@ -702,17 +703,21 @@ export default function AssessmentTakingClient({
               </div>
             )
           })}
+          </div>
+        )}
 
-          {/* Page Navigation */}
-          {pages.length > 1 && (
+        {/* Page Navigation */}
+        {totalPages > 1 && (
             <div className="flex justify-between items-center pt-4 border-t border-gray-200">
               <button
                 onClick={() => {
                   setCurrentPage(Math.max(0, currentPage - 1))
-                  // Scroll to questions section after page change
-                  setTimeout(() => {
-                    questionsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                  }, 100)
+                  // Scroll to questions section after page change (if not on instructions page)
+                  if (currentPage > 1 || !hasInstructions) {
+                    setTimeout(() => {
+                      questionsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    }, 100)
+                  }
                 }}
                 disabled={isFirstPage}
                 className={`px-6 py-2 rounded-md font-medium ${
@@ -725,17 +730,19 @@ export default function AssessmentTakingClient({
               </button>
               
               <span className="text-sm text-gray-600">
-                Page {currentPage + 1} of {pages.length}
+                Page {currentPage + 1} of {totalPages}
               </span>
               
               {!isLastPage && (
                 <button
                   onClick={() => {
-                    setCurrentPage(Math.min(pages.length - 1, currentPage + 1))
-                    // Scroll to questions section after page change
-                    setTimeout(() => {
-                      questionsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                    }, 100)
+                    setCurrentPage(Math.min(totalPages - 1, currentPage + 1))
+                    // Scroll to questions section after page change (if moving to a question page)
+                    if (currentPage >= instructionsPageIndex || !hasInstructions) {
+                      setTimeout(() => {
+                        questionsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                      }, 100)
+                    }
                   }}
                   className="px-6 py-2 rounded-md font-medium bg-indigo-600 text-white hover:bg-indigo-700"
                 >
@@ -746,7 +753,7 @@ export default function AssessmentTakingClient({
           )}
 
           {/* Submit Button - Only on Final Page (or single page) */}
-          {(isLastPage || pages.length === 1) && (
+          {(isLastPage || totalPages === 1) && !isInstructionsPage && (
             <div className="flex justify-end pt-4 border-t border-gray-200">
               <button
                 onClick={handleSubmit}
@@ -757,7 +764,6 @@ export default function AssessmentTakingClient({
               </button>
             </div>
           )}
-        </div>
       </div>
     </div>
   )

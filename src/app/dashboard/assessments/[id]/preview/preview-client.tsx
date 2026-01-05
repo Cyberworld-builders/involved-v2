@@ -361,35 +361,25 @@ export default function AssessmentPreviewClient({ assessmentId }: PreviewClientP
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Instructions Field */}
+        {/* Instructions and Questions with Page Breaks */}
         {(() => {
+          // Get instructions field
           const instructionsField = fields.find(f => {
             const fieldType = f.type as string
             return fieldType === 'instructions' || fieldType === '10'
           })
-          
-          if (!instructionsField) return null
 
           let instructionText = ''
-          try {
-            const parsed = JSON.parse(instructionsField.content)
-            instructionText = parsed.text || ''
-          } catch {
-            instructionText = instructionsField.content
+          const hasInstructions = !!instructionsField
+          if (instructionsField) {
+            try {
+              const parsed = JSON.parse(instructionsField.content)
+              instructionText = parsed.text || ''
+            } catch {
+              instructionText = instructionsField.content
+            }
           }
 
-          return (
-            <div className="mb-8 p-6 bg-white rounded-lg shadow-sm">
-              <div 
-                className="rich-text-content"
-                dangerouslySetInnerHTML={{ __html: instructionText }}
-              />
-            </div>
-          )
-        })()}
-
-        {/* Questions with Page Breaks */}
-        {(() => {
           // Filter out instructions field
           const allFields = [...fields]
             .filter(f => {
@@ -399,7 +389,7 @@ export default function AssessmentPreviewClient({ assessmentId }: PreviewClientP
             .sort((a, b) => (a.order || 0) - (b.order || 0))
 
           // Split fields into pages based on page_break fields
-          const pages: FieldRow[][] = []
+          const questionPages: FieldRow[][] = []
           let currentPageFields: FieldRow[] = []
 
           allFields.forEach((field) => {
@@ -407,7 +397,7 @@ export default function AssessmentPreviewClient({ assessmentId }: PreviewClientP
             if (fieldType === 'page_break') {
               // Save current page and start a new one
               if (currentPageFields.length > 0) {
-                pages.push(currentPageFields)
+                questionPages.push(currentPageFields)
                 currentPageFields = []
               }
             } else {
@@ -417,11 +407,23 @@ export default function AssessmentPreviewClient({ assessmentId }: PreviewClientP
 
           // Add the last page if it has fields
           if (currentPageFields.length > 0) {
-            pages.push(currentPageFields)
+            questionPages.push(currentPageFields)
           }
 
-          // If no pages, show empty state
-          if (pages.length === 0) {
+          // Calculate total pages: instructions page (if exists) + question pages
+          const totalPages = hasInstructions ? questionPages.length + 1 : questionPages.length
+          const instructionsPageIndex = 0
+          const firstQuestionPageIndex = hasInstructions ? 1 : 0
+
+          // Determine if we're on instructions page or a question page
+          const isInstructionsPage = hasInstructions && currentPage === instructionsPageIndex
+          const questionPageIndex = hasInstructions ? currentPage - 1 : currentPage
+          const currentPageFieldsList = isInstructionsPage ? [] : (questionPages[questionPageIndex] || [])
+          const isLastPage = currentPage === totalPages - 1
+          const isFirstPage = currentPage === 0
+
+          // If no pages and no instructions, show empty state
+          if (questionPages.length === 0 && !hasInstructions) {
             return (
               <div className="space-y-8">
                 <div ref={questionsSectionRef} className="sr-only">
@@ -434,36 +436,49 @@ export default function AssessmentPreviewClient({ assessmentId }: PreviewClientP
             )
           }
 
-          // Get current page fields
-          const currentPageFieldsList = pages[currentPage] || []
-          const isLastPage = currentPage === pages.length - 1
-          const isFirstPage = currentPage === 0
-
           // Calculate starting question number for this page
+          // Only count questions from question pages (skip instructions page)
           let startingQuestionNumber = 0
-          for (let pageIdx = 0; pageIdx < currentPage; pageIdx++) {
-            const pageFields = pages[pageIdx] || []
-            pageFields.forEach((field) => {
-              const fieldType = field.type as string
-              const questionType = QUESTION_TYPES[fieldType] || QUESTION_TYPES['description']
-              const isActualQuestion = fieldType !== 'description' && fieldType !== 'rich_text' && fieldType !== '2' && fieldType !== 'page_break'
-              
-              if (isActualQuestion && questionType?.showPage) {
-                startingQuestionNumber++
-              }
-            })
+          if (!isInstructionsPage) {
+            for (let pageIdx = 0; pageIdx < questionPageIndex; pageIdx++) {
+              const pageFields = questionPages[pageIdx] || []
+              pageFields.forEach((field) => {
+                const fieldType = field.type as string
+                const questionType = QUESTION_TYPES[fieldType] || QUESTION_TYPES['description']
+                const isActualQuestion = fieldType !== 'description' && fieldType !== 'rich_text' && fieldType !== '2' && fieldType !== 'page_break'
+                
+                if (isActualQuestion && questionType?.showPage) {
+                  startingQuestionNumber++
+                }
+              })
+            }
           }
 
           let pageQuestionCounter = startingQuestionNumber
 
           return (
-            <div className="space-y-8">
-              <div ref={questionsSectionRef} className="sr-only">
-                {/* Hidden ref point for scrolling */}
-              </div>
-              
-              {/* Current Page Fields */}
-              {currentPageFieldsList.map((field) => {
+            <>
+              {/* Instructions Page */}
+              {isInstructionsPage && instructionText && (
+                <div className="space-y-8">
+                  <div className="p-6 bg-white rounded-lg shadow-sm">
+                    <div 
+                      className="rich-text-content"
+                      dangerouslySetInnerHTML={{ __html: instructionText }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Questions with Page Breaks */}
+              {!isInstructionsPage && (
+                <div className="space-y-8">
+                  <div ref={questionsSectionRef} className="sr-only">
+                    {/* Hidden ref point for scrolling */}
+                  </div>
+                  
+                  {/* Current Page Fields */}
+                  {currentPageFieldsList.map((field) => {
                 const fieldType = field.type as string
                 const questionType = QUESTION_TYPES[fieldType] || QUESTION_TYPES['description']
                 
@@ -503,57 +518,134 @@ export default function AssessmentPreviewClient({ assessmentId }: PreviewClientP
                   </div>
                 )
               })}
+                </div>
+              )}
+            </>
+          )
+        })()}
 
-              {/* Page Navigation */}
-              {pages.length > 1 && (
-                <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-                  <button
-                    onClick={() => {
-                      setCurrentPage(Math.max(0, currentPage - 1))
-                      // Scroll to questions section after page change
+        {/* Page Navigation */}
+        {(() => {
+          const instructionsField = fields.find(f => {
+            const fieldType = f.type as string
+            return fieldType === 'instructions' || fieldType === '10'
+          })
+          const hasInstructions = !!instructionsField
+          const allFields = [...fields]
+            .filter(f => {
+              const fieldType = f.type as string
+              return fieldType !== 'instructions' && fieldType !== '10'
+            })
+            .sort((a, b) => (a.order || 0) - (b.order || 0))
+          const questionPages: FieldRow[][] = []
+          let currentPageFields: FieldRow[] = []
+          allFields.forEach((field) => {
+            const fieldType = field.type as string
+            if (fieldType === 'page_break') {
+              if (currentPageFields.length > 0) {
+                questionPages.push(currentPageFields)
+                currentPageFields = []
+              }
+            } else {
+              currentPageFields.push(field)
+            }
+          })
+          if (currentPageFields.length > 0) {
+            questionPages.push(currentPageFields)
+          }
+          const totalPages = hasInstructions ? questionPages.length + 1 : questionPages.length
+          const instructionsPageIndex = 0
+          const isInstructionsPage = hasInstructions && currentPage === instructionsPageIndex
+          const isLastPage = currentPage === totalPages - 1
+          const isFirstPage = currentPage === 0
+
+          if (totalPages <= 1) return null
+
+          return (
+            <div className="flex justify-between items-center pt-4 border-t border-gray-200">
+              <button
+                onClick={() => {
+                  setCurrentPage(Math.max(0, currentPage - 1))
+                  if (currentPage > 1 || !hasInstructions) {
+                    setTimeout(() => {
+                      questionsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    }, 100)
+                  }
+                }}
+                disabled={isFirstPage}
+                className={`px-6 py-2 rounded-md font-medium ${
+                  isFirstPage
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Previous
+              </button>
+              
+              <span className="text-sm text-gray-600">
+                Page {currentPage + 1} of {totalPages}
+              </span>
+              
+              {!isLastPage && (
+                <button
+                  onClick={() => {
+                    setCurrentPage(Math.min(totalPages - 1, currentPage + 1))
+                    if (currentPage >= instructionsPageIndex || !hasInstructions) {
                       setTimeout(() => {
                         questionsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                       }, 100)
-                    }}
-                    disabled={isFirstPage}
-                    className={`px-6 py-2 rounded-md font-medium ${
-                      isFirstPage
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
-                  >
-                    Previous
-                  </button>
-                  
-                  <span className="text-sm text-gray-600">
-                    Page {currentPage + 1} of {pages.length}
-                  </span>
-                  
-                  {!isLastPage && (
-                    <button
-                      onClick={() => {
-                        setCurrentPage(Math.min(pages.length - 1, currentPage + 1))
-                        // Scroll to questions section after page change
-                        setTimeout(() => {
-                          questionsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                        }, 100)
-                      }}
-                      className="px-6 py-2 rounded-md font-medium bg-indigo-600 text-white hover:bg-indigo-700"
-                    >
-                      Next
-                    </button>
-                  )}
-                </div>
+                    }
+                  }}
+                  className="px-6 py-2 rounded-md font-medium bg-indigo-600 text-white hover:bg-indigo-700"
+                >
+                  Next
+                </button>
               )}
+            </div>
+          )
+        })()}
 
-              {/* Submit Button - Only on Final Page (or single page) */}
-              {(isLastPage || pages.length === 1) && (
-                <div className="flex justify-end pt-4 border-t border-gray-200">
-                  <button className="px-8 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-lg font-medium">
-                    Submit Answers
-                  </button>
-                </div>
-              )}
+        {/* Submit Button - Only on Final Page (or single page) */}
+        {(() => {
+          const instructionsField = fields.find(f => {
+            const fieldType = f.type as string
+            return fieldType === 'instructions' || fieldType === '10'
+          })
+          const hasInstructions = !!instructionsField
+          const allFields = [...fields]
+            .filter(f => {
+              const fieldType = f.type as string
+              return fieldType !== 'instructions' && fieldType !== '10'
+            })
+            .sort((a, b) => (a.order || 0) - (b.order || 0))
+          const questionPages: FieldRow[][] = []
+          let currentPageFields: FieldRow[] = []
+          allFields.forEach((field) => {
+            const fieldType = field.type as string
+            if (fieldType === 'page_break') {
+              if (currentPageFields.length > 0) {
+                questionPages.push(currentPageFields)
+                currentPageFields = []
+              }
+            } else {
+              currentPageFields.push(field)
+            }
+          })
+          if (currentPageFields.length > 0) {
+            questionPages.push(currentPageFields)
+          }
+          const totalPages = hasInstructions ? questionPages.length + 1 : questionPages.length
+          const instructionsPageIndex = 0
+          const isInstructionsPage = hasInstructions && currentPage === instructionsPageIndex
+          const isLastPage = currentPage === totalPages - 1
+
+          if (!((isLastPage || totalPages === 1) && !isInstructionsPage)) return null
+
+          return (
+            <div className="flex justify-end pt-4 border-t border-gray-200">
+              <button className="px-8 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-lg font-medium">
+                Submit Answers
+              </button>
             </div>
           )
         })()}

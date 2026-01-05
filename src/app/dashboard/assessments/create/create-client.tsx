@@ -219,6 +219,7 @@ export default function CreateAssessmentClient() {
             content: field.content ?? '',
             order: orderValue,
             number: numberValue,
+            required: field.required !== undefined ? field.required : true,
             practice: field.practice || false,
             anchors: field.anchors || [],
           }

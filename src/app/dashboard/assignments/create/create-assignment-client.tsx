@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Database } from '@/types/database'
+import RichTextEditor from '@/components/rich-text-editor'
 
 type Assessment = Database['public']['Tables']['assessments']['Row']
 type Profile = Database['public']['Tables']['profiles']['Row']
@@ -525,11 +526,9 @@ Thank you.`)
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Email Body
                   </label>
-                  <textarea
-                    value={emailBody}
-                    onChange={(e) => setEmailBody(e.target.value)}
-                    rows={6}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
+                  <RichTextEditor
+                    content={emailBody}
+                    onChange={setEmailBody}
                     placeholder="Hello {name}, you have been assigned {assessments}. Please complete by {expiration-date}."
                   />
                   <p className="text-xs text-gray-500 mt-1">

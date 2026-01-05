@@ -240,6 +240,7 @@ export interface Field {
   dimension_id: string | null
   anchors: Anchor[]
   order: number
+  required?: boolean  // Whether this question is required
   number?: number  // Question number (legacy compatibility)
   practice?: boolean  // Practice question flag
   insights_table?: string[][]  // Additional insights table: array of rows, each row is array of cell values (one per anchor)
@@ -360,6 +361,7 @@ export default function AssessmentForm({
             ]
           : [],
       order: nextOrder,
+      required: true,  // Default to required
       number: nextOrder,
       practice: false,
     }
@@ -2018,6 +2020,25 @@ export default function AssessmentForm({
                             </option>
                           ))}
                         </select>
+                      </div>
+
+                      {/* Required Toggle */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-900 mb-2">
+                          Required
+                        </label>
+                        <div className="flex items-center gap-4">
+                          <Button
+                            type="button"
+                            variant={(field.required !== false) ? "default" : "outline"}
+                            onClick={() => handleUpdateField(field.id, 'required', field.required === false)}
+                          >
+                            {(field.required !== false) ? 'Required' : 'Optional'}
+                          </Button>
+                          <span className="text-sm text-gray-500">
+                            {(field.required !== false) ? 'User must answer this question' : 'User can skip this question'}
+                          </span>
+                        </div>
                       </div>
 
                       {/* Practice Question Toggle */}

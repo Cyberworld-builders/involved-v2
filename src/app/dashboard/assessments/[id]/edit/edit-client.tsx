@@ -131,7 +131,7 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
           // The fields are already sorted by 'order' column, so we preserve that order
           fields: (fields || []).map((field, index) => {
             type FieldRow = Database['public']['Tables']['fields']['Row']
-            const fieldWithExtras = field as FieldRow & { number?: number; practice?: boolean }
+            const fieldWithExtras = field as FieldRow & { number?: number; practice?: boolean; required?: boolean }
             return {
               id: field.id,
               type: field.type as QuestionType,
@@ -147,6 +147,7 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
               // This handles any inconsistencies
               order: field.order || index + 1,
               number: fieldWithExtras.number || field.order || index + 1,
+              required: fieldWithExtras.required !== undefined ? fieldWithExtras.required : true,
               practice: fieldWithExtras.practice || false,
               insights_table: (() => {
                 const fieldWithInsights = field as FieldRow & { insights_table?: unknown }
@@ -487,6 +488,7 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
               content: field.content ?? '',
               order: orderValue,
               number: numberValue,
+              required: field.required !== undefined ? field.required : true,
               practice: field.practice || false,
               anchors: field.anchors || [],
               insights_table: field.insights_table || undefined,
