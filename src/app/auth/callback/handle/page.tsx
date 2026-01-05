@@ -16,47 +16,62 @@ function HandleMagicLinkClient() {
 
       try {
         // Supabase magic links use hash fragments (#access_token=...)
-        // The Supabase client automatically handles these when getSession() is called
-        // Check if we have a session (which means the hash fragments were processed)
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        // The Supabase client automatically processes these, but we need to wait for it
+        // Use onAuthStateChange to detect when the session is ready
+        
+        let sessionFound = false
+        let attempts = 0
+        const maxAttempts = 10 // Try for up to 5 seconds (10 * 500ms)
 
-        if (sessionError) {
-          console.error('Error getting session:', sessionError)
-          setStatus('error')
-          setMessage('Failed to authenticate. Please try requesting a new login link.')
-          return
+        const checkSession = async () => {
+          const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+
+          if (sessionError) {
+            console.error('Error getting session:', sessionError)
+            setStatus('error')
+            setMessage('Failed to authenticate. Please try requesting a new login link.')
+            return
+          }
+
+          if (session) {
+            sessionFound = true
+            setStatus('success')
+            setMessage('Successfully logged in! Redirecting to dashboard...')
+            
+            // Redirect to dashboard after a brief delay
+            setTimeout(() => {
+              router.push('/dashboard')
+            }, 1500)
+          } else if (attempts < maxAttempts) {
+            // Wait a bit and try again - Supabase might still be processing hash fragments
+            attempts++
+            setTimeout(checkSession, 500)
+          } else {
+            // Give up after max attempts
+            setStatus('error')
+            setMessage('No authentication tokens found. The link may have expired. Please request a new login link.')
+          }
         }
 
-        if (session) {
-          // Successfully authenticated
-          setStatus('success')
-          setMessage('Successfully logged in! Redirecting to dashboard...')
-          
-          // Redirect to dashboard after a brief delay
-          setTimeout(() => {
-            router.push('/dashboard')
-          }, 1500)
-        } else {
-          // No session - check if there are hash fragments in the URL
-          // If hash fragments exist, Supabase should process them on next getSession call
-          // Wait a moment and try again
-          setTimeout(async () => {
-            const { data: { session: retrySession }, error: retryError } = await supabase.auth.getSession()
-            
-            if (retryError) {
-              setStatus('error')
-              setMessage('Failed to authenticate. Please try requesting a new login link.')
-            } else if (retrySession) {
-              setStatus('success')
-              setMessage('Successfully logged in! Redirecting to dashboard...')
-              setTimeout(() => {
-                router.push('/dashboard')
-              }, 1500)
-            } else {
-              setStatus('error')
-              setMessage('No authentication tokens found. The link may have expired. Please request a new login link.')
-            }
-          }, 500)
+        // Also listen for auth state changes in case Supabase processes the hash asynchronously
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+          if (event === 'SIGNED_IN' && session && !sessionFound) {
+            sessionFound = true
+            setStatus('success')
+            setMessage('Successfully logged in! Redirecting to dashboard...')
+            setTimeout(() => {
+              router.push('/dashboard')
+            }, 1500)
+            subscription.unsubscribe()
+          }
+        })
+
+        // Start checking for session
+        checkSession()
+
+        // Cleanup subscription on unmount
+        return () => {
+          subscription.unsubscribe()
         }
       } catch (error) {
         console.error('Magic link handling error:', error)
