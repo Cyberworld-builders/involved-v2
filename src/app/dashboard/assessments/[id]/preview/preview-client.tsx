@@ -424,8 +424,8 @@ export default function AssessmentPreviewClient({ assessmentId }: PreviewClientP
           if (pages.length === 0) {
             return (
               <div className="space-y-8">
-                <div ref={questionsSectionRef}>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Questions</h2>
+                <div ref={questionsSectionRef} className="sr-only">
+                  {/* Hidden ref point for scrolling */}
                 </div>
                 <div className="text-center py-12 text-gray-500">
                   No questions yet.
@@ -458,8 +458,8 @@ export default function AssessmentPreviewClient({ assessmentId }: PreviewClientP
 
           return (
             <div className="space-y-8">
-              <div ref={questionsSectionRef}>
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Questions</h2>
+              <div ref={questionsSectionRef} className="sr-only">
+                {/* Hidden ref point for scrolling */}
               </div>
               
               {/* Current Page Fields */}
@@ -486,7 +486,7 @@ export default function AssessmentPreviewClient({ assessmentId }: PreviewClientP
                     <div className="mb-4">
                       {questionType?.showContent && (
                         <div className="flex items-start">
-                          {isActualQuestion && questionType?.showPage && pageQuestionCounter > 0 && (
+                          {((assessment as AssessmentRow & { show_question_numbers?: boolean })?.show_question_numbers !== false) && isActualQuestion && questionType?.showPage && pageQuestionCounter > 0 && (
                             <span className="text-lg font-semibold text-gray-900 mr-2 flex-shrink-0">
                               {pageQuestionCounter}.
                             </span>

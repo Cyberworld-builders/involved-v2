@@ -36,6 +36,7 @@ interface AssessmentTakingClientProps {
       time_limit: number | null
       target: string | null
       is_360: boolean
+      show_question_numbers: boolean
     } | null
     target_user?: {
       id: string
@@ -656,8 +657,8 @@ export default function AssessmentTakingClient({
 
         {/* Questions with Page Breaks */}
         <div className="space-y-8">
-          <div ref={questionsSectionRef}>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Questions</h2>
+          <div ref={questionsSectionRef} className="sr-only">
+            {/* Hidden ref point for scrolling */}
           </div>
           
           {/* Current Page Fields */}
@@ -684,7 +685,7 @@ export default function AssessmentTakingClient({
                 <div className="mb-4">
                   {questionType?.showContent && (
                     <div className="flex items-start">
-                      {isActualQuestion && questionType?.showPage && pageQuestionCounter > 0 && (
+                      {((assessment as typeof assessment & { show_question_numbers?: boolean })?.show_question_numbers !== false) && isActualQuestion && questionType?.showPage && pageQuestionCounter > 0 && (
                         <span className="text-lg font-semibold text-gray-900 mr-2 flex-shrink-0">
                           {pageQuestionCounter}.
                         </span>

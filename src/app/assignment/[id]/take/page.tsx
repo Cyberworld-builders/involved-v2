@@ -84,7 +84,8 @@ export default async function AssessmentTakingPage({ params, searchParams }: Ass
         timed,
         time_limit,
         target,
-        is_360
+        is_360,
+        show_question_numbers
       ),
       target_user:profiles!assignments_target_id_fkey(
         id,

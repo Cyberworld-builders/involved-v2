@@ -270,6 +270,7 @@ export interface AssessmentFormData {
   target: 'self' | 'other_user' | 'group_leader' | ''  // Legacy: 0=self, 1=other_user, 2=group_leader
   is_360: boolean
   number_of_questions: number | null  // For non-360 assessments: number of questions to randomly select
+  show_question_numbers: boolean  // Whether to display question numbers on the assessment
   use_custom_fields: boolean
   custom_fields: CustomField[]
   
@@ -323,6 +324,7 @@ export default function AssessmentForm({
     target: (initialData?.target as 'self' | 'other_user' | 'group_leader') || '',
     is_360: initialData?.is_360 || false,
     number_of_questions: initialData?.number_of_questions || null,
+    show_question_numbers: initialData?.show_question_numbers !== undefined ? initialData.show_question_numbers : true,
     use_custom_fields: initialData?.use_custom_fields || false,
     custom_fields: initialData?.custom_fields || [],
     dimensions: initialData?.dimensions || [],
@@ -475,7 +477,6 @@ export default function AssessmentForm({
 
   // Organize dimensions hierarchically for display
   const getDimensionTree = () => {
-    const dimensionMap = new Map(formData.dimensions.map(d => [d.id, d]))
     const rootDimensions: Dimension[] = []
     const childrenMap = new Map<string, Dimension[]>()
 
@@ -1224,6 +1225,25 @@ export default function AssessmentForm({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* Show Question Numbers */}
+            <div>
+              <label htmlFor="show_question_numbers" className="block text-sm font-medium text-gray-900 mb-2">
+                Show Question Numbers?
+              </label>
+              <p className="text-sm text-gray-500 mb-3">
+                If enabled, question numbers (1., 2., 3., etc.) will be displayed on the assessment.
+              </p>
+              <select
+                id="show_question_numbers"
+                value={formData.show_question_numbers ? '1' : '0'}
+                onChange={(e) => handleInputChange('show_question_numbers', e.target.value === '1')}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
+              >
+                <option value="1">Yes</option>
+                <option value="0">No</option>
+              </select>
+            </div>
+
             {/* Timed */}
             <div>
               <label htmlFor="timed" className="block text-sm font-medium text-gray-900 mb-2">
