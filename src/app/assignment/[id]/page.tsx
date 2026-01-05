@@ -21,54 +21,136 @@ export default async function AssignmentStagePage({ params, searchParams }: Assi
   // Try to validate URL token first
   const validation = validateAssignmentURL(assignmentId, query)
   
-  // If URL validation fails, check if user is authenticated and owns the assignment
-  let username: string | undefined = validation.username
-  let isValidAccess = validation.valid
+  // Check if user is authenticated
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  if (!validation.valid) {
-    // Check if user is logged in and owns this assignment
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+  let username: string | undefined
+  let isValidAccess = false
+  let requiresLogin = false
 
-    if (user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id, username')
-        .eq('auth_user_id', user.id)
+  if (user) {
+    // User is logged in - check if they own this assignment
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, username')
+      .eq('auth_user_id', user.id)
+      .single()
+
+    if (profile) {
+      // Check if this assignment belongs to the logged-in user
+      const { createAdminClient } = await import('@/lib/supabase/admin')
+      const adminClient = createAdminClient()
+      
+      const { data: assignment } = await adminClient
+        .from('assignments')
+        .select('user_id')
+        .eq('id', assignmentId)
         .single()
 
-      if (profile) {
-        // Check if this assignment belongs to the logged-in user
-        const { createAdminClient } = await import('@/lib/supabase/admin')
-        const adminClient = createAdminClient()
-        
-        const { data: assignment } = await adminClient
-          .from('assignments')
-          .select('user_id')
-          .eq('id', assignmentId)
-          .single()
-
-        if (assignment && assignment.user_id === profile.id) {
-          // User owns this assignment, allow access
-          isValidAccess = true
-          username = profile.username
-        }
+      if (assignment && assignment.user_id === profile.id) {
+        // User owns this assignment, allow access
+        isValidAccess = true
+        username = profile.username
       }
+    }
+  } else {
+    // User is not logged in
+    if (validation.valid) {
+      // Valid signed URL but user needs to log in
+      requiresLogin = true
+      username = validation.username
+    } else {
+      // Invalid URL
+      return (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6 text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Invalid Assignment Link</h1>
+            <p className="text-gray-600 mb-4">{validation.error || 'This assignment link is invalid or has expired.'}</p>
+            <p className="text-sm text-gray-500">
+              Please contact your administrator for a new assignment link.
+            </p>
+          </div>
+        </div>
+      )
     }
   }
 
-  if (!isValidAccess) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6 text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Invalid Assignment Link</h1>
-          <p className="text-gray-600 mb-4">{validation.error || 'This assignment link is invalid or has expired.'}</p>
-          <p className="text-sm text-gray-500">
-            Please contact your administrator for a new assignment link.
-          </p>
+  if (requiresLogin) {
+    // Load assignment data to show preview on login request page
+    const { createAdminClient } = await import('@/lib/supabase/admin')
+    const adminClient = createAdminClient()
+    
+    const { data: assignment } = await adminClient
+      .from('assignments')
+      .select(`
+        *,
+        assessment:assessments!assignments_assessment_id_fkey(
+          id,
+          title,
+          description,
+          logo,
+          background,
+          primary_color,
+          accent_color
+        ),
+        profiles:profiles!assignments_user_id_fkey(
+          id,
+          email
+        )
+      `)
+      .eq('id', assignmentId)
+      .single()
+
+    if (!assignment) {
+      return (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6 text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Assignment Not Found</h1>
+            <p className="text-gray-600 mb-4">The assignment you&apos;re looking for doesn&apos;t exist.</p>
+          </div>
         </div>
-      </div>
+      )
+    }
+
+    // Check if assignment is completed or expired
+    if (assignment.completed) {
+      return (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6 text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Assignment Completed</h1>
+            <p className="text-gray-600 mb-4">This assignment has already been completed.</p>
+          </div>
+        </div>
+      )
+    }
+
+    if (new Date(assignment.expires) < new Date()) {
+      return (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6 text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Assignment Expired</h1>
+            <p className="text-gray-600 mb-4">
+              This assignment expired on {new Date(assignment.expires).toLocaleDateString()}.
+            </p>
+          </div>
+        </div>
+      )
+    }
+
+    // Show login request page
+    const { default: LoginRequestClient } = await import('./login-request-client')
+    // Build the return URL with all query parameters to preserve the signed URL token
+    const queryString = new URLSearchParams(query as Record<string, string>).toString()
+    const currentUrl = `/assignment/${assignmentId}${queryString ? `?${queryString}` : ''}`
+    
+    return (
+      <LoginRequestClient
+        assignment={assignment}
+        returnUrl={currentUrl}
+        userEmail={assignment.profiles?.email || ''}
+      />
     )
   }
 
