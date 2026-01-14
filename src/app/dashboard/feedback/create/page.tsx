@@ -2,10 +2,9 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import FeedbackListClient from './feedback-list-client'
+import CreateFeedbackClient from './create-feedback-client'
 
-export default async function FeedbackPage() {
+export default async function CreateFeedbackPage() {
   const supabase = await createClient()
 
   const {
@@ -23,12 +22,12 @@ export default async function FeedbackPage() {
     .eq('auth_user_id', user.id)
     .single()
 
-  // Only admins can access feedback management
+  // Only admins can create feedback
   if (!profile || (profile.access_level !== 'client_admin' && profile.access_level !== 'super_admin')) {
     redirect('/dashboard')
   }
 
-  // Get all assessments for filtering
+  // Get all assessments for selection
   const { data: assessments } = await supabase
     .from('assessments')
     .select('id, title')
@@ -38,20 +37,15 @@ export default async function FeedbackPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Feedback Library</h1>
-          <p className="text-gray-600">Manage feedback entries for assessments</p>
+          <h1 className="text-2xl font-bold text-gray-900">Create Feedback Entry</h1>
+          <p className="text-gray-600">Add a new feedback entry to the library</p>
         </div>
-        <div className="flex gap-2">
-          <Link href="/dashboard/feedback/bulk-upload">
-            <Button variant="outline">Bulk Upload</Button>
-          </Link>
-          <Link href="/dashboard/feedback/create">
-            <Button>Create Feedback</Button>
-          </Link>
-        </div>
+        <Link href="/dashboard/feedback">
+          <Button variant="outline">Back to Feedback Library</Button>
+        </Link>
       </div>
 
-      <FeedbackListClient assessments={assessments || []} />
+      <CreateFeedbackClient assessments={assessments || []} />
     </div>
   )
 }

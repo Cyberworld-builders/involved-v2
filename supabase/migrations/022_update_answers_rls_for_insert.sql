@@ -8,6 +8,7 @@ DROP POLICY IF EXISTS "Users can manage their own answers" ON answers;
 -- Users can view/update/delete answers for their own assignments
 -- Check if the auth user's profile ID matches the answer's user_id
 -- AND verify the assignment belongs to the user
+DROP POLICY IF EXISTS "Users can view and update their own answers" ON answers;
 CREATE POLICY "Users can view and update their own answers" ON answers
   FOR ALL USING (
     EXISTS (
@@ -22,6 +23,7 @@ CREATE POLICY "Users can view and update their own answers" ON answers
 -- Users can insert answers for their own assignments
 -- Check if the auth user's profile ID matches the answer's user_id
 -- AND verify the assignment belongs to the user
+DROP POLICY IF EXISTS "Users can insert answers for their own assignments" ON answers;
 CREATE POLICY "Users can insert answers for their own assignments" ON answers
   FOR INSERT WITH CHECK (
     EXISTS (
