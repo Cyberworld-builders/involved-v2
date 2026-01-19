@@ -1200,6 +1200,978 @@ The list is sorted alphabetically by name for easy browsing.
 `,
     video: { bucket: 'resources-videos', path: 'phase-1/industries.mp4' },
   },
+  {
+    slug: 'create-360-assessment',
+    title: 'Creating a 360 Assessment: Dimensions, Fields, and Anchors',
+    description:
+      'Complete guide to creating a 360 assessment from scratch: setting up dimensions, adding questions with anchors, and configuring assessment settings.',
+    publishedAt: '2026-01-01',
+    tags: ['Assessments', 'Phase 2', '360 Assessment', 'Fields', 'Dimensions', 'Anchors'],
+    bodyMarkdown: `
+## Overview
+
+This guide walks you through creating a complete **360 assessment** from start to finish:
+
+- Create a new assessment and configure it as a 360 assessment
+- Add and organize **dimensions** (assessment categories)
+- Add **fields** (questions) of different types
+- Configure **anchors** (rating options) for multiple choice and slider questions
+- Use anchor templates for quick setup
+- Preview and publish your assessment
+
+> **360 Assessment**:** A 360 assessment collects feedback from multiple raters (peers, managers, direct reports, self) about a target individual. All questions are shown to all participants.
+
+---
+
+## Prerequisites
+
+- You are signed in as a user with permission to create assessments (typically a super admin or client admin).
+- You understand the difference between:
+  - **360 Assessment**: All questions shown to all participants
+  - **Non-360 Assessment**: Random subset of questions shown to each participant
+- You have a plan for:
+  - Assessment structure (dimensions/categories)
+  - Question types and content
+  - Rating scales (anchors)
+
+---
+
+## Step 1: Create the Assessment
+
+### Navigate to Assessment Creation
+
+1. Go to **Dashboard → Assessments**
+2. Click **Create Assessment** (top right button)
+
+### Fill in Assessment Details
+
+On the **Details** tab, configure:
+
+**Title** (required)
+- Enter a clear, descriptive name
+- Example: "Leadership 360 Assessment", "Manager Performance Review"
+- This appears in assessment lists and assignment screens
+
+**Description** (optional but recommended)
+- Use the rich text editor to add formatted content
+- Explain what the assessment measures and who it's for
+- Can include instructions, context, or background information
+- Supports formatting: bold, italic, lists, links, etc.
+
+**360 Assessment** (required)
+- Select **Yes** to create a 360 assessment
+- When set to Yes:
+  - All questions are shown to all participants
+  - No "Number of Questions" field appears (all questions are included)
+- When set to No:
+  - A "Number of Questions" field appears
+  - Each participant gets a random subset of questions
+
+**Logo** (optional)
+- Upload a logo image for the assessment header
+- Accepted formats: PNG, JPG, SVG, etc.
+- Best practices:
+  - Use high-resolution image (at least 200x200 pixels)
+  - Transparent background (PNG) works best
+  - Keep file size reasonable (under 2MB)
+
+**Background Image** (optional)
+- Upload a background image for the assessment header
+- Accepted formats: PNG, JPG, etc.
+- Best practices:
+  - Use high-resolution image (recommended: 1920x1080)
+  - Consider how it looks with logo overlaid
+  - Keep file size reasonable (under 5MB)
+
+**Primary Color** (optional)
+- Set the primary brand color (default: #2D2E30)
+- Use color picker or enter hex code directly
+- Affects assessment appearance and branding
+
+**Accent Color** (optional)
+- Set the secondary brand color (default: #FFBA00)
+- Use color picker or enter hex code directly
+- Used for highlights and accents
+
+### Save the Assessment
+
+1. Click **Save Assessment** (or **Create Assessment** button)
+2. You'll be redirected to the assessment edit page
+3. The assessment is now created but not yet published
+
+---
+
+## Step 2: Add Dimensions
+
+Dimensions are the high-level categories that organize your assessment questions. Examples: "Leadership", "Communication", "Technical Skills", "Team Collaboration".
+
+### Navigate to Dimensions Tab
+
+1. On the assessment edit page, click the **Dimensions** tab
+2. You'll see an empty list (or existing dimensions if editing)
+
+### Add Your First Dimension
+
+1. Click **Add Dimension** button
+2. Fill in:
+   - **Name**: The dimension name (e.g., "Leadership", "Communication")
+   - **Code**: A short code for the dimension (e.g., "LEAD", "COMM")
+     - Used for benchmarks and reporting
+     - Should be unique within the assessment
+     - Typically 3-5 uppercase letters
+3. Click **Save** or press Enter
+
+### Add Additional Dimensions
+
+Repeat the process for each dimension you need:
+
+- **Leadership** (code: LEAD)
+- **Communication** (code: COMM)
+- **Technical Skills** (code: TECH)
+- **Team Collaboration** (code: TEAM)
+- **Problem Solving** (code: PROB)
+
+### Reorder Dimensions
+
+1. Use the **drag handle** (⋮⋮ icon) to drag dimensions up or down
+2. Or use the **arrow buttons** (↑ ↓) to move dimensions
+3. The order you set here determines how dimensions appear in:
+   - The assessment preview
+   - The actual assessment when taken
+   - Reports and results
+
+### Edit or Delete Dimensions
+
+- **Edit**: Click into the name or code field and update
+- **Delete**: Click the **trash icon** (confirm deletion when prompted)
+  - ⚠️ **Warning**: Deleting a dimension may affect associated fields and benchmarks
+
+### Best Practices for Dimensions
+
+- **Keep it focused**: 4-8 dimensions is typically ideal
+- **Clear names**:** Use names that raters will understand
+- **Consistent codes**: Use a consistent format (all uppercase, 3-5 letters)
+- **Logical order**: Arrange dimensions in a logical flow
+
+---
+
+## Step 3: Add Fields (Questions)
+
+Fields are the actual questions or content items in your assessment. You can add different types of fields:
+
+- **Rich Text**: Instructions, context, or formatted content
+- **Multiple Choice**: Questions with predefined answer options (anchors)
+- **Slider**: Questions with a sliding scale (anchors)
+- **Text Input**: Free-form text responses
+- **Page Break**: Visual separator between pages
+
+### Navigate to Fields Tab
+
+1. On the assessment edit page, click the **Fields** tab
+2. You'll see an empty list (or existing fields if editing)
+
+### Add a Rich Text Field (Instructions)
+
+Rich text fields are great for section headers, instructions, or context.
+
+1. Click **+ Text** button (or use the "Add Field" dropdown)
+2. Select **Rich Text** type
+3. In the rich text editor:
+   - Enter your content (instructions, context, etc.)
+   - Use formatting tools: bold, italic, lists, links
+   - Example: "Please rate the following leadership behaviors on a scale from 1-5."
+4. **Assign to Dimension**: Select a dimension from the dropdown (optional)
+5. Click **Save Field**
+
+### Add a Multiple Choice Field
+
+Multiple choice fields are the core of most 360 assessments. They include a question and rating options (anchors).
+
+1. Click **+ MC** button (Multiple Choice)
+2. Enter the **question text** in the rich text editor
+   - Example: "How would you rate this person's ability to communicate clearly?"
+   - Supports formatting: bold, italic, lists
+3. **Assign to Dimension**: Select the dimension this question belongs to
+4. **Configure Anchors** (see Step 4 below for detailed anchor setup)
+5. Click **Save Field**
+
+### Add a Slider Field
+
+Slider fields provide a visual sliding scale for ratings.
+
+1. Click **+ Slider** button
+2. Enter the **question text**
+3. **Assign to Dimension**: Select the dimension
+4. **Configure Anchors** (same as multiple choice - see Step 4)
+5. Click **Save Field**
+
+### Add a Text Input Field
+
+Text input fields allow free-form written responses.
+
+1. Click **+ Text** button and select **Text Input**
+2. Enter the **question or prompt**
+3. **Assign to Dimension**: Select the dimension
+4. Click **Save Field**
+
+### Reorder Fields
+
+1. Use the **drag handle** (⋮⋮ icon) to drag fields up or down
+2. Or use the **arrow buttons** (↑ ↓) to move fields
+3. Fields can be reordered within dimensions or across dimensions
+
+### Add Page Breaks
+
+To split your assessment into multiple pages:
+
+1. Click **Add Field** → **Page Break**
+2. The page break will appear in the field list
+3. When participants take the assessment, they'll see a new page after the page break
+
+### Edit or Delete Fields
+
+- **Edit**: Click the **Edit** button on a field card
+- **Delete**: Click the **trash icon** (confirm deletion when prompted)
+
+---
+
+## Step 4: Configure Anchors
+
+Anchors are the rating options for multiple choice and slider questions. Examples: "Below Expectations", "Meets Expectations", "Exceeds Expectations".
+
+### Understanding Anchors
+
+- **Anchors define the rating scale** for a question
+- Each anchor has:
+  - **Name**: The label shown to raters (e.g., "Meets Expectations")
+  - **Value**: The numeric value used in scoring (e.g., 1, 2, 3, 4, 5)
+- Anchors are **ordered** (first anchor = lowest value, last anchor = highest value)
+- Values can be **reversed** with one click (useful if you want highest = best)
+
+### Add Anchors Manually
+
+1. When editing a **Multiple Choice** or **Slider** field, scroll to the **Anchors** section
+2. Click **Add Anchor** button
+3. For each anchor, enter:
+   - **Name**: The label (e.g., "Below Expectations")
+   - **Value**: The numeric value (typically 1, 2, 3, 4, 5)
+4. Repeat for all anchors
+5. Anchors are automatically ordered by value (lowest to highest)
+
+### Use Anchor Templates
+
+For quick setup, use a pre-built anchor template:
+
+1. In the **Anchors** section, find the **Anchor Templates** dropdown
+2. Select a template (e.g., "Standard 5-Point Scale")
+3. Click **Apply Template**
+4. The template anchors will populate automatically
+5. You can edit individual anchors after applying the template
+
+**Available Templates:**
+- **Standard 5-Point Scale**: "Below Expectations", "Slightly Below Expectations", "Meets Expectations", "Slightly Exceeds Expectations", "Exceeds Expectations"
+- More templates can be added as needed
+
+### Reverse Anchor Values
+
+If you want to flip the scale (highest = best instead of lowest = best):
+
+1. In the **Anchors** section, click **Reverse Values** button
+2. Anchor values will be reversed automatically
+3. Example: If anchors were 1, 2, 3, 4, 5, they become 5, 4, 3, 2, 1
+
+### Parse HTML Table for Insights
+
+If you have anchor data in an HTML table format:
+
+1. In the **Anchors** section, find the **Parse HTML Table** text area
+2. Paste your HTML table (with anchor names in cells)
+3. Click **Parse Table**
+4. The system will extract anchor names from the table cells
+5. Review and adjust the parsed anchors as needed
+
+### Best Practices for Anchors
+
+- **Consistent scales**: Use the same anchor set across related questions
+- **Clear labels**: Use labels that are unambiguous
+- **Appropriate number**: 3-7 anchors is typically ideal (5 is most common)
+- **Order matters**: Ensure anchors are in logical order (worst to best, or best to worst)
+
+---
+
+## Step 5: Preview Your Assessment
+
+Before publishing, preview how your assessment will look to participants.
+
+### Access Preview
+
+1. On the assessment edit page, click **Preview** button (top right)
+2. Or navigate to the assessment detail page and click **Preview**
+
+### Review in Preview
+
+- **Header**: Check logo, background image, and colors display correctly
+- **Instructions**: Review description and any rich text fields
+- **Dimensions**: Verify dimensions appear in the correct order
+- **Questions**: Check that all fields display properly
+- **Anchors**: Verify anchor options appear correctly for multiple choice/slider questions
+- **Page breaks**: Confirm pages split at the right locations
+
+### Navigate Through Preview
+
+- Use **Next** and **Previous** buttons to move between pages
+- The view will scroll to the questions section when navigating
+- Review the entire assessment flow
+
+---
+
+## Step 6: Publish Your Assessment
+
+Once your assessment is complete and previewed, publish it so it can be assigned.
+
+### Publish from Edit Page
+
+1. On the assessment edit page, find the **Status** section
+2. Toggle **Draft** to **Published** (or click **Publish** button)
+3. The assessment status will update
+4. Published assessments can now be assigned to users
+
+### Verify Publication
+
+1. Go to **Dashboard → Assessments**
+2. Find your assessment in the list
+3. Verify it shows as **Published** (not Draft)
+4. The assessment is now ready for assignment
+
+---
+
+## Step 7: Assign the Assessment
+
+After publishing, assign the assessment to users or groups.
+
+### Navigate to Assignment
+
+1. Go to **Dashboard → Clients**
+2. Select a client
+3. Click the **Assignments** tab
+4. Click **Create Assignment**
+
+### Configure Assignment
+
+1. **Select Assessment**: Choose your newly created 360 assessment
+2. **Select Target**: Choose the person being assessed
+3. **Select Raters**: Choose users or groups who will provide feedback
+4. **Set Due Date**: Optional deadline for completion
+5. **Send Notifications**: Check to send email invites
+6. Click **Create Assignment**
+
+### Verify Assignment
+
+- Raters will receive email notifications (if enabled)
+- Assignment appears in the assignments list
+- Raters can access the assessment via their assignment link
+
+---
+
+## Recommended Workflow
+
+1. **Plan your assessment**:
+   - Define dimensions
+   - List questions for each dimension
+   - Decide on rating scales (anchors)
+
+2. **Create the assessment**:
+   - Fill in details (title, description, 360 setting)
+   - Upload branding (logo, background, colors)
+
+3. **Set up dimensions**:
+   - Add all dimensions
+   - Order them logically
+   - Verify codes are unique
+
+4. **Add fields**:
+   - Start with rich text instructions
+   - Add questions for each dimension
+   - Use consistent anchor sets
+
+5. **Configure anchors**:
+   - Use templates for speed
+   - Ensure consistency across questions
+   - Verify values are correct
+
+6. **Preview and refine**:
+   - Review the entire assessment
+   - Check formatting and flow
+   - Make adjustments as needed
+
+7. **Publish and assign**:
+   - Publish the assessment
+   - Assign to target and raters
+   - Monitor completion
+
+---
+
+## Troubleshooting
+
+### "Assessment not showing in assignment list"
+
+- **Cause**: Assessment may still be in Draft status
+- **Solution**: Go to assessment edit page and publish it
+
+### "Anchors not appearing on questions"
+
+- **Cause**: Anchors may not be saved, or field type doesn't support anchors
+- **Solution**: 
+  - Ensure you're editing a Multiple Choice or Slider field
+  - Verify anchors are saved (check the Anchors section)
+  - Refresh the page and try again
+
+### "Dimensions not appearing in field assignment"
+
+- **Cause**: Dimensions may not be saved
+- **Solution**: 
+  - Go to Dimensions tab and verify dimensions exist
+  - Save the assessment
+  - Return to Fields tab and try again
+
+### "Preview not showing correctly"
+
+- **Cause**: Images may not be loading, or there's a formatting issue
+- **Solution**:
+  - Check that images uploaded successfully
+  - Verify image file formats are supported
+  - Check browser console for errors
+
+### "Can't reorder fields"
+
+- **Cause**: Drag-and-drop may not be working, or fields aren't saved
+- **Solution**:
+  - Try using the arrow buttons instead
+  - Ensure fields are saved before reordering
+  - Refresh the page and try again
+
+---
+
+## Best Practices
+
+### Assessment Structure
+
+- **Start with instructions**: Use rich text fields to provide context
+- **Group by dimension**: Organize questions within their dimensions
+- **Use page breaks**: Split long assessments into manageable pages
+- **Consistent formatting**: Use the same anchor sets for similar questions
+
+### Dimensions
+
+- **4-8 dimensions**: Keep it focused and manageable
+- **Clear names**: Use names that are self-explanatory
+- **Logical order**: Arrange dimensions in a flow that makes sense
+
+### Questions
+
+- **Clear and specific**: Write questions that are unambiguous
+- **One concept per question**: Avoid compound questions
+- **Appropriate type**: Choose the right field type for each question
+
+### Anchors
+
+- **Consistent scales**: Use the same anchor set across related questions
+- **5-point scale**: Most common and effective
+- **Clear labels**: Avoid ambiguous terms
+
+### Branding
+
+- **Test images**: Preview how logo and background look together
+- **Contrast**: Ensure text is readable over background images
+- **File sizes**: Keep images optimized for fast loading
+
+---
+
+## Next Steps
+
+After creating your 360 assessment:
+
+1. **Set up benchmarks** (optional): Go to Benchmarks to set industry-specific target values
+2. **Test the assessment**: Assign it to yourself or a test user
+3. **Gather feedback**: Have a colleague review the assessment
+4. **Refine as needed**: Make adjustments based on feedback
+5. **Assign to real users**: Once finalized, assign to actual participants
+
+For more information on:
+- **Assigning assessments**: See the "Assignment Management" resource
+- **Viewing results**: See the "Assessment Results" resource
+- **Setting benchmarks**: See the "Benchmarks" resource (Phase 1)
+`,
+    video: { bucket: 'resources-videos', path: 'phase-2/create-360-assessment.mp4' },
+  },
+  {
+    slug: 'assign-assessments',
+    title: 'Assigning Assessments: Creating and Managing Assignments',
+    description:
+      'Complete guide to assigning assessments to users and groups, configuring notifications and reminders, tracking progress, and viewing results.',
+    publishedAt: '2026-01-01',
+    tags: ['Assignments', 'Phase 2', 'Assessment Management', 'Notifications', 'Reminders'],
+    bodyMarkdown: `
+## Overview
+
+This guide covers the complete assignment workflow:
+
+- **Create assignments** for individual users or groups
+- **Configure assignment settings** (expiration, notifications, reminders)
+- **Understand assignment URLs** and how users access assessments
+- **Track assignment progress** and completion status
+- **View assessment results** after completion
+- **Manage email notifications** and automated reminders
+
+> **Assignments** connect assessments to users, allowing them to take assessments and provide feedback. Assignments can be created for individual users or entire groups, with flexible configuration options.
+
+---
+
+## Prerequisites
+
+- You are signed in as a user with permission to create assignments (typically a client admin or super admin).
+- You have at least one **published assessment** ready to assign.
+- You have **users** or **groups** set up in the system.
+- For 360 assessments, you understand the concept of **target users** (the person being assessed).
+
+---
+
+## Step 1: Access Assignment Creation
+
+### Navigate to Assignments
+
+1. Go to **Dashboard → Clients**
+2. Select the client you want to create assignments for
+3. Click the **Assignments** tab (beside Details, Users, and Groups)
+4. Click **Create Assignment** button (top right)
+
+You're now on the assignment creation form.
+
+---
+
+## Step 2: Select Assessment
+
+### Choose a Published Assessment
+
+1. In the **Assessment** dropdown, select the assessment you want to assign
+   - **Only published assessments** appear in this list
+   - Draft assessments cannot be assigned
+   - If your assessment doesn't appear, go back and publish it first
+
+2. After selecting an assessment:
+   - The assessment details will display
+   - If it's a **360 assessment**, a **Target** field will appear
+   - If it's a **non-360 assessment**, you may see a "Number of Questions" indicator
+
+### Understanding Assessment Types
+
+- **360 Assessment**: All questions shown to all participants. Requires selecting a **target user** (the person being assessed).
+- **Non-360 Assessment**: Each participant gets a random subset of questions. No target required.
+
+---
+
+## Step 3: Select Recipients
+
+You can assign to **individual users** or **groups**.
+
+### Option A: Assign to Individual Users
+
+1. In the **Recipients** section, select **Individual Users**
+2. Use the user selector to choose one or more users
+   - Type to search for users by name or email
+   - Select multiple users if needed
+   - All selected users will receive the assignment
+
+### Option B: Assign to Groups
+
+1. In the **Recipients** section, select **Groups**
+2. Use the group selector to choose one or more groups
+   - All members of selected groups will receive the assignment
+   - Separate assignment records are created for each group member
+   - Useful for bulk assignments
+
+### Best Practices
+
+- **Use groups** for bulk assignments (e.g., all managers, all team members)
+- **Use individual users** for one-off assignments or specific people
+- **Verify group membership** before assigning to ensure the right people receive it
+
+---
+
+## Step 4: Configure Assignment Settings
+
+### Set Target User (360 Assessments Only)
+
+If you selected a **360 assessment**, you must select a **target user**:
+
+1. In the **Target** field, select the user being assessed
+2. This is the person that all raters will provide feedback about
+3. The target's name will appear in:
+   - Assignment emails
+   - Assessment instructions (replaces [name] shortcode)
+   - Assessment taking interface
+
+### Set Expiration Date (Optional)
+
+1. In the **Expiration Date** field, select a date
+2. After this date, users cannot access or complete the assignment
+3. Leave blank for no expiration
+4. **Best practice**: Set expiration 2-4 weeks from assignment date
+
+### Enable Email Notifications
+
+1. Check **Send Email Notification** to send invite emails
+2. When enabled:
+   - Users receive an email with assignment details
+   - Email includes direct link to the assessment
+   - Email includes expiration date and instructions
+3. When disabled:
+   - Assignment is created but no email sent
+   - You can share the assignment URL manually
+   - Assignment appears in user's dashboard (if they have one)
+
+### Configure Email Reminders (Optional)
+
+For incomplete assignments, you can set up automated reminders:
+
+1. Check **Enable Email Reminders**
+2. Select **Reminder Frequency**:
+   - **1 Week**: Reminder sent every week until completed
+   - **2 Weeks**: Reminder sent every 2 weeks
+   - **3 Weeks**: Reminder sent every 3 weeks
+   - **Monthly**: Reminder sent once per month
+3. Reminders are sent automatically by the system
+4. Reminders stop automatically when the assignment is completed
+
+### Understanding Reminders
+
+- **Automatic**: Reminders are sent by a scheduled background job
+- **Stops on completion**: No reminders sent after user completes assessment
+- **Includes link**: Each reminder email includes the assignment link
+- **Respects expiration**: No reminders sent after expiration date
+
+---
+
+## Step 5: Create the Assignment
+
+### Review and Submit
+
+1. Review all selections:
+   - Assessment is correct
+   - Recipients are correct
+   - Target is set (if 360 assessment)
+   - Expiration date is appropriate
+   - Email settings are configured as desired
+
+2. Click **Create Assignment** (or **Create Assignments** for multiple recipients)
+
+3. Wait for confirmation:
+   - Success message will appear
+   - Assignment(s) will be created
+   - Emails will be sent (if enabled)
+   - You'll be redirected to the assignments list
+
+### What Happens After Creation
+
+- **Assignment records created**: One per recipient
+- **Assignment URLs generated**: Secure, signed URLs for each assignment
+- **Emails sent** (if enabled): Users receive notification emails
+- **Reminders scheduled** (if enabled): First reminder scheduled based on frequency
+- **Assignment appears in list**: Visible in the Assignments tab
+
+---
+
+## Step 6: View and Manage Assignments
+
+### Access the Assignments List
+
+1. Go to **Dashboard → Clients**
+2. Select a client
+3. Click the **Assignments** tab
+4. You'll see a list of all assignments for that client
+
+### Understanding the Assignments List
+
+The list shows:
+- **User**: Who the assignment is for
+- **Assessment**: Which assessment was assigned
+- **Target**: Target user (for 360 assessments)
+- **Status**: Current status (Pending, In Progress, Completed)
+- **Assigned Date**: When the assignment was created
+- **Expiration Date**: When the assignment expires
+- **Completed Date**: When the assignment was completed (if applicable)
+- **Actions**: View details, view results, etc.
+
+### Filter Assignments
+
+You can filter assignments by status:
+- **All**: Show all assignments
+- **Pending**: Not yet started
+- **In Progress**: Started but not completed
+- **Completed**: Finished assessments
+
+### View Assignment Details
+
+1. Click on an assignment in the list
+2. You'll see:
+   - Full assignment details
+   - Assignment URL (for sharing)
+   - Current status and progress
+   - Answers (if completed)
+
+### View Assessment Results
+
+For completed assignments:
+1. Click **View Results** on the assignment
+2. You'll see:
+   - All questions from the assessment
+   - All answers provided by the user
+   - Answers displayed in the same format as the assessment preview
+   - Organized by dimensions (if applicable)
+
+---
+
+## Step 7: Understanding Assignment URLs
+
+### How Assignment URLs Work
+
+- **Secure and signed**: URLs are cryptographically signed for security
+- **Token-based access**: Users don't need to log in to access assignments
+- **Expiration handling**: Expired URLs show appropriate error messages
+- **One-time use**: URLs are designed for secure, direct access
+
+### Sharing Assignment URLs
+
+1. From the assignment details page, copy the assignment URL
+2. Share via:
+   - Email (if notifications disabled)
+   - Slack/Teams message
+   - Direct link sharing
+3. Users can click the link to access their assignment
+
+### URL Security Features
+
+- **Signed tokens**: Prevent URL tampering
+- **Expiration validation**: Expired assignments cannot be accessed
+- **Assignment-specific**: Each assignment has a unique URL
+- **No login required**: Users access directly via URL
+
+---
+
+## Step 8: Track Assignment Progress
+
+### Monitor Completion Status
+
+1. In the assignments list, check the **Status** column:
+   - **Pending**: Assignment created but not started
+   - **In Progress**: User has started but not completed
+   - **Completed**: Assessment finished
+
+2. View **Completion Percentage** (if displayed):
+   - Shows how much of the assessment is complete
+   - Updates as user progresses
+
+### Check Assignment Activity
+
+- **Assigned Date**: When assignment was created
+- **Started Date**: When user first accessed the assignment
+- **Completed Date**: When user submitted the assessment
+- **Last Activity**: Last time user interacted with assignment
+
+### Send Reminders Manually
+
+If reminders are enabled but you want to send one immediately:
+1. View assignment details
+2. Use the reminder option (if available)
+3. Or resend the assignment email
+
+---
+
+## Step 9: View Assessment Results
+
+### Access Results
+
+1. Go to **Assignments** tab
+2. Find a **completed** assignment
+3. Click **View Results** (or click on the assignment)
+
+### Understanding Results Display
+
+Results show:
+- **All questions**: Every question from the assessment
+- **All answers**: User's responses to each question
+- **Answer format**: Answers displayed correctly by type:
+  - Multiple Choice: Selected option shown
+  - Slider: Selected value shown
+  - Text Input: Free-form text shown
+- **Organization**: Results organized by dimensions (if applicable)
+
+### Export Results (if available)
+
+Some systems allow exporting results:
+1. View results page
+2. Click **Export** button (if available)
+3. Choose format (CSV, PDF, etc.)
+4. Download the file
+
+---
+
+## Recommended Workflow
+
+1. **Prepare assessments**:
+   - Create and publish assessments
+   - Test assessments in preview mode
+   - Verify all questions and settings are correct
+
+2. **Prepare recipients**:
+   - Ensure users exist in the system
+   - Create groups if needed for bulk assignments
+   - Verify user email addresses are correct
+
+3. **Create assignments**:
+   - Select published assessment
+   - Choose recipients (individual or group)
+   - Set target (for 360 assessments)
+   - Configure expiration date
+   - Enable email notifications
+   - Set up reminders (if desired)
+
+4. **Monitor progress**:
+   - Check assignments list regularly
+   - Filter by status to see pending/in-progress/completed
+   - Send reminders if needed
+
+5. **Review results**:
+   - View completed assessment results
+   - Export results if needed
+   - Use results for reporting or analysis
+
+---
+
+## Troubleshooting
+
+### "Assessment not appearing in dropdown"
+
+- **Cause**: Assessment may be in Draft status
+- **Solution**: Go to Assessments, edit the assessment, and publish it
+
+### "User not receiving email"
+
+- **Cause**: Email notifications may be disabled, or email may be in spam
+- **Solutions**:
+  - Check that "Send Email Notification" was enabled
+  - Verify user's email address is correct
+  - Check spam/junk folder
+  - Manually share the assignment URL
+
+### "Assignment URL not working"
+
+- **Cause**: Assignment may be expired, or URL may be invalid
+- **Solutions**:
+  - Check expiration date on assignment
+  - Verify URL was copied correctly
+  - Try generating a new assignment URL (if option available)
+
+### "Reminders not being sent"
+
+- **Cause**: Reminders may not be enabled, or assignment may be completed
+- **Solutions**:
+  - Verify "Enable Email Reminders" was checked
+  - Check that assignment is not completed (reminders stop on completion)
+  - Verify reminder frequency is set correctly
+  - Check that assignment hasn't expired
+
+### "Cannot assign to group"
+
+- **Cause**: Group may not exist or may have no members
+- **Solutions**:
+  - Verify group exists in the system
+  - Check that group has members
+  - Create group and add members if needed
+
+### "Target field not appearing"
+
+- **Cause**: Assessment may not be a 360 assessment
+- **Solution**: Verify the selected assessment is marked as "360 Assessment" in its settings
+
+---
+
+## Best Practices
+
+### Assignment Creation
+
+- **Set expiration dates**: Prevents assignments from lingering indefinitely
+- **Use groups for bulk**: More efficient than individual assignments
+- **Enable notifications**: Ensures users know about assignments
+- **Set reminders**: Helps improve completion rates
+
+### Email Configuration
+
+- **Test email delivery**: Send a test assignment to yourself first
+- **Verify email content**: Check that links and information are correct
+- **Monitor email delivery**: Check for bounce-backs or delivery issues
+
+### Progress Tracking
+
+- **Check regularly**: Monitor assignments list for pending/incomplete items
+- **Send reminders**: Don't hesitate to send manual reminders if needed
+- **Follow up**: Contact users directly if assignments are overdue
+
+### Results Management
+
+- **Review promptly**: Check results soon after completion
+- **Export for backup**: Download results for record-keeping
+- **Use for reporting**: Aggregate results for analysis
+
+### Security
+
+- **Share URLs securely**: Don't share assignment URLs publicly
+- **Respect expiration**: Don't extend expiration dates unnecessarily
+- **Monitor access**: Check assignment activity for unusual patterns
+
+---
+
+## Understanding Assignment Status
+
+### Pending
+
+- Assignment created but user hasn't accessed it yet
+- No answers submitted
+- Can still be accessed via URL
+
+### In Progress
+
+- User has started the assessment
+- Some answers may be saved
+- Assessment not yet submitted
+- Can continue where left off
+
+### Completed
+
+- User has submitted the assessment
+- All answers are final
+- Results are available for viewing
+- No further edits allowed
+
+---
+
+## Next Steps
+
+After creating assignments:
+
+1. **Monitor completion**: Check assignments list regularly
+2. **Send reminders**: Use automated or manual reminders as needed
+3. **Review results**: View completed assessment results
+4. **Export data**: Download results for analysis or reporting
+5. **Follow up**: Contact users about incomplete assignments if needed
+
+For more information on:
+- **Creating assessments**: See the "Creating a 360 Assessment" resource
+- **User management**: See the "User Onboarding" resource (Phase 1)
+- **Group management**: See the "Groups" resource (if available)
+`,
+    video: { bucket: 'resources-videos', path: 'phase-2/assign-assessments.mp4' },
+  },
 ]
 
 export function getResourcePostBySlug(slug: string) {

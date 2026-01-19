@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 import GroupsTable from './groups-table'
 
 export default async function GroupsPage() {
@@ -31,8 +30,7 @@ export default async function GroupsPage() {
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
@@ -124,6 +122,5 @@ export default async function GroupsPage() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
   )
 }

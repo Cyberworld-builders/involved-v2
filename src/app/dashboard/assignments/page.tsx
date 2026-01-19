@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getUserProfile } from '@/lib/utils/get-user-profile'
 import { Database } from '@/types/database'
@@ -9,10 +8,10 @@ type Assignment = Database['public']['Tables']['assignments']['Row']
 type Assessment = Database['public']['Tables']['assessments']['Row']
 
 interface AssignmentWithAssessment extends Assignment {
-  assessments: Assessment
+  assessment: Pick<Assessment, 'id' | 'title' | 'description'> | null
 }
 
-export default async function MyAssignmentsPage() {
+export default async function AssignmentsPage() {
   const supabase = await createClient()
 
   const {
@@ -29,6 +28,19 @@ export default async function MyAssignmentsPage() {
     redirect('/auth/login')
   }
 
+  // If user is admin (client_admin or super_admin), redirect to clients page
+  // Assignments are managed per-client, not globally
+  if (profile.access_level === 'client_admin' || profile.access_level === 'super_admin') {
+    if (profile.access_level === 'client_admin' && profile.client_id) {
+      redirect(`/dashboard/clients/${profile.client_id}?tab=assignments`)
+    } else {
+      // Super admin - redirect to clients list
+      redirect('/dashboard/clients')
+    }
+  }
+
+  // Otherwise, show user's own assignments (member view)
+
   // Get user's profile ID (not auth_user_id)
   const { data: userProfile } = await supabase
     .from('profiles')
@@ -38,23 +50,18 @@ export default async function MyAssignmentsPage() {
 
   if (!userProfile) {
     return (
-      <DashboardLayout>
-        <div className="space-y-6">
-          <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
-            Profile not found. Please contact support.
-          </div>
+      <div className="space-y-6">
+        <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
+          Profile not found. Please contact support.
         </div>
-      </DashboardLayout>
+      </div>
     )
   }
 
   // Get assignments for this user
   const { data: assignments, error } = await supabase
     .from('assignments')
-    .select(`
-      *,
-      assessments (*)
-    `)
+    .select('*')
     .eq('user_id', userProfile.id)
     .order('created_at', { ascending: false })
 
@@ -62,7 +69,35 @@ export default async function MyAssignmentsPage() {
     console.error('Error fetching assignments:', error)
   }
 
-  const assignmentsList = (assignments as AssignmentWithAssessment[]) || []
+  // Get unique assessment IDs
+  const assessmentIds = [...new Set((assignments || []).map(a => a.assessment_id).filter(Boolean))]
+
+  // Fetch assessments separately
+  const assessmentsMap = new Map<string, Pick<Assessment, 'id' | 'title' | 'description'>>()
+  if (assessmentIds.length > 0) {
+    const { data: assessments, error: assessmentsError } = await supabase
+      .from('assessments')
+      .select('id, title, description')
+      .in('id', assessmentIds)
+
+    if (assessmentsError) {
+      console.error('Error fetching assessments:', assessmentsError)
+    } else if (assessments) {
+      for (const assessment of assessments) {
+        assessmentsMap.set(assessment.id, {
+          id: assessment.id,
+          title: assessment.title,
+          description: assessment.description
+        })
+      }
+    }
+  }
+
+  // Join assignments with assessments
+  const assignmentsList: AssignmentWithAssessment[] = (assignments || []).map(assignment => ({
+    ...assignment,
+    assessment: assessmentsMap.get(assignment.assessment_id) || null
+  }))
 
   // Separate assignments by status
   const pendingAssignments = assignmentsList.filter(
@@ -74,8 +109,7 @@ export default async function MyAssignmentsPage() {
   )
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">My Assignments</h1>
           <p className="text-gray-600">View and complete your assigned assessments</p>
@@ -134,28 +168,57 @@ export default async function MyAssignmentsPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <h3 className="font-semibold text-gray-900">
-                          {assignment.assessments?.title || 'Untitled Assessment'}
+                          {assignment.assessment?.title || 'Untitled Assessment'}
                         </h3>
                         <p className="text-sm text-gray-600 mt-1">
                           Due: {new Date(assignment.expires).toLocaleDateString()}
                         </p>
-                        {assignment.assessments?.description && (
-                          <p className="text-sm text-gray-500 mt-2">
-                            {assignment.assessments.description}
-                          </p>
+                        {assignment.assessment?.description && (
+                          <div 
+                            className="text-sm text-gray-500 mt-2 rich-text-content"
+                            dangerouslySetInnerHTML={{ __html: assignment.assessment.description }}
+                          />
                         )}
                       </div>
                       <div className="ml-4">
-                        {assignment.url ? (
-                          <a
-                            href={assignment.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700"
-                          >
-                            Start Assessment
-                          </a>
-                        ) : (
+                        {assignment.url ? (() => {
+                          let url = assignment.url.trim()
+                          
+                          // URLs are stored with domain but no protocol (e.g., "involved-v2.cyberworldbuilders.dev/assignment/...")
+                          // Strip the domain and keep only the path so React/Next.js can add the domain automatically
+                          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || ''
+                          const baseUrlWithoutProtocol = baseUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')
+                          
+                          // Remove the domain part if it matches our base URL
+                          if (baseUrlWithoutProtocol && url.startsWith(baseUrlWithoutProtocol)) {
+                            url = url.substring(baseUrlWithoutProtocol.length)
+                          } else {
+                            // Fallback: find the first slash and take everything from there
+                            const firstSlashIndex = url.indexOf('/')
+                            if (firstSlashIndex !== -1) {
+                              url = url.substring(firstSlashIndex)
+                            } else {
+                              // No slash found, ensure it starts with /
+                              url = `/${url}`
+                            }
+                          }
+                          
+                          // Ensure it starts with /
+                          if (!url.startsWith('/')) {
+                            url = `/${url}`
+                          }
+                          
+                          return (
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700"
+                            >
+                              Start Assessment
+                            </a>
+                          )
+                        })() : (
                           <span className="inline-flex items-center px-4 py-2 bg-gray-300 text-gray-600 text-sm font-medium rounded-md cursor-not-allowed">
                             Not Available
                           </span>
@@ -186,7 +249,7 @@ export default async function MyAssignmentsPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <h3 className="font-semibold text-gray-900">
-                          {assignment.assessments?.title || 'Untitled Assessment'}
+                          {assignment.assessment?.title || 'Untitled Assessment'}
                         </h3>
                         <p className="text-sm text-gray-600 mt-1">
                           Completed: {assignment.completed_at ? new Date(assignment.completed_at).toLocaleDateString() : 'N/A'}
@@ -222,7 +285,7 @@ export default async function MyAssignmentsPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <h3 className="font-semibold text-gray-900">
-                          {assignment.assessments?.title || 'Untitled Assessment'}
+                          {assignment.assessment?.title || 'Untitled Assessment'}
                         </h3>
                         <p className="text-sm text-red-600 mt-1">
                           Expired: {new Date(assignment.expires).toLocaleDateString()}
@@ -255,6 +318,6 @@ export default async function MyAssignmentsPage() {
           </Card>
         )}
       </div>
-    </DashboardLayout>
   )
 }
+

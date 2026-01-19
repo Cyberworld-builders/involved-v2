@@ -20,6 +20,15 @@ export interface NavigationProps {
 export type HeaderProps = NavigationProps
 
 /**
+ * User profile data for sidebar
+ */
+export interface UserProfile {
+  access_level: 'member' | 'client_admin' | 'super_admin'
+  name: string
+  email: string
+}
+
+/**
  * SidebarProps extends NavigationProps for future extensibility.
  * Currently matches NavigationProps but allows adding Sidebar-specific props later
  * without breaking changes (e.g., collapsed?: boolean, userInfo?: UserInfo)
@@ -27,4 +36,5 @@ export type HeaderProps = NavigationProps
 export interface SidebarProps extends NavigationProps {
   isOpen?: boolean
   onClose?: () => void
+  userProfile?: UserProfile // Optional: if provided, skip fetching (for performance)
 }

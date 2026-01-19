@@ -2,7 +2,6 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 import ClientTabs from './client-tabs'
 
 interface ClientPageProps {
@@ -37,23 +36,20 @@ export default async function ClientPage({ params, searchParams }: ClientPagePro
 
   if (error || !client) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Client Not Found</h1>
-          <p className="text-gray-600 mb-4">The client you&apos;re looking for doesn&apos;t exist.</p>
-          <Link href="/dashboard/clients">
-            <Button>Back to Clients</Button>
-          </Link>
-        </div>
-      </DashboardLayout>
+      <div className="text-center py-12">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">Client Not Found</h1>
+        <p className="text-gray-600 mb-4">The client you&apos;re looking for doesn&apos;t exist.</p>
+        <Link href="/dashboard/clients">
+          <Button>Back to Clients</Button>
+        </Link>
+      </div>
     )
   }
 
   const activeTab = tab || 'details'
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Page Header */}
         <div className="flex justify-between items-center">
           <div>
@@ -73,6 +69,5 @@ export default async function ClientPage({ params, searchParams }: ClientPagePro
         {/* Tabs */}
         <ClientTabs clientId={client.id} activeTab={activeTab} client={client} />
       </div>
-    </DashboardLayout>
   )
 }

@@ -120,7 +120,7 @@ describe('GroupPage', () => {
     const params = Promise.resolve({ id: 'nonexistent' })
     const result = await GroupPage({ params })
 
-    const { container } = render(result as React.ReactElement)
+    render(result as React.ReactElement)
 
     expect(screen.getByText('Group Not Found')).toBeInTheDocument()
     expect(screen.getByText("The group you're looking for doesn't exist.")).toBeInTheDocument()
@@ -148,7 +148,7 @@ describe('GroupPage', () => {
     const params = Promise.resolve({ id: 'group-1' })
     const result = await GroupPage({ params })
 
-    const { container } = render(result as React.ReactElement)
+    render(result as React.ReactElement)
 
     expect(screen.getAllByText('Engineering Team').length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText('Group details and members')).toBeInTheDocument()

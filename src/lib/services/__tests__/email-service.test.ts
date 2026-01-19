@@ -6,7 +6,6 @@ import {
   sendEmail,
   sendInviteEmail,
   type InviteEmailData,
-  type EmailDeliveryResult,
 } from '../email-service'
 
 // Mock nodemailer

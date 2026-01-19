@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 
 interface BenchmarkPageProps {
   params: Promise<{
@@ -36,15 +35,13 @@ export default async function BenchmarkPage({ params }: BenchmarkPageProps) {
 
   if (error || !benchmark) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Benchmark Not Found</h1>
-          <p className="text-gray-600 mb-4">The benchmark you&apos;re looking for doesn&apos;t exist.</p>
-          <Link href="/dashboard/benchmarks/list">
-            <Button>Back to Benchmarks</Button>
-          </Link>
-        </div>
-      </DashboardLayout>
+      <div className="text-center py-12">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">Benchmark Not Found</h1>
+        <p className="text-gray-600 mb-4">The benchmark you&apos;re looking for doesn&apos;t exist.</p>
+        <Link href="/dashboard/benchmarks/list">
+          <Button>Back to Benchmarks</Button>
+        </Link>
+      </div>
     )
   }
 
@@ -52,8 +49,7 @@ export default async function BenchmarkPage({ params }: BenchmarkPageProps) {
   const industry = benchmark.industries
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
           <div>
@@ -187,6 +183,5 @@ export default async function BenchmarkPage({ params }: BenchmarkPageProps) {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
   )
 }

@@ -16,7 +16,13 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:brave": "playwright test --project=brave",
-    "test:e2e:duckduckgo": "playwright test --project=duckduckgo"
+    "test:e2e:duckduckgo": "playwright test --project=duckduckgo",
+    "db:migrate": "supabase migration up",
+    "db:migrate:refresh": "./scripts/apply-migration.sh",
+    "db:reset": "supabase db reset",
+    "db:status": "supabase migration list",
+    "db:push": "supabase db push",
+    "supabase:restart": "supabase stop && supabase start"
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.948.0",
@@ -34,8 +40,10 @@
     "@tiptap/react": "^3.11.1",
     "@tiptap/starter-kit": "^3.11.1",
     "@types/nodemailer": "^7.0.4",
+    "@vercel/functions": "^3.3.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dotenv": "^17.2.3",
     "lucide-react": "^0.545.0",
     "next": "15.5.7",
     "nodemailer": "^7.0.11",

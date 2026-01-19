@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { stripHtmlTags } from '@/lib/utils'
@@ -19,11 +20,71 @@ interface AssessmentsTableProps {
 }
 
 export default function AssessmentsTable({ initialAssessments }: AssessmentsTableProps) {
-  const [assessments] = useState<Assessment[]>(initialAssessments)
+  const [assessments, setAssessments] = useState<Assessment[]>(initialAssessments)
+  const [duplicatingId, setDuplicatingId] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const router = useRouter()
 
   const formatDate = (date: string) => {
     // Use UTC to avoid timezone-dependent date shifts in UI/tests.
     return new Date(date).toLocaleDateString(undefined, { timeZone: 'UTC' })
+  }
+
+  const handleDuplicate = async (assessmentId: string) => {
+    if (duplicatingId) return // Prevent multiple simultaneous duplicates
+    
+    setDuplicatingId(assessmentId)
+    try {
+      const response = await fetch(`/api/assessments/${assessmentId}/duplicate`, {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to duplicate assessment')
+      }
+
+      const data = await response.json()
+      
+      // Redirect to the new assessment's edit page
+      router.push(`/dashboard/assessments/${data.assessment.id}/edit`)
+    } catch (error) {
+      console.error('Error duplicating assessment:', error)
+      alert(error instanceof Error ? error.message : 'Failed to duplicate assessment')
+    } finally {
+      setDuplicatingId(null)
+    }
+  }
+
+  const handleDelete = async (assessmentId: string, assessmentTitle: string) => {
+    if (deletingId) return // Prevent multiple simultaneous deletes
+    
+    // Confirm deletion
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${assessmentTitle}"?\n\nThis action cannot be undone and will delete all associated fields, dimensions, and other related data.`
+    )
+
+    if (!confirmed) return
+
+    setDeletingId(assessmentId)
+    try {
+      const response = await fetch(`/api/assessments/${assessmentId}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to delete assessment')
+      }
+
+      // Remove from local state
+      setAssessments(prev => prev.filter(a => a.id !== assessmentId))
+    } catch (error) {
+      console.error('Error deleting assessment:', error)
+      alert(error instanceof Error ? error.message : 'Failed to delete assessment')
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   if (!assessments || assessments.length === 0) {
@@ -72,12 +133,29 @@ export default function AssessmentsTable({ initialAssessments }: AssessmentsTabl
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div className="flex justify-end space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDuplicate(assessment.id)}
+                    disabled={duplicatingId === assessment.id}
+                  >
+                    {duplicatingId === assessment.id ? 'Duplicating...' : 'Duplicate'}
+                  </Button>
                   <Link href={`/dashboard/assessments/${assessment.id}/edit`}>
                     <Button variant="outline" size="sm">Edit Assessment</Button>
                   </Link>
                   <Link href={`/dashboard/benchmarks/manage/${assessment.id}`}>
                     <Button variant="outline" size="sm">Manage Benchmarks</Button>
                   </Link>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDelete(assessment.id, assessment.title)}
+                    disabled={deletingId === assessment.id}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    {deletingId === assessment.id ? 'Deleting...' : 'Delete'}
+                  </Button>
                 </div>
               </td>
             </tr>

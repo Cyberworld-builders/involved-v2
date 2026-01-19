@@ -208,7 +208,7 @@ describe('API User Status Management', () => {
       })
 
       const response = await createUser(request)
-      const data = await response.json()
+      await response.json()
 
       expect(response.status).toBe(201)
       expect(insertMock).toHaveBeenCalledWith(
@@ -350,7 +350,7 @@ describe('API User Status Management', () => {
       })
 
       const response = await createUser(request)
-      const data = await response.json()
+      await response.json()
 
       expect(response.status).toBe(400)
       expect(data.error).toBe('Invalid status. Must be one of: active, inactive, suspended')
@@ -386,7 +386,7 @@ describe('API User Status Management', () => {
 
       const params = Promise.resolve({ id: 'test-id' })
       const response = await updateUser(request, { params })
-      const data = await response.json()
+      await response.json()
 
       expect(response.status).toBe(200)
       expect(updateMock).toHaveBeenCalledWith(

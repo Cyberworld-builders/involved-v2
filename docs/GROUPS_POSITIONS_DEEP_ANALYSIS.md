@@ -281,3 +281,4 @@ The V2 architecture with a single `role` field is **semantically simpler and arc
 - Updated CSV template to use "Position" header
 - Added note in CSV upload modal explaining positions are organizational only
 - Updated documentation to reflect organizational-only purpose
+

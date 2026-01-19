@@ -44,6 +44,11 @@ export default function ClientAssignments({ clientId }: ClientAssignmentsProps) 
   const [assignments, setAssignments] = useState<Assignment[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [message, setMessage] = useState('')
+  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'completed' | 'expired'>('all')
+  const [filterUserId, setFilterUserId] = useState<string>('')
+  const [filterAssessmentId, setFilterAssessmentId] = useState<string>('')
+  const [availableUsers, setAvailableUsers] = useState<Array<{ id: string; name: string; email: string }>>([])
+  const [availableAssessments, setAvailableAssessments] = useState<Array<{ id: string; title: string }>>([])
   const supabase = createClient()
 
   useEffect(() => {
@@ -86,11 +91,31 @@ export default function ClientAssignments({ clientId }: ClientAssignmentsProps) 
 
         const userIds = clientUsers.map(u => u.id)
 
-        // Load assignments for these users
-        const { data: assignmentsOnly, error: assignmentsError } = await supabase
+        // Build query with filters
+        let assignmentsQuery = supabase
           .from('assignments')
           .select('*')
           .in('user_id', userIds)
+
+        // Apply status filter
+        if (filterStatus === 'completed') {
+          assignmentsQuery = assignmentsQuery.eq('completed', true)
+        } else if (filterStatus === 'pending') {
+          assignmentsQuery = assignmentsQuery.eq('completed', false)
+        }
+
+        // Apply user filter
+        if (filterUserId) {
+          assignmentsQuery = assignmentsQuery.eq('user_id', filterUserId)
+        }
+
+        // Apply assessment filter
+        if (filterAssessmentId) {
+          assignmentsQuery = assignmentsQuery.eq('assessment_id', filterAssessmentId)
+        }
+
+        // Load assignments for these users
+        const { data: assignmentsOnly, error: assignmentsError } = await assignmentsQuery
           .order('created_at', { ascending: false })
 
         if (assignmentsError) {
@@ -145,6 +170,21 @@ export default function ClientAssignments({ clientId }: ClientAssignmentsProps) 
         }))
 
         setAssignments(assignmentsData)
+
+        // Load users and assessments for filters
+        const { data: usersData } = await supabase
+          .from('profiles')
+          .select('id, name, email')
+          .eq('client_id', clientId)
+          .order('name', { ascending: true })
+
+        const { data: assessmentsData } = await supabase
+          .from('assessments')
+          .select('id, title')
+          .order('title', { ascending: true })
+
+        setAvailableUsers(usersData || [])
+        setAvailableAssessments(assessmentsData || [])
       } catch (error) {
         console.error('Error loading assignments:', error)
         
@@ -181,61 +221,64 @@ export default function ClientAssignments({ clientId }: ClientAssignmentsProps) 
 
     loadAssignments()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clientId])
+  }, [clientId, filterStatus, filterUserId, filterAssessmentId])
 
-  const handleDelete = async (assignmentId: string, userName: string, assessmentTitle: string) => {
-    if (!confirm(`Are you sure you want to delete the assignment for ${userName} for ${assessmentTitle}?`)) {
-      return
+  // Delete functionality can be added later if needed
+  // const handleDelete = async (assignmentId: string, userName: string, assessmentTitle: string) => {
+  //   if (!confirm(`Are you sure you want to delete the assignment for ${userName} for ${assessmentTitle}?`)) {
+  //     return
+  //   }
+
+  //   try {
+  //     const { error } = await supabase
+  //       .from('assignments')
+  //       .delete()
+  //       .eq('id', assignmentId)
+
+  //     if (error) {
+  //       throw new Error(`Failed to delete assignment: ${error.message}`)
+  //     }
+
+  //     // Refresh assignments list
+  //     setAssignments(prev => prev.filter(a => a.id !== assignmentId))
+  //     setMessage('Assignment deleted successfully')
+  //     setTimeout(() => setMessage(''), 3000)
+  //   } catch (error) {
+  //     console.error('Error deleting assignment:', error)
+  //     setMessage(error instanceof Error ? error.message : 'Failed to delete assignment')
+  //   }
+  // }
+
+  const getStatusBadge = (assignment: Assignment) => {
+    if (assignment.completed) {
+      return (
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          Completed
+        </span>
+      )
     }
-
-    try {
-      const { error } = await supabase
-        .from('assignments')
-        .delete()
-        .eq('id', assignmentId)
-
-      if (error) {
-        throw new Error(`Failed to delete assignment: ${error.message}`)
-      }
-
-      // Refresh assignments list
-      setAssignments(prev => prev.filter(a => a.id !== assignmentId))
-      setMessage('Assignment deleted successfully')
-      setTimeout(() => setMessage(''), 3000)
-    } catch (error) {
-      console.error('Error deleting assignment:', error)
-      setMessage(error instanceof Error ? error.message : 'Failed to delete assignment')
+    if (new Date(assignment.expires) < new Date()) {
+      return (
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+          Expired
+        </span>
+      )
     }
+    return (
+      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+        Pending
+      </span>
+    )
   }
 
-  const formatExpiration = (expires: string) => {
-    const expiresDate = new Date(expires)
-    const now = new Date()
-    const diff = expiresDate.getTime() - now.getTime()
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-
-    if (diff < 0) {
-      const absDays = Math.abs(days)
-      const absHours = Math.abs(hours)
-      if (absDays > 0) {
-        return `Expired ${absDays} day${absDays > 1 ? 's' : ''} ago`
-      } else if (absHours > 0) {
-        return `Expired ${absHours} hour${absHours > 1 ? 's' : ''} ago`
-      } else {
-        return `Expired ${Math.abs(minutes)} minute${Math.abs(minutes) !== 1 ? 's' : ''} ago`
-      }
-    } else {
-      if (days > 0) {
-        return `Expires in ${days} day${days > 1 ? 's' : ''}`
-      } else if (hours > 0) {
-        return `Expires in ${hours} hour${hours > 1 ? 's' : ''}`
-      } else {
-        return `Expires in ${minutes} minute${minutes !== 1 ? 's' : ''}`
-      }
-    }
-  }
+  const filteredAssignments = assignments.filter((assignment) => {
+    if (filterStatus === 'completed' && !assignment.completed) return false
+    if (filterStatus === 'pending' && (assignment.completed || new Date(assignment.expires) < new Date())) return false
+    if (filterStatus === 'expired' && (assignment.completed || new Date(assignment.expires) >= new Date())) return false
+    if (filterUserId && assignment.user_id !== filterUserId) return false
+    if (filterAssessmentId && assignment.assessment_id !== filterAssessmentId) return false
+    return true
+  })
 
   if (isLoading) {
     return (
@@ -270,16 +313,76 @@ export default function ClientAssignments({ clientId }: ClientAssignmentsProps) 
         </div>
       )}
 
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Filters</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Status
+              </label>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value as 'all' | 'pending' | 'completed' | 'expired')}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              >
+                <option value="all">All</option>
+                <option value="pending">Pending</option>
+                <option value="completed">Completed</option>
+                <option value="expired">Expired</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                User
+              </label>
+              <select
+                value={filterUserId}
+                onChange={(e) => setFilterUserId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              >
+                <option value="">All Users</option>
+                {availableUsers.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name} ({user.email})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Assessment
+              </label>
+              <select
+                value={filterAssessmentId}
+                onChange={(e) => setFilterAssessmentId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              >
+                <option value="">All Assessments</option>
+                {availableAssessments.map((assessment) => (
+                  <option key={assessment.id} value={assessment.id}>
+                    {assessment.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Assignments Table */}
       <Card>
         <CardHeader>
           <CardTitle>All Assignments</CardTitle>
           <CardDescription>
-            View and manage all assessment assignments for this client
+            {filteredAssignments.length} assignment{filteredAssignments.length !== 1 ? 's' : ''} found
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {assignments.length === 0 ? (
+          {filteredAssignments.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <p>No assignments have been assigned yet.</p>
               <p className="text-sm mt-2">
@@ -290,100 +393,67 @@ export default function ClientAssignments({ clientId }: ClientAssignmentsProps) 
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-300">
+              <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Assigned To
+                      User
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Assessment
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Completed
+                      Assigned
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Expiration
+                      Expires
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Settings
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {assignments.map((assignment) => (
-                    <tr key={assignment.id}>
+                  {filteredAssignments.map((assignment) => (
+                    <tr key={assignment.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {assignment.user ? (
-                          <Link 
-                            href={`/dashboard/users/${assignment.user.id}`}
-                            className="text-indigo-600 hover:text-indigo-700"
-                          >
-                            👤 {assignment.user.name}
-                          </Link>
-                        ) : (
-                          <span className="text-gray-400">User not found</span>
-                        )}
+                        <div className="text-sm font-medium text-gray-900">
+                          {assignment.user?.name || 'Unknown'}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {assignment.user?.email || 'N/A'}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {assignment.assessment ? (
-                          <div>
-                            <Link 
-                              href={`/dashboard/assessments/${assignment.assessment.id}`}
-                              className="text-indigo-600 hover:text-indigo-700"
-                            >
-                              {assignment.assessment.title}
-                            </Link>
-                            {assignment.target && (
-                              <div className="text-sm text-gray-500">
-                                For {assignment.target.name}
-                              </div>
-                            )}
+                        <div className="text-sm text-gray-900">
+                          {assignment.assessment?.title || 'Unknown Assessment'}
+                        </div>
+                        {assignment.target && (
+                          <div className="text-xs text-gray-500">
+                            Target: {assignment.target.name}
                           </div>
-                        ) : (
-                          <span className="text-red-600">
-                            ⚠️ Assessment Not Found
-                          </span>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {assignment.completed ? (
-                          <div className="text-green-600">
-                            ✓ Completed
-                            {assignment.completed_at && (
-                              <div className="text-xs text-gray-500">
-                                {new Date(assignment.completed_at).toLocaleString()}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-gray-400">Not Completed</span>
-                        )}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {assignment.created_at
+                          ? new Date(assignment.created_at).toLocaleDateString()
+                          : 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(assignment.expires).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={new Date(assignment.expires) < new Date() ? 'text-red-600' : 'text-gray-900'}>
-                          {formatExpiration(assignment.expires)}
-                        </span>
+                        {getStatusBadge(assignment)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-4">
-                          <Link 
-                            href={`/dashboard/assignments/${assignment.id}/edit`}
-                            className="text-indigo-600 hover:text-indigo-700"
-                          >
-                            ✏️ Edit
-                          </Link>
-                          <button
-                            onClick={() => handleDelete(
-                              assignment.id,
-                              assignment.user?.name || 'Unknown',
-                              assignment.assessment?.title || 'Unknown Assessment'
-                            )}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            🗑️ Delete
-                          </button>
-                        </div>
+                        <Link href={`/dashboard/clients/${clientId}/assignments/${assignment.id}`}>
+                          <Button variant="outline" size="sm">
+                            View
+                          </Button>
+                        </Link>
                       </td>
                     </tr>
                   ))}

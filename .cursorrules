@@ -1,0 +1,38 @@
+# Cursor Rules for Involved V2
+
+## Supabase Migration Workflow
+
+**CRITICAL: Always restart Supabase after applying migrations to refresh PostgREST schema cache.**
+
+### Creating Migrations
+- Always use `supabase migration new <name>` to create migrations
+- Never manually create migration files with custom numbers
+- Use descriptive names: `create_answers_table`, `add_status_to_profiles`
+
+### Applying Migrations
+1. Create migration: `supabase migration new <name>`
+2. Write SQL (use `IF NOT EXISTS` for idempotency)
+3. Apply: `npm run db:migrate:refresh` (applies + restarts)
+4. Test your changes
+5. Push to remote: `npm run db:push` (when ready)
+
+### The Problem We're Solving
+PostgREST caches the database schema. After migrations add columns/tables, the cache becomes stale. Restarting Supabase forces PostgREST to reload the schema.
+
+### Quick Reference
+- `npm run db:migrate` - Apply migrations only
+- `npm run db:migrate:refresh` - Apply migrations + restart (recommended)
+- `npm run db:status` - Check migration status
+- `npm run db:reset` - Reset database (loses all data)
+- `npm run db:push` - Push migrations to remote
+- `npm run supabase:restart` - Restart Supabase only
+
+### Migration Best Practices
+- Use `IF NOT EXISTS` for idempotency
+- Use `CREATE OR REPLACE` for functions
+- Always `DROP CONSTRAINT IF EXISTS` before adding constraints
+- Test migrations on clean database first
+- Never skip migration numbers
+
+See `docs/MIGRATION_WORKFLOW.md` for complete guide.
+

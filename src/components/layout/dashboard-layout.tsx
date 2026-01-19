@@ -2,12 +2,15 @@
 
 import { ReactNode, useState } from 'react'
 import Sidebar from '@/components/navigation/sidebar'
+import { UserProfile } from '@/components/navigation/types'
+import SignOutButton from '@/app/dashboard/sign-out-button'
 
 interface DashboardLayoutProps {
   children: ReactNode
+  userProfile?: UserProfile // Optional: pass profile from server layout
 }
 
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
+export default function DashboardLayout({ children, userProfile }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
@@ -15,6 +18,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <Sidebar 
         isOpen={sidebarOpen} 
         onClose={() => setSidebarOpen(false)}
+        userProfile={userProfile}
       />
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top navigation bar */}
@@ -34,7 +38,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </button>
               <h1 className="text-xl md:text-2xl font-semibold text-gray-900">Dashboard</h1>
             </div>
-
+            
+            <div className="flex items-center">
+              <SignOutButton />
+            </div>
           </div>
         </header>
 

@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 import ClientForm from '@/components/forms/client-form'
 
 interface ClientFormData {
@@ -67,8 +66,7 @@ export default function CreateClientPage() {
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Page Header */}
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Create Client</h1>
@@ -93,6 +91,5 @@ export default function CreateClientPage() {
           submitText="Create Client"
         />
       </div>
-    </DashboardLayout>
   )
 }

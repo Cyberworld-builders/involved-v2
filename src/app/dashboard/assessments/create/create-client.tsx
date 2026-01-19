@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 import AssessmentForm, { AssessmentFormData } from '@/components/forms/assessment-form'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
@@ -68,6 +67,24 @@ export default function CreateAssessmentClient() {
         backgroundUrl = backgroundUrlData.publicUrl
       }
 
+      // Prepare custom_fields for database
+      let customFieldsJson: { tag: string[]; default: string[] } | null = null
+      if (data.use_custom_fields && data.custom_fields.length > 0) {
+        customFieldsJson = {
+          tag: data.custom_fields.map(cf => cf.tag),
+          default: data.custom_fields.map(cf => cf.default),
+        }
+      }
+      
+      // Convert target to legacy format (0=self, 1=other_user, 2=group_leader)
+      let targetValue: string | null = null
+      if (data.target === 'self') targetValue = '0'
+      else if (data.target === 'other_user') targetValue = '1'
+      else if (data.target === 'group_leader') targetValue = '2'
+
+      // Store original dimension_question_counts for mapping after dimensions are created
+      const originalDimensionCounts = data.dimension_question_counts || {}
+
       // Create assessment record
       const { data: assessment, error: assessmentError } = await supabase
         .from('assessments')
@@ -80,13 +97,20 @@ export default function CreateAssessmentClient() {
             background: backgroundUrl,
             primary_color: data.primary_color,
             accent_color: data.accent_color,
+            status: data.status || 'draft',
             split_questions: data.split_questions,
             questions_per_page: data.questions_per_page,
             timed: data.timed,
             time_limit: data.time_limit,
-            target: data.target || null,
+            target: targetValue,
             is_360: data.is_360,
+            number_of_questions: data.number_of_questions || null,
+            // dimension_question_counts will be updated after dimensions are created and mapped
+            dimension_question_counts: null,
+            show_question_numbers: data.show_question_numbers !== undefined ? data.show_question_numbers : true,
             type: data.is_360 ? '360' : 'custom',
+            use_custom_fields: data.use_custom_fields,
+            custom_fields: customFieldsJson,
           },
         ])
         .select()
@@ -97,30 +121,182 @@ export default function CreateAssessmentClient() {
       }
 
       // Create dimensions if any
+      // Map temporary dimension IDs to database UUIDs (will be populated as we insert dimensions)
+      const tempIdToDbIdMap = new Map<string, string>()
+      
       if (data.dimensions.length > 0) {
-        const dimensionsToInsert = data.dimensions
+        // Build a map of temporary IDs to dimension data
+        const tempIdMap = new Map<string, { name: string; code: string; parent_id: string | null }>()
+        data.dimensions
           .filter(dim => dim.name && dim.code)
-          .map(dim => ({
-            assessment_id: assessment.id,
-            name: dim.name,
-            code: dim.code,
-            parent_id: dim.parent_id || null,
-          }))
+          .forEach(dim => {
+            tempIdMap.set(dim.id, {
+              name: dim.name,
+              code: dim.code,
+              parent_id: dim.parent_id,
+            })
+          })
 
-        if (dimensionsToInsert.length > 0) {
-          const { error: dimensionsError } = await supabase
+        // Organize dimensions into levels (parents first, then children)
+        const getDimensionLevel = (dimId: string, visited = new Set<string>()): number => {
+          if (visited.has(dimId)) return 0 // Circular reference protection
+          visited.add(dimId)
+          const dim = tempIdMap.get(dimId)
+          if (!dim || !dim.parent_id || !tempIdMap.has(dim.parent_id)) return 0
+          return 1 + getDimensionLevel(dim.parent_id, visited)
+        }
+
+        // Sort dimensions by level (parents first)
+        const sortedDimensions = Array.from(tempIdMap.entries())
+          .sort(([idA], [idB]) => getDimensionLevel(idA) - getDimensionLevel(idB))
+
+        // Insert dimensions level by level, mapping temporary IDs to database UUIDs
+        for (const [tempId, dimData] of sortedDimensions) {
+          // Map parent_id from temporary ID to database UUID if it exists
+          let parentId: string | null = null
+          if (dimData.parent_id && tempIdToDbIdMap.has(dimData.parent_id)) {
+            parentId = tempIdToDbIdMap.get(dimData.parent_id)!
+          } else if (dimData.parent_id) {
+            // Parent not yet inserted - this shouldn't happen with proper sorting, but handle gracefully
+            console.warn(`Parent dimension ${dimData.parent_id} not found for ${tempId}, setting to null`)
+            parentId = null
+          }
+
+          const { data: insertedDimension, error: insertError } = await supabase
             .from('dimensions')
-            .insert(dimensionsToInsert)
+            .insert({
+              assessment_id: assessment.id,
+              name: dimData.name,
+              code: dimData.code,
+              parent_id: parentId,
+            })
+            .select('id')
+            .single()
 
-          if (dimensionsError) {
-            throw new Error(`Failed to create dimensions: ${dimensionsError.message}`)
+          if (insertError) {
+            throw new Error(`Failed to create dimensions: ${insertError.message}`)
+          }
+
+          // Map temporary ID to database UUID
+          if (insertedDimension) {
+            tempIdToDbIdMap.set(tempId, insertedDimension.id)
+          }
+        }
+      }
+
+      // Create fields (questions) if any
+      if (data.fields.length > 0) {
+        // Use the tempIdToDbIdMap we created when inserting dimensions
+        // If it's empty (no dimensions were inserted), rebuild it from database
+        if (tempIdToDbIdMap.size === 0 && data.dimensions.length > 0) {
+          const { data: dimensions } = await supabase
+            .from('dimensions')
+            .select('id, code')
+            .eq('assessment_id', assessment.id)
+
+          dimensions?.forEach(dbDim => {
+            // Find the matching dimension in form data by code (since code is unique)
+            const formDim = data.dimensions.find(d => d.code === dbDim.code)
+            if (formDim) {
+              tempIdToDbIdMap.set(formDim.id, dbDim.id)
+            }
+          })
+        }
+
+        // Preserve the exact order from the form data array
+        const fieldsToInsert = data.fields.map((field, index) => {
+          let dimensionId = null
+          if (field.dimension_id) {
+            // Map temporary dimension ID to database UUID
+            dimensionId = tempIdToDbIdMap.get(field.dimension_id) || null
+          }
+
+          // Use the array index + 1 as the order to preserve the exact order from the form
+          // The array position reflects the current visual order
+          const orderValue = index + 1
+          // Number should match order for consistency
+          const numberValue = orderValue
+
+          return {
+            assessment_id: assessment.id,
+            dimension_id: dimensionId,
+            type: field.type,
+            content: field.content ?? '',
+            order: orderValue,
+            number: numberValue,
+            required: field.required !== undefined ? field.required : true,
+            practice: field.practice || false,
+            anchors: field.anchors || [],
+          }
+        })
+
+        if (fieldsToInsert.length > 0) {
+          const { error: fieldsError } = await supabase
+            .from('fields')
+            .insert(fieldsToInsert)
+
+          if (fieldsError) {
+            throw new Error(`Failed to create questions: ${fieldsError.message}`)
+          }
+        }
+      }
+
+      // Map dimension_question_counts from temporary IDs to database UUIDs
+      if (Object.keys(originalDimensionCounts).length > 0) {
+        // Rebuild tempIdToDbIdMap if needed (in case no new dimensions were created)
+        if (tempIdToDbIdMap.size === 0 && data.dimensions.length > 0) {
+          const { data: dimensions } = await supabase
+            .from('dimensions')
+            .select('id, code')
+            .eq('assessment_id', assessment.id)
+
+          dimensions?.forEach(dbDim => {
+            // Find the matching dimension in form data by code (since code is unique)
+            const formDim = data.dimensions.find(d => d.code === dbDim.code)
+            if (formDim) {
+              tempIdToDbIdMap.set(formDim.id, dbDim.id)
+            }
+          })
+        }
+
+        // Map dimension_question_counts keys from temporary IDs to database UUIDs
+        const mappedDimensionCounts: Record<string, number> = {}
+        for (const [tempId, count] of Object.entries(originalDimensionCounts)) {
+          if (typeof count === 'number' && count > 0) {
+            const dbId = tempIdToDbIdMap.get(tempId)
+            if (dbId) {
+              mappedDimensionCounts[dbId] = count
+            } else {
+              // If temp ID not found in map, it might already be a database UUID
+              // Check if it's a valid UUID format
+              const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+              if (uuidRegex.test(tempId)) {
+                // Already a UUID, use it directly
+                mappedDimensionCounts[tempId] = count
+              } else {
+                console.warn(`Dimension ID ${tempId} not found in tempIdToDbIdMap and is not a UUID, skipping`)
+              }
+            }
+          }
+        }
+
+        // Update assessment with mapped dimension_question_counts
+        if (Object.keys(mappedDimensionCounts).length > 0) {
+          const { error: updateCountsError } = await supabase
+            .from('assessments')
+            .update({ dimension_question_counts: mappedDimensionCounts })
+            .eq('id', assessment.id)
+
+          if (updateCountsError) {
+            console.error('Error updating dimension_question_counts:', updateCountsError)
+            // Don't throw - this is not critical, assessment is already created
           }
         }
       }
 
       setMessage('Assessment created successfully!')
       setTimeout(() => {
-        router.push('/dashboard/assessments')
+        router.push(`/dashboard/assessments/${assessment.id}/edit`)
       }, 1500)
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'An unexpected error occurred')
@@ -130,8 +306,7 @@ export default function CreateAssessmentClient() {
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Page Header */}
         <div className="flex justify-between items-center">
           <div>
@@ -161,6 +336,5 @@ export default function CreateAssessmentClient() {
           submitText="Create Assessment"
         />
       </div>
-    </DashboardLayout>
   )
 }

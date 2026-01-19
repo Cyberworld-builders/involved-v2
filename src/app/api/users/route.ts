@@ -6,6 +6,7 @@ import { generateUsernameFromName, generateUsernameFromEmail, generateUniqueUser
 import { isValidEmail } from '@/lib/utils/email-validation'
 
 type ProfileInsert = Database['public']['Tables']['profiles']['Insert']
+type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
 
 const VALID_ROLES = ['admin', 'manager', 'client', 'user', 'unverified'] as const
 type ValidRole = (typeof VALID_ROLES)[number]
@@ -308,10 +309,24 @@ export async function POST(request: NextRequest) {
     // Client scoping:
     // - client_admin can only create users under their own client_id
     // - super_admin can create users for any client (or none)
-    // Handle empty strings by converting them to null
-    const clientIdValue = typeof client_id === 'string' && client_id.trim() !== '' ? client_id.trim() : null
+    // Handle empty strings, undefined, and null by converting them to null
+    let clientIdValue: string | null = null
+    if (client_id !== undefined && client_id !== null) {
+      if (typeof client_id === 'string') {
+        const trimmed = client_id.trim()
+        if (trimmed !== '' && trimmed !== 'null' && trimmed !== 'undefined') {
+          clientIdValue = trimmed
+        }
+      }
+    }
     const resolvedClientId =
       isClientAdmin ? actorClientId : clientIdValue
+    
+    // Debug logging
+    console.log('[CREATE USER API] Raw client_id:', client_id, 'type:', typeof client_id)
+    console.log('[CREATE USER API] Processed clientIdValue:', clientIdValue)
+    console.log('[CREATE USER API] resolvedClientId:', resolvedClientId)
+    console.log('[CREATE USER API] isClientAdmin:', isClientAdmin, 'actorClientId:', actorClientId)
 
     // Keep legacy role in sync (until we fully remove it from the product model)
     const resolvedRole: ValidRole =
@@ -331,6 +346,9 @@ export async function POST(request: NextRequest) {
       completed_profile: false,
       status: status || 'active',
     }
+    
+    // Debug logging
+    console.log('[CREATE USER] profileData.client_id:', profileData.client_id)
 
     // Create profile
     const { data: profile, error: profileError } = await adminClient
@@ -352,7 +370,51 @@ export async function POST(request: NextRequest) {
           .single()
         
         if (existingProfile) {
-          // Profile exists - return it (user was already created)
+          // Profile exists - update it with the new client_id and other fields if provided
+          const updateData: ProfileUpdate = {
+            updated_at: new Date().toISOString(),
+          }
+          
+          // Update client_id if provided and different
+          if (resolvedClientId !== null && existingProfile.client_id !== resolvedClientId) {
+            updateData.client_id = resolvedClientId
+            console.log('[CREATE USER] Updating existing profile client_id from', existingProfile.client_id, 'to', resolvedClientId)
+          }
+          
+          // Update industry_id if provided and different
+          if (industry_id && existingProfile.industry_id !== industry_id) {
+            updateData.industry_id = industry_id
+          }
+          
+          // Update name if different
+          if (name.trim() !== existingProfile.name) {
+            updateData.name = name.trim()
+          }
+          
+          // Update email if different
+          if (email.trim() !== existingProfile.email) {
+            updateData.email = email.trim()
+          }
+          
+          // Only update if there are changes
+          if (Object.keys(updateData).length > 1) { // More than just updated_at
+            const { data: updatedProfile, error: updateError } = await adminClient
+              .from('profiles')
+              .update(updateData)
+              .eq('id', existingProfile.id)
+              .select()
+              .single()
+            
+            if (updateError) {
+              console.error('Error updating existing profile:', updateError)
+              // Return existing profile even if update failed
+              return NextResponse.json({ user: existingProfile }, { status: 200 })
+            }
+            
+            return NextResponse.json({ user: updatedProfile }, { status: 200 })
+          }
+          
+          // Profile exists and no updates needed - return it
           return NextResponse.json({ user: existingProfile }, { status: 200 })
         }
       }

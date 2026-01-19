@@ -1,12 +1,10 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getResourcePostBySlug } from '@/lib/resources/resources'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { createClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -19,33 +17,27 @@ export default async function ResourceDetailPage({
   const { slug } = await params
   const post = getResourcePostBySlug(slug)
 
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/auth/login')
-  }
+  // Note: Auth check is done in layout.tsx, so we can skip it here
+  // This eliminates a duplicate getUserProfile() call, improving performance
 
   if (!post) {
     return (
-      <DashboardLayout>
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">Resources</h1>
-            <Link href="/dashboard/resources">
-              <Button variant="outline">Back</Button>
-            </Link>
-          </div>
-          <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
-            Resource not found.
-          </div>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-900">Resources</h1>
+          <Link href="/dashboard/resources">
+            <Button variant="outline">Back</Button>
+          </Link>
         </div>
-      </DashboardLayout>
+        <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
+          Resource not found.
+        </div>
+      </div>
     )
   }
 
+  // Note: Auth check is done in layout.tsx, but we still need supabase client for storage
+  const supabase = await createClient()
   const { data: signed, error: signedError } = await supabase.storage
     .from(post.video.bucket)
     .createSignedUrl(post.video.path, 60 * 60) // 1 hour
@@ -61,8 +53,7 @@ export default async function ResourceDetailPage({
   const signedUrl = signed?.signedUrl || null
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <nav className="flex" aria-label="Breadcrumb">
           <ol className="flex items-center space-x-2 text-sm">
             <li>
@@ -164,7 +155,6 @@ export default async function ResourceDetailPage({
           </Card>
         ) : null}
       </div>
-    </DashboardLayout>
   )
 }
 

@@ -1,10 +1,9 @@
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import DashboardLayout from '@/components/layout/dashboard-layout'
 import SignOutButton from './sign-out-button'
 import AuthStatus from '@/components/auth-status'
 import Changelog from '@/components/changelog/changelog'
+import { createClient } from '@/lib/supabase/server'
 import { getUserProfile } from '@/lib/utils/get-user-profile'
 
 export default async function DashboardPage() {
@@ -19,14 +18,14 @@ export default async function DashboardPage() {
   }
 
   // Check user access level and redirect members to assignments
+  // Note: Profile is already fetched in layout.tsx, but we need it here for redirect logic
   const profile = await getUserProfile(supabase, user.id)
   if (profile && profile.access_level === 'member') {
     redirect('/dashboard/assignments')
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Welcome Section */}
         <div className="bg-white rounded-lg shadow p-4 md:p-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
@@ -104,6 +103,5 @@ export default async function DashboardPage() {
           <Changelog />
         </div>
       </div>
-    </DashboardLayout>
   )
 }

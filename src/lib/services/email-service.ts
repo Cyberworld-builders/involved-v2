@@ -383,7 +383,8 @@ async function sendEmailViaSES(
   htmlBody: string,
   textBody: string
 ): Promise<EmailDeliveryResult> {
-  // Get and trim credentials to prevent issues with trailing spaces or newlines
+  // Prefer OIDC (AWS_ROLE_ARN) over access keys for security (AWS best practice)
+  const awsRoleArn = process.env.AWS_ROLE_ARN?.trim()
   const awsAccessKeyId = process.env.AWS_ACCESS_KEY_ID?.trim()
   const awsSecretAccessKey = process.env.AWS_SECRET_ACCESS_KEY?.trim()
   // Trim whitespace from region to prevent SDK errors
@@ -395,23 +396,54 @@ async function sendEmailViaSES(
   // Log the sender email for debugging
   console.log('[Email Service] Using sender email:', fromEmail)
   
-  if (!awsAccessKeyId || !awsSecretAccessKey) {
-    throw new Error('AWS credentials not configured (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)')
+  // Check for OIDC or access keys
+  if (!awsRoleArn && (!awsAccessKeyId || !awsSecretAccessKey)) {
+    throw new Error('AWS credentials not configured. Set AWS_ROLE_ARN (preferred) or AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY')
   }
   
-  // Validate credentials don't contain invalid characters
-  if (awsAccessKeyId.length < 16 || awsSecretAccessKey.length < 20) {
-    throw new Error('AWS credentials appear to be invalid (too short)')
+  // Validate access keys if using them (not needed for OIDC)
+  if (!awsRoleArn && awsAccessKeyId && awsSecretAccessKey) {
+    if (awsAccessKeyId.length < 16 || awsSecretAccessKey.length < 20) {
+      throw new Error('AWS credentials appear to be invalid (too short)')
+    }
   }
   
-  // Create SES client with trimmed credentials
-  // Note: AWS SDK handles special characters in credentials, but we ensure they're trimmed
+  // Get credentials - prefer OIDC over access keys
+  let credentials
+  if (awsRoleArn) {
+    try {
+      // Dynamic import to avoid errors in non-Vercel environments
+      const { awsCredentialsProvider } = await import('@vercel/functions/oidc')
+      credentials = awsCredentialsProvider({
+        roleArn: awsRoleArn,
+      })
+      console.log('[Email Service] ✅ Using OIDC credentials (AWS_ROLE_ARN)')
+    } catch (oidcError) {
+      console.warn('[Email Service] ⚠️ OIDC provider not available, falling back to access keys:', oidcError)
+      // Fallback to access keys if OIDC fails (e.g., local development)
+      if (awsAccessKeyId && awsSecretAccessKey) {
+        credentials = {
+          accessKeyId: awsAccessKeyId,
+          secretAccessKey: awsSecretAccessKey,
+        }
+        console.log('[Email Service] Using access keys as fallback')
+      } else {
+        throw new Error('OIDC failed and no access keys available')
+      }
+    }
+  } else {
+    // Use access keys (fallback for local development)
+    credentials = {
+      accessKeyId: awsAccessKeyId!,
+      secretAccessKey: awsSecretAccessKey!,
+    }
+    console.log('[Email Service] ⚠️ Using access keys (consider using AWS_ROLE_ARN for production)')
+  }
+  
+  // Create SES client with credentials (OIDC or access keys)
   const sesClient = new SESClient({
     region: awsRegion,
-    credentials: {
-      accessKeyId: awsAccessKeyId,
-      secretAccessKey: awsSecretAccessKey,
-    },
+    credentials,
     // Add request handler to help with debugging
     requestHandler: {
       requestTimeout: 10000,
@@ -504,56 +536,36 @@ export async function sendEmail(
     throw new Error('to must be a valid email address')
   }
   
-  // Priority order: Resend > AWS SES > SMTP
-  const resendApiKey = process.env.RESEND_API_KEY?.trim()
+  // Priority order: AWS SES with OIDC (AWS_ROLE_ARN) > AWS SES with access keys > Resend > SMTP
+  // OIDC is preferred for production (Vercel deployments) as it follows AWS security best practices
+  const awsRoleArn = process.env.AWS_ROLE_ARN?.trim()
   const awsAccessKeyId = process.env.AWS_ACCESS_KEY_ID?.trim()
   const awsSecretAccessKey = process.env.AWS_SECRET_ACCESS_KEY?.trim()
-  const useResend = !!resendApiKey
-  const useAwsSes = !!(awsAccessKeyId && awsSecretAccessKey)
+  const resendApiKey = process.env.RESEND_API_KEY?.trim()
+  const hasAwsSesOidc = !!awsRoleArn
+  const hasAwsSesAccessKeys = !!(awsAccessKeyId && awsSecretAccessKey)
+  const useAwsSes = hasAwsSesOidc || hasAwsSesAccessKeys
+  const useResend = !!resendApiKey && !useAwsSes // Only use Resend if AWS SES is not available
   const isLocal = process.env.NODE_ENV === 'development' || !process.env.SMTP_HOST
   
   // Log for debugging
   console.log('[Email Service] Configuration check:', {
-    useResend: !!resendApiKey,
+    priority: hasAwsSesOidc ? 'AWS SES (OIDC)' : hasAwsSesAccessKeys ? 'AWS SES (Access Keys)' : useResend ? 'Resend' : 'SMTP',
+    hasAwsSesOidc,
+    hasAwsSesAccessKeys,
     useAwsSes,
+    useResend,
+    hasRoleArn: !!awsRoleArn,
     hasAccessKey: !!awsAccessKeyId,
     hasSecretKey: !!awsSecretAccessKey,
     nodeEnv: process.env.NODE_ENV,
     smtpHost: process.env.SMTP_HOST ? 'set' : 'not set',
   })
   
-  // Use Resend if API key is available (preferred method)
-  if (useResend) {
-    console.log('[Email Service] Attempting to send via Resend')
-    try {
-      const result = await sendEmailViaResend(to, subject, htmlBody, textBody)
-      console.log('[Email Service] Resend send successful:', result.messageId)
-      return result
-    } catch (error) {
-      console.error('[Email Service] Resend failed:', error)
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      // If Resend fails, try AWS SES as fallback
-      if (useAwsSes) {
-        console.log('[Email Service] Falling back to AWS SES')
-        try {
-          return await sendEmailViaSES(to, subject, htmlBody, textBody)
-        } catch (sesError) {
-          return {
-            success: false,
-            error: `Resend failed: ${errorMessage}. AWS SES also failed: ${sesError instanceof Error ? sesError.message : String(sesError)}`,
-          }
-        }
-      }
-      return {
-        success: false,
-        error: `Resend failed: ${errorMessage}`,
-      }
-    }
-  }
-  
-  // Use AWS SES if credentials are available (fallback)
+  // Priority 1: AWS SES with OIDC (best practice for production)
+  // Priority 2: AWS SES with access keys (fallback for local dev)
   if (useAwsSes) {
-    console.log('[Email Service] Attempting to send via AWS SES SDK')
+    console.log('[Email Service] Attempting to send via AWS SES')
     try {
       const result = await sendEmailViaSES(to, subject, htmlBody, textBody)
       console.log('[Email Service] AWS SES send successful:', result.messageId)
@@ -561,12 +573,41 @@ export async function sendEmail(
     } catch (error) {
       console.error('[Email Service] AWS SES failed:', error)
       const errorMessage = error instanceof Error ? error.message : String(error)
+      // If AWS SES fails, try Resend as fallback (if configured)
+      if (useResend) {
+        console.log('[Email Service] Falling back to Resend')
+        try {
+          return await sendEmailViaResend(to, subject, htmlBody, textBody)
+        } catch (resendError) {
+          return {
+            success: false,
+            error: `AWS SES failed: ${errorMessage}. Resend also failed: ${resendError instanceof Error ? resendError.message : String(resendError)}`,
+          }
+        }
+      }
       return {
         success: false,
         error: `AWS SES failed: ${errorMessage}. Please verify your email address in AWS SES and check IAM permissions.`,
       }
     }
   }
+  
+  // Priority 3: Use Resend if API key is available (only if AWS SES is not configured)
+  if (useResend) {
+      console.log('[Email Service] Attempting to send via Resend')
+      try {
+        const result = await sendEmailViaResend(to, subject, htmlBody, textBody)
+        console.log('[Email Service] Resend send successful:', result.messageId)
+        return result
+      } catch (error) {
+        console.error('[Email Service] Resend failed:', error)
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        return {
+          success: false,
+          error: `Resend failed: ${errorMessage}`,
+        }
+      }
+    }
   
   // If we get here, neither Resend nor AWS SES are available
   console.warn('[Email Service] Resend and AWS SES not available, attempting SMTP fallback')

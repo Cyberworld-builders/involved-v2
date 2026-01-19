@@ -205,3 +205,4 @@ Use CSV upload to quickly create multiple groups and assign many users at once, 
 - Group names must be unique per client
 - If importing duplicates, the system will create groups with the same name but different IDs
 - Consider using more specific names (e.g., "Engineering Team Q1" vs "Engineering Team")
+

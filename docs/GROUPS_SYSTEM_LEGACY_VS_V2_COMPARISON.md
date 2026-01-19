@@ -382,3 +382,4 @@ The V2 groups system is **architecturally superior** with proper relational desi
 4. **Optional:** Group roles system appears unused, can be deprecated
 
 The core functionality is consistent, but the field naming differences could cause confusion during data migration or when comparing systems.
+

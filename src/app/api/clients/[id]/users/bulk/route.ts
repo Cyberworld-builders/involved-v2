@@ -123,14 +123,12 @@ export async function POST(
 
       try {
         // Create or get existing auth user
-        let authData
         let authUserId: string
         let isNewAuthUser = false
 
         if (existingAuthUser) {
           // Auth user exists, use it
           authUserId = existingAuthUser.id
-          authData = { user: existingAuthUser }
         } else {
           // Create new auth user
           const { data: newAuthData, error: authError } = await adminClient.auth.admin.createUser({
@@ -160,7 +158,6 @@ export async function POST(
               )
               if (foundUser) {
                 authUserId = foundUser.id
-                authData = { user: foundUser }
               } else {
                 results.push({ 
                   user: userData.Email, 
@@ -187,7 +184,6 @@ export async function POST(
             })
             continue
           } else {
-            authData = newAuthData
             authUserId = newAuthData.user.id
             isNewAuthUser = true
           }

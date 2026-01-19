@@ -36,10 +36,12 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // If user is not authenticated and trying to access protected routes
+  // Exclude /assignment routes and /auth/callback - they handle their own authentication flow
   if (
     !user &&
     !request.nextUrl.pathname.startsWith('/auth') &&
     !request.nextUrl.pathname.startsWith('/api') &&
+    !request.nextUrl.pathname.startsWith('/assignment') &&
     request.nextUrl.pathname !== '/'
   ) {
     // Redirect to login page
@@ -62,6 +64,12 @@ export async function updateSession(request: NextRequest) {
       console.log('User authenticated but no profile found:', user.id)
       // You could redirect to a profile setup page here if needed
     }
+  }
+
+  // Allow auth callback to proceed without redirect (it handles its own redirect)
+  // This must come before the authenticated user redirect check
+  if (request.nextUrl.pathname === '/auth/callback') {
+    return supabaseResponse
   }
 
   // If user is authenticated and on auth pages, redirect to dashboard
