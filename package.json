@@ -22,7 +22,8 @@
     "db:reset": "supabase db reset",
     "db:status": "supabase migration list",
     "db:push": "supabase db push",
-    "supabase:restart": "supabase stop && supabase start"
+    "supabase:restart": "supabase stop && supabase start",
+    "seed:360-demo": "tsx scripts/seed-360-demo.ts"
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.948.0",
@@ -75,6 +76,7 @@
     "eslint-config-next": "15.5.7",
     "jsdom": "^27.3.0",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5",
     "vitest": "^4.0.15"
   }

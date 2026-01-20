@@ -83,7 +83,6 @@ export default function HorizontalBarChart({
                   position: 'relative',
                   width: `${chartWidth}px`,
                   height: `${barHeight}px`,
-                  top: 0,
                   display: 'block',
                 }}
               >

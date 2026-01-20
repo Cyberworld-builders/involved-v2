@@ -73,8 +73,17 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
   const transformDimensionForChart = (dim: DimensionReport) => {
     const scores: Array<{ label: string; score: number; flagged?: boolean }> = []
     
-    // Legacy order: All Raters, Peer, Direct Report, Supervisor, Self, Other
-    // But legacy shows: Peer, Direct Report, Supervisor, Self, Other (All Raters is the large score)
+    // Add "All Raters" as the first bar (overall score)
+    const allRatersScore = dim.rater_breakdown.all_raters ?? dim.overall_score
+    if (allRatersScore !== null) {
+      const flagged = 
+        (dim.industry_benchmark !== null && allRatersScore <= (dim.industry_benchmark - 0.49)) ||
+        (dim.geonorm !== null && allRatersScore <= (dim.geonorm - 0.49))
+      
+      scores.push({ label: 'All Raters', score: allRatersScore, flagged })
+    }
+    
+    // Add individual rater categories
     const categories = [
       { key: 'peer', label: 'Peer' },
       { key: 'direct_report', label: 'Direct Report' },
@@ -108,18 +117,6 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
       'Direct Report': [] as string[],
       Others: dim.text_feedback || [],
     }
-  }
-
-  // Calculate percentages for bar widths
-  const calculatePercent = (score: number) => {
-    return (score / 5) * 100
-  }
-
-  // Check if a score is flagged
-  const isFlagged = (score: number, benchmark: number | null, geonorm: number | null) => {
-    if (benchmark !== null && score <= (benchmark - 0.49)) return true
-    if (geonorm !== null && score <= (geonorm - 0.49)) return true
-    return false
   }
 
   return (

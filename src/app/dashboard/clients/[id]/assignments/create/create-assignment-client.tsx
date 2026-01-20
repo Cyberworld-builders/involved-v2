@@ -36,7 +36,7 @@ interface Group {
   members?: Array<{
     profile_id: string
     profile?: User
-    role?: string | null
+    position?: string | null
   }>
 }
 
@@ -125,7 +125,7 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
             target:profiles!groups_target_id_fkey(id, name, email, username),
             group_members(
               profile_id,
-              role,
+              position,
               profiles(id, name, email, username)
             )
           `)
@@ -141,7 +141,7 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
             target?: User | null
             group_members?: Array<{
               profile_id: string
-              role?: string | null
+              position?: string | null
               profiles?: User | null
             }>
           }) => ({
@@ -153,7 +153,7 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
             members: group.group_members?.map((gm) => ({
               profile_id: gm.profile_id,
               profile: gm.profiles || undefined,
-              role: gm.role || null,
+              position: gm.position || null,
             })) || [],
           }))
           setAvailableGroups(transformedGroups)
@@ -230,15 +230,15 @@ Thank you.`)
         const targetId = group.target_id || null
         const target = group.target || null
 
-        // Get role from group member
-        const role = member.role || ''
+        // Get position from group member (for custom fields)
+        const position = member.position || ''
 
         newUsers.push({
           user_id: member.profile.id,
           user: member.profile,
           target_id: targetId,
           target: target,
-          role: role,
+          role: position, // Use position for role field (backward compatibility with custom fields)
           source: 'group',
           groupId: group.id,
           groupName: group.name,
@@ -1179,15 +1179,15 @@ Thank you.`)
                             const targetId = group.target_id || null
                             const target = group.target || null
 
-                            // Get role from group member
-                            const role = member.role || ''
+                            // Get position from group member (for custom fields)
+                            const position = member.position || ''
 
                             newUsers.push({
                               user_id: member.profile.id,
                               user: member.profile,
                               target_id: targetId,
                               target: target,
-                              role: role,
+                              role: position, // Use position for role field (backward compatibility with custom fields)
                               source: 'group',
                               groupId: group.id,
                               groupName: group.name,

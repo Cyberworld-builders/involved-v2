@@ -337,8 +337,12 @@
   position: relative;
   width: 563px;
   height: 40px;
-  top: 0;
+  margin-bottom: 12px;
   display: block;
+}
+
+.chart .graph-row:last-child {
+  margin-bottom: 0;
 }
 
 .chart .graph-row .ratee {

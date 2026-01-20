@@ -13,7 +13,7 @@ interface GroupPageProps {
 interface GroupMember {
   id: string
   profile_id: string
-  role: string | null
+  position: string | null
   profiles?: {
     id: string
     name: string
@@ -51,7 +51,7 @@ export default async function GroupPage({ params }: GroupPageProps) {
       group_members(
         id,
         profile_id,
-        role,
+        position,
         profiles(id, name, email, username)
       )
     `)
@@ -132,8 +132,8 @@ export default async function GroupPage({ params }: GroupPageProps) {
                         <div>
                           <p className="font-medium text-gray-900">{member.profiles?.name || 'Name not available'}</p>
                           <p className="text-sm text-gray-500">{member.profiles?.email || ''}</p>
-                          {member.role && (
-                            <p className="text-xs text-gray-400 mt-1">Role: {member.role}</p>
+                          {member.position && (
+                            <p className="text-xs text-gray-400 mt-1">Position: {member.position}</p>
                           )}
                         </div>
                         <Link href={`/dashboard/users/${member.profile_id}`}>
