@@ -7,22 +7,29 @@
 import { Document, Page, Text, View, StyleSheet, pdf } from '@react-pdf/renderer'
 import React from 'react'
 
-// Define styles for PDF
+// Define styles for PDF matching legacy design
+// Legacy colors: primaryBlue: #55a1d8, darkBlue: #272842, orangeRed: #f26950, lightGray: #c0c9cf
 const styles = StyleSheet.create({
   page: {
-    padding: 30,
-    fontSize: 12,
+    padding: '59px 73px',
+    fontSize: 14.8,
     fontFamily: 'Helvetica',
+    color: '#272842',
+    backgroundColor: '#ffffff',
   },
   title: {
-    fontSize: 24,
+    fontSize: 69,
     marginBottom: 10,
     fontWeight: 'bold',
+    textTransform: 'uppercase',
+    letterSpacing: -2,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 14.8,
     marginBottom: 20,
-    color: '#666',
+    color: '#272842',
+    letterSpacing: 0.5,
+    lineHeight: 27.05,
   },
   section: {
     marginBottom: 20,
@@ -33,35 +40,40 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   score: {
-    fontSize: 32,
+    fontSize: 91,
     fontWeight: 'bold',
-    color: '#4F46E5',
+    color: '#272842',
     marginBottom: 5,
   },
   dimensionCard: {
     marginBottom: 15,
     padding: 10,
-    border: '1px solid #E5E7EB',
+    border: '1px solid #c0c9cf',
   },
   dimensionTitle: {
-    fontSize: 16,
+    fontSize: 50,
     fontWeight: 'bold',
     marginBottom: 5,
+    textTransform: 'uppercase',
   },
   dimensionScore: {
-    fontSize: 20,
+    fontSize: 34,
     fontWeight: 'bold',
     marginBottom: 5,
+    color: '#272842',
   },
   comparison: {
-    fontSize: 12,
+    fontSize: 14.8,
     marginBottom: 3,
+    letterSpacing: 0.5,
   },
   feedback: {
     marginTop: 10,
     padding: 8,
-    backgroundColor: '#F9FAFB',
-    fontSize: 11,
+    backgroundColor: '#ffffff',
+    fontSize: 14,
+    letterSpacing: 0.5,
+    lineHeight: 18,
   },
   row: {
     flexDirection: 'row',
@@ -69,12 +81,36 @@ const styles = StyleSheet.create({
   },
   label: {
     width: 150,
-    fontSize: 11,
-    color: '#666',
+    fontSize: 14.8,
+    color: '#272842',
   },
   value: {
     flex: 1,
-    fontSize: 11,
+    fontSize: 14.8,
+    color: '#272842',
+  },
+  // Legacy-specific styles
+  pageHeader: {
+    marginBottom: 20,
+    borderBottom: '4px solid #55a1d8',
+    paddingBottom: 10,
+  },
+  pageFooter: {
+    position: 'absolute',
+    bottom: 0,
+    width: '100%',
+    textAlign: 'center',
+    fontSize: 14,
+    letterSpacing: 0.3,
+  },
+  primaryBlue: {
+    color: '#55a1d8',
+  },
+  darkBlue: {
+    color: '#272842',
+  },
+  orangeRed: {
+    color: '#f26950',
   },
 })
 

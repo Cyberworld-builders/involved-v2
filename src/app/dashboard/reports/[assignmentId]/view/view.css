@@ -1,13 +1,15 @@
 /* Print styles for fullscreen report view */
 @media print {
   @page {
-    margin: 1in;
+    margin: 0;
     size: letter;
   }
 
   body {
     background: white !important;
     color: black !important;
+    margin: 0;
+    padding: 0;
   }
 
   /* Hide any navigation or buttons */
@@ -25,6 +27,22 @@
   /* Prevent breaking inside important sections */
   .no-break {
     page-break-inside: avoid;
+  }
+
+  /* Page break controls for report pages */
+  .page-container {
+    page-break-after: always;
+    page-break-inside: avoid;
+  }
+  
+  .page-container:last-child {
+    page-break-after: auto;
+  }
+
+  /* Ensure proper page size */
+  .page-container {
+    width: 850px;
+    height: 1100px;
   }
 
   /* Ensure colors print */

@@ -1,0 +1,616 @@
+/**
+ * Report Styles
+ * 
+ * Ported from legacy pdf.css for matching visual presentation
+ * Uses CSS custom properties for easy theming
+ */
+
+:root {
+  --report-color-primary-blue: #55a1d8;
+  --report-color-dark-blue: #272842;
+  --report-color-dark-blue-alt: #383b62;
+  --report-color-orange-red: #f26950;
+  --report-color-light-gray: #c0c9cf;
+  --report-color-very-light-gray: #e8ebed;
+  --report-color-white: #ffffff;
+  --report-color-text-primary: #272842;
+  --report-color-text-secondary: #666666;
+}
+
+/* Page Container */
+.page-container {
+  background-color: var(--report-color-white);
+  height: 1100px;
+  width: 850px;
+  page-break-after: always;
+  position: relative;
+  color: var(--report-color-text-primary);
+  overflow: hidden;
+}
+
+.page-wrapper {
+  padding: 59px 73px;
+  position: relative;
+  height: 960px;
+}
+
+/* Page Header */
+.page-header {
+  margin: 0;
+  border: none;
+  padding: 0;
+}
+
+.page-header .logo {
+  width: 125px;
+  float: left;
+  padding-right: 8px;
+  background: var(--report-color-white);
+  position: relative;
+  top: -8px;
+}
+
+.page-header .logo.right {
+  width: 134px;
+  float: right;
+  padding-left: 8px;
+  padding-right: 0;
+  position: relative;
+  top: -2px;
+}
+
+.page-header .line {
+  height: 4px;
+  background: var(--report-color-primary-blue);
+  overflow: hidden;
+}
+
+/* Page Footer */
+.page-footer {
+  position: absolute;
+  bottom: 0;
+  width: 704px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 9px;
+  text-align: center;
+  letter-spacing: 0.3px;
+}
+
+/* Typography */
+.page-container p {
+  letter-spacing: 0.5px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 14.8px;
+  line-height: 27.05px;
+  margin: 20px 0 40px;
+}
+
+.page-container p .color {
+  color: var(--report-color-primary-blue);
+}
+
+.page-content.leader-info p {
+  font-size: 15.5px;
+  line-height: 22px;
+}
+
+.page-content.leader-info p.big {
+  font-size: 18px;
+}
+
+/* Page Titles */
+.page-title {
+  margin-top: 70px;
+  text-transform: uppercase;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 600;
+  font-size: 69px;
+  line-height: 40px;
+  letter-spacing: -2px;
+  display: inline-block;
+  border-bottom: 4px solid var(--report-color-text-primary);
+  margin-left: -73px;
+  padding-left: 73px;
+}
+
+.page-title.alt {
+  font-size: 50px;
+}
+
+.page-title.alt span {
+  display: block;
+  margin-left: 35px;
+}
+
+.page-title.alt span.subtitle {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 24px;
+  letter-spacing: 0;
+  line-height: 23px;
+  margin-left: 0;
+  font-weight: 400;
+}
+
+.page-title.alt span.subtitle img {
+  position: relative;
+  top: 3px;
+  margin-right: 15px;
+}
+
+.page-title.alt2 {
+  font-size: 34px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  letter-spacing: 0;
+  margin-top: 80px;
+  font-weight: 400;
+}
+
+.page-title.alt2 span {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 600;
+  font-size: 70px;
+}
+
+.page-subtitle {
+  text-transform: uppercase;
+  margin-top: 5px;
+  font-size: 24px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.page-subtitle span {
+  font-weight: 600;
+}
+
+/* Cover Page */
+.cover-shapes {
+  position: absolute;
+  top: 226px;
+  left: 0;
+  z-index: 0;
+}
+
+.cover-title {
+  position: absolute;
+  top: 285px;
+  font-size: 36px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  margin: 0 80px;
+  text-transform: uppercase;
+}
+
+.cover-title span {
+  display: block;
+  line-height: 28px;
+}
+
+.cover-title .report {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 95px;
+  line-height: 70px;
+  text-indent: -3px;
+  padding: 19px 0;
+  font-weight: 600;
+  display: block;
+}
+
+.cover-title .for {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 34px;
+  line-height: 22px;
+  display: block;
+}
+
+.cover-disclaimer {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  padding-right: 73px;
+}
+
+/* Table of Contents */
+.table-of-contents {
+  letter-spacing: 0.5px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 18px;
+  line-height: 22px;
+  margin-top: 40px;
+  width: 704px;
+  position: relative;
+}
+
+.table-of-contents .line {
+  border-bottom: 1px solid var(--report-color-light-gray);
+  margin-bottom: 14px;
+  position: relative;
+  width: 704px;
+  height: 29px;
+}
+
+.table-of-contents .line .title {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 600;
+  position: absolute;
+  left: 0;
+}
+
+.table-of-contents .line .page {
+  position: absolute;
+  right: 0;
+}
+
+.table-of-contents .line.subline {
+  margin-left: 25px;
+  width: 679px;
+}
+
+.table-of-contents .line.subsubline {
+  margin-left: 50px;
+  width: 654px;
+}
+
+/* Charts */
+.chart {
+  width: 563px;
+  height: 190px;
+  margin-top: 20px;
+}
+
+.chart .title {
+  font-size: 16px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 600;
+  text-decoration: none;
+  text-align: center;
+  margin-bottom: 45px;
+}
+
+.chart .score {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  width: 141px;
+  float: left;
+  font-size: 91px;
+  line-height: 40px;
+  height: 230px;
+  padding-top: 100px;
+}
+
+.chart .bars {
+  width: 563px;
+  height: 230px;
+  float: left;
+}
+
+.chart .graph {
+  position: relative;
+  width: 563px;
+  height: 190px;
+}
+
+.chart .graph-lines {
+  position: absolute;
+  width: 422px;
+  height: 190px;
+  left: 135px;
+  top: 0;
+}
+
+.chart .graph-lines .line {
+  position: absolute;
+  width: 2px;
+  height: 0px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  color: var(--report-color-text-primary);
+  background: var(--report-color-light-gray);
+  text-indent: -2px;
+  padding-top: 220px;
+}
+
+.chart .graph-row {
+  position: relative;
+  width: 563px;
+  height: 40px;
+  top: 0;
+  display: block;
+}
+
+.chart .graph-row .ratee {
+  position: absolute;
+  width: 135px;
+  left: -10px;
+  top: 10px;
+  text-align: right;
+  color: var(--report-color-text-primary);
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  margin-right: 10px;
+  margin-top: 0;
+}
+
+.chart .graph-row .bar {
+  position: absolute;
+  width: 422px;
+  left: 135px;
+  top: 0;
+  height: 40px;
+}
+
+.chart .graph-row .bar .inner {
+  position: relative;
+  width: 422px;
+  height: 20px;
+  background: var(--report-color-primary-blue);
+  color: var(--report-color-white);
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  text-align: right;
+  padding: 4px 0 8px;
+  padding-right: 0;
+  margin: 6px 0;
+}
+
+.chart .graph-row .bar .inner.flagged::after {
+  content: '';
+  width: 13px;
+  height: 13px;
+  display: block;
+  position: absolute;
+  right: -17px;
+  top: 8px;
+  background: url('/images/reports/triangle-orange.png') no-repeat scroll 0 0 transparent;
+}
+
+/* Norms Display */
+.norms {
+  position: relative;
+  width: 488px;
+  height: 55px;
+  margin: 90px 94px 0;
+  color: var(--report-color-text-primary);
+  top: 70px;
+}
+
+.norm-group {
+  position: relative;
+  width: 267px;
+  height: 55px;
+  float: left;
+}
+
+.norm-group.group {
+  width: 220px;
+  border-left: 2px solid var(--report-color-light-gray);
+}
+
+.norm {
+  position: absolute;
+  width: 73px;
+  left: 0;
+  top: 0;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 34px;
+  letter-spacing: -1px;
+  margin-top: 3px;
+}
+
+.norm-group.group .norm {
+  width: 72px;
+  left: 53px;
+}
+
+.norm-label {
+  position: absolute;
+  width: 202px;
+  left: 73px;
+  top: 10px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  text-transform: uppercase;
+  margin-top: 10px;
+  line-height: 10px;
+}
+
+.norm-group.group .norm-label {
+  width: 96px;
+  left: 125px;
+}
+
+/* Comparison Chart */
+.leader-overall-score-chart {
+  margin-top: 10px;
+}
+
+.leader-overall-score-chart .chart {
+  width: 704px;
+  height: 300px;
+  float: none;
+  margin-top: 10px;
+}
+
+.leader-overall-score-chart .chart .title {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 18px;
+  text-decoration: underline;
+  margin-bottom: 20px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.leader-overall-score-chart .chart .bars {
+  width: 704px;
+  height: 218px;
+}
+
+.leader-overall-score-chart .chart .graph {
+  position: relative;
+  width: 704px;
+  height: 218px;
+}
+
+.leader-overall-score-chart .chart .graph-lines {
+  position: absolute;
+  width: 704px;
+  height: 218px;
+  left: 0;
+}
+
+.leader-overall-score-chart .chart .graph-lines .line {
+  position: absolute;
+  width: 2px;
+  height: 0;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  color: var(--report-color-text-primary);
+  background: var(--report-color-light-gray);
+  text-indent: -2px;
+  padding-top: 218px;
+}
+
+.leader-overall-score-chart .chart .graph-row {
+  position: relative;
+  width: 704px;
+  height: 67px;
+  top: 4px;
+}
+
+.leader-overall-score-chart .chart .graph-row .bar {
+  position: absolute;
+  width: 704px;
+  left: 0;
+  height: 67px;
+  top: 10px;
+}
+
+.leader-overall-score-chart .chart .graph-row .bar .inner {
+  position: relative;
+  width: 704px;
+  height: 50px;
+  color: var(--report-color-white);
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 20px;
+  line-height: 27px;
+  text-align: right;
+  padding: 3px 0 0 0;
+  margin: 0;
+}
+
+.leader-overall-score-chart .chart .graph-row .bar .inner.flagged::after {
+  content: '';
+  width: 19px;
+  height: 19px;
+  display: block;
+  position: absolute;
+  right: -27px;
+  top: 15px;
+  background: url('/images/reports/triangle-orange-large.png') no-repeat scroll 0 0 transparent;
+}
+
+.leader-overall-score-chart .legend {
+  position: relative;
+  display: block;
+  text-align: center;
+  font-size: 14px;
+  left: 170px;
+  top: 70px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.leader-overall-score-chart .legend .item {
+  display: inline-block;
+  position: relative;
+  margin: 0 60px;
+}
+
+.leader-overall-score-chart .legend .item::before {
+  content: '';
+  display: block;
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  left: -22px;
+  top: 6px;
+}
+
+.leader-overall-score-chart .legend .item.group::before {
+  background: var(--report-color-primary-blue);
+}
+
+.leader-overall-score-chart .legend .item.you::before {
+  background: var(--report-color-dark-blue);
+}
+
+.leader-overall-score-chart .legend .item.benchmark::before {
+  background: var(--report-color-orange-red);
+}
+
+/* Feedback Sections */
+.feedbacks {
+  margin-top: 70px;
+}
+
+.feedback {
+  margin-bottom: 20px;
+}
+
+.feedback .number {
+  float: left;
+  color: var(--report-color-primary-blue);
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 600;
+  font-size: 24px;
+  height: 43px;
+  border-right: 6px solid var(--report-color-primary-blue);
+  line-height: 19px;
+  padding-right: 16px;
+}
+
+.feedback .type {
+  float: left;
+  margin-left: 16px;
+  margin-top: 6px;
+  width: 620px;
+}
+
+.feedback .type h3 {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 600;
+  font-size: 24px;
+  text-transform: uppercase;
+  margin: 0;
+  line-height: 17px;
+}
+
+.feedback .type p {
+  margin: 20px 0;
+  line-height: 18px;
+  font-size: 14px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.feedback .paragraph-lines {
+  margin: 10px 0;
+}
+
+.feedback .paragraph-lines .line {
+  border-bottom: 1px solid var(--report-color-light-gray);
+  height: 24px;
+  margin-bottom: 10px;
+}
+
+/* Clearfix */
+.clearfix {
+  clear: both;
+}
+
+/* Print Styles */
+@media print {
+  .page-container {
+    page-break-after: always;
+  }
+  
+  .page-container:last-child {
+    page-break-after: auto;
+  }
+}

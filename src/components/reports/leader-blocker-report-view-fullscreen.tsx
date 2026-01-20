@@ -1,9 +1,20 @@
 'use client'
 
 /**
- * Full-screen Leader/Blocker report view optimized for PDF/printing
- * Matches PDF styling as closely as possible
+ * Full-screen Leader/Blocker report view matching legacy branding and layout
+ * Matches legacy leader.blade.php and blockers.blade.php structure
  */
+
+import { REPORT_TYPOGRAPHY, REPORT_COLORS, REPORT_SPACING } from '@/lib/reports/report-design-constants'
+import PageContainer from './layout/page-container'
+import PageWrapper from './layout/page-wrapper'
+import PageHeader from './layout/page-header'
+import PageFooter from './layout/page-footer'
+import CoverPage from './sections/cover-page'
+import TableOfContents from './sections/table-of-contents'
+import ComparisonChart from './charts/comparison-chart'
+import FeedbackSection from './sections/feedback-section'
+import Image from 'next/image'
 
 interface DimensionReport {
   dimension_id: string
@@ -16,6 +27,18 @@ interface DimensionReport {
   improvement_needed: boolean
   specific_feedback: string | null
   specific_feedback_id: string | null
+  // Legacy structure expects these
+  definition?: string
+  subdimensions?: Array<{
+    name: string
+    definition: string
+    score: number
+    feedback: {
+      Overall?: string
+      Actionable?: string[]
+      Thoughts?: string
+    }
+  }>
 }
 
 interface ReportLeaderBlockerData {
@@ -32,6 +55,8 @@ interface ReportLeaderBlockerData {
   overall_feedback: string | null
   overall_feedback_id: string | null
   generated_at: string
+  // Determine if this is a blocker report
+  is_blocker?: boolean
 }
 
 interface ReportLeaderBlockerViewFullscreenProps {
@@ -39,179 +64,440 @@ interface ReportLeaderBlockerViewFullscreenProps {
 }
 
 export default function ReportLeaderBlockerViewFullscreen({ reportData }: ReportLeaderBlockerViewFullscreenProps) {
+  const isBlocker = reportData.is_blocker || reportData.assessment_title.toLowerCase().includes('blocker')
+  const reportType = isBlocker ? 'blockers' : 'leader'
+  let pageNumber = 1
+
+  // Build table of contents
+  const buildTOC = () => {
+    const sections = [
+      { title: 'Read Me First', page: 3 },
+      { title: 'Summary of Scores', page: 7 },
+      {
+        title: 'Dimension Scores With Feedback:',
+        page: 0,
+        subSections: reportData.dimensions.map((dim, idx) => ({
+          title: dim.dimension_name,
+          page: 8 + idx,
+        })),
+      },
+    ]
+    return sections
+  }
+
+  // Check if score is flagged (for blockers, higher is worse; for leaders, lower is worse)
+  const isFlagged = (score: number, benchmark: number | null, geonorm: number | null) => {
+    if (isBlocker) {
+      // For blockers: flagged if score is significantly ABOVE benchmark/geonorm
+      return (
+        (benchmark !== null && score >= (benchmark + 0.49)) ||
+        (geonorm !== null && score >= (geonorm + 0.49))
+      )
+    } else {
+      // For leaders: flagged if score is significantly BELOW benchmark/geonorm
+      return (
+        (benchmark !== null && score <= (benchmark - 0.49)) ||
+        (geonorm !== null && score <= (geonorm - 0.49))
+      )
+    }
+  }
+
   return (
-    <div className="max-w-4xl mx-auto p-8 print:p-8 bg-white print:bg-white">
-      {/* Header */}
-      <div className="mb-8 print:mb-8 border-b border-gray-300 print:border-gray-300 pb-4 print:pb-4">
-        <h1 className="text-3xl font-bold text-gray-900 print:text-black mb-2 print:mb-2">
-          {reportData.assessment_title}
-        </h1>
-        <p className="text-lg text-gray-600 print:text-gray-700">
-          Assessment Report for {reportData.user_name}
-        </p>
-        <div className="mt-4 print:mt-4 grid grid-cols-2 gap-4 print:gap-4">
-          <div>
-            <p className="text-sm text-gray-500 print:text-gray-600">Overall Score</p>
-            <p className="text-4xl font-bold text-indigo-600 print:text-indigo-700">
-              {reportData.overall_score.toFixed(2)}
-            </p>
-          </div>
-          {reportData.group_name && (
-            <div>
-              <p className="text-sm text-gray-500 print:text-gray-600">Group</p>
-              <p className="text-xl font-semibold text-gray-900 print:text-black">
-                {reportData.group_name}
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
+    <div style={{ backgroundColor: REPORT_COLORS.white }}>
+      {/* Cover Page */}
+      <CoverPage
+        assessmentTitle={reportData.assessment_title}
+        userName={reportData.user_name}
+        reportType={reportType}
+        pageNumber={pageNumber++}
+      />
 
-      {/* Dimension Breakdowns */}
-      {reportData.dimensions.map((dimension, index) => (
-        <div
-          key={dimension.dimension_id}
-          className={`mb-8 print:mb-8 pb-6 print:pb-6 ${index < reportData.dimensions.length - 1 ? 'border-b border-gray-200 print:border-gray-300' : ''}`}
-        >
-          <div className="mb-4 print:mb-4">
-            <h2 className="text-2xl font-bold text-gray-900 print:text-black mb-1 print:mb-1">
-              {dimension.dimension_name}
-            </h2>
-            <p className="text-sm text-gray-500 print:text-gray-600">
-              Dimension Code: {dimension.dimension_code}
-            </p>
+      {/* Table of Contents */}
+      <PageContainer pageNumber={pageNumber} id={`${pageNumber}`}>
+        <PageWrapper>
+          <PageHeader
+            pageNumber={pageNumber}
+            logo={`involve-${reportType}-logo-small.png`}
+            logoWidth={reportType === 'leader' ? 166 : 174}
+          />
+
+          {/* Title */}
+          <div
+            className="page-title alt2"
+            style={{
+              fontSize: REPORT_TYPOGRAPHY.pageTitle.small,
+              fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+              letterSpacing: 0,
+              marginTop: '80px',
+            }}
+          >
+            Table Of<br />
+            <span style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif", fontWeight: 600, fontSize: '70px' }}>Contents</span>
           </div>
 
-          {/* Score Comparison */}
-          <div className="grid grid-cols-3 gap-4 print:gap-4 mb-4 print:mb-4">
-            <div>
-              <p className="text-sm text-gray-600 print:text-gray-700 mb-1 print:mb-1">Your Score</p>
-              <p className="text-3xl font-bold text-gray-900 print:text-black">
-                {dimension.target_score.toFixed(2)}
-              </p>
-            </div>
-            {dimension.industry_benchmark !== null && (
-              <div>
-                <p className="text-sm text-gray-600 print:text-gray-700 mb-1 print:mb-1">Industry Benchmark</p>
-                <p className="text-xl font-semibold text-gray-900 print:text-black">
-                  {dimension.industry_benchmark.toFixed(2)}
-                  {dimension.target_score < dimension.industry_benchmark && (
-                    <span className="ml-2 text-red-600 print:text-red-700 text-sm">↓ Below</span>
-                  )}
-                  {dimension.target_score >= dimension.industry_benchmark && (
-                    <span className="ml-2 text-green-600 print:text-green-700 text-sm">↑ Above</span>
-                  )}
+          {/* TOC Content */}
+          <TableOfContents sections={buildTOC()} />
+
+          <PageFooter pageNumber={pageNumber} />
+        </PageWrapper>
+      </PageContainer>
+
+      {/* Read Me First Page */}
+      <PageContainer pageNumber={pageNumber} id={`${pageNumber}`}>
+        <PageWrapper>
+          <PageHeader
+            pageNumber={pageNumber}
+            logo={`involve-${reportType}-logo-small.png`}
+            logoWidth={reportType === 'leader' ? 166 : 174}
+          />
+
+          {/* Title */}
+          <div
+            className="page-title"
+            style={{
+              marginTop: '70px',
+              textTransform: 'uppercase',
+              fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+              fontWeight: 600,
+              fontSize: REPORT_TYPOGRAPHY.pageTitle.large,
+              lineHeight: '40px',
+              letterSpacing: '-2px',
+              display: 'inline-block',
+              borderBottom: `4px solid ${REPORT_COLORS.textPrimary}`,
+              marginLeft: `-${REPORT_SPACING.pagePaddingLeft}px`,
+              paddingLeft: `${REPORT_SPACING.pagePaddingLeft}px`,
+            }}
+          >
+            Read Me First
+          </div>
+
+          {/* Sub-title */}
+          <div
+            className="page-subtitle"
+            style={{
+              textTransform: 'uppercase',
+              marginTop: '5px',
+              fontSize: '24px',
+              fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+            }}
+          >
+            <Image
+              src="/images/reports/triangle-orange-large.png"
+              alt=""
+              width={20}
+              height={20}
+              style={{
+                marginLeft: '0px',
+                marginRight: '15px',
+                marginTop: '0px',
+                display: 'inline-block',
+              }}
+            />
+            <span>
+              Your Guide to {reportData.assessment_title}
+              <span style={{ display: 'block', fontSize: '14px', fontStyle: 'italic', marginTop: '5px' }}>
+                Seriously, read this. There is some really good stuff here.
+              </span>
+            </span>
+          </div>
+
+          {/* Content */}
+          <div
+            className="page-content leader-info"
+            style={{
+              letterSpacing: '0.5px',
+              fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+              fontSize: REPORT_TYPOGRAPHY.leaderInfo.fontSize,
+              lineHeight: REPORT_TYPOGRAPHY.leaderInfo.lineHeight,
+              margin: '20px 0 40px',
+            }}
+          >
+            <p style={{ fontSize: '16px' }}>
+              {reportData.assessment_title} is a diagnostic inventory that examines theoretically grounded <strong>and</strong> analytically documented drivers of leadership effectiveness.
+            </p>
+            {!isBlocker && (
+              <>
+                <p style={{ fontSize: '16px' }}>
+                  There are two distinct, but complementary over-riding dimensions that constitute the Involved-Leader: (1) Involving-Stakeholders and (2) Involving-Self. Involved leaders not only need to be involving their team and other important stakeholders, but also themselves. Most leaders tend to focus on one or the other – don't, <strong>you must focus on both</strong>.
                 </p>
-              </div>
+                <p style={{ fontSize: '16px' }}>
+                  Of course, there is overlap between these factors; they do not operate in absence of each other, but usually they are more directed to one focal point than the other (hence the names). They work in tandem and over thousands of leaders, we have found this distinction is highly effective for action planning as you work to improve your leadership effectiveness (and that of your team & organization).
+                </p>
+                <p style={{ fontSize: '16px' }}>
+                  Each Primary Dimension has 5 sub-dimensions and within these subdimensions can be found 'leadership magic'.
+                </p>
+              </>
             )}
-            {dimension.geonorm !== null && (
-              <div>
-                <p className="text-sm text-gray-600 print:text-gray-700 mb-1 print:mb-1">
-                  Group Norm (n={dimension.geonorm_participant_count})
+            {isBlocker && (
+              <>
+                <p style={{ fontSize: '16px' }}>
+                  Blockers are behaviors and mindsets that prevent leaders from being effective. This report identifies areas where you may be blocking your own success and the success of your team.
                 </p>
-                <p className="text-xl font-semibold text-gray-900 print:text-black">
-                  {dimension.geonorm.toFixed(2)}
-                  {dimension.target_score < dimension.geonorm && (
-                    <span className="ml-2 text-red-600 print:text-red-700 text-sm">↓ Below</span>
-                  )}
-                  {dimension.target_score >= dimension.geonorm && (
-                    <span className="ml-2 text-green-600 print:text-green-700 text-sm">↑ Above</span>
-                  )}
+                <p style={{ fontSize: '16px' }}>
+                  Higher scores in blocker dimensions indicate areas that need attention. Unlike leadership dimensions where higher is better, in blocker dimensions, lower scores are preferable.
                 </p>
-              </div>
+              </>
             )}
           </div>
 
-          {/* Visual Comparison Bar Chart */}
-          <div className="mb-4 print:mb-4 pt-4 print:pt-4 border-t border-gray-200 print:border-gray-300">
-            <p className="text-sm font-medium text-gray-700 print:text-gray-800 mb-2 print:mb-2">
-              Score Comparison
-            </p>
-            <div className="space-y-3 print:space-y-3">
-              <div>
-                <div className="flex justify-between text-xs text-gray-600 print:text-gray-700 mb-1 print:mb-1">
-                  <span>Your Score</span>
-                  <span>{dimension.target_score.toFixed(2)}</span>
-                </div>
-                <div className="w-full bg-gray-200 print:bg-gray-300 rounded-full h-4 print:h-4 border border-gray-300 print:border-gray-400">
+          <PageFooter pageNumber={pageNumber} />
+        </PageWrapper>
+      </PageContainer>
+
+      {/* Scores Summary Page */}
+      <PageContainer pageNumber={pageNumber} id={`${pageNumber}`}>
+        <PageWrapper>
+          <PageHeader
+            pageNumber={pageNumber}
+            logo={`involve-${reportType}-logo-small.png`}
+            logoWidth={reportType === 'leader' ? 166 : 174}
+          />
+
+          {/* Title */}
+          <div
+            className="page-title alt2"
+            style={{
+              fontSize: REPORT_TYPOGRAPHY.pageTitle.small,
+              fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+              letterSpacing: 0,
+              marginTop: '80px',
+            }}
+          >
+            Scores<br />
+            <span style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif", fontWeight: 600, fontSize: '70px' }}>Summary</span>
+          </div>
+
+          {/* Content */}
+          <div
+            className="page-content"
+            style={{
+              letterSpacing: '0.5px',
+              fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+              fontSize: REPORT_TYPOGRAPHY.body.fontSize,
+              lineHeight: REPORT_TYPOGRAPHY.body.lineHeight,
+              margin: '20px 0 40px',
+            }}
+          >
+            <div
+              className="leader-summary-charts"
+              style={{
+                marginTop: '40px',
+              }}
+            >
+              {reportData.dimensions.map((dimension, idx) => {
+                const flagged = isFlagged(
+                  dimension.target_score,
+                  dimension.industry_benchmark,
+                  dimension.geonorm
+                )
+
+                return (
                   <div
-                    className="bg-indigo-600 print:bg-indigo-700 h-4 print:h-4 rounded-full"
-                    style={{ width: `${Math.min((dimension.target_score / 5) * 100, 100)}%` }}
+                    key={dimension.dimension_id}
+                    style={{
+                      marginBottom: idx < reportData.dimensions.length - 1 ? '40px' : '0',
+                    }}
+                  >
+                    <ComparisonChart
+                      yourScore={dimension.target_score}
+                      groupAverage={dimension.geonorm || undefined}
+                      benchmark={dimension.industry_benchmark || undefined}
+                      dimensionName={dimension.dimension_name}
+                      yourScoreFlagged={flagged}
+                      maxValue={5}
+                    />
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          <PageFooter pageNumber={pageNumber} />
+        </PageWrapper>
+      </PageContainer>
+
+      {/* For Each Dimension */}
+      {reportData.dimensions.map((dimension, dimIdx) => {
+        const dimensionPage = pageNumber++
+        const flagged = isFlagged(
+          dimension.target_score,
+          dimension.industry_benchmark,
+          dimension.geonorm
+        )
+
+        return (
+          <div key={dimension.dimension_id}>
+            {/* Overall Score Page for Dimension */}
+            <PageContainer pageNumber={dimensionPage} id={`${dimensionPage}`}>
+              <PageWrapper>
+                <PageHeader
+                  pageNumber={dimensionPage}
+                  logo={`involve-${reportType}-logo-small.png`}
+                  logoWidth={reportType === 'leader' ? 166 : 174}
+                />
+
+                {/* Title */}
+                <div
+                  className="page-title alt"
+                  style={{
+                    marginTop: '70px',
+                    textTransform: 'uppercase',
+                    fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                    fontWeight: 600,
+                    fontSize: REPORT_TYPOGRAPHY.pageTitle.medium,
+                    lineHeight: '40px',
+                    letterSpacing: '-2px',
+                    display: 'inline-block',
+                    borderBottom: `4px solid ${REPORT_COLORS.textPrimary}`,
+                    marginLeft: `-${REPORT_SPACING.pagePaddingLeft}px`,
+                    paddingLeft: `${REPORT_SPACING.pagePaddingLeft}px`,
+                  }}
+                >
+                  <span
+                    className="subtitle"
+                    style={{
+                      fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                      fontSize: '24px',
+                      letterSpacing: 0,
+                      lineHeight: '23px',
+                      marginLeft: 0,
+                      display: 'block',
+                    }}
+                  >
+                    <Image
+                      src="/images/reports/triangle.png"
+                      alt=""
+                      width={15}
+                      height={18}
+                      style={{
+                        position: 'relative',
+                        top: '3px',
+                        marginRight: '15px',
+                        display: 'inline-block',
+                      }}
+                    />
+                    Dimension:
+                  </span>
+                  <span style={{ display: 'block', marginLeft: '35px' }}>
+                    {dimension.dimension_name}
+                  </span>
+                </div>
+
+                {/* Content */}
+                <div
+                  className="page-content"
+                  style={{
+                    letterSpacing: '0.5px',
+                    fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                    fontSize: REPORT_TYPOGRAPHY.body.fontSize,
+                    lineHeight: REPORT_TYPOGRAPHY.body.lineHeight,
+                    margin: '20px 0 40px',
+                  }}
+                >
+                  {dimension.definition && <p>{dimension.definition}</p>}
+
+                  <ComparisonChart
+                    yourScore={dimension.target_score}
+                    groupAverage={dimension.geonorm || undefined}
+                    benchmark={dimension.industry_benchmark || undefined}
+                    dimensionName={dimension.dimension_name}
+                    yourScoreFlagged={flagged}
+                    maxValue={5}
                   />
                 </div>
-              </div>
-              {dimension.industry_benchmark !== null && (
-                <div>
-                  <div className="flex justify-between text-xs text-gray-600 print:text-gray-700 mb-1 print:mb-1">
-                    <span>Industry Benchmark</span>
-                    <span>{dimension.industry_benchmark.toFixed(2)}</span>
+
+                <PageFooter pageNumber={dimensionPage} />
+              </PageWrapper>
+            </PageContainer>
+
+            {/* Feedback Page for Dimension */}
+            {dimension.specific_feedback && (
+              <PageContainer pageNumber={pageNumber} id={`${pageNumber}`}>
+                <PageWrapper>
+                  <PageHeader
+                    pageNumber={pageNumber}
+                    logo={`involve-${reportType}-logo-small.png`}
+                    logoWidth={reportType === 'leader' ? 166 : 174}
+                  />
+
+                  {/* Title */}
+                  <div
+                    className="page-title alt2"
+                    style={{
+                      fontSize: REPORT_TYPOGRAPHY.pageTitle.small,
+                      fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                      letterSpacing: 0,
+                      marginTop: '80px',
+                    }}
+                  >
+                    Developmental<br />
+                    <span style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif", fontWeight: 600, fontSize: '70px' }}>Feedback</span>
                   </div>
-                  <div className="w-full bg-gray-200 print:bg-gray-300 rounded-full h-4 print:h-4 border border-gray-300 print:border-gray-400">
-                    <div
-                      className="bg-blue-500 print:bg-blue-600 h-4 print:h-4 rounded-full"
-                      style={{ width: `${Math.min((dimension.industry_benchmark / 5) * 100, 100)}%` }}
+
+                  {/* Sub-title */}
+                  <div
+                    className="page-subtitle"
+                    style={{
+                      textTransform: 'uppercase',
+                      marginTop: '5px',
+                      fontSize: '24px',
+                      fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                    }}
+                  >
+                    <Image
+                      src="/images/reports/triangle-orange-large.png"
+                      alt=""
+                      width={20}
+                      height={20}
+                      style={{
+                        marginLeft: '0px',
+                        marginRight: '15px',
+                        marginTop: '0px',
+                        display: 'inline-block',
+                      }}
                     />
+                    For: <span style={{ fontWeight: 600 }}>{dimension.dimension_name}</span>
                   </div>
-                </div>
-              )}
-              {dimension.geonorm !== null && (
-                <div>
-                  <div className="flex justify-between text-xs text-gray-600 print:text-gray-700 mb-1 print:mb-1">
-                    <span>Group Norm</span>
-                    <span>{dimension.geonorm.toFixed(2)}</span>
+
+                  {/* Content */}
+                  <div
+                    className="page-content"
+                    style={{
+                      letterSpacing: '0.5px',
+                      fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                      fontSize: REPORT_TYPOGRAPHY.body.fontSize,
+                      lineHeight: REPORT_TYPOGRAPHY.body.lineHeight,
+                      margin: '20px 0 40px',
+                    }}
+                  >
+                    <div className="feedbacks" style={{ marginTop: '70px' }}>
+                      <FeedbackSection
+                        number="01"
+                        title="Overall Feedback"
+                        content={dimension.specific_feedback}
+                        type="overall"
+                      />
+                      <FeedbackSection
+                        number="02"
+                        title="Actionable Feedback"
+                        content={dimension.specific_feedback}
+                        type="actionable"
+                      />
+                      <FeedbackSection
+                        number="03"
+                        title="Your Thoughts For Action Planning"
+                        type="thoughts"
+                      />
+                    </div>
                   </div>
-                  <div className="w-full bg-gray-200 print:bg-gray-300 rounded-full h-4 print:h-4 border border-gray-300 print:border-gray-400">
-                    <div
-                      className="bg-green-500 print:bg-green-600 h-4 print:h-4 rounded-full"
-                      style={{ width: `${Math.min((dimension.geonorm / 5) * 100, 100)}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
+
+                  <PageFooter pageNumber={pageNumber} />
+                </PageWrapper>
+              </PageContainer>
+            )}
           </div>
-
-          {/* Improvement Indicator */}
-          {dimension.improvement_needed && (
-            <div className="bg-yellow-50 print:bg-yellow-50 border border-yellow-200 print:border-yellow-300 rounded-md print:rounded p-3 print:p-3 mb-4 print:mb-4">
-              <p className="text-sm text-yellow-800 print:text-yellow-900">
-                ⚠️ Improvement suggested: Score is below benchmark or group norm
-              </p>
-            </div>
-          )}
-
-          {/* Specific Feedback */}
-          {dimension.specific_feedback && (
-            <div className="pt-4 print:pt-4 border-t border-gray-200 print:border-gray-300">
-              <p className="text-sm font-medium text-gray-700 print:text-gray-800 mb-2 print:mb-2">
-                Feedback
-              </p>
-              <div
-                className="p-3 print:p-3 bg-gray-50 print:bg-gray-100 rounded print:rounded text-sm text-gray-700 print:text-gray-800 border border-gray-200 print:border-gray-300"
-                dangerouslySetInnerHTML={{ __html: dimension.specific_feedback }}
-              />
-            </div>
-          )}
-        </div>
-      ))}
-
-      {/* Overall Feedback */}
-      {reportData.overall_feedback && (
-        <div className="mt-8 print:mt-8 pt-6 print:pt-6 border-t border-gray-300 print:border-gray-400">
-          <h2 className="text-2xl font-bold text-gray-900 print:text-black mb-4 print:mb-4">
-            Overall Feedback
-          </h2>
-          <div
-            className="p-4 print:p-4 bg-gray-50 print:bg-gray-100 rounded print:rounded text-gray-700 print:text-gray-800 border border-gray-200 print:border-gray-300"
-            dangerouslySetInnerHTML={{ __html: reportData.overall_feedback }}
-          />
-        </div>
-      )}
-
-      {/* Footer */}
-      <div className="mt-8 print:mt-8 pt-4 print:pt-4 border-t border-gray-300 print:border-gray-400 text-xs text-gray-500 print:text-gray-600 text-center print:text-center">
-        <p>Generated on {new Date(reportData.generated_at).toLocaleString()}</p>
-      </div>
+        )
+      })}
     </div>
   )
 }
