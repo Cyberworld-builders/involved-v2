@@ -58,6 +58,7 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns,
   },
+  serverExternalPackages: ['@react-pdf/renderer'],
 };
 
 export default nextConfig;

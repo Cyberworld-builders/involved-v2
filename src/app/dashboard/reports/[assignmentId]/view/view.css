@@ -1,0 +1,36 @@
+/* Print styles for fullscreen report view */
+@media print {
+  @page {
+    margin: 1in;
+    size: letter;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Hide any navigation or buttons */
+  nav,
+  button:not(.print-visible),
+  .no-print {
+    display: none !important;
+  }
+
+  /* Ensure proper page breaks */
+  .page-break {
+    page-break-before: always;
+  }
+
+  /* Prevent breaking inside important sections */
+  .no-break {
+    page-break-inside: avoid;
+  }
+
+  /* Ensure colors print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+}

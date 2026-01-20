@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { generate360Report } from '@/lib/reports/generate-360-report'
 import { generateLeaderBlockerReport } from '@/lib/reports/generate-leader-blocker-report'
 import { assignFeedbackToReport, get360TextFeedback } from '@/lib/reports/assign-feedback'
+import { applyTemplateToReport } from '@/lib/reports/apply-template'
 
 /**
  * POST /api/reports/generate/:assignmentId
@@ -76,11 +77,35 @@ export async function POST(
 
     // Generate report based on assessment type
     let reportData: unknown
+    let overallScore: number | null = null
 
     if (assignment.assessment?.is_360) {
       reportData = await generate360Report(assignmentId)
+      // Extract overall_score from 360 report
+      if (reportData && typeof reportData === 'object' && 'overall_score' in reportData) {
+        overallScore = typeof reportData.overall_score === 'number' ? reportData.overall_score : null
+      }
     } else {
       reportData = await generateLeaderBlockerReport(assignmentId)
+      // Extract overall_score from Leader/Blocker report
+      if (reportData && typeof reportData === 'object' && 'overall_score' in reportData) {
+        overallScore = typeof reportData.overall_score === 'number' ? reportData.overall_score : null
+      }
+    }
+
+    // Load template for this assessment (default or first available)
+    const { data: template } = await adminClient
+      .from('report_templates')
+      .select('*')
+      .eq('assessment_id', assignment.assessment_id)
+      .order('is_default', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+
+    // Apply template to report if available
+    if (template && reportData && typeof reportData === 'object') {
+      reportData = applyTemplateToReport(reportData as any, template as any)
     }
 
     // Store report data
@@ -88,6 +113,7 @@ export async function POST(
       .from('report_data')
       .upsert({
         assignment_id: assignmentId,
+        overall_score: overallScore,
         dimension_scores: reportData,
         calculated_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -106,12 +132,14 @@ export async function POST(
     })
   } catch (error) {
     console.error('Error generating report:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const statusCode = errorMessage.includes('dimensions') || errorMessage.includes('No dimensions') ? 400 : 500
     return NextResponse.json(
       {
         error: 'Failed to generate report',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        details: errorMessage,
       },
-      { status: 500 }
+      { status: statusCode }
     )
   }
 }

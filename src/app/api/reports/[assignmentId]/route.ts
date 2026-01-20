@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { generate360Report } from '@/lib/reports/generate-360-report'
 import { generateLeaderBlockerReport } from '@/lib/reports/generate-leader-blocker-report'
+import { applyTemplateToReport } from '@/lib/reports/apply-template'
 
 /**
  * GET /api/reports/:assignmentId
@@ -66,11 +67,35 @@ export async function GET(
     if (needsRegeneration) {
       // Generate report
       let report: unknown
+      let overallScore: number | null = null
 
       if (assignment.assessment?.is_360) {
         report = await generate360Report(assignmentId)
+        // Extract overall_score from 360 report
+        if (report && typeof report === 'object' && 'overall_score' in report) {
+          overallScore = typeof report.overall_score === 'number' ? report.overall_score : null
+        }
       } else {
         report = await generateLeaderBlockerReport(assignmentId)
+        // Extract overall_score from Leader/Blocker report
+        if (report && typeof report === 'object' && 'overall_score' in report) {
+          overallScore = typeof report.overall_score === 'number' ? report.overall_score : null
+        }
+      }
+
+      // Load template for this assessment (default or first available)
+      const { data: template } = await adminClient
+        .from('report_templates')
+        .select('*')
+        .eq('assessment_id', assignment.assessment_id)
+        .order('is_default', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      // Apply template to report if available
+      if (template && report && typeof report === 'object') {
+        report = applyTemplateToReport(report as any, template as any)
       }
 
       // Store report data
@@ -78,6 +103,7 @@ export async function GET(
         .from('report_data')
         .upsert({
           assignment_id: assignmentId,
+          overall_score: overallScore,
           dimension_scores: report,
           calculated_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),

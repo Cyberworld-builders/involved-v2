@@ -19,6 +19,7 @@ export default function ReportViewClient({ assignmentId, is360 }: ReportViewClie
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [reportData, setReportData] = useState<Report360Data | ReportLeaderBlockerData | null>(null)
+  const [regenerating, setRegenerating] = useState(false)
 
   const loadReport = useCallback(async () => {
     try {
@@ -41,6 +42,30 @@ export default function ReportViewClient({ assignmentId, is360 }: ReportViewClie
       setLoading(false)
     }
   }, [assignmentId])
+
+  const regenerateReport = useCallback(async () => {
+    try {
+      setRegenerating(true)
+      setError(null)
+
+      const response = await fetch(`/api/reports/generate/${assignmentId}`, {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to regenerate report')
+      }
+
+      // Reload the report after regeneration
+      await loadReport()
+    } catch (err) {
+      console.error('Error regenerating report:', err)
+      setError(err instanceof Error ? err.message : 'Failed to regenerate report')
+    } finally {
+      setRegenerating(false)
+    }
+  }, [assignmentId, loadReport])
 
   useEffect(() => {
     loadReport()
@@ -65,9 +90,14 @@ export default function ReportViewClient({ assignmentId, is360 }: ReportViewClie
         <CardContent className="py-12">
           <div className="text-center text-red-600">
             <p>Error: {error}</p>
-            <Button onClick={loadReport} className="mt-4">
-              Retry
-            </Button>
+            <div className="flex gap-2 justify-center mt-4">
+              <Button onClick={loadReport} variant="outline">
+                Retry
+              </Button>
+              <Button onClick={regenerateReport} disabled={regenerating}>
+                {regenerating ? 'Regenerating...' : 'Force Regenerate'}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -88,6 +118,16 @@ export default function ReportViewClient({ assignmentId, is360 }: ReportViewClie
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-end">
+        <Button
+          onClick={regenerateReport}
+          disabled={regenerating}
+          variant="outline"
+          size="sm"
+        >
+          {regenerating ? 'Regenerating...' : '🔄 Regenerate Report'}
+        </Button>
+      </div>
       {is360 ? (
         <Report360View reportData={reportData as Report360Data} />
       ) : (

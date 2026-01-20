@@ -167,7 +167,18 @@ export async function generate360Report(
     .order('name', { ascending: true })
 
   if (!dimensions || dimensions.length === 0) {
-    throw new Error('No dimensions found for assessment')
+    // Check if there are any dimensions at all (including child dimensions)
+    const { data: allDimensions } = await adminClient
+      .from('dimensions')
+      .select('id')
+      .eq('assessment_id', assignment.assessment_id)
+      .limit(1)
+
+    if (!allDimensions || allDimensions.length === 0) {
+      throw new Error('This assessment has no dimensions configured. Please add dimensions to the assessment before generating a report.')
+    } else {
+      throw new Error('This assessment has dimensions but no top-level (parent) dimensions. Reports require at least one top-level dimension.')
+    }
   }
 
   const dimensionIds = dimensions.map((d) => d.id)

@@ -60,6 +60,10 @@ export default async function ReportPage({
     notFound()
   }
 
+  // Type assertions for nested objects (Supabase returns arrays for relations, but .single() should return objects)
+  const assessment = (assignment.assessment as unknown) as { id: string; title: string; is_360: boolean } | null
+  const assignmentUser = (assignment.user as unknown) as { id: string; name: string; email: string } | null
+
   // Check permissions
   const isOwner = assignment.user_id === profile.id
   const isAdmin = profile.access_level === 'client_admin' || profile.access_level === 'super_admin'
@@ -88,20 +92,35 @@ export default async function ReportPage({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            Assessment Report: {assignment.assessment?.title || 'Unknown Assessment'}
+            Assessment Report: {assessment?.title || 'Unknown Assessment'}
           </h1>
           <p className="text-gray-600">
-            {assignment.assessment?.is_360 ? '360 Assessment Report' : 'Assessment Report'} for {assignment.user?.name || 'Unknown User'}
+            {assessment?.is_360 ? '360 Assessment Report' : 'Assessment Report'} for {assignmentUser?.name || 'Unknown User'}
           </p>
         </div>
         <div className="flex gap-2">
+          <Link href={`/dashboard/reports/${assignmentId}/view`} target="_blank">
+            <Button variant="outline">👁️ View Fullscreen</Button>
+          </Link>
+          <Link href={`/api/reports/${assignmentId}/export/pdf`} target="_blank">
+            <Button variant="outline">📄 View PDF</Button>
+          </Link>
+          <Link href={`/api/reports/${assignmentId}/export/pdf?download=true`} target="_blank">
+            <Button variant="outline">💾 Download PDF</Button>
+          </Link>
+          <Link href={`/api/reports/${assignmentId}/export/excel`}>
+            <Button variant="outline">📊 Export Excel</Button>
+          </Link>
+          <Link href={`/api/reports/${assignmentId}/export/csv`}>
+            <Button variant="outline">📋 Export CSV</Button>
+          </Link>
           <Link href="/dashboard/assignments">
             <Button variant="outline">Back to Assignments</Button>
           </Link>
         </div>
       </div>
 
-      <ReportViewClient assignmentId={assignmentId} is360={assignment.assessment?.is_360 || false} />
+      <ReportViewClient assignmentId={assignmentId} is360={assessment?.is_360 || false} />
     </div>
   )
 }
