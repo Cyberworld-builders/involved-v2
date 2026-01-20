@@ -15,6 +15,7 @@ interface DimensionReport360 {
     supervisor: number | null
     self: number | null
     other: number | null
+    all_raters: number | null
   }
   industry_benchmark: number | null
   geonorm: number | null
@@ -103,14 +104,14 @@ export function generate360ReportCSV(reportData: Report360Data): string {
   lines.push('')
   
   // Dimension breakdown
-  lines.push('Dimension,Code,Overall Score,Peer,Direct Report,Supervisor,Self,Other,Industry Benchmark,Group Norm,Improvement Needed')
+  lines.push('Dimension,Code,All Raters,Peer,Direct Report,Supervisor,Self,Other,Industry Benchmark,Group Norm,Improvement Needed')
   
   reportData.dimensions.forEach((dim) => {
     lines.push(
       [
         escapeCsvField(dim.dimension_name),
         escapeCsvField(dim.dimension_code),
-        escapeCsvField(dim.overall_score.toFixed(2)),
+        escapeCsvField((dim.rater_breakdown.all_raters ?? dim.overall_score).toFixed(2)),
         escapeCsvField(dim.rater_breakdown.peer?.toFixed(2) || 'N/A'),
         escapeCsvField(dim.rater_breakdown.direct_report?.toFixed(2) || 'N/A'),
         escapeCsvField(dim.rater_breakdown.supervisor?.toFixed(2) || 'N/A'),

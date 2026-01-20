@@ -40,8 +40,7 @@ export default function HorizontalBarChart({
   const rateeWidth = 135 // Legacy ratee label width
   
   return (
-    <div className="chart" style={{ width: `${chartWidth}px`, height: `${REPORT_SPACING.chartHeight}px`, marginTop: '20px' }}>
-      <div className="bars" style={{ width: `${chartWidth}px`, height: `${REPORT_SPACING.chartBarsHeight}px`, float: 'left' }}>
+    <div className="bars" style={{ width: `${chartWidth}px`, height: `${REPORT_SPACING.chartBarsHeight}px` }}>
         <div className="graph" style={{ position: 'relative', width: `${chartWidth}px`, height: `${REPORT_SPACING.chartHeight}px` }}>
           {/* Grid Lines */}
           {showGridLines && (
@@ -122,34 +121,24 @@ export default function HorizontalBarChart({
                     className={`inner ${barData.flagged ? 'flagged' : ''}`}
                     style={{
                       position: 'relative',
-                      width: `${graphWidth}px`,
-                      height: '20px',
+                      width: `${percent}%`,
+                      minHeight: `${barHeight}px`,
+                      height: 'auto',
                       background: barColor,
                       color: REPORT_COLORS.white,
                       fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
                       fontSize: '14px',
                       textAlign: 'right',
-                      padding: '4px 0 8px',
-                      paddingRight: 0,
-                      margin: '6px 0',
-                      width: `${percent}%`,
+                      padding: '8px 12px',
+                      margin: '0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'flex-end',
+                      lineHeight: '1.2',
+                      boxSizing: 'border-box',
                     }}
                   >
                     {showScoreInBar && barData.score.toFixed(1)}
-                    {barData.flagged && (
-                      <div
-                        style={{
-                          content: '',
-                          width: '13px',
-                          height: '13px',
-                          display: 'block',
-                          position: 'absolute',
-                          right: '-17px',
-                          top: '8px',
-                          background: `url('/images/reports/triangle-orange.png') no-repeat scroll 0 0 transparent`,
-                        }}
-                      />
-                    )}
                   </div>
                 </div>
 
@@ -159,7 +148,5 @@ export default function HorizontalBarChart({
           })}
         </div>
       </div>
-      <div style={{ clear: 'both' }} />
-    </div>
   )
 }

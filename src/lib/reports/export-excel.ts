@@ -17,6 +17,7 @@ interface DimensionReport360 {
     supervisor: number | null
     self: number | null
     other: number | null
+    all_raters: number | null
   }
   industry_benchmark: number | null
   geonorm: number | null
@@ -93,7 +94,7 @@ export async function generate360ReportExcel(reportData: Report360Data): Promise
   dimensionSheet.columns = [
     { header: 'Dimension', key: 'dimension', width: 30 },
     { header: 'Code', key: 'code', width: 15 },
-    { header: 'Overall Score', key: 'overall_score', width: 15 },
+    { header: 'All Raters', key: 'all_raters', width: 15 },
     { header: 'Peer', key: 'peer', width: 12 },
     { header: 'Direct Report', key: 'direct_report', width: 15 },
     { header: 'Supervisor', key: 'supervisor', width: 15 },
@@ -108,7 +109,7 @@ export async function generate360ReportExcel(reportData: Report360Data): Promise
     dimensionSheet.addRow({
       dimension: dim.dimension_name,
       code: dim.dimension_code,
-      overall_score: dim.overall_score.toFixed(2),
+      all_raters: (dim.rater_breakdown.all_raters ?? dim.overall_score).toFixed(2),
       peer: dim.rater_breakdown.peer?.toFixed(2) || 'N/A',
       direct_report: dim.rater_breakdown.direct_report?.toFixed(2) || 'N/A',
       supervisor: dim.rater_breakdown.supervisor?.toFixed(2) || 'N/A',

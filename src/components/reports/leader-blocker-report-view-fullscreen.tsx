@@ -102,8 +102,11 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
     }
   }
 
+  // Calculate expected page count: cover (1) + TOC (1) + Read Me First (1) + Scores Summary (1) + dimensions (2 each: overall + feedback)
+  const expectedPages = 4 + (reportData.dimensions.length * 2)
+  
   return (
-    <div style={{ backgroundColor: REPORT_COLORS.white }}>
+    <div style={{ backgroundColor: REPORT_COLORS.white }} data-report-pages={`${expectedPages}`}>
       {/* Cover Page */}
       <CoverPage
         assessmentTitle={reportData.assessment_title}
@@ -160,12 +163,13 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
               fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
               fontWeight: 600,
               fontSize: REPORT_TYPOGRAPHY.pageTitle.large,
-              lineHeight: '40px',
+              lineHeight: '50px', /* Increased to create space for descenders */
               letterSpacing: '-2px',
               display: 'inline-block',
               borderBottom: `4px solid ${REPORT_COLORS.textPrimary}`,
               marginLeft: `-${REPORT_SPACING.pagePaddingLeft}px`,
               paddingLeft: `${REPORT_SPACING.pagePaddingLeft}px`,
+              paddingBottom: '8px', /* Space between text and underline */
             }}
           >
             Read Me First
@@ -345,12 +349,13 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                     fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
                     fontWeight: 600,
                     fontSize: REPORT_TYPOGRAPHY.pageTitle.medium,
-                    lineHeight: '40px',
+                    lineHeight: '50px', /* Increased to create space for descenders */
                     letterSpacing: '-2px',
                     display: 'inline-block',
                     borderBottom: `4px solid ${REPORT_COLORS.textPrimary}`,
                     marginLeft: `-${REPORT_SPACING.pagePaddingLeft}px`,
                     paddingLeft: `${REPORT_SPACING.pagePaddingLeft}px`,
+                    paddingBottom: '8px', /* Space between text and underline */
                   }}
                 >
                   <span

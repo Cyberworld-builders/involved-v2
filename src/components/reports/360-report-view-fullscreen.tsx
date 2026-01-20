@@ -27,6 +27,7 @@ interface DimensionReport {
     supervisor: number | null
     self: number | null
     other: number | null
+    all_raters: number | null
   }
   industry_benchmark: number | null
   geonorm: number | null
@@ -122,7 +123,7 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
   }
 
   return (
-    <div style={{ backgroundColor: REPORT_COLORS.white }}>
+    <div style={{ backgroundColor: REPORT_COLORS.white }} data-report-pages={`${pageNumber + reportData.dimensions.length * 2}`}>
       {/* Cover Page */}
       <CoverPage
         assessmentTitle={reportData.assessment_title}
@@ -145,12 +146,13 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
               fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
               fontWeight: 600,
               fontSize: REPORT_TYPOGRAPHY.pageTitle.large,
-              lineHeight: '40px',
+              lineHeight: '50px', /* Increased to create space for descenders */
               letterSpacing: '-2px',
               display: 'inline-block',
               borderBottom: `4px solid ${REPORT_COLORS.textPrimary}`,
               marginLeft: `-${REPORT_SPACING.pagePaddingLeft}px`,
               paddingLeft: `${REPORT_SPACING.pagePaddingLeft}px`,
+              paddingBottom: '8px', /* Space between text and underline */
             }}
           >
             {reportData.assessment_title}
@@ -202,12 +204,13 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                     fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
                     fontWeight: 600,
                     fontSize: REPORT_TYPOGRAPHY.pageTitle.medium,
-                    lineHeight: '40px',
+                    lineHeight: '50px', /* Increased to create space for descenders */
                     letterSpacing: '-2px',
                     display: 'inline-block',
                     borderBottom: `4px solid ${REPORT_COLORS.textPrimary}`,
                     marginLeft: `-${REPORT_SPACING.pagePaddingLeft}px`,
                     paddingLeft: `${REPORT_SPACING.pagePaddingLeft}px`,
+                    paddingBottom: '8px', /* Space between text and underline */
                   }}
                 >
                   <span
@@ -294,103 +297,127 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                       </span>
                     </div>
 
-                    {/* Score Display */}
-                    <ScoreDisplay
-                      score={dimension.overall_score}
-                      maxValue={5}
-                      label="out of 5"
-                      size="large"
-                    />
+                    {/* Score and Chart Container */}
+                    <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                      {/* Score Display Container - centered vertically and horizontally */}
+                      <div
+                        className="score-container"
+                        style={{
+                          width: '141px',
+                          height: '230px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                      <ScoreDisplay
+                        score={dimension.rater_breakdown.all_raters ?? dimension.overall_score}
+                        maxValue={5}
+                        label="out of 5"
+                        size="large"
+                      />
+                      </div>
 
-                    {/* Bar Chart */}
-                    <HorizontalBarChart
-                      scores={transformDimensionForChart(dimension)}
-                      maxValue={5}
-                      showGridLines={true}
-                      barHeight={40}
-                      showScoreInBar={true}
-                    />
+                      {/* Bar Chart */}
+                      <div style={{ flex: 1, marginLeft: '0' }}>
+                        <HorizontalBarChart
+                          scores={transformDimensionForChart(dimension)}
+                          maxValue={5}
+                          showGridLines={true}
+                          barHeight={40}
+                          showScoreInBar={true}
+                        />
+                      </div>
+                    </div>
 
                     {/* Norms Display */}
                     <div
                       className="norms"
                       style={{
                         position: 'relative',
-                        width: '488px',
+                        width: `${REPORT_SPACING.contentWidth}px`,
                         height: '55px',
-                        margin: '90px 94px 0',
+                        margin: '90px auto 0',
                         color: REPORT_COLORS.textPrimary,
                         top: '70px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0',
                       }}
                     >
-                      {dimension.industry_benchmark !== null && (
+                      {/* Industry Norm Group - Always shown */}
+                      <div
+                        className="norm-group industry"
+                        style={{
+                          position: 'relative',
+                          width: '280px',
+                          height: '55px',
+                          display: 'flex',
+                          alignItems: 'center',
+                        }}
+                      >
                         <div
-                          className="norm-group industry"
+                          className="norm"
                           style={{
+                            width: '80px',
                             position: 'relative',
-                            width: '267px',
-                            height: '55px',
-                            float: 'left',
+                            fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                            fontSize: '34px',
+                            letterSpacing: '-1px',
+                            marginTop: '3px',
+                            flexShrink: 0,
                           }}
                         >
-                          <div
-                            className="norm"
-                            style={{
-                              position: 'absolute',
-                              width: '73px',
-                              left: 0,
-                              top: 0,
-                              fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-                              fontSize: '34px',
-                              letterSpacing: '-1px',
-                              marginTop: '3px',
-                            }}
-                          >
-                            {dimension.industry_benchmark.toFixed(2)}
-                          </div>
-                          <div
-                            className="norm-label"
-                            style={{
-                              position: 'absolute',
-                              width: '202px',
-                              left: '73px',
-                              top: '10px',
-                              fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-                              fontSize: '12px',
-                              textTransform: 'uppercase',
-                              marginTop: '10px',
-                              lineHeight: '10px',
-                            }}
-                          >
-                            Industry Norm for<br />
-                            <span style={{ fontWeight: 600 }}>Industry</span>
-                          </div>
-                          <div style={{ clear: 'both' }} />
+                          {dimension.industry_benchmark !== null 
+                            ? dimension.industry_benchmark.toFixed(2)
+                            : '0.00'}
                         </div>
-                      )}
+                        <div
+                          className="norm-label"
+                          style={{
+                            width: '180px',
+                            marginLeft: '15px',
+                            position: 'relative',
+                            fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                            fontSize: '12px',
+                            textTransform: 'uppercase',
+                            lineHeight: '14px',
+                            flexShrink: 0,
+                          }}
+                        >
+                          Industry Norm for<br />
+                          <span style={{ fontWeight: 600 }}>
+                            {dimension.industry_benchmark !== null ? 'Industry' : 'NO INDUSTRY SET'}
+                          </span>
+                        </div>
+                      </div>
 
+                      {/* Group Norm - Always shown if geonorm exists */}
                       {dimension.geonorm !== null && (
                         <div
                           className="norm-group group"
                           style={{
-                            width: '220px',
+                            width: '250px',
                             borderLeft: `2px solid ${REPORT_COLORS.lightGray}`,
                             position: 'relative',
                             height: '55px',
-                            float: 'left',
+                            display: 'flex',
+                            alignItems: 'center',
+                            paddingLeft: '20px',
                           }}
                         >
                           <div
                             className="norm"
                             style={{
-                              width: '72px',
-                              left: '53px',
-                              position: 'absolute',
-                              top: 0,
+                              width: '80px',
+                              position: 'relative',
                               fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
                               fontSize: '34px',
                               letterSpacing: '-1px',
                               marginTop: '3px',
+                              flexShrink: 0,
                             }}
                           >
                             {dimension.geonorm.toFixed(2)}
@@ -398,15 +425,14 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                           <div
                             className="norm-label"
                             style={{
-                              width: '96px',
-                              left: '125px',
-                              position: 'absolute',
-                              top: '10px',
+                              width: '130px',
+                              marginLeft: '15px',
+                              position: 'relative',
                               fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
                               fontSize: '12px',
                               textTransform: 'uppercase',
-                              marginTop: '10px',
-                              lineHeight: '10px',
+                              lineHeight: '14px',
+                              flexShrink: 0,
                             }}
                           >
                             Avg Score<br />
@@ -414,8 +440,6 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                           </div>
                         </div>
                       )}
-
-                      <div style={{ clear: 'both' }} />
                     </div>
                   </div>
                 </div>

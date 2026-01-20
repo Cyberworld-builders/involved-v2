@@ -99,7 +99,7 @@ export default async function ReportPage({
           </p>
         </div>
         <div className="flex gap-2">
-          <Link href={`/dashboard/reports/${assignmentId}/view`} target="_blank">
+          <Link href={`/reports/${assignmentId}/view`} target="_blank">
             <Button variant="outline">👁️ View Fullscreen</Button>
           </Link>
           <Link href={`/api/reports/${assignmentId}/export/pdf`} target="_blank">

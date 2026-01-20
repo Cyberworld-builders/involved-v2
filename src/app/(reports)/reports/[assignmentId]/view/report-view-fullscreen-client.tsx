@@ -44,6 +44,23 @@ export default function ReportViewFullscreenClient({ assignmentId, is360 }: Repo
     loadReport()
   }, [loadReport])
 
+  // Set data-report-loaded when report data is available and rendered
+  useEffect(() => {
+    if (reportData && !loading) {
+      // Small delay to ensure DOM is updated
+      setTimeout(() => {
+        const container = document.querySelector('[data-report-loaded]')
+        if (container) {
+          // Ensure all page containers are rendered
+          const pageContainers = document.querySelectorAll('.page-container')
+          if (pageContainers.length > 0) {
+            console.log(`Report loaded with ${pageContainers.length} pages`)
+          }
+        }
+      }, 100)
+    }
+  }, [reportData, loading])
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">

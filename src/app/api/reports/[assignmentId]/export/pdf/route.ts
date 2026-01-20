@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { generate360Report } from '@/lib/reports/generate-360-report'
-import { generateLeaderBlockerReport } from '@/lib/reports/generate-leader-blocker-report'
-import { generate360ReportPDF, generateLeaderBlockerReportPDF } from '@/lib/reports/export-pdf'
+import { generatePDFFromView } from '@/lib/reports/export-pdf-playwright'
 
 /**
  * GET /api/reports/:assignmentId/export/pdf
@@ -52,22 +50,35 @@ export async function GET(
       )
     }
 
-    // Generate report data
-    let reportData: unknown
+    // Get the base URL for constructing the fullscreen view URL
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
+                   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+                   request.headers.get('origin') || 
+                   'http://localhost:3000'
 
-    if (assignment.assessment?.is_360) {
-      reportData = await generate360Report(assignmentId)
-    } else {
-      reportData = await generateLeaderBlockerReport(assignmentId)
-    }
+    // Get all cookies from the request to pass to Playwright for authentication
+    const requestCookies = request.headers.get('cookie') || ''
+    const cookieArray = requestCookies.split(';').map(cookie => {
+      const [name, ...valueParts] = cookie.trim().split('=')
+      return {
+        name: name.trim(),
+        value: valueParts.join('='),
+      }
+    }).filter(c => c.name && c.value)
 
-    // Generate PDF
-    let pdfBuffer: Buffer
-    if (assignment.assessment?.is_360) {
-      pdfBuffer = await generate360ReportPDF(reportData as Parameters<typeof generate360ReportPDF>[0])
-    } else {
-      pdfBuffer = await generateLeaderBlockerReportPDF(reportData as Parameters<typeof generateLeaderBlockerReportPDF>[0])
-    }
+    // Construct the fullscreen view URL (using the route group path, no dashboard layout)
+    const viewUrl = `${baseUrl}/reports/${assignmentId}/view`
+
+    // Generate PDF from the fullscreen view using Playwright
+    // This ensures the PDF is identical to what users see
+    const pdfBuffer = await generatePDFFromView(
+      viewUrl,
+      cookieArray,
+      {
+        waitForSelector: '[data-report-loaded]',
+        waitForTimeout: 30000,
+      }
+    )
 
     // Get assessment title for filename
     const { data: assessment } = await adminClient

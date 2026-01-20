@@ -34,6 +34,7 @@ interface DimensionReport {
     supervisor: number | null
     self: number | null
     other: number | null
+    all_raters: number | null
   }
   industry_benchmark: number | null
   geonorm: number | null
@@ -57,26 +58,34 @@ interface Report360Data {
 }
 
 /**
- * Map group_members.role to report rater types
+ * Map group_members.position to report rater types
+ * Legacy uses free-form position text, so we map common values to standard types
+ * Custom position names will fall into 'other' category
  */
-function mapRoleToRaterType(role: string | null | undefined): 'peer' | 'direct_report' | 'supervisor' | 'self' | 'other' {
-  if (!role) return 'other'
+function mapPositionToRaterType(position: string | null | undefined): 'peer' | 'direct_report' | 'supervisor' | 'self' | 'other' {
+  if (!position) return 'other'
   
-  const roleLower = role.toLowerCase()
+  const positionLower = position.toLowerCase().trim()
   
-  if (roleLower === 'peer' || roleLower === 'colleague') {
+  // Map common legacy position values
+  if (positionLower === 'peer' || positionLower === 'peers' || positionLower === 'colleague' || positionLower === 'colleagues') {
     return 'peer'
   }
-  if (roleLower === 'direct_report' || roleLower === 'subordinate' || roleLower === 'directreport') {
+  if (positionLower === 'direct_report' || positionLower === 'direct reports' || 
+      positionLower === 'subordinate' || positionLower === 'subordinates' ||
+      positionLower === 'directreport' || positionLower === 'staff') {
     return 'direct_report'
   }
-  if (roleLower === 'supervisor' || roleLower === 'manager' || roleLower === 'boss') {
+  if (positionLower === 'supervisor' || positionLower === 'supervisors' || 
+      positionLower === 'manager' || positionLower === 'managers' || 
+      positionLower === 'boss') {
     return 'supervisor'
   }
-  if (roleLower === 'self') {
+  if (positionLower === 'self') {
     return 'self'
   }
   
+  // Any other position value goes to 'other'
   return 'other'
 }
 
@@ -130,6 +139,7 @@ export async function generate360Report(
     .select(`
       id,
       user_id,
+      target_id,
       completed,
       user:profiles!assignments_user_id_fkey(
         id,
@@ -145,16 +155,17 @@ export async function generate360Report(
     throw new Error('No completed assignments found for 360 target')
   }
 
-  // Get group members with their roles (raters)
+  // Get group members with their positions (raters)
   const { data: groupMembers } = await adminClient
     .from('group_members')
-    .select('profile_id, role')
+    .select('profile_id, position')
     .eq('group_id', group.id)
 
   // Create rater lookup map
-  const raterMap = new Map<string, string>() // user_id -> rater_type
+  // Map: user_id -> rater_type
+  const raterMap = new Map<string, 'peer' | 'direct_report' | 'supervisor' | 'self' | 'other'>()
   groupMembers?.forEach((gm) => {
-    const raterType = mapRoleToRaterType(gm.role)
+    const raterType = mapPositionToRaterType(gm.position)
     raterMap.set(gm.profile_id, raterType)
   })
 
@@ -245,6 +256,7 @@ export async function generate360Report(
     }
 
     // Calculate overall score (average of all raters)
+    // This will be the same as all_raters, but we calculate it here for consistency
     const overallScore =
       scoresForDimension.reduce((sum, ds) => sum + (ds.avg_score || 0), 0) /
       scoresForDimension.length
@@ -258,12 +270,25 @@ export async function generate360Report(
       other: [],
     }
 
+    // Track all scores for "All Raters" calculation
+    const allRaterScores: number[] = []
+    
     scoresForDimension.forEach((ds) => {
       const assignment = allTargetAssignments.find((a) => a.id === ds.assignment_id)
       if (!assignment) return
 
-      const raterType = raterMap.get(assignment.user_id) || 'other'
-      raterBreakdown[raterType].push(ds.avg_score || 0)
+      // Check for self-assessment first (user rating themselves)
+      let raterType: 'peer' | 'direct_report' | 'supervisor' | 'self' | 'other'
+      if (assignment.user_id === assignment.target_id) {
+        raterType = 'self'
+      } else {
+        // Use position mapping from group_members
+        raterType = raterMap.get(assignment.user_id) || 'other'
+      }
+      
+      const score = ds.avg_score || 0
+      raterBreakdown[raterType].push(score)
+      allRaterScores.push(score) // Add to all raters for overall calculation
     })
 
     // Calculate average for each rater type
@@ -282,6 +307,10 @@ export async function generate360Report(
         : null,
       other: raterBreakdown.other.length > 0
         ? raterBreakdown.other.reduce((sum, s) => sum + s, 0) / raterBreakdown.other.length
+        : null,
+      // Add "All Raters" score (average of all rater types combined)
+      all_raters: allRaterScores.length > 0
+        ? allRaterScores.reduce((sum, s) => sum + s, 0) / allRaterScores.length
         : null,
     }
 
