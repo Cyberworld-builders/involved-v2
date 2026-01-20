@@ -124,11 +124,11 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
       const transformed = data.map(group => ({
         ...group,
         target: group.target_id ? (targets[group.target_id] || null) : null,
-        members: group.group_members?.map((gm: GroupMemberRow & { profiles?: Profile }) => ({
+        members: group.group_members?.map((gm: GroupMemberRow & { profiles?: Profile; position?: string | null; leader?: boolean }) => ({
           id: gm.id,
           profile_id: gm.profile_id,
-          position: gm.position || null,
-          leader: gm.leader || false,
+          position: (gm as { position?: string | null }).position || null,
+          leader: (gm as { leader?: boolean }).leader || false,
           profile: gm.profiles
         })) || []
       }))

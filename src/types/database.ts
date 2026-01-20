@@ -333,21 +333,24 @@ export interface Database {
           id: string
           group_id: string
           profile_id: string
-          role: string
+          position: string | null
+          leader: boolean
           created_at: string
         }
         Insert: {
           id?: string
           group_id: string
           profile_id: string
-          role?: string
+          position?: string | null
+          leader?: boolean
           created_at?: string
         }
         Update: {
           id?: string
           group_id?: string
           profile_id?: string
-          role?: string
+          position?: string | null
+          leader?: boolean
           created_at?: string
         }
         Relationships: []
@@ -427,6 +430,171 @@ export interface Database {
           completed_at?: string | null
           created_at?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      report_data: {
+        Row: {
+          id: string
+          assignment_id: string
+          overall_score: number | null
+          dimension_scores: Record<string, unknown>
+          feedback_assigned: Record<string, unknown>[] | null
+          geonorm_data: Record<string, unknown> | null
+          calculated_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          assignment_id: string
+          overall_score?: number | null
+          dimension_scores?: Record<string, unknown>
+          feedback_assigned?: Record<string, unknown>[] | null
+          geonorm_data?: Record<string, unknown> | null
+          calculated_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          assignment_id?: string
+          overall_score?: number | null
+          dimension_scores?: Record<string, unknown>
+          feedback_assigned?: Record<string, unknown>[] | null
+          geonorm_data?: Record<string, unknown> | null
+          calculated_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      report_templates: {
+        Row: {
+          id: string
+          assessment_id: string
+          name: string
+          is_default: boolean
+          components: Record<string, unknown>
+          labels: Record<string, unknown>
+          styling: Record<string, unknown>
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          assessment_id: string
+          name: string
+          is_default?: boolean
+          components?: Record<string, unknown>
+          labels?: Record<string, unknown>
+          styling?: Record<string, unknown>
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          assessment_id?: string
+          name?: string
+          is_default?: boolean
+          components?: Record<string, unknown>
+          labels?: Record<string, unknown>
+          styling?: Record<string, unknown>
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      feedback_library: {
+        Row: {
+          id: string
+          assessment_id: string
+          dimension_id: string | null
+          type: 'overall' | 'specific'
+          feedback: string
+          min_score: number | null
+          max_score: number | null
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          assessment_id: string
+          dimension_id?: string | null
+          type: 'overall' | 'specific'
+          feedback: string
+          min_score?: number | null
+          max_score?: number | null
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          assessment_id?: string
+          dimension_id?: string | null
+          type?: 'overall' | 'specific'
+          feedback?: string
+          min_score?: number | null
+          max_score?: number | null
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      assignment_dimension_scores: {
+        Row: {
+          assignment_id: string
+          dimension_id: string
+          avg_score: number
+          answer_count: number
+          calculated_at: string
+        }
+        Insert: {
+          assignment_id: string
+          dimension_id: string
+          avg_score: number
+          answer_count: number
+          calculated_at?: string
+        }
+        Update: {
+          assignment_id?: string
+          dimension_id?: string
+          avg_score?: number
+          answer_count?: number
+          calculated_at?: string
+        }
+        Relationships: []
+      }
+      geonorms: {
+        Row: {
+          id: string
+          group_id: string
+          assessment_id: string
+          dimension_id: string
+          avg_score: number
+          participant_count: number
+          calculated_at: string
+        }
+        Insert: {
+          id?: string
+          group_id: string
+          assessment_id: string
+          dimension_id: string
+          avg_score: number
+          participant_count: number
+          calculated_at?: string
+        }
+        Update: {
+          id?: string
+          group_id?: string
+          assessment_id?: string
+          dimension_id?: string
+          avg_score?: number
+          participant_count?: number
+          calculated_at?: string
         }
         Relationships: []
       }

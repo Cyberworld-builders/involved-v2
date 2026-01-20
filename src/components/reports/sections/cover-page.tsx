@@ -1,6 +1,6 @@
 'use client'
 
-import { REPORT_TYPOGRAPHY, REPORT_COLORS, REPORT_SPACING } from '@/lib/reports/report-design-constants'
+import { REPORT_TYPOGRAPHY, REPORT_LAYOUT, REPORT_SPACING } from '@/lib/reports/report-design-constants'
 import Image from 'next/image'
 import PageContainer from '../layout/page-container'
 import PageWrapper from '../layout/page-wrapper'
@@ -61,7 +61,7 @@ export default function CoverPage({
         height={1100}
         style={{
           position: 'absolute',
-          top: `${REPORT_SPACING.coverShapesTop}px`,
+          top: `${REPORT_LAYOUT.coverShapesTop}px`,
           left: 0,
           zIndex: 0,
         }}
@@ -80,7 +80,7 @@ export default function CoverPage({
           className="cover-title"
           style={{
             position: 'absolute',
-            top: `${REPORT_SPACING.coverTitleTop}px`,
+            top: `${REPORT_LAYOUT.coverTitleTop}px`,
             fontSize: REPORT_TYPOGRAPHY.coverTitle.assessment,
             fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
             margin: '0 80px',

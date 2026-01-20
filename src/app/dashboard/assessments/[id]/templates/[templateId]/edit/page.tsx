@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import EditTemplateClient from './edit-template-client'
+import EditTemplateClient from '../edit-template-client'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export default async function EditTemplatePage({
@@ -78,11 +78,9 @@ export default async function EditTemplatePage({
           is_default: template.is_default,
           components: (template.components as Record<string, boolean>) || {},
           labels: (template.labels as Record<string, string>) || {},
-          styling: (template.styling as Record<string, any>) || {},
+          styling: (template.styling as Record<string, unknown>) || {},
         }}
       />
     </div>
   )
-}
-
 }

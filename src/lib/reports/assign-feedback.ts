@@ -156,7 +156,9 @@ export async function get360TextFeedback(
   const feedbackByDimension = new Map<string | null, string[]>()
   
   textAnswers.forEach((answer) => {
-    const dimensionId = answer.field?.dimension_id || null
+    // Type assertion for nested object (Supabase returns arrays for relations)
+    const field = (answer.field as unknown) as { dimension_id: string | null; type: string } | null
+    const dimensionId = field?.dimension_id || null
     if (!feedbackByDimension.has(dimensionId)) {
       feedbackByDimension.set(dimensionId, [])
     }

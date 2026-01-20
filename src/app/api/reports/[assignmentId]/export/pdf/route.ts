@@ -94,7 +94,7 @@ export async function GET(
     // Return PDF - use 'inline' to open in browser viewer, 'attachment' to force download
     const disposition = forceDownload ? 'attachment' : 'inline'
 
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `${disposition}; filename="${filename}"`,

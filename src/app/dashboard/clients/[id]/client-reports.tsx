@@ -7,8 +7,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import Link from 'next/link'
 import { Database } from '@/types/database'
 
-type ReportDataRow = Database['public']['Tables']['report_data']['Row']
-type AssignmentRow = Database['public']['Tables']['assignments']['Row']
+// Manual type definition for report_data since it may not be in generated types
+type ReportDataRow = {
+  id: string
+  assignment_id: string
+  overall_score: number | null
+  dimension_scores: Record<string, unknown>
+  calculated_at: string
+  updated_at: string
+}
+// Partial type for assignments query that only selects specific fields
+type AssignmentQueryResult = {
+  id: string
+  user_id: string
+  assessment_id: string
+  completed: boolean
+  completed_at: string | null
+  created_at: string
+}
 
 interface ClientReportsProps {
   clientId: string
@@ -18,7 +34,7 @@ interface Report {
   id: string
   assignment_id: string
   overall_score: number | null
-  dimension_scores: Record<string, any>
+  dimension_scores: Record<string, unknown>
   calculated_at: string
   updated_at: string
   assignment: {
@@ -133,8 +149,8 @@ export default function ClientReports({ clientId }: ClientReportsProps) {
         }
 
         // Load related data
-        const allUserIds = [...new Set(assignments.map((a: AssignmentRow) => a.user_id))].filter(Boolean)
-        const assessmentIds = [...new Set(assignments.map((a: AssignmentRow) => a.assessment_id))].filter(Boolean)
+        const allUserIds = [...new Set(assignments.map((a: AssignmentQueryResult) => a.user_id))].filter(Boolean)
+        const assessmentIds = [...new Set(assignments.map((a: AssignmentQueryResult) => a.assessment_id))].filter(Boolean)
 
         const [usersResult, assessmentsResult] = await Promise.all([
           allUserIds.length > 0
@@ -160,7 +176,7 @@ export default function ClientReports({ clientId }: ClientReportsProps) {
 
         // Combine the data
         const reportsWithDetails = (reportsData || []).map((report: ReportDataRow) => {
-          const assignment = assignments.find((a: AssignmentRow) => a.id === report.assignment_id)
+          const assignment = assignments.find((a: AssignmentQueryResult) => a.id === report.assignment_id)
           return {
             ...report,
             assignment: assignment ? {

@@ -12,14 +12,14 @@ interface TemplateFormProps {
     is_default: boolean
     components: Record<string, boolean>
     labels: Record<string, string>
-    styling: Record<string, any>
+    styling: Record<string, unknown>
   }
   onSubmit: (data: {
     name: string
     is_default: boolean
     components: Record<string, boolean>
     labels: Record<string, string>
-    styling: Record<string, any>
+    styling: Record<string, unknown>
   }) => Promise<void>
   onCancel: () => void
 }

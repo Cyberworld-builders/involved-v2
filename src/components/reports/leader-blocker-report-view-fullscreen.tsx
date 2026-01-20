@@ -222,13 +222,13 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
             {!isBlocker && (
               <>
                 <p style={{ fontSize: '16px' }}>
-                  There are two distinct, but complementary over-riding dimensions that constitute the Involved-Leader: (1) Involving-Stakeholders and (2) Involving-Self. Involved leaders not only need to be involving their team and other important stakeholders, but also themselves. Most leaders tend to focus on one or the other – don't, <strong>you must focus on both</strong>.
+                  There are two distinct, but complementary over-riding dimensions that constitute the Involved-Leader: (1) Involving-Stakeholders and (2) Involving-Self. Involved leaders not only need to be involving their team and other important stakeholders, but also themselves. Most leaders tend to focus on one or the other – don&apos;t, <strong>you must focus on both</strong>.
                 </p>
                 <p style={{ fontSize: '16px' }}>
                   Of course, there is overlap between these factors; they do not operate in absence of each other, but usually they are more directed to one focal point than the other (hence the names). They work in tandem and over thousands of leaders, we have found this distinction is highly effective for action planning as you work to improve your leadership effectiveness (and that of your team & organization).
                 </p>
                 <p style={{ fontSize: '16px' }}>
-                  Each Primary Dimension has 5 sub-dimensions and within these subdimensions can be found 'leadership magic'.
+                  Each Primary Dimension has 5 sub-dimensions and within these subdimensions can be found &apos;leadership magic&apos;.
                 </p>
               </>
             )}

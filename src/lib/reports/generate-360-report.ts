@@ -122,6 +122,10 @@ export async function generate360Report(
     throw new Error('Assignment not found or invalid for 360 report')
   }
 
+  // Type assertions for nested objects (Supabase returns arrays for relations, but .single() should return objects)
+  const assessmentData = (assignment.assessment as unknown) as { id: string; title: string } | null
+  const targetData = (assignment.target as unknown) as { id: string; name: string; email: string } | null
+
   // Find the group that has this target
   const { data: group } = await adminClient
     .from('groups')
@@ -233,7 +237,9 @@ export async function generate360Report(
   // Group text feedback by dimension
   const textFeedbackByDimension = new Map<string, string[]>()
   textAnswers?.forEach((answer) => {
-    const dimensionId = answer.field?.dimension_id || 'overall'
+    // Type assertion for nested object (Supabase returns arrays for relations)
+    const field = (answer.field as unknown) as { dimension_id: string | null; type: string } | null
+    const dimensionId = field?.dimension_id || 'overall'
     if (!textFeedbackByDimension.has(dimensionId)) {
       textFeedbackByDimension.set(dimensionId, [])
     }
@@ -351,10 +357,10 @@ export async function generate360Report(
   return {
     assignment_id: assignmentId,
     target_id: assignment.target_id,
-    target_name: assignment.target?.name || 'Unknown',
-    target_email: assignment.target?.email || '',
+    target_name: targetData?.name || 'Unknown',
+    target_email: targetData?.email || '',
     assessment_id: assignment.assessment_id,
-    assessment_title: assignment.assessment?.title || 'Unknown Assessment',
+    assessment_title: assessmentData?.title || 'Unknown Assessment',
     group_id: group.id,
     group_name: group.name,
     overall_score: overallScore,

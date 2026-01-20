@@ -8,42 +8,38 @@ import { generate360ReportExcel, generateLeaderBlockerReportExcel } from '@/lib/
 import { generate360ReportCSV, generateLeaderBlockerReportCSV } from '@/lib/reports/export-csv'
 
 /**
- * POST /api/reports/bulk-export
- * Create bulk export job for multiple reports
+ * Shared logic for bulk export
  */
-export async function POST(request: NextRequest) {
+async function handleBulkExport(assignment_ids: string[], format: string = 'all') {
+  const supabase = await createClient()
+  const adminClient = createAdminClient()
+
+  // Verify user is authenticated
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  if (!assignment_ids || !Array.isArray(assignment_ids) || assignment_ids.length === 0) {
+    return NextResponse.json(
+      { error: 'assignment_ids array is required' },
+      { status: 400 }
+    )
+  }
+
+  // Limit to 100 reports at a time
+  if (assignment_ids.length > 100) {
+    return NextResponse.json(
+      { error: 'Maximum 100 reports per bulk export' },
+      { status: 400 }
+    )
+  }
+
   try {
-    const supabase = await createClient()
-    const adminClient = createAdminClient()
-
-    // Verify user is authenticated
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const body = await request.json()
-    const { assignment_ids, format = 'all' } = body // format: 'pdf', 'excel', 'csv', or 'all'
-
-    if (!assignment_ids || !Array.isArray(assignment_ids) || assignment_ids.length === 0) {
-      return NextResponse.json(
-        { error: 'assignment_ids array is required' },
-        { status: 400 }
-      )
-    }
-
-    // Limit to 100 reports at a time
-    if (assignment_ids.length > 100) {
-      return NextResponse.json(
-        { error: 'Maximum 100 reports per bulk export' },
-        { status: 400 }
-      )
-    }
-
     // Get assignments
     const { data: assignments, error: assignmentsError } = await adminClient
       .from('assignments')
@@ -84,8 +80,11 @@ export async function POST(request: NextRequest) {
 
     for (const assignment of assignments) {
       try {
+        // Type assertion for nested object (Supabase returns arrays for relations)
+        const assessment = (assignment.assessment as unknown) as { id: string; title: string; is_360: boolean } | null
+
         let reportData: unknown
-        if (assignment.assessment?.is_360) {
+        if (assessment?.is_360) {
           reportData = await generate360Report(assignment.id)
         } else {
           reportData = await generateLeaderBlockerReport(assignment.id)
@@ -93,8 +92,8 @@ export async function POST(request: NextRequest) {
 
         reports.push({
           assignmentId: assignment.id,
-          assessmentTitle: assignment.assessment?.title || 'Unknown',
-          is360: assignment.assessment?.is_360 || false,
+          assessmentTitle: assessment?.title || 'Unknown',
+          is360: assessment?.is_360 || false,
           data: reportData,
         })
       } catch (error) {
@@ -129,7 +128,7 @@ export async function POST(request: NextRequest) {
           pdfBuffer = await generateLeaderBlockerReportPDF(report.data as Parameters<typeof generateLeaderBlockerReportPDF>[0])
         }
         const filename = `${safeTitle}_${shortId}.pdf`
-        return new NextResponse(pdfBuffer, {
+        return new NextResponse(new Uint8Array(pdfBuffer), {
           headers: {
             'Content-Type': 'application/pdf',
             'Content-Disposition': `attachment; filename="${filename}"`,
@@ -145,7 +144,7 @@ export async function POST(request: NextRequest) {
           excelBuffer = await generateLeaderBlockerReportExcel(report.data as Parameters<typeof generateLeaderBlockerReportExcel>[0])
         }
         const filename = `${safeTitle}_${shortId}.xlsx`
-        return new NextResponse(excelBuffer, {
+        return new NextResponse(new Uint8Array(excelBuffer), {
           headers: {
             'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'Content-Disposition': `attachment; filename="${filename}"`,
@@ -179,17 +178,29 @@ export async function POST(request: NextRequest) {
       },
       { status: 501 }
     )
-    const filename = `reports_export_${new Date().toISOString().split('T')[0]}.zip`
-
-    // Return ZIP file
-    return new NextResponse(zipBuffer, {
-      headers: {
-        'Content-Type': 'application/zip',
-        'Content-Disposition': `attachment; filename="${filename}"`,
-      },
-    })
   } catch (error) {
     console.error('Error in bulk export:', error)
+    return NextResponse.json(
+      {
+        error: 'Failed to create bulk export',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    )
+  }
+}
+
+/**
+ * POST /api/reports/bulk-export
+ * Create bulk export job for multiple reports
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { assignment_ids, format = 'all' } = body // format: 'pdf', 'excel', 'csv', or 'all'
+    return handleBulkExport(assignment_ids, format)
+  } catch (error) {
+    console.error('Error in POST /api/reports/bulk-export:', error)
     return NextResponse.json(
       {
         error: 'Failed to create bulk export',
@@ -218,15 +229,7 @@ export async function GET(request: NextRequest) {
     }
 
     const assignment_ids = assignmentIdsParam.split(',').filter(Boolean)
-
-    // Create a POST request body and call POST handler logic
-    const postRequest = new Request(request.url, {
-      method: 'POST',
-      headers: request.headers,
-      body: JSON.stringify({ assignment_ids, format }),
-    })
-
-    return POST(postRequest)
+    return handleBulkExport(assignment_ids, format)
   } catch (error) {
     console.error('Error in GET /api/reports/bulk-export:', error)
     return NextResponse.json(

@@ -25,7 +25,7 @@ interface ReportTemplate {
     geonorm_label?: string
     feedback_label?: string
   }
-  styling: Record<string, any>
+  styling: Record<string, unknown>
 }
 
 interface ReportData {
@@ -33,9 +33,9 @@ interface ReportData {
   dimensions: Array<{
     dimension_id: string
     dimension_name: string
-    [key: string]: any
+    [key: string]: unknown
   }>
-  [key: string]: any
+  [key: string]: unknown
 }
 
 /**

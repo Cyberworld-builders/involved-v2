@@ -64,12 +64,15 @@ export async function GET(
         reportData.calculated_at &&
         new Date(reportData.calculated_at) < new Date(assignment.completed_at))
 
+    // Type assertion for nested object (Supabase returns arrays for relations, but .single() should return objects)
+    const assessment = (assignment.assessment as unknown) as { is_360: boolean } | null
+
     if (needsRegeneration) {
       // Generate report
       let report: unknown
       let overallScore: number | null = null
 
-      if (assignment.assessment?.is_360) {
+      if (assessment?.is_360) {
         report = await generate360Report(assignmentId)
         // Extract overall_score from 360 report
         if (report && typeof report === 'object' && 'overall_score' in report) {
@@ -95,7 +98,26 @@ export async function GET(
 
       // Apply template to report if available
       if (template && report && typeof report === 'object') {
-        report = applyTemplateToReport(report as any, template as any)
+        // Type assertions for applyTemplateToReport
+        type ReportData = {
+          overall_score: number
+          dimensions: Array<{
+            dimension_id: string
+            dimension_name: string
+            [key: string]: unknown
+          }>
+          [key: string]: unknown
+        }
+        type ReportTemplate = {
+          id: string
+          assessment_id: string
+          name: string
+          is_default: boolean
+          components: Record<string, boolean>
+          labels: Record<string, string>
+          styling: Record<string, unknown>
+        }
+        report = applyTemplateToReport(report as unknown as ReportData, template as unknown as ReportTemplate)
       }
 
       // Store report data

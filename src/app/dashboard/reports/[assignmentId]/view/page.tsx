@@ -65,10 +65,13 @@ export default async function ReportViewFullscreenPage({
     redirect(`/dashboard/reports/${assignmentId}`)
   }
 
+  // Type assertion for nested object (Supabase returns arrays for relations, but .single() should return objects)
+  const assessment = (assignment.assessment as unknown) as { id: string; title: string; is_360: boolean } | null
+
   return (
     <ReportViewFullscreenClient 
       assignmentId={assignmentId} 
-      is360={assignment.assessment?.is_360 || false} 
+      is360={assessment?.is_360 || false} 
     />
   )
 }

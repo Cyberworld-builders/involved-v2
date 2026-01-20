@@ -107,7 +107,7 @@ export default function ComparisonChart({
                     className="inner"
                     style={{
                       position: 'relative',
-                      width: `${chartWidth}px`,
+                      width: `${groupPercent}%`,
                       height: `${barHeight}px`,
                       background: REPORT_COLORS.primaryBlue,
                       color: REPORT_COLORS.white,
@@ -117,7 +117,6 @@ export default function ComparisonChart({
                       textAlign: 'right',
                       padding: '3px 0 0 0',
                       margin: 0,
-                      width: `${groupPercent}%`,
                     }}
                   >
                     {groupAverage.toFixed(1)}
@@ -133,7 +132,7 @@ export default function ComparisonChart({
                   className={`inner ${yourScoreFlagged ? 'flagged' : ''}`}
                   style={{
                     position: 'relative',
-                    width: `${chartWidth}px`,
+                    width: `${yourPercent}%`,
                     height: `${barHeight}px`,
                     background: REPORT_COLORS.darkBlue,
                     color: REPORT_COLORS.white,
@@ -143,7 +142,6 @@ export default function ComparisonChart({
                     textAlign: 'right',
                     padding: '3px 0 0 0',
                     margin: 0,
-                    width: `${yourPercent}%`,
                   }}
                 >
                   {yourScore.toFixed(1)}
@@ -173,7 +171,7 @@ export default function ComparisonChart({
                     className="inner"
                     style={{
                       position: 'relative',
-                      width: `${chartWidth}px`,
+                      width: `${benchmarkPercent}%`,
                       height: `${barHeight}px`,
                       background: REPORT_COLORS.orangeRed,
                       color: REPORT_COLORS.white,
@@ -183,7 +181,6 @@ export default function ComparisonChart({
                       textAlign: 'right',
                       padding: '3px 0 0 0',
                       margin: 0,
-                      width: `${benchmarkPercent}%`,
                     }}
                   >
                     {benchmark.toFixed(1)}

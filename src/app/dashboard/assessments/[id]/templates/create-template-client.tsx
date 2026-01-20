@@ -15,7 +15,7 @@ export default function CreateTemplateClient({ assessmentId }: CreateTemplateCli
     is_default: boolean
     components: Record<string, boolean>
     labels: Record<string, string>
-    styling: Record<string, any>
+    styling: Record<string, unknown>
   }) => {
     const response = await fetch('/api/templates', {
       method: 'POST',

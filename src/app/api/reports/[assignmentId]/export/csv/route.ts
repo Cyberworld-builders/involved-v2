@@ -49,10 +49,13 @@ export async function GET(
       )
     }
 
+    // Type assertion for nested object (Supabase returns arrays for relations, but .single() should return objects)
+    const assessment = (assignment.assessment as unknown) as { is_360: boolean } | null
+
     // Generate report data
     let reportData: unknown
 
-    if (assignment.assessment?.is_360) {
+    if (assessment?.is_360) {
       reportData = await generate360Report(assignmentId)
     } else {
       reportData = await generateLeaderBlockerReport(assignmentId)
@@ -60,20 +63,20 @@ export async function GET(
 
     // Generate CSV
     let csvContent: string
-    if (assignment.assessment?.is_360) {
+    if (assessment?.is_360) {
       csvContent = generate360ReportCSV(reportData as Parameters<typeof generate360ReportCSV>[0])
     } else {
       csvContent = generateLeaderBlockerReportCSV(reportData as Parameters<typeof generateLeaderBlockerReportCSV>[0])
     }
 
     // Get assessment title for filename
-    const { data: assessment } = await adminClient
+    const { data: assessmentData } = await adminClient
       .from('assessments')
       .select('title')
       .eq('id', assignment.assessment_id)
       .single()
 
-    const filename = `${assessment?.title || 'Report'}_${assignmentId.substring(0, 8)}.csv`
+    const filename = `${assessmentData?.title || 'Report'}_${assignmentId.substring(0, 8)}.csv`
       .replace(/[^a-z0-9]/gi, '_')
       .toLowerCase()
 

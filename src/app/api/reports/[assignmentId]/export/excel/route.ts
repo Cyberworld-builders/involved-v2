@@ -49,10 +49,13 @@ export async function GET(
       )
     }
 
+    // Type assertion for nested object (Supabase returns arrays for relations, but .single() should return objects)
+    const assessment = (assignment.assessment as unknown) as { is_360: boolean } | null
+
     // Generate report data
     let reportData: unknown
 
-    if (assignment.assessment?.is_360) {
+    if (assessment?.is_360) {
       reportData = await generate360Report(assignmentId)
     } else {
       reportData = await generateLeaderBlockerReport(assignmentId)
@@ -60,25 +63,25 @@ export async function GET(
 
     // Generate Excel
     let excelBuffer: Buffer
-    if (assignment.assessment?.is_360) {
+    if (assessment?.is_360) {
       excelBuffer = await generate360ReportExcel(reportData as Parameters<typeof generate360ReportExcel>[0])
     } else {
       excelBuffer = await generateLeaderBlockerReportExcel(reportData as Parameters<typeof generateLeaderBlockerReportExcel>[0])
     }
 
     // Get assessment title for filename
-    const { data: assessment } = await adminClient
+    const { data: assessmentData } = await adminClient
       .from('assessments')
       .select('title')
       .eq('id', assignment.assessment_id)
       .single()
 
-    const filename = `${assessment?.title || 'Report'}_${assignmentId.substring(0, 8)}.xlsx`
+    const filename = `${assessmentData?.title || 'Report'}_${assignmentId.substring(0, 8)}.xlsx`
       .replace(/[^a-z0-9]/gi, '_')
       .toLowerCase()
 
     // Return Excel
-    return new NextResponse(excelBuffer, {
+    return new NextResponse(new Uint8Array(excelBuffer), {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'Content-Disposition': `attachment; filename="${filename}"`,

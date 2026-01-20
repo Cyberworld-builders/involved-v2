@@ -7,6 +7,31 @@
 import { Document, Page, Text, View, StyleSheet, pdf } from '@react-pdf/renderer'
 import React from 'react'
 
+/**
+ * Helper to convert ReadableStream to Buffer
+ * Newer versions of @react-pdf/renderer return ReadableStream from toBuffer()
+ */
+async function streamToBuffer(stream: ReadableStream<Uint8Array>): Promise<Buffer> {
+  const reader = stream.getReader()
+  const chunks: Uint8Array[] = []
+  
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    if (value) chunks.push(value)
+  }
+  
+  const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0)
+  const result = new Uint8Array(totalLength)
+  let offset = 0
+  for (const chunk of chunks) {
+    result.set(chunk, offset)
+    offset += chunk.length
+  }
+  
+  return Buffer.from(result)
+}
+
 // Define styles for PDF matching legacy design
 // Legacy colors: primaryBlue: #55a1d8, darkBlue: #272842, orangeRed: #f26950, lightGray: #c0c9cf
 const styles = StyleSheet.create({
@@ -267,7 +292,8 @@ export async function generate360ReportPDF(reportData: Report360Data): Promise<B
   )
 
   const pdfDoc = pdf(doc)
-  return await pdfDoc.toBuffer()
+  const stream = await pdfDoc.toBuffer()
+  return await streamToBuffer(stream as unknown as ReadableStream<Uint8Array>)
 }
 
 /**
@@ -350,5 +376,6 @@ export async function generateLeaderBlockerReportPDF(reportData: ReportLeaderBlo
   )
 
   const pdfDoc = pdf(doc)
-  return await pdfDoc.toBuffer()
+  const stream = await pdfDoc.toBuffer()
+  return await streamToBuffer(stream as unknown as ReadableStream<Uint8Array>)
 }

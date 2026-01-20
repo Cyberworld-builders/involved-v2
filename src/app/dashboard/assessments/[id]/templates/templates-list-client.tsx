@@ -11,7 +11,7 @@ interface Template {
   is_default: boolean
   components: Record<string, boolean>
   labels: Record<string, string>
-  styling: Record<string, any>
+  styling: Record<string, unknown>
   created_at: string
   updated_at: string
 }

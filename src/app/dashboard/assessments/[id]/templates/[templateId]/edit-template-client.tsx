@@ -11,7 +11,7 @@ interface EditTemplateClientProps {
     is_default: boolean
     components: Record<string, boolean>
     labels: Record<string, string>
-    styling: Record<string, any>
+    styling: Record<string, unknown>
   }
 }
 
@@ -27,7 +27,7 @@ export default function EditTemplateClient({
     is_default: boolean
     components: Record<string, boolean>
     labels: Record<string, string>
-    styling: Record<string, any>
+    styling: Record<string, unknown>
   }) => {
     const response = await fetch(`/api/templates/${templateId}`, {
       method: 'PUT',

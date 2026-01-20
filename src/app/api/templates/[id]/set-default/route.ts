@@ -39,8 +39,11 @@ export async function POST(
       )
     }
 
+    // Type assertion for nested object (Supabase returns arrays for relations, but .single() should return objects)
+    const assessment = (existingTemplate.assessment as unknown) as { created_by: string } | null
+
     // Verify user has access
-    if (existingTemplate.assessment?.created_by !== user.id) {
+    if (assessment?.created_by !== user.id) {
       return NextResponse.json(
         { error: 'Access denied' },
         { status: 403 }

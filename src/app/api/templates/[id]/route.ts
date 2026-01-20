@@ -92,8 +92,11 @@ export async function PUT(
       )
     }
 
+    // Type assertion for nested object (Supabase returns arrays for relations, but .single() should return objects)
+    const assessment = (existingTemplate.assessment as unknown) as { created_by: string } | null
+
     // Verify user has access
-    if (existingTemplate.assessment?.created_by !== user.id) {
+    if (assessment?.created_by !== user.id) {
       return NextResponse.json(
         { error: 'Access denied' },
         { status: 403 }
@@ -117,9 +120,9 @@ export async function PUT(
     const updateData: {
       name?: string
       is_default?: boolean
-      components?: Record<string, any>
-      labels?: Record<string, any>
-      styling?: Record<string, any>
+      components?: Record<string, boolean>
+      labels?: Record<string, string>
+      styling?: Record<string, unknown>
     } = {}
 
     if (name !== undefined) updateData.name = name
@@ -196,8 +199,11 @@ export async function DELETE(
       )
     }
 
+    // Type assertion for nested object (Supabase returns arrays for relations, but .single() should return objects)
+    const assessment = (existingTemplate.assessment as unknown) as { created_by: string } | null
+
     // Verify user has access
-    if (existingTemplate.assessment?.created_by !== user.id) {
+    if (assessment?.created_by !== user.id) {
       return NextResponse.json(
         { error: 'Access denied' },
         { status: 403 }

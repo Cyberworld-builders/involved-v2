@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import CreateTemplateClient from './create-template-client'
+import CreateTemplateClient from '../create-template-client'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export default async function CreateTemplatePage({

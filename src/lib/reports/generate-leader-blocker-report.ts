@@ -79,7 +79,11 @@ export async function generateLeaderBlockerReport(
     throw new Error('Assignment not found')
   }
 
-  if (assignment.assessment?.is_360) {
+  // Type assertions for nested objects (Supabase returns arrays for relations, but .single() should return objects)
+  const assessmentData = (assignment.assessment as unknown) as { id: string; title: string; is_360: boolean } | null
+  const userData = (assignment.user as unknown) as { id: string; name: string; email: string; client_id: string | null } | null
+
+  if (assessmentData?.is_360) {
     throw new Error('This is a 360 assessment. Use generate360Report instead.')
   }
 
@@ -96,7 +100,9 @@ export async function generateLeaderBlockerReport(
     .eq('profile_id', assignment.user_id)
     .limit(1)
 
-  const group = userGroups?.[0]?.group || null
+  // Type assertion for nested object (Supabase returns arrays for relations)
+  const groupRaw = userGroups?.[0]?.group
+  const group = groupRaw ? ((groupRaw as unknown) as { id: string; name: string }) : null
 
   // Get all dimensions for this assessment
   const { data: dimensions } = await adminClient
@@ -211,10 +217,10 @@ export async function generateLeaderBlockerReport(
   return {
     assignment_id: assignmentId,
     user_id: assignment.user_id,
-    user_name: assignment.user?.name || 'Unknown',
-    user_email: assignment.user?.email || '',
+    user_name: userData?.name || 'Unknown',
+    user_email: userData?.email || '',
     assessment_id: assignment.assessment_id,
-    assessment_title: assignment.assessment?.title || 'Unknown Assessment',
+    assessment_title: assessmentData?.title || 'Unknown Assessment',
     group_id: group?.id || null,
     group_name: group?.name || null,
     overall_score: overallScore,

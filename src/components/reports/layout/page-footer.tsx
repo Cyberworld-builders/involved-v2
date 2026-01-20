@@ -1,6 +1,6 @@
 'use client'
 
-import { REPORT_TYPOGRAPHY, REPORT_SPACING, REPORT_COLORS } from '@/lib/reports/report-design-constants'
+import { REPORT_TYPOGRAPHY, REPORT_LAYOUT, REPORT_COLORS } from '@/lib/reports/report-design-constants'
 
 interface PageFooterProps {
   pageNumber: number
@@ -22,7 +22,7 @@ export default function PageFooter({ pageNumber }: PageFooterProps) {
       style={{
         position: 'absolute',
         bottom: 0,
-        width: `${REPORT_SPACING.footerWidth}px`,
+        width: `${REPORT_LAYOUT.footerWidth}px`,
         fontFamily: REPORT_TYPOGRAPHY.footer.fontSize,
         fontSize: REPORT_TYPOGRAPHY.footer.fontSize,
         lineHeight: '9px',

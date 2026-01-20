@@ -57,10 +57,13 @@ export async function POST(
       .eq('assignment_id', assignmentId)
       .single()
 
+    // Type assertion for nested object (Supabase returns arrays for relations, but .single() should return objects)
+    const assessment = (assignment.assessment as unknown) as { is_360: boolean } | null
+
     if (!existingReportData || !existingReportData.feedback_assigned || 
         (Array.isArray(existingReportData.feedback_assigned) && existingReportData.feedback_assigned.length === 0)) {
       // Assign feedback for non-360 assessments
-      if (!assignment.assessment?.is_360) {
+      if (!assessment?.is_360) {
         const assignedFeedback = await assignFeedbackToReport(assignmentId, assignment.assessment_id)
         
         // Store assigned feedback
@@ -79,7 +82,7 @@ export async function POST(
     let reportData: unknown
     let overallScore: number | null = null
 
-    if (assignment.assessment?.is_360) {
+    if (assessment?.is_360) {
       reportData = await generate360Report(assignmentId)
       // Extract overall_score from 360 report
       if (reportData && typeof reportData === 'object' && 'overall_score' in reportData) {
@@ -105,7 +108,26 @@ export async function POST(
 
     // Apply template to report if available
     if (template && reportData && typeof reportData === 'object') {
-      reportData = applyTemplateToReport(reportData as any, template as any)
+      // Type assertions for applyTemplateToReport
+      type ReportData = {
+        overall_score: number
+        dimensions: Array<{
+          dimension_id: string
+          dimension_name: string
+          [key: string]: unknown
+        }>
+        [key: string]: unknown
+      }
+      type ReportTemplate = {
+        id: string
+        assessment_id: string
+        name: string
+        is_default: boolean
+        components: Record<string, boolean>
+        labels: Record<string, string>
+        styling: Record<string, unknown>
+      }
+      reportData = applyTemplateToReport(reportData as unknown as ReportData, template as unknown as ReportTemplate)
     }
 
     // Store report data
