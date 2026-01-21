@@ -27,6 +27,15 @@ export default async function ClientPage({ params, searchParams }: ClientPagePro
     redirect('/auth/login')
   }
 
+  // Get user profile to check access level
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('access_level')
+    .eq('auth_user_id', user.id)
+    .single()
+
+  const isSuperAdmin = profile?.access_level === 'super_admin'
+
   // Fetch client from database
   const { data: client, error } = await supabase
     .from('clients')
@@ -67,7 +76,7 @@ export default async function ClientPage({ params, searchParams }: ClientPagePro
         </div>
 
         {/* Tabs */}
-        <ClientTabs clientId={client.id} activeTab={activeTab} client={client} />
+        <ClientTabs clientId={client.id} activeTab={activeTab} client={client} isSuperAdmin={isSuperAdmin} />
       </div>
   )
 }

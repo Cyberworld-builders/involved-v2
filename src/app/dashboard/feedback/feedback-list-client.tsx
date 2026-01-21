@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import FeedbackPreview from '@/components/feedback/feedback-preview'
 
 interface FeedbackEntry {
   id: string
@@ -31,6 +32,12 @@ interface Assessment {
   title: string
 }
 
+interface Dimension {
+  id: string
+  name: string
+  code: string
+}
+
 interface FeedbackListClientProps {
   assessments: Assessment[]
 }
@@ -45,7 +52,15 @@ export default function FeedbackListClient({ assessments }: FeedbackListClientPr
   // Filters
   const [filterAssessment, setFilterAssessment] = useState<string>('all')
   const [filterType, setFilterType] = useState<string>('all')
+  const [filterDimension, setFilterDimension] = useState<string>('all')
   const [searchTerm, setSearchTerm] = useState('')
+  
+  // Dimensions for selected assessment
+  const [availableDimensions, setAvailableDimensions] = useState<Dimension[]>([])
+  const [loadingDimensions, setLoadingDimensions] = useState(false)
+  
+  // Preview state
+  const [previewFeedback, setPreviewFeedback] = useState<FeedbackEntry | null>(null)
 
   useEffect(() => {
     loadFeedback()
@@ -53,7 +68,11 @@ export default function FeedbackListClient({ assessments }: FeedbackListClientPr
 
   useEffect(() => {
     applyFilters()
-  }, [feedback, filterAssessment, filterType, searchTerm])
+  }, [feedback, filterAssessment, filterType, filterDimension, searchTerm])
+
+  useEffect(() => {
+    loadDimensions()
+  }, [filterAssessment])
 
   const loadFeedback = async () => {
     try {
@@ -75,6 +94,33 @@ export default function FeedbackListClient({ assessments }: FeedbackListClientPr
     }
   }
 
+  const loadDimensions = async () => {
+    if (filterAssessment === 'all') {
+      setAvailableDimensions([])
+      setFilterDimension('all')
+      return
+    }
+
+    try {
+      setLoadingDimensions(true)
+      const response = await fetch(`/api/assessments/${filterAssessment}/dimensions`)
+      
+      if (!response.ok) {
+        throw new Error('Failed to load dimensions')
+      }
+
+      const data = await response.json()
+      setAvailableDimensions(data.dimensions || [])
+      // Reset dimension filter when assessment changes
+      setFilterDimension('all')
+    } catch (err) {
+      console.error('Error loading dimensions:', err)
+      setAvailableDimensions([])
+    } finally {
+      setLoadingDimensions(false)
+    }
+  }
+
   const applyFilters = () => {
     let filtered = [...feedback]
 
@@ -86,6 +132,15 @@ export default function FeedbackListClient({ assessments }: FeedbackListClientPr
     // Filter by type
     if (filterType !== 'all') {
       filtered = filtered.filter((f) => f.type === filterType)
+    }
+
+    // Filter by dimension
+    if (filterDimension !== 'all') {
+      if (filterDimension === 'overall') {
+        filtered = filtered.filter((f) => f.dimension_id === null)
+      } else {
+        filtered = filtered.filter((f) => f.dimension_id === filterDimension)
+      }
     }
 
     // Search in feedback content
@@ -119,6 +174,10 @@ export default function FeedbackListClient({ assessments }: FeedbackListClientPr
       console.error('Error deleting feedback:', err)
       alert('Failed to delete feedback')
     }
+  }
+
+  const handlePreview = (entry: FeedbackEntry) => {
+    setPreviewFeedback(entry)
   }
 
   if (loading) {
@@ -157,7 +216,7 @@ export default function FeedbackListClient({ assessments }: FeedbackListClientPr
           <CardTitle>Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Assessment
@@ -173,6 +232,32 @@ export default function FeedbackListClient({ assessments }: FeedbackListClientPr
                     {assessment.title}
                   </option>
                 ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Dimension
+              </label>
+              <select
+                value={filterDimension}
+                onChange={(e) => setFilterDimension(e.target.value)}
+                disabled={filterAssessment === 'all' || loadingDimensions}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              >
+                <option value="all">
+                  {filterAssessment === 'all' ? 'Select an assessment first' : 'All dimensions'}
+                </option>
+                {filterAssessment !== 'all' && (
+                  <>
+                    <option value="overall">Overall</option>
+                    {availableDimensions.map((dimension) => (
+                      <option key={dimension.id} value={dimension.id}>
+                        {dimension.name}
+                      </option>
+                    ))}
+                  </>
+                )}
               </select>
             </div>
 
@@ -256,6 +341,13 @@ export default function FeedbackListClient({ assessments }: FeedbackListClientPr
                       )}
                     </div>
                     <div className="ml-4 flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePreview(entry)}
+                      >
+                        Preview
+                      </Button>
                       <Link href={`/dashboard/feedback/${entry.id}/edit`}>
                         <Button variant="outline" size="sm">
                           Edit
@@ -277,6 +369,15 @@ export default function FeedbackListClient({ assessments }: FeedbackListClientPr
           )}
         </CardContent>
       </Card>
+
+      {/* Feedback Preview Modal */}
+      {previewFeedback && (
+        <FeedbackPreview
+          feedback={previewFeedback}
+          open={previewFeedback !== null}
+          onClose={() => setPreviewFeedback(null)}
+        />
+      )}
     </div>
   )
 }
