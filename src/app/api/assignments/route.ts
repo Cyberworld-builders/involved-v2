@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { generateAssignmentURL } from '@/lib/assignments/url-generator'
 import { generateTemporaryPassword } from '@/lib/utils/generate-temporary-password'
 import { Database } from '@/types/database'
+import { randomUUID } from 'crypto'
 
 type AssignmentInsert = Database['public']['Tables']['assignments']['Insert']
 
@@ -153,6 +154,7 @@ export async function POST(request: NextRequest) {
       custom_fields,
       whitelabel = false,
       job_id,
+      survey_id,
       reminder = false,
       first_reminder_date = null,
       reminder_frequency = null,
@@ -164,6 +166,7 @@ export async function POST(request: NextRequest) {
       custom_fields?: Record<string, unknown> | null
       whitelabel?: boolean
       job_id?: string | null
+      survey_id?: string | null
       reminder?: boolean
       first_reminder_date?: string | null
       reminder_frequency?: string | null
@@ -345,6 +348,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Generate or use provided survey_id for this batch of assignments
+    // All assignments created in this API call will share the same survey_id
+    // If survey_id is provided, use it (for adding to existing survey)
+    // Otherwise, generate a new one
+    const surveyId = survey_id || randomUUID()
+
     // Generate assignments
     const assignments: AssignmentInsert[] = []
     const assignmentUrls: Array<{ id: string; url: string }> = []
@@ -367,6 +376,7 @@ export async function POST(request: NextRequest) {
           custom_fields: custom_fields || null,
           target_id: target_id || null,
           job_id: job_id || null,
+          survey_id: surveyId,
           reminder: reminder || false,
           reminder_frequency: reminder ? reminder_frequency : null,
           next_reminder: nextReminderDate ? nextReminderDate.toISOString() : null,

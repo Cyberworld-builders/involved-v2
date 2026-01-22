@@ -337,8 +337,13 @@ Thank you.`)
       const expiresDate = new Date(expirationDate)
       expiresDate.setHours(23, 59, 59, 999) // Set to end of day
 
+      // Generate a survey_id for this batch of assignments
+      // All assignments created in this form submission will share the same survey_id
+      const surveyId = crypto.randomUUID()
+
       // Create assignments using API - one API call per user-assessment combination
       // This allows per-user custom_fields and target_id
+      // All assignments in this batch will share the same survey_id
       const createdAssignments: CreatedAssignment[] = []
       const errors: string[] = []
       const userPasswords = new Map<string, string>() // userId -> temporary password
@@ -372,6 +377,7 @@ Thank you.`)
                 target_id: au.target_id || null,
                 custom_fields: customFields,
                 whitelabel: false,
+                survey_id: surveyId, // All assignments in this batch share the same survey_id
                 reminder: enableReminder,
                 first_reminder_date: enableReminder && firstReminderDate ? `${firstReminderDate}T${firstReminderTime}:00` : null,
                 reminder_frequency: enableReminder ? reminderFrequency : null,

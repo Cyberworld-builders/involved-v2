@@ -1,17 +1,19 @@
 /**
- * Comprehensive 360 Survey Demo Seeder
+ * Comprehensive Demo Seeder
  * 
- * This script creates:
- * - A demo client
- * - A 360 assessment with 30 questions across 9 dimensions
+ * This script creates foundational data for testing:
+ * - A demo client (idempotent)
+ * - 20-25 demo users across 3-4 groups (idempotent)
+ * - 360 assessment with improved questions
+ * - Leaders assessment with hierarchical dimensions
+ * - Blockers assessment with flat dimensions
  * - Industry benchmarks for all dimensions
- * - A group of 5 users (supervisor, self/target, 3 subordinates)
- * - Assignments for all users to complete the assessment
- * - Completed answers for all assignments
+ * - Multiple groups with different compositions
+ * 
+ * Note: Assignment/answer/report generation is handled by the survey simulator interface.
  * 
  * Run with: npx tsx scripts/seed-360-demo.ts
  */
-
 
 import { createClient } from '@supabase/supabase-js'
 import * as dotenv from 'dotenv'
@@ -37,8 +39,11 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   }
 })
 
-// Dimensions for the 360 assessment
-const DIMENSIONS = [
+// ============================================================================
+// 360 ASSESSMENT DATA
+// ============================================================================
+
+const DIMENSIONS_360 = [
   { name: 'Communication', code: 'COMM' },
   { name: 'Leadership', code: 'LEAD' },
   { name: 'Teamwork', code: 'TEAM' },
@@ -50,144 +55,388 @@ const DIMENSIONS = [
   { name: 'Emotional Intelligence', code: 'EI' },
 ]
 
-// Questions per dimension (30 total questions, ~3-4 per dimension)
-const QUESTIONS_PER_DIMENSION = [
-  [1, 2, 3, 4],      // Communication (4 questions)
-  [5, 6, 7],         // Leadership (3 questions)
-  [8, 9, 10, 11],    // Teamwork (4 questions)
-  [12, 13, 14],      // Problem Solving (3 questions)
-  [15, 16, 17],      // Adaptability (3 questions)
-  [18, 19, 20],      // Innovation (3 questions)
-  [21, 22, 23],      // Accountability (3 questions)
-  [24, 25, 26],      // Strategic Thinking (3 questions)
-  [27, 28, 29, 30],  // Emotional Intelligence (4 questions)
-]
-
-// Sample questions with descriptions
-const QUESTION_TEMPLATES = [
+const QUESTIONS_360 = [
+  // Communication (4 questions)
   {
-    text: 'How effectively does this person communicate their ideas and thoughts?',
-    description: 'Consider clarity, conciseness, and the ability to convey complex information in an understandable way.',
+    text: 'How clearly and effectively does this person articulate complex ideas to diverse audiences?',
+    description: 'Consider their ability to break down complicated concepts, use appropriate language for the audience, and ensure understanding through clear explanations.',
   },
   {
-    text: 'How well does this person listen to others and respond appropriately?',
-    description: 'Evaluate active listening skills, empathy, and the ability to understand different perspectives.',
+    text: 'How well does this person actively listen and demonstrate understanding of others\' perspectives?',
+    description: 'Evaluate their engagement in conversations, ability to ask clarifying questions, and show genuine interest in what others are saying.',
   },
   {
-    text: 'How effectively does this person provide feedback to colleagues?',
-    description: 'Assess the quality, timeliness, and constructive nature of feedback provided.',
+    text: 'How effectively does this person provide constructive, actionable feedback that helps others improve?',
+    description: 'Assess the quality, specificity, and delivery of feedback. Consider whether it\'s timely, balanced, and focused on growth.',
   },
   {
-    text: 'How well does this person adapt their communication style to different audiences?',
-    description: 'Consider the ability to adjust tone, format, and content based on the audience.',
+    text: 'How well does this person adapt their communication style to different situations and audiences?',
+    description: 'Consider their flexibility in tone, format, and approach based on context, audience needs, and communication goals.',
+  },
+  // Leadership (3 questions)
+  {
+    text: 'How effectively does this person inspire and energize their team toward achieving shared goals?',
+    description: 'Evaluate their ability to create vision, build enthusiasm, and motivate others through both words and actions.',
   },
   {
-    text: 'How effectively does this person inspire and motivate their team?',
-    description: 'Evaluate the ability to create enthusiasm, set a positive tone, and drive team performance.',
+    text: 'How well does this person make timely, well-informed decisions under pressure?',
+    description: 'Assess their decision-making process, ability to gather necessary information, and willingness to make tough calls when needed.',
   },
   {
-    text: 'How well does this person make difficult decisions?',
-    description: 'Assess decision-making quality, timeliness, and the ability to balance competing priorities.',
+    text: 'How effectively does this person delegate responsibilities while providing appropriate support and oversight?',
+    description: 'Consider their ability to match tasks with people\'s capabilities, provide clear direction, and balance autonomy with guidance.',
+  },
+  // Teamwork (4 questions)
+  {
+    text: 'How well does this person collaborate with others to achieve collective objectives?',
+    description: 'Evaluate their willingness to share information, contribute to group efforts, and prioritize team success over individual recognition.',
   },
   {
-    text: 'How effectively does this person delegate tasks and responsibilities?',
-    description: 'Consider the ability to assign appropriate work, provide clear instructions, and trust team members.',
+    text: 'How effectively does this person mediate conflicts and facilitate productive resolutions?',
+    description: 'Assess their ability to understand multiple perspectives, find common ground, and help parties reach mutually beneficial outcomes.',
   },
   {
-    text: 'How well does this person collaborate with team members?',
-    description: 'Evaluate cooperation, willingness to share information, and contribution to team goals.',
+    text: 'How well does this person support colleagues and contribute to a positive team environment?',
+    description: 'Consider their availability to help others, willingness to share knowledge, and efforts to create an inclusive, supportive atmosphere.',
   },
   {
-    text: 'How effectively does this person resolve conflicts within the team?',
-    description: 'Assess mediation skills, fairness, and the ability to find mutually beneficial solutions.',
+    text: 'How effectively does this person contribute valuable insights and ideas during team discussions?',
+    description: 'Evaluate the quality of their contributions, their ability to build on others\' ideas, and their engagement in collaborative problem-solving.',
+  },
+  // Problem Solving (3 questions)
+  {
+    text: 'How well does this person identify root causes of problems rather than just addressing symptoms?',
+    description: 'Assess their analytical thinking, ability to ask probing questions, and commitment to understanding underlying issues.',
   },
   {
-    text: 'How well does this person support and help colleagues when needed?',
-    description: 'Consider availability, helpfulness, and willingness to go above and beyond for team members.',
+    text: 'How effectively does this person develop creative, practical solutions to complex challenges?',
+    description: 'Evaluate their ability to think outside the box, consider multiple approaches, and design solutions that are both innovative and feasible.',
   },
   {
-    text: 'How effectively does this person contribute to team meetings and discussions?',
-    description: 'Evaluate participation quality, idea generation, and constructive input during team activities.',
+    text: 'How well does this person execute solutions and persist through obstacles to achieve results?',
+    description: 'Consider their follow-through, resilience when facing setbacks, and ability to adapt plans while maintaining focus on outcomes.',
+  },
+  // Adaptability (3 questions)
+  {
+    text: 'How effectively does this person adjust their approach when circumstances change unexpectedly?',
+    description: 'Evaluate their flexibility, ability to pivot quickly, and comfort with changing course when new information emerges.',
   },
   {
-    text: 'How well does this person identify and analyze problems?',
-    description: 'Assess the ability to recognize issues, gather relevant information, and understand root causes.',
+    text: 'How well does this person maintain performance and composure in ambiguous or uncertain situations?',
+    description: 'Assess their tolerance for ambiguity, ability to make progress with incomplete information, and resilience under uncertainty.',
   },
   {
-    text: 'How effectively does this person develop solutions to complex problems?',
-    description: 'Evaluate creativity, analytical thinking, and the quality of proposed solutions.',
+    text: 'How effectively does this person learn from new experiences and apply those lessons to future situations?',
+    description: 'Consider their openness to feedback, reflection on outcomes, and ability to continuously improve their approach.',
+  },
+  // Innovation (3 questions)
+  {
+    text: 'How well does this person generate original ideas and creative approaches to challenges?',
+    description: 'Evaluate their creativity, ability to see connections others miss, and willingness to explore unconventional solutions.',
   },
   {
-    text: 'How well does this person implement solutions and follow through?',
-    description: 'Consider execution capability, persistence, and the ability to overcome obstacles.',
+    text: 'How effectively does this person translate innovative ideas into actionable plans and implementations?',
+    description: 'Assess their ability to bridge creativity and execution, making abstract concepts concrete and achievable.',
   },
   {
-    text: 'How effectively does this person adapt to changing circumstances?',
-    description: 'Evaluate flexibility, resilience, and the ability to adjust plans when needed.',
+    text: 'How well does this person foster an environment that encourages and rewards innovative thinking in others?',
+    description: 'Consider their ability to create psychological safety, celebrate experimentation, and support others in taking creative risks.',
+  },
+  // Accountability (3 questions)
+  {
+    text: 'How effectively does this person take ownership of outcomes, both successes and failures?',
+    description: 'Evaluate their willingness to accept responsibility, acknowledge mistakes, and learn from both positive and negative results.',
   },
   {
-    text: 'How well does this person handle ambiguity and uncertainty?',
-    description: 'Assess comfort with unclear situations and the ability to make progress despite incomplete information.',
+    text: 'How well does this person consistently deliver on commitments and meet deadlines?',
+    description: 'Assess their reliability, time management, and ability to follow through on promises made to others.',
   },
   {
-    text: 'How effectively does this person learn from new experiences?',
-    description: 'Consider openness to feedback, willingness to try new approaches, and continuous improvement mindset.',
+    text: 'How effectively does this person maintain high standards for their own work and hold themselves accountable?',
+    description: 'Consider their self-discipline, attention to detail, and commitment to quality without external pressure.',
+  },
+  // Strategic Thinking (3 questions)
+  {
+    text: 'How well does this person think beyond immediate concerns to consider long-term implications and opportunities?',
+    description: 'Evaluate their ability to see the big picture, anticipate future trends, and balance short-term needs with long-term goals.',
   },
   {
-    text: 'How well does this person generate new and creative ideas?',
-    description: 'Evaluate originality, creativity, and the ability to think outside the box.',
+    text: 'How effectively does this person align their actions and decisions with broader organizational strategy?',
+    description: 'Assess their understanding of strategic priorities and ability to connect daily work to larger organizational objectives.',
   },
   {
-    text: 'How effectively does this person implement innovative solutions?',
-    description: 'Assess the ability to turn creative ideas into practical, actionable solutions.',
+    text: 'How well does this person identify emerging challenges and opportunities before they become critical?',
+    description: 'Consider their forward-thinking ability, pattern recognition, and proactive approach to planning and preparation.',
+  },
+  // Emotional Intelligence (4 questions)
+  {
+    text: 'How effectively does this person recognize and manage their own emotions, especially under stress?',
+    description: 'Evaluate their self-awareness, emotional regulation, and ability to maintain composure and clear thinking under pressure.',
   },
   {
-    text: 'How well does this person encourage innovation in others?',
-    description: 'Consider the ability to create an environment that supports and rewards creative thinking.',
+    text: 'How well does this person understand and respond appropriately to others\' emotional states and needs?',
+    description: 'Assess their empathy, social awareness, and ability to read emotional cues and adjust their approach accordingly.',
   },
   {
-    text: 'How effectively does this person take responsibility for their actions?',
-    description: 'Evaluate ownership of outcomes, both positive and negative, and accountability.',
+    text: 'How effectively does this person build and maintain trusting, productive relationships with diverse individuals?',
+    description: 'Consider their interpersonal skills, ability to connect with different personality types, and investment in relationship-building.',
   },
   {
-    text: 'How well does this person follow through on commitments?',
-    description: 'Assess reliability, dependability, and the ability to deliver on promises.',
-  },
-  {
-    text: 'How effectively does this person hold themselves to high standards?',
-    description: 'Consider self-discipline, attention to detail, and commitment to quality work.',
-  },
-  {
-    text: 'How well does this person think strategically about long-term goals?',
-    description: 'Evaluate the ability to see the big picture, plan ahead, and consider future implications.',
-  },
-  {
-    text: 'How effectively does this person align actions with organizational strategy?',
-    description: 'Assess understanding of strategic priorities and the ability to connect daily work to broader goals.',
-  },
-  {
-    text: 'How well does this person anticipate future challenges and opportunities?',
-    description: 'Consider forward-thinking ability, trend recognition, and proactive planning.',
-  },
-  {
-    text: 'How effectively does this person recognize and manage their own emotions?',
-    description: 'Evaluate self-awareness, emotional regulation, and the ability to stay composed under pressure.',
-  },
-  {
-    text: 'How well does this person understand and respond to others\' emotions?',
-    description: 'Assess empathy, social awareness, and the ability to read emotional cues.',
-  },
-  {
-    text: 'How effectively does this person build and maintain relationships?',
-    description: 'Consider interpersonal skills, trust-building, and the ability to connect with diverse individuals.',
-  },
-  {
-    text: 'How well does this person handle stress and pressure?',
-    description: 'Evaluate resilience, composure, and the ability to maintain performance under challenging conditions.',
+    text: 'How well does this person navigate emotionally charged situations while maintaining professionalism and effectiveness?',
+    description: 'Evaluate their ability to stay calm in conflicts, manage difficult conversations, and help others manage their emotions constructively.',
   },
 ]
 
-// Multiple choice anchors (5-point scale)
+const QUESTIONS_PER_DIMENSION_360 = [
+  [0, 1, 2, 3],      // Communication (4 questions)
+  [4, 5, 6],         // Leadership (3 questions)
+  [7, 8, 9, 10],     // Teamwork (4 questions)
+  [11, 12, 13],      // Problem Solving (3 questions)
+  [14, 15, 16],      // Adaptability (3 questions)
+  [17, 18, 19],      // Innovation (3 questions)
+  [20, 21, 22],      // Accountability (3 questions)
+  [23, 24, 25],      // Strategic Thinking (3 questions)
+  [26, 27, 28, 29],  // Emotional Intelligence (4 questions)
+]
+
+const INDUSTRY_BENCHMARKS_360 = [3.2, 3.4, 3.3, 3.1, 3.0, 3.2, 3.3, 3.5, 3.4]
+
+// ============================================================================
+// LEADERS ASSESSMENT DATA
+// ============================================================================
+
+const LEADERS_PARENT_DIMENSIONS = [
+  { name: 'Involving-Stakeholders', code: 'INV_STAKE' },
+  { name: 'Involving-Self', code: 'INV_SELF' },
+]
+
+const LEADERS_SUBDIMENSIONS = [
+  // Involving-Stakeholders subdimensions
+  { name: 'Empowerment', code: 'EMP', parentIndex: 0 },
+  { name: 'Communication', code: 'COMM', parentIndex: 0 },
+  { name: 'Rewards', code: 'REW', parentIndex: 0 },
+  { name: 'Relationships', code: 'REL', parentIndex: 0 },
+  { name: 'Conflict Resolution', code: 'CONF', parentIndex: 0 },
+  // Involving-Self subdimensions
+  { name: 'Authenticity', code: 'AUTH', parentIndex: 1 },
+  { name: 'Servitude', code: 'SERV', parentIndex: 1 },
+  { name: 'Change', code: 'CHG', parentIndex: 1 },
+  { name: 'Ethical', code: 'ETH', parentIndex: 1 },
+  { name: 'Analytical', code: 'ANAL', parentIndex: 1 },
+]
+
+// Questions for Leaders assessment - 8-10 per subdimension (80-100 total)
+const LEADERS_QUESTIONS = [
+  // Empowerment (8 questions)
+  { text: 'How effectively do you delegate meaningful responsibilities that allow others to grow and develop?', subdimensionIndex: 0 },
+  { text: 'How well do you provide others with the autonomy and authority needed to succeed in their roles?', subdimensionIndex: 0 },
+  { text: 'How effectively do you trust team members to make decisions within their areas of expertise?', subdimensionIndex: 0 },
+  { text: 'How well do you remove barriers that prevent others from performing at their best?', subdimensionIndex: 0 },
+  { text: 'How effectively do you create opportunities for others to take on challenging assignments?', subdimensionIndex: 0 },
+  { text: 'How well do you support others when they take calculated risks?', subdimensionIndex: 0 },
+  { text: 'How effectively do you help others develop the skills and confidence needed for greater responsibility?', subdimensionIndex: 0 },
+  { text: 'How well do you recognize and leverage the unique strengths of each team member?', subdimensionIndex: 0 },
+  // Communication (8 questions)
+  { text: 'How effectively do you share information transparently and keep others informed about relevant developments?', subdimensionIndex: 1 },
+  { text: 'How well do you listen actively and seek to understand others\' perspectives before responding?', subdimensionIndex: 1 },
+  { text: 'How effectively do you provide clear, actionable feedback that helps others improve?', subdimensionIndex: 1 },
+  { text: 'How well do you adapt your communication style to connect with different audiences?', subdimensionIndex: 1 },
+  { text: 'How effectively do you facilitate open dialogue and encourage diverse viewpoints?', subdimensionIndex: 1 },
+  { text: 'How well do you communicate your vision and strategic direction in ways that inspire others?', subdimensionIndex: 1 },
+  { text: 'How effectively do you address difficult topics directly and constructively?', subdimensionIndex: 1 },
+  { text: 'How well do you ensure important messages are understood and not lost in translation?', subdimensionIndex: 1 },
+  // Rewards (8 questions)
+  { text: 'How effectively do you recognize and celebrate others\' contributions and achievements?', subdimensionIndex: 2 },
+  { text: 'How well do you provide meaningful rewards that align with what individuals truly value?', subdimensionIndex: 2 },
+  { text: 'How effectively do you create a culture where effort and results are appropriately acknowledged?', subdimensionIndex: 2 },
+  { text: 'How well do you ensure recognition is timely, specific, and genuinely felt?', subdimensionIndex: 2 },
+  { text: 'How effectively do you balance individual recognition with team accomplishments?', subdimensionIndex: 2 },
+  { text: 'How well do you provide both formal and informal recognition for contributions?', subdimensionIndex: 2 },
+  { text: 'How effectively do you link rewards to behaviors and outcomes that matter most?', subdimensionIndex: 2 },
+  { text: 'How well do you create opportunities for others to be recognized by peers and leadership?', subdimensionIndex: 2 },
+  // Relationships (8 questions)
+  { text: 'How effectively do you build genuine, trusting relationships with those you work with?', subdimensionIndex: 3 },
+  { text: 'How well do you invest time in understanding others\' goals, challenges, and motivations?', subdimensionIndex: 3 },
+  { text: 'How effectively do you create connections between people that strengthen the overall team?', subdimensionIndex: 3 },
+  { text: 'How well do you maintain professional relationships even during disagreements or conflicts?', subdimensionIndex: 3 },
+  { text: 'How effectively do you show appreciation for others\' contributions and value their input?', subdimensionIndex: 3 },
+  { text: 'How well do you balance being approachable with maintaining appropriate professional boundaries?', subdimensionIndex: 3 },
+  { text: 'How effectively do you repair relationships when they become strained?', subdimensionIndex: 3 },
+  { text: 'How well do you create an environment where people feel valued and respected?', subdimensionIndex: 3 },
+  // Conflict Resolution (8 questions)
+  { text: 'How effectively do you address conflicts early before they escalate into larger problems?', subdimensionIndex: 4 },
+  { text: 'How well do you help conflicting parties understand each other\'s perspectives?', subdimensionIndex: 4 },
+  { text: 'How effectively do you facilitate solutions that address the underlying concerns of all parties?', subdimensionIndex: 4 },
+  { text: 'How well do you remain neutral and fair when mediating disputes?', subdimensionIndex: 4 },
+  { text: 'How effectively do you help others develop skills to resolve conflicts independently?', subdimensionIndex: 4 },
+  { text: 'How well do you create processes and norms that prevent conflicts from arising?', subdimensionIndex: 4 },
+  { text: 'How effectively do you turn conflicts into opportunities for growth and improved understanding?', subdimensionIndex: 4 },
+  { text: 'How well do you balance assertiveness with collaboration when resolving disagreements?', subdimensionIndex: 4 },
+  // Authenticity (8 questions)
+  { text: 'How well do you stay true to your values and principles, even when it\'s difficult?', subdimensionIndex: 5 },
+  { text: 'How effectively do you show your genuine self rather than presenting a false persona?', subdimensionIndex: 5 },
+  { text: 'How well do you acknowledge your limitations and areas for growth openly?', subdimensionIndex: 5 },
+  { text: 'How effectively do you align your actions with your stated beliefs and commitments?', subdimensionIndex: 5 },
+  { text: 'How well do you maintain consistency in your behavior across different situations?', subdimensionIndex: 5 },
+  { text: 'How effectively do you build trust through transparency and honesty?', subdimensionIndex: 5 },
+  { text: 'How well do you admit mistakes and take responsibility without making excuses?', subdimensionIndex: 5 },
+  { text: 'How effectively do you create space for others to be authentic as well?', subdimensionIndex: 5 },
+  // Servitude (8 questions)
+  { text: 'How effectively do you prioritize others\' needs and success alongside your own?', subdimensionIndex: 6 },
+  { text: 'How well do you use your position and resources to help others succeed?', subdimensionIndex: 6 },
+  { text: 'How effectively do you put the team\'s or organization\'s interests ahead of personal gain?', subdimensionIndex: 6 },
+  { text: 'How well do you actively look for ways to support and assist others?', subdimensionIndex: 6 },
+  { text: 'How effectively do you share credit and recognition rather than seeking it for yourself?', subdimensionIndex: 6 },
+  { text: 'How well do you invest time in developing others without expecting immediate returns?', subdimensionIndex: 6 },
+  { text: 'How effectively do you create opportunities for others to shine and succeed?', subdimensionIndex: 6 },
+  { text: 'How well do you balance serving others with maintaining healthy boundaries?', subdimensionIndex: 6 },
+  // Change (8 questions)
+  { text: 'How effectively do you embrace change and help others navigate transitions?', subdimensionIndex: 7 },
+  { text: 'How well do you adapt your approach when circumstances require a different strategy?', subdimensionIndex: 7 },
+  { text: 'How effectively do you champion necessary changes even when they\'re unpopular?', subdimensionIndex: 7 },
+  { text: 'How well do you help others understand the rationale and benefits of change?', subdimensionIndex: 7 },
+  { text: 'How effectively do you manage your own resistance to change and model flexibility?', subdimensionIndex: 7 },
+  { text: 'How well do you create a culture that views change as an opportunity rather than a threat?', subdimensionIndex: 7 },
+  { text: 'How effectively do you prepare others for change and provide support during transitions?', subdimensionIndex: 7 },
+  { text: 'How well do you learn from change experiences and apply those lessons going forward?', subdimensionIndex: 7 },
+  // Ethical (8 questions)
+  { text: 'How effectively do you make decisions that align with ethical principles and values?', subdimensionIndex: 8 },
+  { text: 'How well do you consider the ethical implications of your actions on all stakeholders?', subdimensionIndex: 8 },
+  { text: 'How effectively do you stand up for what\'s right, even when it\'s personally costly?', subdimensionIndex: 8 },
+  { text: 'How well do you create an environment where ethical behavior is expected and rewarded?', subdimensionIndex: 8 },
+  { text: 'How effectively do you address unethical behavior when you observe it?', subdimensionIndex: 8 },
+  { text: 'How well do you balance competing ethical considerations when making difficult decisions?', subdimensionIndex: 8 },
+  { text: 'How effectively do you model ethical behavior in both visible and behind-the-scenes actions?', subdimensionIndex: 8 },
+  { text: 'How well do you help others develop their own ethical reasoning and judgment?', subdimensionIndex: 8 },
+  // Analytical (8 questions)
+  { text: 'How effectively do you gather and analyze relevant data before making important decisions?', subdimensionIndex: 9 },
+  { text: 'How well do you identify patterns and trends that others might miss?', subdimensionIndex: 9 },
+  { text: 'How effectively do you break down complex problems into manageable components?', subdimensionIndex: 9 },
+  { text: 'How well do you question assumptions and validate information before acting?', subdimensionIndex: 9 },
+  { text: 'How effectively do you use both quantitative and qualitative information to inform decisions?', subdimensionIndex: 9 },
+  { text: 'How well do you balance analysis with the need for timely action?', subdimensionIndex: 9 },
+  { text: 'How effectively do you help others develop their analytical thinking skills?', subdimensionIndex: 9 },
+  { text: 'How well do you learn from outcomes and adjust your analytical approach based on results?', subdimensionIndex: 9 },
+]
+
+const LEADERS_BENCHMARKS = [
+  // Parent dimensions
+  3.3, 3.4,
+  // Subdimensions (Involving-Stakeholders)
+  3.2, 3.4, 3.3, 3.5, 3.1,
+  // Subdimensions (Involving-Self)
+  3.4, 3.3, 3.2, 3.5, 3.4,
+]
+
+// ============================================================================
+// BLOCKERS ASSESSMENT DATA
+// ============================================================================
+
+const BLOCKERS_DIMENSIONS = [
+  { name: 'Communication Barriers', code: 'COMM_BAR' },
+  { name: 'Process Inefficiencies', code: 'PROC_INEF' },
+  { name: 'Resource Constraints', code: 'RES_CON' },
+  { name: 'Team Dynamics', code: 'TEAM_DYN' },
+  { name: 'Strategic Alignment', code: 'STRAT_ALIGN' },
+]
+
+const BLOCKERS_QUESTIONS = [
+  // Communication Barriers (8 questions)
+  { text: 'To what extent do unclear or inconsistent messages create confusion in your work?', dimensionIndex: 0 },
+  { text: 'How often do you experience breakdowns in communication that delay or derail projects?', dimensionIndex: 0 },
+  { text: 'To what degree do information silos prevent you from accessing what you need?', dimensionIndex: 0 },
+  { text: 'How frequently do miscommunications lead to rework or missed expectations?', dimensionIndex: 0 },
+  { text: 'To what extent do communication gaps between departments create obstacles?', dimensionIndex: 0 },
+  { text: 'How often do you find yourself unclear about priorities or expectations?', dimensionIndex: 0 },
+  { text: 'To what degree do language or cultural differences create communication challenges?', dimensionIndex: 0 },
+  { text: 'How frequently do you experience a lack of feedback that hinders your performance?', dimensionIndex: 0 },
+  // Process Inefficiencies (8 questions)
+  { text: 'To what extent do bureaucratic processes slow down your ability to get work done?', dimensionIndex: 1 },
+  { text: 'How often do you encounter redundant or unnecessary steps in your workflows?', dimensionIndex: 1 },
+  { text: 'To what degree do outdated systems or tools create inefficiencies?', dimensionIndex: 1 },
+  { text: 'How frequently do you experience bottlenecks that prevent progress?', dimensionIndex: 1 },
+  { text: 'To what extent do unclear processes create confusion and delays?', dimensionIndex: 1 },
+  { text: 'How often do you find yourself working around broken or ineffective processes?', dimensionIndex: 1 },
+  { text: 'To what degree do approval processes create unnecessary delays?', dimensionIndex: 1 },
+  { text: 'How frequently do process changes create more problems than they solve?', dimensionIndex: 1 },
+  // Resource Constraints (8 questions)
+  { text: 'To what extent do insufficient resources (budget, time, people) limit your effectiveness?', dimensionIndex: 2 },
+  { text: 'How often do you lack the tools or technology needed to perform at your best?', dimensionIndex: 2 },
+  { text: 'To what degree do staffing shortages create excessive workload or missed opportunities?', dimensionIndex: 2 },
+  { text: 'How frequently do budget constraints prevent you from pursuing valuable initiatives?', dimensionIndex: 2 },
+  { text: 'To what extent do you lack access to necessary information or data?', dimensionIndex: 2 },
+  { text: 'How often do time constraints force you to compromise on quality?', dimensionIndex: 2 },
+  { text: 'To what degree do resource allocation decisions seem unfair or poorly prioritized?', dimensionIndex: 2 },
+  { text: 'How frequently do resource limitations prevent you from meeting expectations?', dimensionIndex: 2 },
+  // Team Dynamics (8 questions)
+  { text: 'To what extent do personality conflicts or interpersonal issues disrupt team effectiveness?', dimensionIndex: 3 },
+  { text: 'How often do you experience a lack of trust or collaboration within your team?', dimensionIndex: 3 },
+  { text: 'To what degree do unclear roles and responsibilities create confusion or conflict?', dimensionIndex: 3 },
+  { text: 'How frequently do competing priorities or agendas create friction?', dimensionIndex: 3 },
+  { text: 'To what extent do team members not pulling their weight affect overall performance?', dimensionIndex: 3 },
+  { text: 'How often do you experience a lack of accountability within the team?', dimensionIndex: 3 },
+  { text: 'To what degree do differences in work styles create challenges?', dimensionIndex: 3 },
+  { text: 'How frequently do team dynamics prevent you from achieving your goals?', dimensionIndex: 3 },
+  // Strategic Alignment (8 questions)
+  { text: 'To what extent do conflicting priorities or unclear direction create confusion?', dimensionIndex: 4 },
+  { text: 'How often do you find yourself working on initiatives that don\'t align with stated goals?', dimensionIndex: 4 },
+  { text: 'To what degree do frequent strategy changes disrupt your ability to make progress?', dimensionIndex: 4 },
+  { text: 'How frequently do you lack clarity about how your work connects to larger objectives?', dimensionIndex: 4 },
+  { text: 'To what extent do misaligned incentives create counterproductive behaviors?', dimensionIndex: 4 },
+  { text: 'How often do you experience a disconnect between stated values and actual practices?', dimensionIndex: 4 },
+  { text: 'To what degree do short-term pressures conflict with long-term strategic goals?', dimensionIndex: 4 },
+  { text: 'How frequently do you feel your efforts are not contributing to meaningful outcomes?', dimensionIndex: 4 },
+]
+
+const BLOCKERS_BENCHMARKS = [3.1, 3.0, 2.9, 3.2, 3.1]
+
+// ============================================================================
+// USER DATA (20-25 users across 3-4 groups)
+// ============================================================================
+
+const USERS = [
+  // Group 1
+  { name: 'Sarah Johnson', email: 'sarah.johnson@demo.com', username: 'sjohnson', position: 'Supervisor', leader: true, groupIndex: 0 },
+  { name: 'Michael Chen', email: 'michael.chen@demo.com', username: 'mchen', position: null, leader: false, groupIndex: 0 }, // Target
+  { name: 'Emily Rodriguez', email: 'emily.rodriguez@demo.com', username: 'erodriguez', position: 'Subordinate', leader: false, groupIndex: 0 },
+  { name: 'David Kim', email: 'david.kim@demo.com', username: 'dkim', position: 'Subordinate', leader: false, groupIndex: 0 },
+  { name: 'Jessica Williams', email: 'jessica.williams@demo.com', username: 'jwilliams', position: 'Subordinate', leader: false, groupIndex: 0 },
+  
+  // Group 2
+  { name: 'Robert Martinez', email: 'robert.martinez@demo.com', username: 'rmartinez', position: 'Supervisor', leader: true, groupIndex: 1 },
+  { name: 'Amanda Thompson', email: 'amanda.thompson@demo.com', username: 'athompson', position: null, leader: false, groupIndex: 1 }, // Target
+  { name: 'James Wilson', email: 'james.wilson@demo.com', username: 'jwilson', position: 'Subordinate', leader: false, groupIndex: 1 },
+  { name: 'Lisa Anderson', email: 'lisa.anderson@demo.com', username: 'landerson', position: 'Subordinate', leader: false, groupIndex: 1 },
+  { name: 'Christopher Brown', email: 'christopher.brown@demo.com', username: 'cbrown', position: 'Subordinate', leader: false, groupIndex: 1 },
+  { name: 'Michelle Davis', email: 'michelle.davis@demo.com', username: 'mdavis', position: 'Subordinate', leader: false, groupIndex: 1 },
+  
+  // Group 3
+  { name: 'Daniel Garcia', email: 'daniel.garcia@demo.com', username: 'dgarcia', position: 'Supervisor', leader: true, groupIndex: 2 },
+  { name: 'Jennifer Lee', email: 'jennifer.lee@demo.com', username: 'jlee', position: null, leader: false, groupIndex: 2 }, // Target
+  { name: 'Matthew Taylor', email: 'matthew.taylor@demo.com', username: 'mtaylor', position: 'Subordinate', leader: false, groupIndex: 2 },
+  { name: 'Nicole White', email: 'nicole.white@demo.com', username: 'nwhite', position: 'Subordinate', leader: false, groupIndex: 2 },
+  { name: 'Ryan Moore', email: 'ryan.moore@demo.com', username: 'rmoore', position: 'Subordinate', leader: false, groupIndex: 2 },
+  
+  // Group 4
+  { name: 'Patricia Jackson', email: 'patricia.jackson@demo.com', username: 'pjackson', position: 'Supervisor', leader: true, groupIndex: 3 },
+  { name: 'Kevin Harris', email: 'kevin.harris@demo.com', username: 'kharris', position: null, leader: false, groupIndex: 3 }, // Target
+  { name: 'Stephanie Clark', email: 'stephanie.clark@demo.com', username: 'sclark', position: 'Subordinate', leader: false, groupIndex: 3 },
+  { name: 'Andrew Lewis', email: 'andrew.lewis@demo.com', username: 'alewis', position: 'Subordinate', leader: false, groupIndex: 3 },
+  { name: 'Rachel Walker', email: 'rachel.walker@demo.com', username: 'rwalker', position: 'Subordinate', leader: false, groupIndex: 3 },
+  { name: 'Thomas Hall', email: 'thomas.hall@demo.com', username: 'thall', position: 'Subordinate', leader: false, groupIndex: 3 },
+]
+
+const GROUPS = [
+  { name: '360 Assessment Group 1 - Demo', description: 'Demo group for 360-degree assessment testing - Team Alpha' },
+  { name: '360 Assessment Group 2 - Demo', description: 'Demo group for 360-degree assessment testing - Team Beta' },
+  { name: '360 Assessment Group 3 - Demo', description: 'Demo group for 360-degree assessment testing - Team Gamma' },
+  { name: '360 Assessment Group 4 - Demo', description: 'Demo group for 360-degree assessment testing - Team Delta' },
+]
+
+// ============================================================================
+// COMMON DATA
+// ============================================================================
+
 const ANCHORS = [
   { id: '1', name: 'Below Expectations', value: 1, practice: false },
   { id: '2', name: 'Partially Meets Expectations', value: 2, practice: false },
@@ -196,7 +445,6 @@ const ANCHORS = [
   { id: '5', name: 'Significantly Exceeds Expectations', value: 5, practice: false },
 ]
 
-// Anchor insights (one row per anchor)
 const ANCHOR_INSIGHTS = [
   ['This person consistently falls short of expected performance standards in this area.'],
   ['This person shows some capability but needs significant development to meet expectations.'],
@@ -205,44 +453,21 @@ const ANCHOR_INSIGHTS = [
   ['This person demonstrates exceptional performance that serves as a model for others.'],
 ]
 
-// Sample text feedback responses
-const TEXT_FEEDBACK_RESPONSES = [
-  'This person demonstrates strong communication skills and is always clear and concise.',
-  'I appreciate their willingness to help others and contribute to team success.',
-  'They could improve their time management and prioritization skills.',
-  'Excellent leadership qualities and ability to inspire the team.',
-  'Sometimes struggles with giving constructive feedback but is working on it.',
-  'Very reliable and always follows through on commitments.',
-  'Great problem-solving abilities and creative thinking.',
-  'Could benefit from more strategic thinking and long-term planning.',
-  'Shows strong emotional intelligence and empathy in interactions.',
-  'Needs to work on adapting to change and handling ambiguity.',
-]
-
-// Industry benchmark values (on 5-point scale)
-const INDUSTRY_BENCHMARKS = [3.2, 3.4, 3.3, 3.1, 3.0, 3.2, 3.3, 3.5, 3.4]
-
-// User data
-const USERS = [
-  { name: 'Sarah Johnson', email: 'sarah.johnson@demo.com', username: 'sjohnson', position: 'Supervisor', leader: true },
-  { name: 'Michael Chen', email: 'michael.chen@demo.com', username: 'mchen', position: null, leader: false }, // Target/Self
-  { name: 'Emily Rodriguez', email: 'emily.rodriguez@demo.com', username: 'erodriguez', position: 'Subordinate', leader: false },
-  { name: 'David Kim', email: 'david.kim@demo.com', username: 'dkim', position: 'Subordinate', leader: false },
-  { name: 'Jessica Williams', email: 'jessica.williams@demo.com', username: 'jwilliams', position: 'Subordinate', leader: false },
-]
+// ============================================================================
+// MAIN FUNCTION
+// ============================================================================
 
 async function main() {
-  console.log('🌱 Starting 360 Survey Demo Seeder...\n')
+  console.log('🌱 Starting Demo Seeder...\n')
 
   try {
-    // Step 1: Create or get demo client
-    console.log('📋 Step 1: Creating demo client...')
-    // eslint-disable-next-line prefer-const
+    // Step 1: Create or get demo client (idempotent)
+    console.log('📋 Step 1: Setting up demo client...')
     let { data: client, error: clientError } = await supabase
       .from('clients')
       .select('id')
       .eq('name', 'Demo Client - 360 Survey')
-      .single()
+      .maybeSingle()
 
     if (clientError && clientError.code !== 'PGRST116') {
       throw clientError
@@ -266,14 +491,13 @@ async function main() {
 
     const clientId = client.id
 
-    // Step 2: Create or get industry
-    console.log('\n📋 Step 2: Creating industry...')
-    // eslint-disable-next-line prefer-const
+    // Step 2: Create or get industry (idempotent)
+    console.log('\n📋 Step 2: Setting up industry...')
     let { data: industry, error: industryError } = await supabase
       .from('industries')
       .select('id')
       .eq('name', 'Technology')
-      .single()
+      .maybeSingle()
 
     if (industryError && industryError.code !== 'PGRST116') {
       throw industryError
@@ -295,7 +519,7 @@ async function main() {
 
     const industryId = industry.id
 
-    // Step 3: Create admin user (if needed) or get existing
+    // Step 3: Create or get admin user (idempotent)
     console.log('\n📋 Step 3: Setting up admin user...')
     const { data: { users: authUsers } } = await supabase.auth.admin.listUsers()
     let adminUser = authUsers.find(u => u.email === 'admin@demo.com')
@@ -313,13 +537,12 @@ async function main() {
       console.log('  ✓ Using existing admin auth user')
     }
 
-    // Create or update admin profile
-    // eslint-disable-next-line prefer-const
+    // Create or update admin profile (idempotent)
     let { data: adminProfile, error: profileError } = await supabase
       .from('profiles')
       .select('id')
       .eq('auth_user_id', adminUser.id)
-      .single()
+      .maybeSingle()
 
     if (profileError && profileError.code !== 'PGRST116') {
       throw profileError
@@ -351,7 +574,7 @@ async function main() {
       console.log('  ✓ Updated admin profile')
     }
 
-    // Step 4: Create demo users
+    // Step 4: Create demo users (idempotent)
     console.log('\n📋 Step 4: Creating demo users...')
     const userIds: string[] = []
 
@@ -370,8 +593,8 @@ async function main() {
       let userProfileId: string
       if (!existingProfile) {
         // Check if auth user exists first
-        const { data: { users: authUsers } } = await supabase.auth.admin.listUsers()
-        let authUser = authUsers.find(u => u.email === userData.email)
+        const { data: { users: allAuthUsers } } = await supabase.auth.admin.listUsers()
+        let authUser = allAuthUsers.find(u => u.email === userData.email)
 
         if (!authUser) {
           // Create auth user (trigger will automatically create profile)
@@ -473,7 +696,12 @@ async function main() {
         // Update existing user to ensure they're in the right client
         await supabase
           .from('profiles')
-          .update({ client_id: clientId, industry_id: industryId })
+          .update({ 
+            client_id: clientId, 
+            industry_id: industryId,
+            name: userData.name,
+            username: userData.username,
+          })
           .eq('id', existingProfile.id)
         userProfileId = existingProfile.id
         console.log(`  ✓ Using existing user: ${userData.name}`)
@@ -482,316 +710,596 @@ async function main() {
       userIds.push(userProfileId)
     }
 
-    const [supervisorId, targetId] = userIds
-
-    // Step 5: Create 360 assessment
+    // Step 5: Create 360 assessment (idempotent - check by title)
     console.log('\n📋 Step 5: Creating 360 assessment...')
-    const { data: assessment, error: assessmentError } = await supabase
+    let { data: assessment360, error: assessment360Error } = await supabase
       .from('assessments')
-      .insert({
-        title: '360-Degree Leadership Assessment - Demo',
-        description: 'Comprehensive 360-degree assessment covering 9 key leadership dimensions with 30 questions.',
-        type: '360',
-        is_360: true,
-        status: 'active',
-        created_by: adminUser.id,
-        use_custom_fields: true,
-        custom_fields: {
-          type: ['name', 'email', 'position'],
-          default: ['', '', ''],
-        },
-      })
       .select('id')
-      .single()
+      .eq('title', '360-Degree Leadership Assessment - Demo')
+      .maybeSingle()
 
-    if (assessmentError) throw assessmentError
-    console.log('  ✓ Created assessment')
-    const assessmentId = assessment.id
+    if (assessment360Error && assessment360Error.code !== 'PGRST116') {
+      throw assessment360Error
+    }
 
-    // Step 6: Create dimensions
-    console.log('\n📋 Step 6: Creating dimensions...')
-    const dimensionIds: string[] = []
-
-    for (const dim of DIMENSIONS) {
-      const { data: dimension, error: dimError } = await supabase
-        .from('dimensions')
+    let assessment360Id: string
+    if (!assessment360) {
+      const { data: newAssessment, error: createError } = await supabase
+        .from('assessments')
         .insert({
-          assessment_id: assessmentId,
-          name: dim.name,
-          code: dim.code,
+          title: '360-Degree Leadership Assessment - Demo',
+          description: 'Comprehensive 360-degree assessment covering 9 key leadership dimensions with 30 questions.',
+          type: '360',
+          is_360: true,
+          status: 'active',
+          created_by: adminUser.id,
+          use_custom_fields: true,
+          custom_fields: {
+            type: ['name', 'email', 'position'],
+            default: ['', '', ''],
+          },
         })
         .select('id')
         .single()
 
-      if (dimError) throw dimError
-      dimensionIds.push(dimension.id)
-      console.log(`  ✓ Created dimension: ${dim.name}`)
+      if (createError) throw createError
+      assessment360Id = newAssessment.id
+      console.log('  ✓ Created 360 assessment')
+    } else {
+      assessment360Id = assessment360.id
+      console.log('  ✓ Using existing 360 assessment')
     }
 
-    // Step 7: Create industry benchmarks
-    console.log('\n📋 Step 7: Creating industry benchmarks...')
-    for (let i = 0; i < dimensionIds.length; i++) {
-      const { error: benchError } = await supabase
-        .from('benchmarks')
-        .upsert({
-          dimension_id: dimensionIds[i],
-          industry_id: industryId,
-          value: INDUSTRY_BENCHMARKS[i],
-        }, {
-          onConflict: 'dimension_id,industry_id',
-        })
+    // Step 6: Create 360 dimensions and questions
+    console.log('\n📋 Step 6: Creating 360 dimensions and questions...')
+    const dimension360Ids: string[] = []
 
-      if (benchError) throw benchError
+    // Get existing dimensions for this assessment
+    const { data: existingDimensions360 } = await supabase
+      .from('dimensions')
+      .select('id, name')
+      .eq('assessment_id', assessment360Id)
+
+    const existingDimMap360 = new Map<string, string>()
+    existingDimensions360?.forEach(d => existingDimMap360.set(d.name, d.id))
+
+    for (let i = 0; i < DIMENSIONS_360.length; i++) {
+      const dim = DIMENSIONS_360[i]
+      let dimensionId: string
+
+      if (existingDimMap360.has(dim.name)) {
+        dimensionId = existingDimMap360.get(dim.name)!
+      } else {
+        const { data: dimension, error: dimError } = await supabase
+          .from('dimensions')
+          .insert({
+            assessment_id: assessment360Id,
+            name: dim.name,
+            code: dim.code,
+          })
+          .select('id')
+          .single()
+
+        if (dimError) throw dimError
+        dimensionId = dimension.id
+        console.log(`  ✓ Created dimension: ${dim.name}`)
+      }
+
+      dimension360Ids.push(dimensionId)
     }
-    console.log('  ✓ Created industry benchmarks for all dimensions')
 
-    // Step 8: Create fields (questions)
-    console.log('\n📋 Step 8: Creating questions...')
-    const fieldIds: string[] = [] // Multiple choice field IDs
-    const textFieldIds: string[] = [] // Text input field IDs
+    // Create questions for 360 assessment
+    const { data: existingFields360 } = await supabase
+      .from('fields')
+      .select('id, content, dimension_id')
+      .eq('assessment_id', assessment360Id)
+      .eq('type', 'multiple_choice')
+
+    let fieldCount360 = 0
     let order = 1
 
-    for (let dimIndex = 0; dimIndex < DIMENSIONS.length; dimIndex++) {
-      const dimensionId = dimensionIds[dimIndex]
-      const questionNumbers = QUESTIONS_PER_DIMENSION[dimIndex]
+    for (let dimIndex = 0; dimIndex < DIMENSIONS_360.length; dimIndex++) {
+      const dimensionId = dimension360Ids[dimIndex]
+      const questionIndices = QUESTIONS_PER_DIMENSION_360[dimIndex]
 
-      for (let qIndex = 0; qIndex < questionNumbers.length; qIndex++) {
-        const questionNum = questionNumbers[qIndex]
-        const template = QUESTION_TEMPLATES[questionNum - 1]
+      for (const qIndex of questionIndices) {
+        const question = QUESTIONS_360[qIndex]
+        
+        // Check if question already exists
+        const exists = existingFields360?.some(f => 
+          f.dimension_id === dimensionId && 
+          f.content === question.text
+        )
 
-        // Description field
-        const { error: descError } = await supabase
-          .from('fields')
-          .insert({
-            assessment_id: assessmentId,
-            dimension_id: dimensionId,
-            type: 'rich_text',
-            content: template.description,
-            order: order++,
-            number: order - 1,
-            required: false,
-          })
-
-        if (descError) throw descError
-
-        // Multiple choice question
-        const { data: mcField, error: mcError } = await supabase
-          .from('fields')
-          .insert({
-            assessment_id: assessmentId,
-            dimension_id: dimensionId,
-            type: 'multiple_choice',
-            content: template.text,
-            order: order++,
-            number: order - 1,
-            required: true,
-            anchors: ANCHORS,
-            insights_table: [ANCHOR_INSIGHTS],
-          })
-          .select('id')
-          .single()
-
-        if (mcError) throw mcError
-        fieldIds.push(mcField.id)
-
-        // Text input field
-        const { data: textField, error: textError } = await supabase
-          .from('fields')
-          .insert({
-            assessment_id: assessmentId,
-            dimension_id: dimensionId,
-            type: 'text_input',
-            content: `Please provide specific examples or additional feedback regarding ${template.text.toLowerCase()}`,
-            order: order++,
-            number: order - 1,
-            required: false,
-          })
-          .select('id')
-          .single()
-
-        if (textError) throw textError
-        textFieldIds.push(textField.id)
-
-        // Page break (except for last question)
-        if (questionNum < 30) {
-          const { error: pageBreakError } = await supabase
+        if (!exists) {
+          // Description field
+          await supabase
             .from('fields')
             .insert({
-              assessment_id: assessmentId,
-              dimension_id: null,
-              type: 'page_break',
-              content: '',
+              assessment_id: assessment360Id,
+              dimension_id: dimensionId,
+              type: 'rich_text',
+              content: question.description,
               order: order++,
               number: order - 1,
               required: false,
             })
 
-          if (pageBreakError) throw pageBreakError
-        }
+          // Multiple choice question
+          await supabase
+            .from('fields')
+            .insert({
+              assessment_id: assessment360Id,
+              dimension_id: dimensionId,
+              type: 'multiple_choice',
+              content: question.text,
+              order: order++,
+              number: order - 1,
+              required: true,
+              anchors: ANCHORS,
+              insights_table: [ANCHOR_INSIGHTS],
+            })
 
-        console.log(`  ✓ Created question ${questionNum}: ${template.text.substring(0, 50)}...`)
+          fieldCount360++
+        }
       }
     }
 
-    // Step 9: Create group
-    console.log('\n📋 Step 9: Creating group...')
-    const { data: group, error: groupError } = await supabase
-      .from('groups')
-      .insert({
-        client_id: clientId,
-        name: '360 Assessment Group - Demo',
-        description: 'Demo group for 360-degree assessment testing',
-        target_id: targetId,
-      })
+    if (fieldCount360 > 0) {
+      console.log(`  ✓ Created ${fieldCount360} new questions for 360 assessment`)
+    } else {
+      console.log('  ✓ All 360 questions already exist')
+    }
+
+    // Step 7: Create industry benchmarks for 360
+    console.log('\n📋 Step 7: Creating industry benchmarks for 360...')
+    for (let i = 0; i < dimension360Ids.length; i++) {
+      await supabase
+        .from('benchmarks')
+        .upsert({
+          dimension_id: dimension360Ids[i],
+          industry_id: industryId,
+          value: INDUSTRY_BENCHMARKS_360[i],
+        }, {
+          onConflict: 'dimension_id,industry_id',
+        })
+    }
+    console.log('  ✓ Created/updated industry benchmarks for 360 dimensions')
+
+    // Step 8: Create Leaders assessment
+    console.log('\n📋 Step 8: Creating Leaders assessment...')
+    let { data: assessmentLeaders, error: assessmentLeadersError } = await supabase
+      .from('assessments')
       .select('id')
-      .single()
+      .eq('title', 'Leaders Assessment - Demo')
+      .maybeSingle()
 
-    if (groupError) throw groupError
-    console.log('  ✓ Created group')
-    const groupId = group.id
+    if (assessmentLeadersError && assessmentLeadersError.code !== 'PGRST116') {
+      throw assessmentLeadersError
+    }
 
-    // Step 10: Add members to group
-    console.log('\n📋 Step 10: Adding members to group...')
-    // Delete existing members first to avoid conflicts
-    await supabase
-      .from('group_members')
-      .delete()
-      .eq('group_id', groupId)
-
-    const memberInserts = USERS.map((user, index) => ({
-      group_id: groupId,
-      profile_id: userIds[index],
-      position: user.position,
-      leader: user.leader || false,
-    }))
-
-    const { error: membersError } = await supabase
-      .from('group_members')
-      .insert(memberInserts)
-
-    if (membersError) throw membersError
-    console.log('  ✓ Added all members to group')
-
-    // Step 11: Create assignments
-    console.log('\n📋 Step 11: Creating assignments...')
-    const assignmentIds: string[] = []
-    const expiresAt = new Date()
-    expiresAt.setDate(expiresAt.getDate() + 30)
-
-    for (const userId of userIds) {
-      const { data: assignment, error: assignError } = await supabase
-        .from('assignments')
+    let assessmentLeadersId: string
+    if (!assessmentLeaders) {
+      const { data: newAssessment, error: createError } = await supabase
+        .from('assessments')
         .insert({
-          user_id: userId,
-          assessment_id: assessmentId,
-          target_id: targetId,
-          custom_fields: {
-            type: ['name', 'email', 'position'],
-            value: [
-              USERS[userIds.indexOf(userId)]?.name || '',
-              USERS[userIds.indexOf(userId)]?.email || '',
-              USERS[userIds.indexOf(userId)]?.position || '',
-            ],
-          },
-          expires: expiresAt.toISOString(),
-          completed: true,
-          started_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-          completed_at: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago
+          title: 'Leaders Assessment - Demo',
+          description: 'Leadership assessment with hierarchical dimensions (Involving-Stakeholders and Involving-Self) and their subdimensions.',
+          type: 'custom',
+          is_360: false,
+          status: 'active',
+          created_by: adminUser.id,
+          number_of_questions: 20, // Randomly select 20 questions per participant
         })
         .select('id')
         .single()
 
-      if (assignError) throw assignError
-      assignmentIds.push(assignment.id)
+      if (createError) throw createError
+      assessmentLeadersId = newAssessment.id
+      console.log('  ✓ Created Leaders assessment')
+    } else {
+      assessmentLeadersId = assessmentLeaders.id
+      console.log('  ✓ Using existing Leaders assessment')
     }
-    console.log('  ✓ Created assignments for all users')
 
-    // Step 12: Create answers
-    console.log('\n📋 Step 12: Creating answers...')
-    let answerCount = 0
+    // Step 9: Create Leaders dimensions (parent and child)
+    console.log('\n📋 Step 9: Creating Leaders dimensions...')
+    const leadersParentDimIds: string[] = []
+    const leadersSubdimIds: string[] = []
 
-    for (let assignIndex = 0; assignIndex < assignmentIds.length; assignIndex++) {
-      const assignmentId = assignmentIds[assignIndex]
-      const userId = userIds[assignIndex]
-      const isTarget = userId === targetId
-      const isSupervisor = userId === supervisorId
+    const { data: existingLeadersDims } = await supabase
+      .from('dimensions')
+      .select('id, name, parent_id')
+      .eq('assessment_id', assessmentLeadersId)
 
-      // Generate answers for each multiple choice question
-      for (let fieldIndex = 0; fieldIndex < fieldIds.length; fieldIndex++) {
-        const fieldId = fieldIds[fieldIndex]
-        const textFieldId = textFieldIds[fieldIndex]
+    const existingLeadersDimMap = new Map<string, string>()
+    existingLeadersDims?.forEach(d => existingLeadersDimMap.set(d.name, d.id))
 
-        // Generate organic score (slightly biased based on rater type)
-        let baseScore = 3.0 // Meets expectations
-        if (isTarget) {
-          baseScore = 3.5 // Self-assessment slightly higher
-        } else if (isSupervisor) {
-          baseScore = 3.2 // Supervisor slightly more critical
-        } else {
-          baseScore = 3.3 // Subordinates slightly positive
-        }
+    // Create parent dimensions
+    for (const parentDim of LEADERS_PARENT_DIMENSIONS) {
+      let parentId: string
 
-        // Add some variation
-        const variation = (Math.random() - 0.5) * 0.8 // ±0.4
-        const score = Math.max(1, Math.min(5, Math.round((baseScore + variation) * 10) / 10))
-        const anchorValue = Math.round(score)
-
-        // Multiple choice answer
-        const { error: mcAnswerError } = await supabase
-          .from('answers')
+      if (existingLeadersDimMap.has(parentDim.name)) {
+        parentId = existingLeadersDimMap.get(parentDim.name)!
+      } else {
+        const { data: dimension, error: dimError } = await supabase
+          .from('dimensions')
           .insert({
-            assignment_id: assignmentId,
-            field_id: fieldId,
-            user_id: userId,
-            value: anchorValue.toString(),
-            time: Math.floor(Math.random() * 30) + 10, // 10-40 seconds
+            assessment_id: assessmentLeadersId,
+            name: parentDim.name,
+            code: parentDim.code,
+            parent_id: null,
           })
+          .select('id')
+          .single()
 
-        if (mcAnswerError) throw mcAnswerError
-        answerCount++
+        if (dimError) throw dimError
+        parentId = dimension.id
+        console.log(`  ✓ Created parent dimension: ${parentDim.name}`)
+      }
 
-        // Text input answer (70% chance of providing feedback)
-        if (Math.random() < 0.7 && textFieldId) {
-          const feedbackText = TEXT_FEEDBACK_RESPONSES[
-            Math.floor(Math.random() * TEXT_FEEDBACK_RESPONSES.length)
-          ]
+      leadersParentDimIds.push(parentId)
+    }
 
-          const { error: textAnswerError } = await supabase
-            .from('answers')
+    // Create subdimensions
+    for (const subdim of LEADERS_SUBDIMENSIONS) {
+      const parentId = leadersParentDimIds[subdim.parentIndex]
+      let subdimId: string
+
+      if (existingLeadersDimMap.has(subdim.name)) {
+        subdimId = existingLeadersDimMap.get(subdim.name)!
+      } else {
+        const { data: dimension, error: dimError } = await supabase
+          .from('dimensions')
+          .insert({
+            assessment_id: assessmentLeadersId,
+            name: subdim.name,
+            code: subdim.code,
+            parent_id: parentId,
+          })
+          .select('id')
+          .single()
+
+        if (dimError) throw dimError
+        subdimId = dimension.id
+        console.log(`  ✓ Created subdimension: ${subdim.name}`)
+      }
+
+      leadersSubdimIds.push(subdimId)
+    }
+
+    // Step 10: Create Leaders questions
+    console.log('\n📋 Step 10: Creating Leaders questions...')
+    const { data: existingLeadersFields } = await supabase
+      .from('fields')
+      .select('id, content, dimension_id')
+      .eq('assessment_id', assessmentLeadersId)
+      .eq('type', 'multiple_choice')
+
+    let leadersFieldCount = 0
+    let leadersOrder = 1
+
+    // Group questions by subdimension
+    const questionsBySubdim = new Map<number, typeof LEADERS_QUESTIONS>()
+    LEADERS_QUESTIONS.forEach(q => {
+      if (!questionsBySubdim.has(q.subdimensionIndex)) {
+        questionsBySubdim.set(q.subdimensionIndex, [])
+      }
+      questionsBySubdim.get(q.subdimensionIndex)!.push(q)
+    })
+
+    for (let subdimIndex = 0; subdimIndex < leadersSubdimIds.length; subdimIndex++) {
+      const subdimId = leadersSubdimIds[subdimIndex]
+      const questions = questionsBySubdim.get(subdimIndex) || []
+
+      for (const question of questions) {
+        const exists = existingLeadersFields?.some(f => 
+          f.dimension_id === subdimId && 
+          f.content === question.text
+        )
+
+        if (!exists) {
+          await supabase
+            .from('fields')
             .insert({
-              assignment_id: assignmentId,
-              field_id: textFieldId,
-              user_id: userId,
-              value: feedbackText,
-              time: Math.floor(Math.random() * 60) + 20, // 20-80 seconds
+              assessment_id: assessmentLeadersId,
+              dimension_id: subdimId,
+              type: 'multiple_choice',
+              content: question.text,
+              order: leadersOrder++,
+              number: leadersOrder - 1,
+              required: true,
+              anchors: ANCHORS,
+              insights_table: [ANCHOR_INSIGHTS],
             })
 
-          if (textAnswerError) throw textAnswerError
-          answerCount++
+          leadersFieldCount++
         }
       }
     }
 
-    console.log(`  ✓ Created ${answerCount} answers`)
+    if (leadersFieldCount > 0) {
+      console.log(`  ✓ Created ${leadersFieldCount} new questions for Leaders assessment`)
+    } else {
+      console.log('  ✓ All Leaders questions already exist')
+    }
 
-    // Step 13: Summary
+    // Update dimension_question_counts for Leaders (2-3 questions per subdimension)
+    const dimensionQuestionCounts: Record<string, number> = {}
+    leadersSubdimIds.forEach(subdimId => {
+      dimensionQuestionCounts[subdimId] = 2 // 2 questions per subdimension = 20 total
+    })
+
+    await supabase
+      .from('assessments')
+      .update({ dimension_question_counts: dimensionQuestionCounts })
+      .eq('id', assessmentLeadersId)
+
+    console.log('  ✓ Set dimension_question_counts for Leaders assessment')
+
+    // Step 11: Create industry benchmarks for Leaders
+    console.log('\n📋 Step 11: Creating industry benchmarks for Leaders...')
+    const allLeadersDimIds = [...leadersParentDimIds, ...leadersSubdimIds]
+    for (let i = 0; i < allLeadersDimIds.length; i++) {
+      await supabase
+        .from('benchmarks')
+        .upsert({
+          dimension_id: allLeadersDimIds[i],
+          industry_id: industryId,
+          value: LEADERS_BENCHMARKS[i],
+        }, {
+          onConflict: 'dimension_id,industry_id',
+        })
+    }
+    console.log('  ✓ Created/updated industry benchmarks for Leaders dimensions')
+
+    // Step 12: Create Blockers assessment
+    console.log('\n📋 Step 12: Creating Blockers assessment...')
+    let { data: assessmentBlockers, error: assessmentBlockersError } = await supabase
+      .from('assessments')
+      .select('id')
+      .eq('title', 'Blockers Assessment - Demo')
+      .maybeSingle()
+
+    if (assessmentBlockersError && assessmentBlockersError.code !== 'PGRST116') {
+      throw assessmentBlockersError
+    }
+
+    let assessmentBlockersId: string
+    if (!assessmentBlockers) {
+      const { data: newAssessment, error: createError } = await supabase
+        .from('assessments')
+        .insert({
+          title: 'Blockers Assessment - Demo',
+          description: 'Assessment identifying organizational blockers across 5 key dimensions.',
+          type: 'custom',
+          is_360: false,
+          status: 'active',
+          created_by: adminUser.id,
+          number_of_questions: 20, // Randomly select 20 questions from ~40 question pool
+        })
+        .select('id')
+        .single()
+
+      if (createError) throw createError
+      assessmentBlockersId = newAssessment.id
+      console.log('  ✓ Created Blockers assessment')
+    } else {
+      assessmentBlockersId = assessmentBlockers.id
+      console.log('  ✓ Using existing Blockers assessment')
+    }
+
+    // Step 13: Create Blockers dimensions
+    console.log('\n📋 Step 13: Creating Blockers dimensions...')
+    const blockersDimIds: string[] = []
+
+    const { data: existingBlockersDims } = await supabase
+      .from('dimensions')
+      .select('id, name')
+      .eq('assessment_id', assessmentBlockersId)
+
+    const existingBlockersDimMap = new Map<string, string>()
+    existingBlockersDims?.forEach(d => existingBlockersDimMap.set(d.name, d.id))
+
+    for (const dim of BLOCKERS_DIMENSIONS) {
+      let dimensionId: string
+
+      if (existingBlockersDimMap.has(dim.name)) {
+        dimensionId = existingBlockersDimMap.get(dim.name)!
+      } else {
+        const { data: dimension, error: dimError } = await supabase
+          .from('dimensions')
+          .insert({
+            assessment_id: assessmentBlockersId,
+            name: dim.name,
+            code: dim.code,
+            parent_id: null,
+          })
+          .select('id')
+          .single()
+
+        if (dimError) throw dimError
+        dimensionId = dimension.id
+        console.log(`  ✓ Created dimension: ${dim.name}`)
+      }
+
+      blockersDimIds.push(dimensionId)
+    }
+
+    // Step 14: Create Blockers questions
+    console.log('\n📋 Step 14: Creating Blockers questions...')
+    const { data: existingBlockersFields } = await supabase
+      .from('fields')
+      .select('id, content, dimension_id')
+      .eq('assessment_id', assessmentBlockersId)
+      .eq('type', 'multiple_choice')
+
+    let blockersFieldCount = 0
+    let blockersOrder = 1
+
+    // Group questions by dimension
+    const questionsByDim = new Map<number, typeof BLOCKERS_QUESTIONS>()
+    BLOCKERS_QUESTIONS.forEach(q => {
+      if (!questionsByDim.has(q.dimensionIndex)) {
+        questionsByDim.set(q.dimensionIndex, [])
+      }
+      questionsByDim.get(q.dimensionIndex)!.push(q)
+    })
+
+    for (let dimIndex = 0; dimIndex < blockersDimIds.length; dimIndex++) {
+      const dimId = blockersDimIds[dimIndex]
+      const questions = questionsByDim.get(dimIndex) || []
+
+      for (const question of questions) {
+        const exists = existingBlockersFields?.some(f => 
+          f.dimension_id === dimId && 
+          f.content === question.text
+        )
+
+        if (!exists) {
+          await supabase
+            .from('fields')
+            .insert({
+              assessment_id: assessmentBlockersId,
+              dimension_id: dimId,
+              type: 'multiple_choice',
+              content: question.text,
+              order: blockersOrder++,
+              number: blockersOrder - 1,
+              required: true,
+              anchors: ANCHORS,
+              insights_table: [ANCHOR_INSIGHTS],
+            })
+
+          blockersFieldCount++
+        }
+      }
+    }
+
+    if (blockersFieldCount > 0) {
+      console.log(`  ✓ Created ${blockersFieldCount} new questions for Blockers assessment`)
+    } else {
+      console.log('  ✓ All Blockers questions already exist')
+    }
+
+    // Step 15: Create industry benchmarks for Blockers
+    console.log('\n📋 Step 15: Creating industry benchmarks for Blockers...')
+    for (let i = 0; i < blockersDimIds.length; i++) {
+      await supabase
+        .from('benchmarks')
+        .upsert({
+          dimension_id: blockersDimIds[i],
+          industry_id: industryId,
+          value: BLOCKERS_BENCHMARKS[i],
+        }, {
+          onConflict: 'dimension_id,industry_id',
+        })
+    }
+    console.log('  ✓ Created/updated industry benchmarks for Blockers dimensions')
+
+    // Step 16: Create groups
+    console.log('\n📋 Step 16: Creating groups...')
+    const groupIds: string[] = []
+
+    // Group users by groupIndex
+    const usersByGroup = new Map<number, typeof USERS>()
+    USERS.forEach(user => {
+      if (!usersByGroup.has(user.groupIndex)) {
+        usersByGroup.set(user.groupIndex, [])
+      }
+      usersByGroup.get(user.groupIndex)!.push(user)
+    })
+
+    for (let groupIndex = 0; groupIndex < GROUPS.length; groupIndex++) {
+      const groupData = GROUPS[groupIndex]
+      const groupUsers = usersByGroup.get(groupIndex) || []
+      
+      // Find target user (position is null)
+      const targetUser = groupUsers.find(u => u.position === null)
+      const targetUserId = targetUser ? userIds[USERS.indexOf(targetUser)] : null
+
+      // Check if group exists
+      let { data: existingGroup, error: groupLookupError } = await supabase
+        .from('groups')
+        .select('id')
+        .eq('name', groupData.name)
+        .maybeSingle()
+
+      if (groupLookupError && groupLookupError.code !== 'PGRST116') {
+        throw groupLookupError
+      }
+
+      let groupId: string
+      if (!existingGroup) {
+        const { data: newGroup, error: createError } = await supabase
+          .from('groups')
+          .insert({
+            client_id: clientId,
+            name: groupData.name,
+            description: groupData.description,
+            target_id: targetUserId,
+          })
+          .select('id')
+          .single()
+
+        if (createError) throw createError
+        groupId = newGroup.id
+        console.log(`  ✓ Created group: ${groupData.name}`)
+      } else {
+        groupId = existingGroup.id
+        // Update target_id if needed
+        if (targetUserId) {
+          await supabase
+            .from('groups')
+            .update({ target_id: targetUserId })
+            .eq('id', groupId)
+        }
+        console.log(`  ✓ Using existing group: ${groupData.name}`)
+      }
+
+      groupIds.push(groupId)
+
+      // Add/update group members
+      await supabase
+        .from('group_members')
+        .delete()
+        .eq('group_id', groupId)
+
+      const memberInserts = groupUsers.map(user => {
+        const userIndex = USERS.indexOf(user)
+        return {
+          group_id: groupId,
+          profile_id: userIds[userIndex],
+          position: user.position,
+          leader: user.leader || false,
+        }
+      })
+
+      await supabase
+        .from('group_members')
+        .insert(memberInserts)
+
+      console.log(`  ✓ Added ${memberInserts.length} members to ${groupData.name}`)
+    }
+
+    // Summary
     console.log('\n✅ Seeder completed successfully!\n')
     console.log('📊 Summary:')
     console.log(`  • Client: Demo Client - 360 Survey`)
-    console.log(`  • Assessment: 360-Degree Leadership Assessment - Demo`)
-    console.log(`  • Dimensions: ${DIMENSIONS.length}`)
-    console.log(`  • Questions: ${fieldIds.length} multiple choice questions`)
-    console.log(`  • Users: ${USERS.length} (1 supervisor, 1 target, 3 subordinates)`)
-    console.log(`  • Assignments: ${assignmentIds.length} (all completed)`)
-    console.log(`  • Answers: ${answerCount}`)
+    console.log(`  • Users: ${USERS.length} across ${GROUPS.length} groups`)
+    console.log(`  • Assessments:`)
+    console.log(`    - 360: ${DIMENSIONS_360.length} dimensions, ${QUESTIONS_360.length} questions`)
+    console.log(`    - Leaders: ${LEADERS_PARENT_DIMENSIONS.length} parent dimensions, ${LEADERS_SUBDIMENSIONS.length} subdimensions, ${LEADERS_QUESTIONS.length} questions`)
+    console.log(`    - Blockers: ${BLOCKERS_DIMENSIONS.length} dimensions, ${BLOCKERS_QUESTIONS.length} questions`)
+    console.log(`  • Groups: ${GROUPS.length}`)
     console.log(`\n🔗 Next steps:`)
     console.log(`  1. Log in as admin@demo.com / DemoAdmin123!`)
     console.log(`  2. Navigate to the demo client`)
-    console.log(`  3. View the assessment and group`)
-    console.log(`  4. Generate a 360 report for ${USERS[1].name} (target)`)
-    console.log(`\n👥 Demo Users:`)
+    console.log(`  3. Use the Survey Simulator to create assignments and generate reports`)
+    console.log(`  4. Test with 360, Leaders, and Blockers assessments`)
+    console.log(`\n👥 Demo Users (${USERS.length} total):`)
     USERS.forEach((user, index) => {
-      console.log(`  ${index + 1}. ${user.name} (${user.email}) - ${user.position || 'Target'}`)
+      console.log(`  ${index + 1}. ${user.name} (${user.email}) - ${user.position || 'Target'} - Group ${user.groupIndex + 1}`)
     })
 
   } catch (error) {

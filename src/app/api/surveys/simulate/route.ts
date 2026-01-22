@@ -120,6 +120,13 @@ export async function POST(request: NextRequest) {
     const expiresAt = new Date()
     expiresAt.setDate(expiresAt.getDate() + 30)
 
+    // Generate a survey_id for this batch of assignments
+    const surveyId = crypto.randomUUID()
+
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'simulate/route.ts:123',message:'Generated survey_id for batch',data:{surveyId,group_id,assessment_id,memberCount:groupMembers.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+
     // Create assignments and generate answers for each group member
     for (const member of groupMembers) {
       // Check if assignment already exists
@@ -137,27 +144,52 @@ export async function POST(request: NextRequest) {
         assignmentId = existingAssignment.id
         // Delete existing answers if assignment exists
         await adminClient.from('answers').delete().eq('assignment_id', assignmentId)
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'simulate/route.ts:136',message:'Using existing assignment',data:{assignmentId,hasSurveyId:false},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
+        
+        // Update existing assignment with survey_id
+        await adminClient
+          .from('assignments')
+          .update({ survey_id: surveyId })
+          .eq('id', assignmentId)
       } else {
         // Create new assignment
+        // For all assessments (360, Leaders, Blockers), use group.target_id to identify who is being rated
+        const targetIdForAssignment = group.target_id || null
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'simulate/route.ts:158',message:'Creating assignment',data:{memberId:member.profile_id,assessmentId:assessment_id,is360:assessment.is_360,groupTargetId:group.target_id,targetIdForAssignment},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+        // #endregion
+        
         const { data: newAssignment, error: assignError } = await adminClient
           .from('assignments')
           .insert({
             user_id: member.profile_id,
             assessment_id: assessment_id,
-            target_id: assessment.is_360 ? (group.target_id || null) : null,
+            target_id: targetIdForAssignment,
+            survey_id: surveyId,
             expires: expiresAt.toISOString(),
             completed: false,
             started_at: new Date().toISOString(),
           })
-          .select('id')
+          .select('id, survey_id, user_id, target_id')
           .single()
 
         if (assignError || !newAssignment) {
+          // #region agent log
+          fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'simulate/route.ts:175',message:'Failed to create assignment',data:{error:assignError?.message,memberId:member.profile_id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+          // #endregion
           console.error(`Failed to create assignment for user ${member.profile_id}:`, assignError)
           continue
         }
 
         assignmentId = newAssignment.id
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'simulate/route.ts:185',message:'Created assignment',data:{assignmentId,surveyId:newAssignment.survey_id,userId:newAssignment.user_id,targetId:newAssignment.target_id,is360:assessment.is_360},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+        // #endregion
 
         // Create assignment_fields entries
         const assignmentFields = answerableFields.map((field, index) => ({

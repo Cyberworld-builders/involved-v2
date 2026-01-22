@@ -167,33 +167,353 @@ export async function generatePDFFromView(
       throw new Error('No page containers found in the report')
     }
 
-    // Get the total height of all content
-    const totalHeight = await page.evaluate(() => {
-      // Calculate total height including all page containers and margins
-      const pageContainers = document.querySelectorAll('.page-container')
-      if (pageContainers.length === 0) return 1080
+    // Inject CSS to fix layout issues for PDF generation FIRST
+    // This must happen before measurements so margins are removed
+    await page.addStyleTag({
+      content: `
+        .report-view-container {
+          position: static !important;
+          overflow: visible !important;
+          height: auto !important;
+          display: block !important;
+          top: auto !important;
+          left: auto !important;
+          right: auto !important;
+          bottom: auto !important;
+          padding-top: 0 !important;
+          padding-bottom: 0 !important;
+          margin: 0 !important;
+        }
+        .report-view-container > div {
+          display: block !important;
+          max-width: none !important;
+          width: 100% !important;
+          padding-top: 0 !important;
+          padding-bottom: 0 !important;
+          margin: 0 !important;
+        }
+        /* Remove margins from page containers for PDF - prevents overflow */
+        .page-container {
+          margin-top: 0 !important;
+          margin-bottom: 0 !important;
+        }
+        /* Ensure cover page doesn't overflow - use page-break-before on second page instead */
+        .page-container:first-child {
+          page-break-after: auto !important;
+        }
+        .page-container:nth-child(2) {
+          page-break-before: always !important;
+        }
+        /* Remove page-break-after from last page to prevent blank page at end */
+        .page-container:last-child {
+          page-break-after: auto !important;
+        }
+        /* Fix footer positioning - ensure it's at the bottom accounting for page-wrapper padding */
+        .page-footer {
+          bottom: 0 !important;
+          position: absolute !important;
+        }
+        /* Ensure page-wrapper doesn't overflow container */
+        .page-wrapper {
+          padding-bottom: 59px !important;
+        }
+        @media print {
+          .report-view-container {
+            position: static !important;
+            overflow: visible !important;
+            height: auto !important;
+            display: block !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            margin: 0 !important;
+          }
+          .report-view-container > div {
+            display: block !important;
+            max-width: none !important;
+            width: 100% !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            margin: 0 !important;
+          }
+          /* Remove margins in print media as well */
+          .page-container {
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+          }
+          /* Ensure cover page doesn't overflow - use page-break-before on second page instead */
+          .page-container:first-child {
+            page-break-after: auto !important;
+          }
+          .page-container:nth-child(2) {
+            page-break-before: always !important;
+          }
+          /* Remove page-break-after from last page to prevent blank page at end */
+          .page-container:last-child {
+            page-break-after: auto !important;
+          }
+          /* Fix footer positioning in print */
+          .page-footer {
+            bottom: 0 !important;
+            position: absolute !important;
+          }
+          /* Ensure page-wrapper doesn't overflow container */
+          .page-wrapper {
+            padding-bottom: 59px !important;
+          }
+        }
+      `
+    })
+    
+    // Wait for CSS to apply
+    await page.waitForTimeout(200)
+
+    // Get the total height of all content and detailed measurements
+    const pageMeasurements = await page.evaluate(() => {
+      // #region agent log
+      const logData = {
+        location: 'export-pdf-playwright.ts:171',
+        message: 'Measuring page containers AFTER margin removal',
+        data: { containerCount: 0, measurements: [] as any[] },
+        timestamp: Date.now(),
+        sessionId: 'debug-session',
+        runId: 'post-fix',
+        hypothesisId: 'A'
+      };
+      fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData)}).catch(()=>{});
+      // #endregion
       
+      // Calculate total height - margins should now be 0
+      const pageContainers = document.querySelectorAll('.page-container')
+      if (pageContainers.length === 0) return { totalHeight: 1080, measurements: [] }
+      
+      const measurements: Array<{index: number, height: number, marginTop: number, marginBottom: number, computedHeight: string, totalHeight: number}> = []
       let total = 0
-      pageContainers.forEach((container) => {
+      
+      pageContainers.forEach((container, index) => {
         const rect = container.getBoundingClientRect()
-        total += rect.height + 40 // 40px for margins (20px top + 20px bottom)
+        const styles = window.getComputedStyle(container)
+        const marginTop = parseInt(styles.marginTop) || 0
+        const marginBottom = parseInt(styles.marginBottom) || 0
+        const computedHeight = styles.height
+        const totalHeight = rect.height + marginTop + marginBottom
+        
+        measurements.push({
+          index,
+          height: rect.height,
+          marginTop,
+          marginBottom,
+          computedHeight,
+          totalHeight
+        })
+        
+        total += totalHeight
       })
       
-      return Math.max(1080, total + 100) // Add some padding
+      // #region agent log
+      const logData2 = {
+        location: 'export-pdf-playwright.ts:205',
+        message: 'Page container measurements complete (post-fix)',
+        data: { containerCount: pageContainers.length, measurements, totalHeight: total },
+        timestamp: Date.now(),
+        sessionId: 'debug-session',
+        runId: 'post-fix',
+        hypothesisId: 'A'
+      };
+      fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData2)}).catch(()=>{});
+      // #endregion
+      
+      return { totalHeight: Math.max(1080, total + 100), measurements }
     })
 
+    const totalHeight = pageMeasurements.totalHeight
     console.log(`Total content height: ${totalHeight}px`)
+    
+    // #region agent log
+    const logData3 = {
+      location: 'export-pdf-playwright.ts:217',
+      message: 'Container height analysis (post-fix)',
+      data: { 
+        containerCount: pageMeasurements.measurements.length,
+        avgHeight: pageMeasurements.measurements.reduce((sum, m) => sum + m.height, 0) / pageMeasurements.measurements.length,
+        minHeight: Math.min(...pageMeasurements.measurements.map(m => m.height)),
+        maxHeight: Math.max(...pageMeasurements.measurements.map(m => m.height)),
+        avgTotalHeight: pageMeasurements.measurements.reduce((sum, m) => sum + m.totalHeight, 0) / pageMeasurements.measurements.length,
+        measurements: pageMeasurements.measurements.slice(0, 5) // First 5 for analysis
+      },
+      timestamp: Date.now(),
+      sessionId: 'debug-session',
+      runId: 'post-fix',
+      hypothesisId: 'A'
+    };
+    fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData3)}).catch(()=>{});
+    // #endregion
+
+
+    // Emulate print media to ensure print styles are applied
+    // This is critical for CSS page-break rules to work
+    await page.emulateMedia({ media: 'print' })
+    
+    // Wait for print styles to apply
+    await page.waitForTimeout(500)
 
     // Update viewport to ensure all content is visible
     // Use a very tall viewport so Playwright can capture all pages
+    // Note: totalHeight now reflects containers without margins (1100px each instead of 1140px)
     await page.setViewportSize({ width: 1920, height: Math.min(totalHeight, 50000) })
     
     // Wait a moment for viewport change to take effect
     await page.waitForTimeout(500)
 
+    // Check PDF page dimensions and page break CSS before generating
+    // Focus on first few pages (cover + TOC) to diagnose blank page issue
+    const pdfPageInfo = await page.evaluate(() => {
+      // #region agent log
+      const logData = {
+        location: 'export-pdf-playwright.ts:270',
+        message: 'Checking footer positioning and last page break',
+        data: { 
+          containerCount: document.querySelectorAll('.page-container').length,
+          layoutPadding: null as any,
+          firstPagePosition: null as any,
+          lastPageInfo: null as any,
+          footerPositions: [] as any[],
+          pageBreakStyles: [] as any[]
+        },
+        timestamp: Date.now(),
+        sessionId: 'debug-session',
+        runId: 'run4',
+        hypothesisId: 'K'
+      };
+      
+      // Check layout container padding
+      const layoutContainer = document.querySelector('.report-view-container')
+      const innerContainer = layoutContainer?.querySelector('div')
+      if (layoutContainer) {
+        const layoutStyles = window.getComputedStyle(layoutContainer)
+        const innerStyles = innerContainer ? window.getComputedStyle(innerContainer) : null
+        logData.data.layoutPadding = {
+          outerPaddingTop: layoutStyles.paddingTop,
+          outerPaddingBottom: layoutStyles.paddingBottom,
+          innerPaddingTop: innerStyles?.paddingTop || null,
+          innerPaddingBottom: innerStyles?.paddingBottom || null,
+          totalTopPadding: (parseInt(layoutStyles.paddingTop) || 0) + (parseInt(innerStyles?.paddingTop || '0') || 0)
+        }
+      }
+      
+      const containers = document.querySelectorAll('.page-container')
+      
+      // Get first page position
+      const firstPage = containers[0]
+      if (firstPage) {
+        const firstRect = firstPage.getBoundingClientRect()
+        const firstStyles = window.getComputedStyle(firstPage)
+        logData.data.firstPagePosition = {
+          top: firstRect.top,
+          left: firstRect.left,
+          height: firstRect.height,
+          marginTop: firstStyles.marginTop,
+          marginBottom: firstStyles.marginBottom,
+          computedTop: firstStyles.top,
+          offsetTop: (firstPage as HTMLElement).offsetTop
+        }
+      }
+      
+      // Get last page info
+      const lastPage = containers[containers.length - 1]
+      if (lastPage) {
+        const lastStyles = window.getComputedStyle(lastPage)
+        const lastRect = lastPage.getBoundingClientRect()
+        logData.data.lastPageInfo = {
+          index: containers.length - 1,
+          pageBreakAfter: lastStyles.pageBreakAfter || lastStyles.breakAfter,
+          height: lastRect.height,
+          marginBottom: lastStyles.marginBottom
+        }
+      }
+      
+      // Get footer positions for first 3 pages
+      const footerPositions = Array.from(containers).slice(0, 3).map((container, i) => {
+        const footer = container.querySelector('.page-footer')
+        if (footer) {
+          const footerStyles = window.getComputedStyle(footer)
+          const footerRect = footer.getBoundingClientRect()
+          const containerRect = container.getBoundingClientRect()
+          return {
+            pageIndex: i,
+            footerBottom: footerStyles.bottom,
+            footerPosition: footerStyles.position,
+            footerTop: footerRect.top,
+            containerBottom: containerRect.bottom,
+            distanceFromBottom: containerRect.bottom - footerRect.bottom
+          }
+        }
+        return { pageIndex: i, footer: null }
+      })
+      
+      // Get detailed info for first 3 pages
+      const pageBreakStyles = Array.from(containers).slice(0, 3).map((container, i) => {
+        const styles = window.getComputedStyle(container)
+        const rect = container.getBoundingClientRect()
+        return {
+          index: i,
+          isFirst: i === 0,
+          isLast: i === containers.length - 1,
+          top: rect.top,
+          height: rect.height,
+          marginTop: styles.marginTop,
+          marginBottom: styles.marginBottom,
+          pageBreakAfter: styles.pageBreakAfter || styles.breakAfter
+        }
+      })
+      
+      logData.data.pageBreakStyles = pageBreakStyles
+      logData.data.footerPositions = footerPositions
+      fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData)}).catch(()=>{});
+      // #endregion
+      
+      // A4 dimensions in pixels at 96 DPI: 210mm × 297mm = 794px × 1123px
+      // But Playwright uses points: A4 = 595.276 × 841.890 points
+      // At 72 DPI (standard for PDF): A4 = 595.276 × 841.890 points ≈ 794px × 1123px at 96 DPI
+      const containerHeight = 1100
+      const marginTop = parseInt(pageBreakStyles[0]?.marginTop || '0') || 0
+      const marginBottom = parseInt(pageBreakStyles[0]?.marginBottom || '0') || 0
+      const containerWithMargins = containerHeight + marginTop + marginBottom
+      
+      return {
+        a4HeightPx: 1123, // Approximate A4 height in pixels at 96 DPI
+        a4HeightPoints: 841.890, // A4 height in points
+        containerHeight,
+        containerWithMargins,
+        marginTop,
+        marginBottom
+      }
+    })
+    
+    // #region agent log
+    const logData4 = {
+      location: 'export-pdf-playwright.ts:300',
+      message: 'PDF page dimension analysis - after footer and last page fixes',
+      data: {
+        a4HeightPx: pdfPageInfo.a4HeightPx,
+        containerHeight: pdfPageInfo.containerHeight,
+        containerWithMargins: pdfPageInfo.containerWithMargins,
+        marginTop: pdfPageInfo.marginTop,
+        marginBottom: pdfPageInfo.marginBottom,
+        exceedsA4: pdfPageInfo.containerWithMargins > pdfPageInfo.a4HeightPx,
+        overflow: pdfPageInfo.containerWithMargins - pdfPageInfo.a4HeightPx
+      },
+      timestamp: Date.now(),
+      sessionId: 'debug-session',
+      runId: 'run4',
+      hypothesisId: 'K'
+    };
+    fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData4)}).catch(()=>{});
+    // #endregion
+
     // Generate PDF with A4 size matching legacy dimensions
     // Use displayHeaderFooter: false to avoid browser headers
     // Note: Playwright's PDF generation will automatically handle page breaks based on CSS
+    // The print media emulation ensures CSS page-break rules are respected
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
@@ -206,9 +526,22 @@ export async function generatePDFFromView(
       preferCSSPageSize: false,
       scale: 1,
       displayHeaderFooter: false,
-      // Ensure we capture all content by using the full page height
-      // Playwright will respect CSS page-break rules
+      // Ensure we capture all content - Playwright will respect CSS page-break rules
+      // when print media is emulated
     })
+    
+    // #region agent log
+    const logData5 = {
+      location: 'export-pdf-playwright.ts:330',
+      message: 'PDF generation complete - after footer and last page fixes',
+      data: { pdfBufferSize: pdfBuffer.length },
+      timestamp: Date.now(),
+      sessionId: 'debug-session',
+      runId: 'run4',
+      hypothesisId: 'K'
+    };
+    fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData5)}).catch(()=>{});
+    // #endregion
 
     await context.close()
     return Buffer.from(pdfBuffer)

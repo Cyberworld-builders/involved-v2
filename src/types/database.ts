@@ -392,6 +392,7 @@ export interface Database {
           expires: string
           whitelabel: boolean
           job_id: string | null
+          survey_id: string | null
           url: string | null
           completed: boolean
           started_at: string | null
@@ -408,6 +409,7 @@ export interface Database {
           expires: string
           whitelabel?: boolean
           job_id?: string | null
+          survey_id?: string | null
           url?: string | null
           completed?: boolean
           started_at?: string | null
@@ -424,6 +426,7 @@ export interface Database {
           expires?: string
           whitelabel?: boolean
           job_id?: string | null
+          survey_id?: string | null
           url?: string | null
           completed?: boolean
           started_at?: string | null
