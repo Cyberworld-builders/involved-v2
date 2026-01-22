@@ -136,10 +136,55 @@ export async function PUT(
       )
     }
 
+    // Get current feedback entry to check existing type and dimension
+    const { data: currentFeedback } = await adminClient
+      .from('feedback_library')
+      .select('dimension_id, type, assessment_id')
+      .eq('id', id)
+      .single()
+
+    if (!currentFeedback) {
+      return NextResponse.json(
+        { error: 'Feedback not found' },
+        { status: 404 }
+      )
+    }
+
+    // Determine final dimension_id and type
+    const finalDimensionId = dimension_id !== undefined ? dimension_id : currentFeedback.dimension_id
+    const finalType = type !== undefined ? type : currentFeedback.type
+
+    // Require dimension_id
+    if (!finalDimensionId) {
+      return NextResponse.json(
+        { error: 'dimension_id is required' },
+        { status: 400 }
+      )
+    }
+
+    // Enforce one overall feedback per dimension (if changing to overall or dimension)
+    if (finalType === 'overall' && (type !== undefined || dimension_id !== undefined)) {
+      const { data: existingOverall } = await adminClient
+        .from('feedback_library')
+        .select('id')
+        .eq('assessment_id', currentFeedback.assessment_id)
+        .eq('dimension_id', finalDimensionId)
+        .eq('type', 'overall')
+        .neq('id', id) // Exclude current entry
+        .maybeSingle()
+
+      if (existingOverall) {
+        return NextResponse.json(
+          { error: 'This dimension already has an overall feedback entry. Each dimension can only have one overall feedback.' },
+          { status: 400 }
+        )
+      }
+    }
+
     // Update feedback entry
     const updateData: Record<string, unknown> = {}
-    if (dimension_id !== undefined) updateData.dimension_id = dimension_id || null
-    if (type !== undefined) updateData.type = type
+    if (dimension_id !== undefined) updateData.dimension_id = finalDimensionId
+    if (type !== undefined) updateData.type = finalType
     if (feedback !== undefined) updateData.feedback = feedback
     if (min_score !== undefined) updateData.min_score = min_score || null
     if (max_score !== undefined) updateData.max_score = max_score || null

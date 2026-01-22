@@ -2,8 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import FeedbackListClient from './feedback-list-client'
+import FeedbackManageClient from './feedback-manage-client'
 
 export default async function FeedbackPage() {
   const supabase = await createClient()
@@ -45,13 +44,10 @@ export default async function FeedbackPage() {
           <Link href="/dashboard/feedback/bulk-upload">
             <Button variant="outline">Bulk Upload</Button>
           </Link>
-          <Link href="/dashboard/feedback/create">
-            <Button>Create Feedback</Button>
-          </Link>
         </div>
       </div>
 
-      <FeedbackListClient assessments={assessments || []} />
+      <FeedbackManageClient assessments={assessments || []} />
     </div>
   )
 }

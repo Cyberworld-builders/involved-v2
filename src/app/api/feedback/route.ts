@@ -52,9 +52,6 @@ export async function GET(request: NextRequest) {
 
     if (dimensionId) {
       query = query.eq('dimension_id', dimensionId)
-    } else if (dimensionId === null || searchParams.get('dimension_id') === 'null') {
-      // Filter for overall feedback (dimension_id IS NULL)
-      query = query.is('dimension_id', null)
     }
 
     if (type) {
@@ -116,9 +113,9 @@ export async function POST(request: NextRequest) {
     const { assessment_id, dimension_id, type, feedback, min_score, max_score } = body
 
     // Validate required fields
-    if (!assessment_id || !type || !feedback) {
+    if (!assessment_id || !dimension_id || !type || !feedback) {
       return NextResponse.json(
-        { error: 'Missing required fields: assessment_id, type, feedback' },
+        { error: 'Missing required fields: assessment_id, dimension_id, type, feedback' },
         { status: 400 }
       )
     }
@@ -128,6 +125,24 @@ export async function POST(request: NextRequest) {
         { error: 'Type must be "overall" or "specific"' },
         { status: 400 }
       )
+    }
+
+    // Enforce one overall feedback per dimension
+    if (type === 'overall') {
+      const { data: existingOverall } = await adminClient
+        .from('feedback_library')
+        .select('id')
+        .eq('assessment_id', assessment_id)
+        .eq('dimension_id', dimension_id)
+        .eq('type', 'overall')
+        .maybeSingle()
+
+      if (existingOverall) {
+        return NextResponse.json(
+          { error: 'This dimension already has an overall feedback entry. Each dimension can only have one overall feedback.' },
+          { status: 400 }
+        )
+      }
     }
 
     // Verify user has access to the assessment
@@ -149,7 +164,7 @@ export async function POST(request: NextRequest) {
       .from('feedback_library')
       .insert({
         assessment_id,
-        dimension_id: dimension_id || null,
+        dimension_id,
         type,
         feedback,
         min_score: min_score || null,

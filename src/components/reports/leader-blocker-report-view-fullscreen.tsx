@@ -25,6 +25,8 @@ interface DimensionReport {
   geonorm: number | null
   geonorm_participant_count: number
   improvement_needed: boolean
+  overall_feedback: string | null
+  overall_feedback_id: string | null
   specific_feedback: string | null
   specific_feedback_id: string | null
   // Legacy structure expects these
@@ -476,20 +478,30 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                     }}
                   >
                     <div className="feedbacks" style={{ marginTop: '70px' }}>
+                      {dimension.overall_feedback && (
+                        <FeedbackSection
+                          number="01"
+                          title="Overall Feedback"
+                          content={dimension.overall_feedback}
+                          type="overall"
+                        />
+                      )}
+                      {dimension.specific_feedback && (
+                        <FeedbackSection
+                          number={dimension.overall_feedback ? "02" : "01"}
+                          title="Actionable Feedback"
+                          content={dimension.specific_feedback}
+                          type="actionable"
+                        />
+                      )}
                       <FeedbackSection
-                        number="01"
-                        title="Overall Feedback"
-                        content={dimension.specific_feedback}
-                        type="overall"
-                      />
-                      <FeedbackSection
-                        number="02"
-                        title="Actionable Feedback"
-                        content={dimension.specific_feedback}
-                        type="actionable"
-                      />
-                      <FeedbackSection
-                        number="03"
+                        number={
+                          dimension.overall_feedback && dimension.specific_feedback
+                            ? "03"
+                            : dimension.overall_feedback || dimension.specific_feedback
+                            ? "02"
+                            : "01"
+                        }
                         title="Your Thoughts For Action Planning"
                         type="thoughts"
                       />

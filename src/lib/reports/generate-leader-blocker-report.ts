@@ -25,6 +25,8 @@ interface DimensionReport {
   geonorm: number | null
   geonorm_participant_count: number
   improvement_needed: boolean
+  overall_feedback: string | null
+  overall_feedback_id: string | null
   specific_feedback: string | null
   specific_feedback_id: string | null
 }
@@ -183,6 +185,11 @@ export async function generateLeaderBlockerReport(
       (industryBenchmark !== null && targetScore < industryBenchmark) ||
       (geonorm !== undefined && targetScore < geonorm.avg_score)
 
+    // Get overall feedback for this dimension
+    const overallFeedback = assignedFeedback.find(
+      (f) => f.dimension_id === dimension.id && f.type === 'overall'
+    )
+
     // Get specific feedback for this dimension
     const specificFeedback = assignedFeedback.find(
       (f) => f.dimension_id === dimension.id && f.type === 'specific'
@@ -197,6 +204,8 @@ export async function generateLeaderBlockerReport(
       geonorm: geonorm?.avg_score || null,
       geonorm_participant_count: geonorm?.participant_count || 0,
       improvement_needed: improvementNeeded,
+      overall_feedback: overallFeedback?.feedback_content || null,
+      overall_feedback_id: overallFeedback?.feedback_id || null,
       specific_feedback: specificFeedback?.feedback_content || null,
       specific_feedback_id: specificFeedback?.feedback_id || null,
     })
@@ -209,11 +218,8 @@ export async function generateLeaderBlockerReport(
         dimensionReports.length
       : 0
 
-  // Get overall feedback
-  const overallFeedback = assignedFeedback.find(
-    (f) => f.dimension_id === null && f.type === 'overall'
-  )
-
+  // Overall feedback is now dimension-specific, so we don't have assessment-wide overall feedback
+  // Set to null to maintain API compatibility
   return {
     assignment_id: assignmentId,
     user_id: assignment.user_id,
@@ -225,8 +231,8 @@ export async function generateLeaderBlockerReport(
     group_name: group?.name || null,
     overall_score: overallScore,
     dimensions: dimensionReports,
-    overall_feedback: overallFeedback?.feedback_content || null,
-    overall_feedback_id: overallFeedback?.feedback_id || null,
+    overall_feedback: null, // Overall feedback is now dimension-specific
+    overall_feedback_id: null,
     generated_at: new Date().toISOString(),
   }
 }

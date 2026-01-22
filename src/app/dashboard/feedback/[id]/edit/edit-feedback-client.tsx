@@ -53,8 +53,6 @@ export default function EditFeedbackClient({ feedback, assessments }: EditFeedba
   const [dimensionId, setDimensionId] = useState<string | null>(feedback.dimension_id)
   const [type, setType] = useState<'overall' | 'specific'>(feedback.type)
   const [feedbackContent, setFeedbackContent] = useState(feedback.feedback)
-  const [minScore, setMinScore] = useState<string>(feedback.min_score?.toString() || '')
-  const [maxScore, setMaxScore] = useState<string>(feedback.max_score?.toString() || '')
 
   // Dimensions for selected assessment
   const [dimensions, setDimensions] = useState<Dimension[]>([])
@@ -81,12 +79,6 @@ export default function EditFeedbackClient({ feedback, assessments }: EditFeedba
     loadDimensions()
   }, [assessmentId])
 
-  // Reset dimension when type changes to overall
-  useEffect(() => {
-    if (type === 'overall') {
-      setDimensionId(null)
-    }
-  }, [type])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -107,8 +99,8 @@ export default function EditFeedbackClient({ feedback, assessments }: EditFeedba
       return
     }
 
-    if (type === 'specific' && !dimensionId) {
-      setError('Please select a dimension for specific feedback')
+    if (!dimensionId) {
+      setError('Please select a dimension')
       setLoading(false)
       return
     }
@@ -120,11 +112,11 @@ export default function EditFeedbackClient({ feedback, assessments }: EditFeedba
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          dimension_id: dimensionId || null,
+          dimension_id: dimensionId,
           type,
           feedback: feedbackContent,
-          min_score: minScore ? parseFloat(minScore) : null,
-          max_score: maxScore ? parseFloat(maxScore) : null,
+          min_score: null,
+          max_score: null,
         }),
       })
 
@@ -202,27 +194,30 @@ export default function EditFeedbackClient({ feedback, assessments }: EditFeedba
             </select>
           </div>
 
-          {type === 'specific' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Dimension <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={dimensionId || ''}
-                onChange={(e) => setDimensionId(e.target.value || null)}
-                required
-                disabled={!assessmentId || dimensions.length === 0}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100"
-              >
-                <option value="">Select a dimension</option>
-                {dimensions.map((dimension) => (
-                  <option key={dimension.id} value={dimension.id}>
-                    {dimension.name} ({dimension.code})
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Dimension <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={dimensionId || ''}
+              onChange={(e) => setDimensionId(e.target.value || null)}
+              required
+              disabled={!assessmentId || dimensions.length === 0}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100"
+            >
+              <option value="">Select a dimension</option>
+              {dimensions.map((dimension) => (
+                <option key={dimension.id} value={dimension.id}>
+                  {dimension.name} ({dimension.code})
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              {type === 'overall' 
+                ? 'Overall feedback provides high-level, strategic guidance for this dimension. Each dimension can only have one overall feedback entry.'
+                : 'Specific feedback provides detailed, actionable guidance for this dimension.'}
+            </p>
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -235,35 +230,6 @@ export default function EditFeedbackClient({ feedback, assessments }: EditFeedba
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Minimum Score (optional)
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={minScore}
-                onChange={(e) => setMinScore(e.target.value)}
-                placeholder="e.g., 1.0"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Maximum Score (optional)
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={maxScore}
-                onChange={(e) => setMaxScore(e.target.value)}
-                placeholder="e.g., 5.0"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-          </div>
 
           <div className="flex gap-4">
             <Button type="submit" disabled={loading}>

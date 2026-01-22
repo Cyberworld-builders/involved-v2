@@ -136,11 +136,7 @@ export default function FeedbackListClient({ assessments }: FeedbackListClientPr
 
     // Filter by dimension
     if (filterDimension !== 'all') {
-      if (filterDimension === 'overall') {
-        filtered = filtered.filter((f) => f.dimension_id === null)
-      } else {
-        filtered = filtered.filter((f) => f.dimension_id === filterDimension)
-      }
+      filtered = filtered.filter((f) => f.dimension_id === filterDimension)
     }
 
     // Search in feedback content
@@ -248,16 +244,12 @@ export default function FeedbackListClient({ assessments }: FeedbackListClientPr
                 <option value="all">
                   {filterAssessment === 'all' ? 'Select an assessment first' : 'All dimensions'}
                 </option>
-                {filterAssessment !== 'all' && (
-                  <>
-                    <option value="overall">Overall</option>
-                    {availableDimensions.map((dimension) => (
-                      <option key={dimension.id} value={dimension.id}>
-                        {dimension.name}
-                      </option>
-                    ))}
-                  </>
-                )}
+                {filterAssessment !== 'all' &&
+                  availableDimensions.map((dimension) => (
+                    <option key={dimension.id} value={dimension.id}>
+                      {dimension.name}
+                    </option>
+                  ))}
               </select>
             </div>
 

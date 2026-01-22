@@ -110,6 +110,11 @@ export default function Sidebar({ className, isOpen = true, onClose, userProfile
       icon: '📊',
     },
     {
+      name: 'Feedback',
+      href: '/dashboard/feedback',
+      icon: '💬',
+    },
+    {
       name: 'Resources',
       href: '/dashboard/resources',
       icon: '📚',
