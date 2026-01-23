@@ -6,7 +6,7 @@
  */
 
 import { chromium } from 'playwright-core'
-import chromiumExecutable from '@sparticuz/chromium'
+import chromiumPkg from 'chrome-aws-lambda'
 
 /**
  * Generate PDF from fullscreen report view URL
@@ -27,13 +27,24 @@ export async function generatePDFFromView(
   // In local development, use the default Playwright browser
   const isProduction = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME
   
+  let executablePath: string | undefined
+  let args: string[] | undefined
+  
+  if (isProduction) {
+    try {
+      executablePath = await chromiumPkg.executablePath
+      args = chromiumPkg.args
+    } catch (error) {
+      console.warn('Failed to get chrome-aws-lambda executable, falling back to default:', error)
+      // Fall back to default Playwright browser
+    }
+  }
+  
   // Launch browser
   const browser = await chromium.launch({
     headless: true,
-    ...(isProduction && {
-      executablePath: await chromiumExecutable.executablePath(),
-      args: chromiumExecutable.args,
-    }),
+    ...(executablePath && { executablePath }),
+    ...(args && { args }),
   })
 
   try {
