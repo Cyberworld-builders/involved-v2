@@ -6,7 +6,6 @@
  */
 
 import { chromium } from 'playwright-core'
-import chromiumPkg from 'chrome-aws-lambda'
 
 /**
  * Generate PDF from fullscreen report view URL
@@ -25,6 +24,7 @@ export async function generatePDFFromView(
 ): Promise<Buffer> {
   // Use serverless-optimized Chromium for Vercel/AWS Lambda
   // In local development, use the default Playwright browser
+  // Use dynamic import to avoid webpack bundling issues
   const isProduction = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME
   
   let executablePath: string | undefined
@@ -32,8 +32,10 @@ export async function generatePDFFromView(
   
   if (isProduction) {
     try {
-      executablePath = await chromiumPkg.executablePath
-      args = chromiumPkg.args
+      // Dynamic import to avoid webpack bundling during build
+      const chromiumPkg = await import('chrome-aws-lambda')
+      executablePath = await chromiumPkg.default.executablePath
+      args = chromiumPkg.default.args
     } catch (error) {
       console.warn('Failed to get chrome-aws-lambda executable, falling back to default:', error)
       // Fall back to default Playwright browser
