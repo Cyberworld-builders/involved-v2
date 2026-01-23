@@ -34,6 +34,12 @@ interface DimensionReport {
   geonorm_participant_count: number
   improvement_needed: boolean
   text_feedback: string[]
+  description?: string
+  feedback?: {
+    Self: string[]
+    'Direct Report': string[]
+    Others: string[]
+  }
   // Legacy structure expects these fields
   definition?: string
   flagged?: Record<string, boolean>
@@ -107,11 +113,13 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
     return scores
   }
 
-  // Organize feedback by rater type (for now, put all in Others since we don't have rater type for feedback)
-  // TODO: Enhance backend to organize feedback by rater type
+  // Organize feedback by rater type
   const organizeFeedback = (dim: DimensionReport) => {
-    // For now, all feedback goes to "Others" category
-    // In legacy, feedback is organized by Self, Direct Report, Others
+    // Use feedback organized by rater type if available, otherwise fall back to text_feedback
+    if (dim.feedback) {
+      return dim.feedback
+    }
+    // Fallback: put all feedback in Others category
     return {
       Self: [] as string[],
       'Direct Report': [] as string[],
@@ -251,8 +259,8 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                     margin: '20px 0 40px',
                   }}
                 >
-                  {dimension.definition && (
-                    <p>{dimension.definition}</p>
+                  {(dimension.description || dimension.definition) && (
+                    <p>{dimension.description || dimension.definition}</p>
                   )}
 
                   <div className="chart" style={{ width: `${REPORT_SPACING.contentWidth}px`, height: `${REPORT_SPACING.chartHeight}px`, marginTop: '20px' }}>
@@ -344,7 +352,7 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                         gap: '0',
                       }}
                     >
-                      {/* Industry Norm Group - Always shown */}
+                      {/* GEONORM Group - Always shown */}
                       <div
                         className="norm-group industry"
                         style={{
@@ -384,7 +392,7 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                             flexShrink: 0,
                           }}
                         >
-                          Industry Norm for<br />
+                          GEONORM for<br />
                           <span style={{ fontWeight: 600 }}>
                             {dimension.industry_benchmark !== null ? 'Industry' : 'NO INDUSTRY SET'}
                           </span>

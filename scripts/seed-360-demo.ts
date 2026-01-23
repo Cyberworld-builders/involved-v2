@@ -391,6 +391,178 @@ const BLOCKERS_QUESTIONS = [
 const BLOCKERS_BENCHMARKS = [3.1, 3.0, 2.9, 3.2, 3.1]
 
 // ============================================================================
+// FEEDBACK LIBRARY DATA
+// ============================================================================
+
+// Leaders feedback - organized by dimension name
+const LEADERS_FEEDBACK: Record<string, { overall: string; specific: string[] }> = {
+  // Parent dimensions (no feedback, only subdimensions have feedback)
+  'Involving-Stakeholders': {
+    overall: '',
+    specific: [],
+  },
+  'Involving-Self': {
+    overall: '',
+    specific: [],
+  },
+  // Subdimensions
+  'Empowerment': {
+    overall: 'Enabling stakeholders to have ownership over their work is one of the biggest workplace trends over the past few decades. It allows stakeholders to feel they are part of something larger than their job and in turn, they are more motivated to engage in work, and stay engaged for longer periods of \'peak\' time. Here are some proven tips you can use:',
+    specific: [
+      'Ownership of one\'s job is highly personal with substantial variation across stakeholders. Engage in meaningful dialogue with your subordinates to figure out what each and every member of your team views as \'having ownership\' over his/her job; then adapt your leadership to meet them at their personal view of job ownership.',
+      'Share/explain how you have developed ownership over your own job. For example, what does \'meaningfulness of work\' mean to you, how do you expect leadership to be shared, how do you like to be involved in decision-making, and what has allowed you to build confidence in your own work.',
+      'Have periodic \'ownership pulse checks\' to see how everyone is doing with empowerment - this could be a short survey, virtual meeting, fire-side chat, or sub-group meetings over coffee. Regardless of the medium, you, as the leader, must take action on the feedback you receive.',
+      'You do not always need to be in the middle of every project - thinking it is \'yours\' because you are the leader. Empower others to lead and guide (including leading you) the project. This will increase stakeholder confidence, allow increased efficiencies, and provide an opportunity for others to develop leadership skills.',
+      'When team members come to you with a problem requesting guidance, ask them to provide a possible solution and work to incorporate that into your guidance.',
+    ],
+  },
+  'Communication': {
+    overall: 'You cannot over communicate. Work on providing the information everyone needs in a timely, proactive fashion. Here are some more detailed steps to help with communication:',
+    specific: [
+      'Recognize that you are the primary conduit for ideas and information between your subordinates and upper management, try to make sure both sides know what the other is concerned about.',
+      'In addition to telling "what" employees should do, tell them "why" they should be doing it, especially if the reason isn\'t obvious.',
+      'Do not delay in providing feedback - whether it is positive or negative - but make sure to begin and end with positives.',
+      'When you learn something new that effects your team, make sure to timely and accurately relay the information.',
+      'Periodically check in with your team (in person, virtually, digitally) to make sure your communication is having its intended effect (i.e., make sure there is no confusion).',
+    ],
+  },
+  'Rewards': {
+    overall: 'Everyone likes to be rewarded for a good job - make sure you are doing so by making rewards more meaningful to each person. More specific actions to boost rewards (and thereby performance and well-being) could include:',
+    specific: [
+      'Ask subordinates how they would like to be rewarded, and attempt to provide them with desired rewards for great work (as long as it is within reason).',
+      'Reward fatigue is a real thing. Find the balance between under and over rewarding to ensure the rewards have true meaning.',
+      'Routinely commend your top performers for their work.',
+      'Sometimes even small recognitions of a subordinate\'s hard work can go a long way - what are some small, but powerful things you can do to recognize outstanding performance.',
+      'Some of the most important rewards are those which have personal, not necessarily monetary meaning, but personal meaning. Find a way to incorporate a "personal touch" with every reward provided.',
+    ],
+  },
+  'Relationships': {
+    overall: 'Relationships might be the single biggest lever you have to work with as a leader - work on building meaningful relationships with your team members. Such as:',
+    specific: [
+      'If you can\'t return an email immediately, send a confirmation you received the message and let them know you will get back to them as soon as you can.',
+      'Listen & internalize suggestions/feedback from stakeholders and either accept the feedback, or explain why you believe it to be inaccurate.',
+      'Try to find solutions that satisfy as many stakeholders as possible.',
+      'When there is a disagreement, try to hear out both parties before making a decision or passing judgement.',
+      'Schedule one on one conversations with stakeholders as well as having impromptu meetings (e.g., taking them to lunch, buy them a cup of coffee, invite them to an open-room virtual meeting).',
+    ],
+  },
+  'Conflict Resolution': {
+    overall: 'We are all humans and conflict is inevitable. Managers \'baby-sit\', while leaders resolve conflict. Focus on resolution so all parties can move forward.',
+    specific: [
+      'Try to find solutions that satisfy as many parties as possible.',
+      'Create dialogue among conflicted parties - use data & facts to arrive at dialogue and stay away from rumors & hearsay.',
+      'Recognize and teach others to recognize that most conflict comes down to a few pieces of truth that everyone can agree on - we get into conflict because we exponentially amplify these few pieces of truth into wild \'stories\'.',
+      'Do not run from conflict. We often see conflict as a bad thing, but this is not always the case. Conflict is often the most authentic form of conversation co-workers can have with one another. The important thing however is to manage it well.',
+      'Do not react immediately or take "sides". Have an open mind and open ears and listen to what the parties involved in the conflict are saying. Document these conversations and keep them confidential.',
+    ],
+  },
+  'Authenticity': {
+    overall: 'Being self-aware and authentic might not work in the short-term, but over the long-haul, doing so will open doors to many positives at work (and help you work through many negatives). In fact, authenticity and self-awareness are hallmarks of great leaders, but you need to make sure there is alignment between your own self-views and how others see you - work to close any perceptional gap that might be discovered.',
+    specific: [
+      'If you find yourself in a unique, and possibly uncomfortable position, always fall back on your values.',
+      'Do not hide your real-self, let others see the real you everyday across all your actions - both face-to-face and virtually.',
+      'As a leader, it is critical to be authentic - provide examples of how your real-self has helped you at work.',
+      'If someone asks you to deviate from your guiding principles, try to find out why, but never stray from who you really are.',
+      'Remember, authenticity is not about being fake, but honestly showing who you are - good and bad - and effectively managing the real you.',
+    ],
+  },
+  'Servitude': {
+    overall: 'Servant leadership is about prioritizing others\' needs and success alongside your own. Effective leaders use their position and resources to help others succeed, creating a culture where everyone can thrive.',
+    specific: [
+      'Prioritize others\' needs and success alongside your own. Look for opportunities to support team members in achieving their goals.',
+      'Use your position and resources to help others succeed. Share knowledge, provide opportunities, and remove obstacles.',
+      'Put the team\'s or organization\'s interests ahead of personal gain. Make decisions that benefit the collective.',
+      'Actively look for ways to support and assist others. Be proactive in offering help before it\'s requested.',
+      'Share credit and recognition rather than seeking it for yourself. Celebrate others\' successes publicly.',
+    ],
+  },
+  'Change': {
+    overall: 'Change is constant in today\'s workplace. Effective leaders embrace change and help others navigate transitions successfully. They create a culture that views change as an opportunity rather than a threat.',
+    specific: [
+      'Embrace change and help others navigate transitions. Be a stabilizing force during uncertain times.',
+      'Adapt your approach when circumstances require a different strategy. Be flexible and open to new methods.',
+      'Champion necessary changes even when they\'re unpopular. Help others understand the rationale and benefits.',
+      'Help others understand the rationale and benefits of change. Communicate clearly about why change is needed.',
+      'Manage your own resistance to change and model flexibility. Show others how to adapt positively.',
+    ],
+  },
+  'Ethical': {
+    overall: 'Ethical leadership is foundational to building trust and creating a positive organizational culture. Leaders who consistently demonstrate ethical behavior inspire others to do the same.',
+    specific: [
+      'Make decisions that align with ethical principles and values. Consider the ethical implications of your actions on all stakeholders.',
+      'Stand up for what\'s right, even when it\'s personally costly. Demonstrate courage in ethical decision-making.',
+      'Create an environment where ethical behavior is expected and rewarded. Set clear ethical standards.',
+      'Address unethical behavior when you observe it. Don\'t turn a blind eye to misconduct.',
+      'Model ethical behavior in both visible and behind-the-scenes actions. Consistency is key.',
+    ],
+  },
+  'Analytical': {
+    overall: 'Strong analytical thinking helps leaders make better decisions and solve complex problems. Effective leaders gather relevant data, identify patterns, and use both quantitative and qualitative information to inform their choices.',
+    specific: [
+      'Gather and analyze relevant data before making important decisions. Don\'t rely solely on intuition.',
+      'Identify patterns and trends that others might miss. Look for connections between seemingly unrelated information.',
+      'Break down complex problems into manageable components. Use structured problem-solving approaches.',
+      'Question assumptions and validate information before acting. Verify facts and challenge conventional wisdom.',
+      'Use both quantitative and qualitative information to inform decisions. Balance data with human insights.',
+    ],
+  },
+}
+
+// Blockers feedback - organized by dimension name
+const BLOCKERS_FEEDBACK: Record<string, { overall: string; specific: string[] }> = {
+  'Communication Barriers': {
+    overall: 'Communication barriers can significantly impact team effectiveness and productivity. Addressing these obstacles requires a systematic approach to improving information flow, clarity, and accessibility across the organization.',
+    specific: [
+      'Establish clear communication protocols and channels. Ensure everyone knows how and when to share important information.',
+      'Create regular check-ins to verify message understanding. Ask team members to summarize key points to confirm clarity.',
+      'Break down information silos by creating cross-functional communication opportunities. Encourage knowledge sharing between departments.',
+      'Address miscommunications immediately when they occur. Use them as learning opportunities to improve future communication.',
+      'Provide training on effective communication techniques, especially for virtual and cross-cultural contexts.',
+    ],
+  },
+  'Process Inefficiencies': {
+    overall: 'Inefficient processes waste time, resources, and energy. Identifying and eliminating unnecessary steps, bottlenecks, and outdated procedures can dramatically improve organizational effectiveness.',
+    specific: [
+      'Regularly review and audit existing processes to identify redundancies and bottlenecks. Involve team members who actually use the processes.',
+      'Streamline approval processes by establishing clear criteria and delegating authority appropriately. Reduce unnecessary layers of review.',
+      'Update or replace outdated systems and tools that create inefficiencies. Invest in technology that supports your team\'s work.',
+      'Create process documentation that is clear, accessible, and regularly updated. Ensure everyone understands the "why" behind processes.',
+      'Empower team members to suggest process improvements. Create a culture where process optimization is everyone\'s responsibility.',
+    ],
+  },
+  'Resource Constraints': {
+    overall: 'Resource constraints can limit your team\'s ability to achieve goals and deliver quality work. Effective resource management involves strategic planning, creative problem-solving, and clear prioritization.',
+    specific: [
+      'Conduct regular resource audits to understand current capacity and constraints. Be transparent about resource limitations with your team.',
+      'Prioritize initiatives based on strategic value and available resources. Learn to say no to low-priority requests.',
+      'Explore creative solutions to resource constraints, such as cross-training, flexible staffing, or partnerships.',
+      'Advocate for necessary resources with clear business cases. Document the impact of resource constraints on outcomes.',
+      'Help team members work more efficiently with existing resources. Provide tools, training, and support to maximize productivity.',
+    ],
+  },
+  'Team Dynamics': {
+    overall: 'Team dynamics significantly impact collaboration, productivity, and job satisfaction. Addressing interpersonal challenges, building trust, and creating a positive team culture are essential for high performance.',
+    specific: [
+      'Foster open communication and create safe spaces for team members to express concerns and ideas. Address conflicts early before they escalate.',
+      'Build trust through consistency, transparency, and follow-through. Keep commitments and be honest about challenges.',
+      'Recognize and leverage diverse strengths and perspectives. Create opportunities for different team members to contribute.',
+      'Establish clear team norms and expectations. Ensure everyone understands their roles and how they contribute to team success.',
+      'Invest in team-building activities that strengthen relationships and improve collaboration. Regular check-ins help maintain positive dynamics.',
+    ],
+  },
+  'Strategic Alignment': {
+    overall: 'Strategic alignment ensures that individual efforts contribute to organizational goals. When teams understand how their work connects to the bigger picture, they can make better decisions and stay focused on what matters most.',
+    specific: [
+      'Clearly communicate organizational strategy and how team goals connect to broader objectives. Help team members see the "why" behind their work.',
+      'Regularly review and adjust team priorities to ensure alignment with changing strategic needs. Be flexible when strategy evolves.',
+      'Create opportunities for team members to provide input on strategic direction. Their insights can improve alignment and buy-in.',
+      'Measure and track progress toward strategic goals. Share results regularly so teams can see their impact.',
+      'Address misalignment quickly when it occurs. Help teams understand when and why priorities shift.',
+    ],
+  },
+}
+
+// ============================================================================
 // USER DATA (20-25 users across 3-4 groups)
 // ============================================================================
 
@@ -812,6 +984,8 @@ async function main() {
         )
 
         if (!exists) {
+          const dimensionName = DIMENSIONS_360[dimIndex].name
+          
           // Description field
           await supabase
             .from('fields')
@@ -838,6 +1012,19 @@ async function main() {
               required: true,
               anchors: ANCHORS,
               insights_table: [ANCHOR_INSIGHTS],
+            })
+
+          // Text input field for developmental comments
+          await supabase
+            .from('fields')
+            .insert({
+              assessment_id: assessment360Id,
+              dimension_id: dimensionId,
+              type: 'text_input',
+              content: `Developmental Comments for ${dimensionName}`,
+              order: order++,
+              number: order - 1,
+              required: false,
             })
 
           fieldCount360++
@@ -1280,6 +1467,149 @@ async function main() {
         .insert(memberInserts)
 
       console.log(`  ✓ Added ${memberInserts.length} members to ${groupData.name}`)
+    }
+
+    // Step 17: Create feedback library entries for Leaders and Blockers
+    console.log('\n📋 Step 17: Creating feedback library entries...')
+    
+    // Get all dimensions for Leaders and Blockers assessments
+    const { data: leadersDimensions } = await supabase
+      .from('dimensions')
+      .select('id, name, parent_id')
+      .eq('assessment_id', assessmentLeadersId)
+    
+    const { data: blockersDimensions } = await supabase
+      .from('dimensions')
+      .select('id, name')
+      .eq('assessment_id', assessmentBlockersId)
+    
+    // Check existing feedback to avoid duplicates
+    const { data: existingFeedback } = await supabase
+      .from('feedback_library')
+      .select('id, assessment_id, dimension_id, type')
+      .in('assessment_id', [assessmentLeadersId, assessmentBlockersId])
+    
+    const existingFeedbackMap = new Map<string, boolean>()
+    existingFeedback?.forEach(f => {
+      const key = `${f.assessment_id}-${f.dimension_id || 'null'}-${f.type}`
+      existingFeedbackMap.set(key, true)
+    })
+    
+    let feedbackCount = 0
+    
+    // Seed Leaders feedback (only for subdimensions, not parent dimensions)
+    if (leadersDimensions) {
+      for (const dimension of leadersDimensions) {
+        // Skip parent dimensions (they don't have feedback)
+        if (!dimension.parent_id) continue
+        
+        const feedbackData = LEADERS_FEEDBACK[dimension.name]
+        if (!feedbackData || !feedbackData.overall) continue
+        
+        // Check if overall feedback exists
+        const overallKey = `${assessmentLeadersId}-${dimension.id}-overall`
+        if (!existingFeedbackMap.has(overallKey)) {
+          await supabase
+            .from('feedback_library')
+            .insert({
+              assessment_id: assessmentLeadersId,
+              dimension_id: dimension.id,
+              type: 'overall',
+              feedback: feedbackData.overall,
+              min_score: null,
+              max_score: null,
+              created_by: adminUser.id,
+            })
+          feedbackCount++
+        }
+        
+        // Insert specific feedback entries
+        for (const specificText of feedbackData.specific) {
+          // Check if this specific feedback already exists (by content)
+          const { data: existingSpecific } = await supabase
+            .from('feedback_library')
+            .select('id')
+            .eq('assessment_id', assessmentLeadersId)
+            .eq('dimension_id', dimension.id)
+            .eq('type', 'specific')
+            .eq('feedback', specificText)
+            .maybeSingle()
+          
+          if (!existingSpecific) {
+            await supabase
+              .from('feedback_library')
+              .insert({
+                assessment_id: assessmentLeadersId,
+                dimension_id: dimension.id,
+                type: 'specific',
+                feedback: specificText,
+                min_score: null,
+                max_score: null,
+                created_by: adminUser.id,
+              })
+            feedbackCount++
+          }
+        }
+      }
+    }
+    
+    // Seed Blockers feedback
+    if (blockersDimensions) {
+      for (const dimension of blockersDimensions) {
+        const feedbackData = BLOCKERS_FEEDBACK[dimension.name]
+        if (!feedbackData || !feedbackData.overall) continue
+        
+        // Check if overall feedback exists
+        const overallKey = `${assessmentBlockersId}-${dimension.id}-overall`
+        if (!existingFeedbackMap.has(overallKey)) {
+          await supabase
+            .from('feedback_library')
+            .insert({
+              assessment_id: assessmentBlockersId,
+              dimension_id: dimension.id,
+              type: 'overall',
+              feedback: feedbackData.overall,
+              min_score: null,
+              max_score: null,
+              created_by: adminUser.id,
+            })
+          feedbackCount++
+        }
+        
+        // Insert specific feedback entries
+        for (const specificText of feedbackData.specific) {
+          // Check if this specific feedback already exists (by content)
+          const { data: existingSpecific } = await supabase
+            .from('feedback_library')
+            .select('id')
+            .eq('assessment_id', assessmentBlockersId)
+            .eq('dimension_id', dimension.id)
+            .eq('type', 'specific')
+            .eq('feedback', specificText)
+            .maybeSingle()
+          
+          if (!existingSpecific) {
+            await supabase
+              .from('feedback_library')
+              .insert({
+                assessment_id: assessmentBlockersId,
+                dimension_id: dimension.id,
+                type: 'specific',
+                feedback: specificText,
+                min_score: null,
+                max_score: null,
+                created_by: adminUser.id,
+              })
+            feedbackCount++
+          }
+        }
+      }
+    }
+    
+    if (feedbackCount > 0) {
+      console.log(`  ✓ Created ${feedbackCount} feedback library entries`)
+    } else {
+      console.log('  ✓ All feedback library entries already exist')
     }
 
     // Summary

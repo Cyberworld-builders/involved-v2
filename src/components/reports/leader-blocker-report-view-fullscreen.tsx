@@ -276,7 +276,7 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
       <PageContainer pageNumber={pageNumbers.toc} id={`${pageNumbers.toc}`}>
         <PageWrapper>
           <PageHeader
-            pageNumber={pageNumber}
+            pageNumber={pageNumbers.toc}
             logo={`involve-${reportType}-logo-small.png`}
             logoWidth={reportType === 'leader' ? 166 : 174}
           />

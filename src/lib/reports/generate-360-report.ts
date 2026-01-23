@@ -41,6 +41,12 @@ interface DimensionReport {
   geonorm_participant_count: number
   improvement_needed: boolean
   text_feedback: string[]
+  description?: string
+  feedback?: {
+    Self: string[]
+    'Direct Report': string[]
+    Others: string[]
+  }
 }
 
 interface Report360Data {
@@ -220,12 +226,31 @@ export async function generate360Report(
   // Calculate GEOnorms
   const geonorms = await calculateGEOnorms(group.id, assignment.assessment_id, dimensionIds)
 
+  // Get description fields (rich_text) for each dimension
+  const { data: descriptionFields } = await adminClient
+    .from('fields')
+    .select('dimension_id, content')
+    .eq('assessment_id', assignment.assessment_id)
+    .eq('type', 'rich_text')
+    .in('dimension_id', dimensionIds)
+  
+  const descriptionByDimension = new Map<string, string>()
+  descriptionFields?.forEach((field) => {
+    if (field.dimension_id && field.content) {
+      // If multiple description fields exist for a dimension, use the first one
+      if (!descriptionByDimension.has(field.dimension_id)) {
+        descriptionByDimension.set(field.dimension_id, field.content)
+      }
+    }
+  })
+
   // Get text feedback from 360 responses
   const { data: textAnswers } = await adminClient
     .from('answers')
     .select(`
       value,
       assignment_id,
+      user_id,
       field:fields!answers_field_id_fkey(
         dimension_id,
         type
@@ -234,18 +259,42 @@ export async function generate360Report(
     .in('assignment_id', assignmentIds)
     .eq('fields.type', 'text_input')
 
-  // Group text feedback by dimension
-  const textFeedbackByDimension = new Map<string, string[]>()
+  // Group text feedback by dimension and rater type
+  // Structure: dimensionId -> { Self: [], Direct Report: [], Others: [] }
+  const textFeedbackByDimension = new Map<string, { Self: string[]; 'Direct Report': string[]; Others: string[] }>()
+  
   textAnswers?.forEach((answer) => {
     // Type assertion for nested object (Supabase returns arrays for relations)
     const field = (answer.field as unknown) as { dimension_id: string | null; type: string } | null
     const dimensionId = field?.dimension_id || 'overall'
+    
     if (!textFeedbackByDimension.has(dimensionId)) {
-      textFeedbackByDimension.set(dimensionId, [])
+      textFeedbackByDimension.set(dimensionId, { Self: [], 'Direct Report': [], Others: [] })
     }
-    if (answer.value) {
-      textFeedbackByDimension.get(dimensionId)!.push(answer.value)
+    
+    if (!answer.value) return
+    
+    // Find the assignment to get rater type
+    const answerAssignment = allTargetAssignments.find((a) => a.id === answer.assignment_id)
+    if (!answerAssignment) return
+    
+    // Determine rater type
+    // All assignments have the same target_id (the person being rated)
+    // Check if the user_id (rater) matches the target_id (self-assessment)
+    let raterType: 'Self' | 'Direct Report' | 'Others'
+    const targetId = assignment.target_id // All assignments have the same target_id
+    if (answerAssignment.user_id === targetId) {
+      raterType = 'Self'
+    } else {
+      const raterTypeFromMap = raterMap.get(answerAssignment.user_id) || 'other'
+      if (raterTypeFromMap === 'direct_report') {
+        raterType = 'Direct Report'
+      } else {
+        raterType = 'Others'
+      }
     }
+    
+    textFeedbackByDimension.get(dimensionId)![raterType].push(answer.value)
   })
 
   // Build dimension reports
@@ -330,8 +379,12 @@ export async function generate360Report(
       (industryBenchmark !== null && overallScore < industryBenchmark) ||
       (geonorm !== undefined && overallScore < geonorm.avg_score)
 
-    // Get text feedback for this dimension
-    const textFeedback = textFeedbackByDimension.get(dimension.id) || []
+    // Get text feedback for this dimension (organized by rater type)
+    const textFeedbackData = textFeedbackByDimension.get(dimension.id) || { Self: [], 'Direct Report': [], Others: [] }
+    const allTextFeedback = [...textFeedbackData.Self, ...textFeedbackData['Direct Report'], ...textFeedbackData.Others]
+    
+    // Get description field for this dimension
+    const description = descriptionByDimension.get(dimension.id)
 
     dimensionReports.push({
       dimension_id: dimension.id,
@@ -343,7 +396,9 @@ export async function generate360Report(
       geonorm: geonorm?.avg_score || null,
       geonorm_participant_count: geonorm?.participant_count || 0,
       improvement_needed: improvementNeeded,
-      text_feedback: textFeedback,
+      text_feedback: allTextFeedback, // Keep for backward compatibility
+      description: description,
+      feedback: textFeedbackData, // Organized by rater type
     })
   }
 
