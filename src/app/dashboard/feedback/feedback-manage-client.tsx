@@ -51,7 +51,7 @@ export default function FeedbackManageClient({ assessments }: FeedbackManageClie
   // Editing state
   const [editingEntry, setEditingEntry] = useState<{
     id: string | null
-    dimensionId: string
+    dimensionId: string | null
     type: 'overall' | 'specific'
   } | null>(null)
   const [editForm, setEditForm] = useState({
@@ -125,7 +125,7 @@ export default function FeedbackManageClient({ assessments }: FeedbackManageClie
   const handleEditFeedback = (entry: FeedbackEntry) => {
     setEditingEntry({
       id: entry.id,
-      dimensionId: entry.dimension_id,
+      dimensionId: entry.dimension_id ?? null,
       type: entry.type,
     })
     setEditForm({

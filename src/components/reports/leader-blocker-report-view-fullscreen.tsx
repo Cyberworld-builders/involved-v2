@@ -167,11 +167,11 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
       // Leaders TOC
       const sections: Array<{ title: string; page: number; subSections?: Array<{ title: string; page: number }> }> = [
         { title: 'Read Me First', page: pageNumbers.readMeFirst },
-        { title: 'Summary of Scores', page: pageNumbers.scoresSummary },
+        { title: 'Summary of Scores', page: (pageNumbers as { scoresSummary: number }).scoresSummary },
         {
           title: 'Dimension Scores With Feedback:',
           page: 0,
-          subSections: (pageNumbers.dimensionPages as Array<{ dimension: DimensionReport; overallPage: number; subdimensionPages: Array<{ subdim: SubdimensionReport; page: number }> }>).flatMap((dp) => {
+          subSections: (pageNumbers.dimensionPages as Array<{ dimension: DimensionReport; overallPage: number; subdimensionPages: Array<{ subdim: SubdimensionReport; page: number; feedbackPage?: number }> }>).flatMap((dp) => {
             const subsections: Array<{ title: string; page: number }> = []
             subsections.push({ title: dp.dimension.dimension_name, page: dp.overallPage })
             if (dp.subdimensionPages && dp.subdimensionPages.length > 0) {
@@ -186,9 +186,14 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
       return sections
     } else {
       // Blockers TOC
-      const sections: Array<{ title: string; page: number }> = [
+      const sections: Array<{ title: string; page: number; subSections?: Array<{ title: string; page: number }> }> = [
         { title: 'Read Me First', page: pageNumbers.readMeFirst },
-        { title: 'Summary of Scores', page: (pageNumbers as any).overallBlockerScore },
+        { 
+          title: 'Summary of Scores', 
+          page: isBlocker 
+            ? (pageNumbers as { overallBlockerScore: number }).overallBlockerScore 
+            : (pageNumbers as { scoresSummary: number }).scoresSummary 
+        },
         {
           title: 'Involved-Blockers Dimensions:',
           page: 0,
@@ -407,10 +412,10 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
 
       {/* Subdimensions Overview Page (Leaders only) */}
       {!isBlocker && (
-        <PageContainer pageNumber={pageNumbers.subdimensionsOverview} id={`${pageNumbers.subdimensionsOverview}`}>
+        <PageContainer pageNumber={(pageNumbers as { subdimensionsOverview: number }).subdimensionsOverview} id={`${(pageNumbers as { subdimensionsOverview: number }).subdimensionsOverview}`}>
           <PageWrapper>
             <PageHeader
-              pageNumber={pageNumbers.subdimensionsOverview}
+              pageNumber={(pageNumbers as { subdimensionsOverview: number }).subdimensionsOverview}
               logo={`involve-${reportType}-logo-small.png`}
               logoWidth={166}
             />
@@ -496,16 +501,16 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
               ))}
             </div>
 
-            <PageFooter pageNumber={pageNumbers.subdimensionsOverview} />
+            <PageFooter pageNumber={(pageNumbers as { subdimensionsOverview: number }).subdimensionsOverview} />
           </PageWrapper>
         </PageContainer>
       )}
 
       {/* Overview Info Page */}
-      <PageContainer pageNumber={pageNumbers.overviewInfo} id={`${pageNumbers.overviewInfo}`}>
-        <PageWrapper>
-          <PageHeader
-            pageNumber={pageNumbers.overviewInfo}
+      <PageContainer pageNumber={(pageNumbers as { overviewInfo: number }).overviewInfo} id={`${(pageNumbers as { overviewInfo: number }).overviewInfo}`}>
+          <PageWrapper>
+            <PageHeader
+              pageNumber={(pageNumbers as { overviewInfo: number }).overviewInfo}
             logo={`involve-${reportType}-logo-small.png`}
             logoWidth={reportType === 'leader' ? 166 : 174}
           />
@@ -575,16 +580,16 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
             )}
           </div>
 
-          <PageFooter pageNumber={pageNumbers.overviewInfo} />
+          <PageFooter pageNumber={(pageNumbers as { overviewInfo: number }).overviewInfo} />
         </PageWrapper>
       </PageContainer>
 
       {/* Overview Info Continued (Leaders only) */}
       {!isBlocker && (
-        <PageContainer pageNumber={pageNumbers.overviewInfoContinued} id={`${pageNumbers.overviewInfoContinued}`}>
+        <PageContainer pageNumber={(pageNumbers as { overviewInfoContinued: number }).overviewInfoContinued} id={`${(pageNumbers as { overviewInfoContinued: number }).overviewInfoContinued}`}>
           <PageWrapper>
             <PageHeader
-              pageNumber={pageNumbers.overviewInfoContinued}
+              pageNumber={(pageNumbers as { overviewInfoContinued: number }).overviewInfoContinued}
               logo={`involve-${reportType}-logo-small.png`}
               logoWidth={166}
             />
@@ -608,17 +613,17 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
               </p>
             </div>
 
-            <PageFooter pageNumber={pageNumbers.overviewInfoContinued} />
+            <PageFooter pageNumber={(pageNumbers as { overviewInfoContinued: number }).overviewInfoContinued} />
           </PageWrapper>
         </PageContainer>
       )}
 
       {/* Overall Blocker Score Page (Blockers only) */}
       {isBlocker && (
-        <PageContainer pageNumber={pageNumbers.overallBlockerScore} id={`${pageNumbers.overallBlockerScore}`}>
+        <PageContainer pageNumber={(pageNumbers as { overallBlockerScore: number }).overallBlockerScore} id={`${(pageNumbers as { overallBlockerScore: number }).overallBlockerScore}`}>
           <PageWrapper>
             <PageHeader
-              pageNumber={pageNumbers.overallBlockerScore}
+              pageNumber={(pageNumbers as { overallBlockerScore: number }).overallBlockerScore}
               logo={`involve-${reportType}-logo-small.png`}
               logoWidth={174}
             />
@@ -815,17 +820,17 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
               </div>
             </div>
 
-            <PageFooter pageNumber={pageNumbers.overallBlockerScore} />
+            <PageFooter pageNumber={(pageNumbers as { overallBlockerScore: number }).overallBlockerScore} />
           </PageWrapper>
         </PageContainer>
       )}
 
       {/* Scores Summary Page (Leaders only) */}
       {!isBlocker && (
-        <PageContainer pageNumber={pageNumbers.scoresSummary} id={`${pageNumbers.scoresSummary}`}>
+        <PageContainer pageNumber={(pageNumbers as { scoresSummary: number }).scoresSummary} id={`${(pageNumbers as { scoresSummary: number }).scoresSummary}`}>
           <PageWrapper>
             <PageHeader
-              pageNumber={pageNumbers.scoresSummary}
+              pageNumber={(pageNumbers as { scoresSummary: number }).scoresSummary}
               logo={`involve-${reportType}-logo-small.png`}
               logoWidth={166}
             />
@@ -1044,7 +1049,7 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
               <div style={{ clear: 'both' }}></div>
             </div>
 
-            <PageFooter pageNumber={pageNumbers.scoresSummary} />
+            <PageFooter pageNumber={(pageNumbers as { scoresSummary: number }).scoresSummary} />
           </PageWrapper>
         </PageContainer>
       )}
@@ -1053,7 +1058,7 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
       {reportData.dimensions.map((dimension, dimIdx) => {
         if (!isBlocker) {
           // Leaders: Parent dimension overall page + subdimension pages
-          const dp = (pageNumbers.dimensionPages as Array<{ dimension: DimensionReport; overallPage: number; subdimensionPages: Array<{ subdim: SubdimensionReport; page: number }> }>)[dimIdx]
+          const dp = (pageNumbers.dimensionPages as Array<{ dimension: DimensionReport; overallPage: number; subdimensionPages: Array<{ subdim: SubdimensionReport; page: number; feedbackPage?: number }> }>)[dimIdx]
           const parentFlagged = isFlagged(
             dimension.target_score,
             dimension.industry_benchmark,

@@ -45,11 +45,6 @@ interface DimensionReport {
   flagged?: Record<string, boolean>
   percent?: Record<string, number>
   score?: Record<string, number>
-  feedback?: {
-    Self?: string[]
-    'Direct Report'?: string[]
-    Others?: string[]
-  }
 }
 
 interface Report360Data {

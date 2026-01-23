@@ -273,7 +273,7 @@ export async function generatePDFFromView(
       const logData = {
         location: 'export-pdf-playwright.ts:171',
         message: 'Measuring page containers AFTER margin removal',
-        data: { containerCount: 0, measurements: [] as any[] },
+        data: { containerCount: 0, measurements: [] as Array<Record<string, unknown>> },
         timestamp: Date.now(),
         sessionId: 'debug-session',
         runId: 'post-fix',
@@ -373,11 +373,11 @@ export async function generatePDFFromView(
         message: 'Checking footer positioning and last page break',
         data: { 
           containerCount: document.querySelectorAll('.page-container').length,
-          layoutPadding: null as any,
-          firstPagePosition: null as any,
-          lastPageInfo: null as any,
-          footerPositions: [] as any[],
-          pageBreakStyles: [] as any[]
+          layoutPadding: null as Record<string, unknown> | null,
+          firstPagePosition: null as Record<string, unknown> | null,
+          lastPageInfo: null as Record<string, unknown> | null,
+          footerPositions: [] as Array<Record<string, unknown>>,
+          pageBreakStyles: [] as Array<Record<string, unknown>>
         },
         timestamp: Date.now(),
         sessionId: 'debug-session',
