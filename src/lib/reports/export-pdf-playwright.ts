@@ -6,6 +6,7 @@
  */
 
 import { chromium } from 'playwright-core'
+import chromiumExecutable from '@sparticuz/chromium'
 
 /**
  * Generate PDF from fullscreen report view URL
@@ -22,9 +23,17 @@ export async function generatePDFFromView(
     waitForTimeout?: number
   }
 ): Promise<Buffer> {
+  // Use serverless-optimized Chromium for Vercel/AWS Lambda
+  // In local development, use the default Playwright browser
+  const isProduction = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME
+  
   // Launch browser
   const browser = await chromium.launch({
     headless: true,
+    ...(isProduction && {
+      executablePath: await chromiumExecutable.executablePath(),
+      args: chromiumExecutable.args,
+    }),
   })
 
   try {
