@@ -46,7 +46,8 @@ export default async function ReportPage({
       user:profiles!assignments_user_id_fkey(
         id,
         name,
-        email
+        email,
+        client_id
       ),
       assessment:assessments!assignments_assessment_id_fkey(
         id,
@@ -63,7 +64,8 @@ export default async function ReportPage({
 
   // Type assertions for nested objects (Supabase returns arrays for relations, but .single() should return objects)
   const assessment = (assignment.assessment as unknown) as { id: string; title: string; is_360: boolean } | null
-  const assignmentUser = (assignment.user as unknown) as { id: string; name: string; email: string } | null
+  const assignmentUser = (assignment.user as unknown) as { id: string; name: string; email: string; client_id: string } | null
+  const clientId = assignmentUser?.client_id || profile.client_id
 
   // Check permissions
   const isOwner = assignment.user_id === profile.id
@@ -110,7 +112,7 @@ export default async function ReportPage({
           <Link href={`/api/reports/${assignmentId}/export/csv`}>
             <Button variant="outline">📋 Export CSV</Button>
           </Link>
-          <Link href="/dashboard/assignments">
+          <Link href={`/dashboard/clients/${clientId}?tab=assignments`}>
             <Button variant="outline">Back to Assignments</Button>
           </Link>
         </div>
