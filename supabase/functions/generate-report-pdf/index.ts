@@ -69,6 +69,8 @@ async function generatePDF(
   serviceRoleKey: string
 ): Promise<Uint8Array> {
   try {
+    console.log('[Edge Function] Starting PDF generation', { viewUrl, nextjsApiUrl })
+    
     // Extract assignment ID from view URL or construct the API URL
     // The viewUrl format is: {baseUrl}/reports/{assignmentId}/view
     const urlParts = viewUrl.split('/reports/')
@@ -81,9 +83,8 @@ async function generatePDF(
     // We use the service role key for authentication (passed in request body)
     const apiUrl = `${nextjsApiUrl}/api/reports/${assignmentId}/export/pdf?download=true`
     
-    console.log(`[Info] Calling Next.js API: ${apiUrl}`)
-    console.log(`[Info] Service role key present: ${!!serviceRoleKey}, length: ${serviceRoleKey?.length || 0}`)
-    console.log(`[Info] Auth header will be: Bearer ${serviceRoleKey?.substring(0, 20)}...`)
+    console.log(`[Edge Function] Calling Next.js API: ${apiUrl}`)
+    console.log(`[Edge Function] Service role key present: ${!!serviceRoleKey}, length: ${serviceRoleKey?.length || 0}`)
     
     const response = await fetch(apiUrl, {
       method: 'GET',
@@ -139,6 +140,8 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  console.log('[Edge Function] PDF generation request received')
+
   try {
     // Get Supabase client with service role key
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
@@ -157,6 +160,11 @@ serve(async (req) => {
 
     // Parse request body
     const body: GeneratePDFRequest = await req.json()
+    console.log('[Edge Function] Request body parsed:', {
+      assignment_id: body.assignment_id,
+      view_url: body.view_url,
+      nextjs_api_url: body.nextjs_api_url,
+    })
     const { assignment_id, view_url, nextjs_api_url, job_id, service_role_key } = body
 
     if (!assignment_id || !view_url) {

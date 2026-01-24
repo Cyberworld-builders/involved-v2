@@ -128,6 +128,7 @@ export async function GET(
     // Generate PDF from the fullscreen view
     // Use Puppeteer in Vercel (serverless), Playwright in local development
     const isVercel = !!process.env.VERCEL
+    console.log(`[PDF] Starting PDF generation (Vercel: ${isVercel}, View URL: ${viewUrl})`)
     let pdfBuffer: Buffer
     
     if (isVercel) {
@@ -143,6 +144,7 @@ export async function GET(
       )
     } else {
       // Use Playwright for local development
+      console.log(`[PDF] Using Playwright for local PDF generation`)
       const { generatePDFFromView } = await import('@/lib/reports/export-pdf-playwright')
       pdfBuffer = await generatePDFFromView(
         viewUrl,

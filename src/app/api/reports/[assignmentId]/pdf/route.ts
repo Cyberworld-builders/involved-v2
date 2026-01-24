@@ -207,6 +207,13 @@ export async function POST(
     // Trigger Edge Function asynchronously (don't wait for completion)
     const edgeFunctionUrl = `${supabaseUrl}/functions/v1/generate-report-pdf`
     
+    console.log(`[PDF] Triggering Edge Function for assignment ${assignmentId}`, {
+      edgeFunctionUrl,
+      viewUrl,
+      nextjsApiUrl,
+      jobId,
+    })
+    
     // #region agent log
     fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'pdf/route.ts:182',message:'Calling Edge Function',data:{edgeFunctionUrl,assignmentId,jobId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
     // #endregion
@@ -226,6 +233,8 @@ export async function POST(
       }),
     })
     .then(async (response) => {
+      console.log(`[PDF] Edge Function response: ${response.status} ${response.statusText}`)
+      
       // #region agent log
       fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'pdf/route.ts:200',message:'Edge Function response received',data:{status:response.status,statusText:response.statusText,ok:response.ok},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
       // #endregion
@@ -245,6 +254,8 @@ export async function POST(
       // #endregion
     })
     .catch(error => {
+      console.error(`[PDF] Edge Function fetch failed:`, error)
+      
       // #region agent log
       fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'pdf/route.ts:216',message:'Edge Function fetch failed',data:{error:error.message,stack:error.stack?.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
       // #endregion

@@ -33,22 +33,59 @@ export async function generatePDFFromViewPuppeteer(
   
   if (isProduction) {
     try {
-      const chromium = await import('@sparticuz/chromium')
-      // @sparticuz/chromium exports a default object with executablePath() and args
+      // Try @sparticuz/chromium-min first (includes necessary libraries, works better in Vercel)
+      const chromium = await import('@sparticuz/chromium-min')
+      // @sparticuz/chromium-min exports a default object with executablePath() and args
       executablePath = await chromium.default.executablePath()
       args = chromium.default.args
+      console.log('[Puppeteer] Using @sparticuz/chromium-min for serverless')
     } catch (error) {
-      console.warn('Failed to get @sparticuz/chromium executable:', error)
-      // Will fail, but at least we tried
+      try {
+        // Fallback to regular @sparticuz/chromium
+        const chromium = await import('@sparticuz/chromium')
+        executablePath = await chromium.default.executablePath()
+        args = chromium.default.args
+        console.log('[Puppeteer] Using @sparticuz/chromium for serverless')
+      } catch (fallbackError) {
+        console.warn('Failed to get @sparticuz/chromium executable:', fallbackError)
+        // Will fail, but at least we tried
+      }
     }
   }
   
   // Launch browser
-  const browser = await puppeteer.default.launch({
-    headless: true,
-    ...(executablePath && { executablePath }),
-    ...(args && { args }),
+  console.log('[Puppeteer] Launching browser...', { 
+    isProduction, 
+    hasExecutablePath: !!executablePath,
+    argsCount: args?.length || 0 
   })
+  
+  const launchOptions: any = {
+    headless: true,
+  }
+  
+  if (executablePath) {
+    launchOptions.executablePath = executablePath
+  }
+  
+  if (args && args.length > 0) {
+    launchOptions.args = args
+  }
+  
+  // Additional args for Vercel/serverless environments
+  if (isProduction) {
+    launchOptions.args = [
+      ...(launchOptions.args || []),
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--single-process', // Important for serverless
+    ]
+  }
+  
+  const browser = await puppeteer.default.launch(launchOptions)
+  console.log('[Puppeteer] Browser launched successfully')
 
   try {
     const url = new URL(viewUrl)

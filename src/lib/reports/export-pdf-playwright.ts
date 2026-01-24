@@ -22,6 +22,8 @@ export async function generatePDFFromView(
     waitForTimeout?: number
   }
 ): Promise<Buffer> {
+  console.log('[Playwright] Starting PDF generation from view URL:', viewUrl)
+  
   // Use serverless-optimized Chromium for Vercel/AWS Lambda
   // In local development, use the default Playwright browser
   // Use dynamic import to avoid webpack bundling issues
@@ -30,25 +32,18 @@ export async function generatePDFFromView(
   let executablePath: string | undefined
   let args: string[] | undefined
   
-  if (isProduction) {
-    try {
-      // Try chrome-aws-lambda (for AWS Lambda)
-      const chromiumPkg = await import('chrome-aws-lambda')
-      executablePath = await chromiumPkg.default.executablePath
-      args = chromiumPkg.default.args
-    } catch (error) {
-      console.warn('Failed to get chrome-aws-lambda executable, falling back to default:', error)
-      // Fall back to default Playwright browser (will fail in Vercel but works locally)
-      // Note: In Vercel, we use Puppeteer instead (see export-pdf-puppeteer.ts)
-    }
-  }
+  // Note: In production (Vercel), we use Puppeteer instead (see export-pdf-puppeteer.ts)
+  // Playwright is only used for local development where the default browser works
+  // No need to configure serverless Chromium here since this code path is only for local dev
   
   // Launch browser
+  console.log('[Playwright] Launching browser...', { isProduction, hasExecutablePath: !!executablePath })
   const browser = await chromium.launch({
     headless: true,
     ...(executablePath && { executablePath }),
     ...(args && { args }),
   })
+  console.log('[Playwright] Browser launched successfully')
 
   try {
     const url = new URL(viewUrl)
@@ -78,10 +73,12 @@ export async function generatePDFFromView(
     // #endregion
 
     // Navigate to the fullscreen view
+    console.log('[Playwright] Navigating to view URL...')
     await page.goto(viewUrl, {
       waitUntil: 'networkidle',
       timeout: 60000,
     })
+    console.log('[Playwright] Navigation complete, final URL:', page.url())
 
     // #region agent log
     const finalUrl = page.url()
