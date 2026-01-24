@@ -148,6 +148,37 @@ export async function POST(
       // Continue anyway - report is generated, just not cached
     }
 
+    // Optionally trigger PDF generation (non-blocking, fire-and-forget)
+    // PDF generation is optional and doesn't block report viewing
+    const shouldAutoGeneratePdf = process.env.AUTO_GENERATE_PDF !== 'false' // Default to true unless explicitly disabled
+    
+    if (shouldAutoGeneratePdf) {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
+                     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+                     'http://localhost:3000'
+      
+      const viewUrl = `${baseUrl}/reports/${assignmentId}/view`
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+      const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+
+      // Trigger PDF generation asynchronously (don't wait for completion)
+      fetch(`${supabaseUrl}/functions/v1/generate-report-pdf`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          assignment_id: assignmentId,
+          view_url: viewUrl,
+          nextjs_api_url: baseUrl,
+        }),
+      }).catch(error => {
+        console.error('Error triggering PDF generation (non-blocking):', error)
+        // Don't fail report generation if PDF trigger fails
+      })
+    }
+
     return NextResponse.json({
       success: true,
       report: reportData,

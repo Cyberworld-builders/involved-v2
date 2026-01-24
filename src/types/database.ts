@@ -446,6 +446,12 @@ export interface Database {
           geonorm_data: Record<string, unknown> | null
           calculated_at: string
           updated_at: string
+          pdf_status: 'not_requested' | 'queued' | 'generating' | 'ready' | 'failed' | null
+          pdf_storage_path: string | null
+          pdf_generated_at: string | null
+          pdf_version: number | null
+          pdf_last_error: string | null
+          pdf_job_id: string | null
         }
         Insert: {
           id?: string
@@ -456,6 +462,12 @@ export interface Database {
           geonorm_data?: Record<string, unknown> | null
           calculated_at?: string
           updated_at?: string
+          pdf_status?: 'not_requested' | 'queued' | 'generating' | 'ready' | 'failed' | null
+          pdf_storage_path?: string | null
+          pdf_generated_at?: string | null
+          pdf_version?: number | null
+          pdf_last_error?: string | null
+          pdf_job_id?: string | null
         }
         Update: {
           id?: string
@@ -466,6 +478,12 @@ export interface Database {
           geonorm_data?: Record<string, unknown> | null
           calculated_at?: string
           updated_at?: string
+          pdf_status?: 'not_requested' | 'queued' | 'generating' | 'ready' | 'failed' | null
+          pdf_storage_path?: string | null
+          pdf_generated_at?: string | null
+          pdf_version?: number | null
+          pdf_last_error?: string | null
+          pdf_job_id?: string | null
         }
         Relationships: []
       }

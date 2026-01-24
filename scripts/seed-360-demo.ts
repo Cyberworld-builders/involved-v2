@@ -897,22 +897,22 @@ async function main() {
     let assessment360Id: string
     if (!assessment360) {
       const { data: newAssessment, error: createError } = await supabase
-        .from('assessments')
-        .insert({
-          title: '360-Degree Leadership Assessment - Demo',
-          description: 'Comprehensive 360-degree assessment covering 9 key leadership dimensions with 30 questions.',
-          type: '360',
-          is_360: true,
-          status: 'active',
-          created_by: adminUser.id,
-          use_custom_fields: true,
-          custom_fields: {
-            type: ['name', 'email', 'position'],
-            default: ['', '', ''],
-          },
-        })
-        .select('id')
-        .single()
+      .from('assessments')
+      .insert({
+        title: '360-Degree Leadership Assessment - Demo',
+        description: 'Comprehensive 360-degree assessment covering 9 key leadership dimensions with 30 questions.',
+        type: '360',
+        is_360: true,
+        status: 'active',
+        created_by: adminUser.id,
+        use_custom_fields: true,
+        custom_fields: {
+          type: ['name', 'email', 'position'],
+          default: ['', '', ''],
+        },
+      })
+      .select('id')
+      .single()
 
       if (createError) throw createError
       assessment360Id = newAssessment.id
@@ -942,20 +942,20 @@ async function main() {
       if (existingDimMap360.has(dim.name)) {
         dimensionId = existingDimMap360.get(dim.name)!
       } else {
-        const { data: dimension, error: dimError } = await supabase
-          .from('dimensions')
-          .insert({
+      const { data: dimension, error: dimError } = await supabase
+        .from('dimensions')
+        .insert({
             assessment_id: assessment360Id,
-            name: dim.name,
-            code: dim.code,
-          })
-          .select('id')
-          .single()
+          name: dim.name,
+          code: dim.code,
+        })
+        .select('id')
+        .single()
 
-        if (dimError) throw dimError
+      if (dimError) throw dimError
         dimensionId = dimension.id
-        console.log(`  ✓ Created dimension: ${dim.name}`)
-      }
+      console.log(`  ✓ Created dimension: ${dim.name}`)
+    }
 
       dimension360Ids.push(dimensionId)
     }
@@ -985,46 +985,46 @@ async function main() {
 
         if (!exists) {
           const dimensionName = DIMENSIONS_360[dimIndex].name
-          
-          // Description field
-          await supabase
-            .from('fields')
-            .insert({
-              assessment_id: assessment360Id,
-              dimension_id: dimensionId,
-              type: 'rich_text',
-              content: question.description,
-              order: order++,
-              number: order - 1,
-              required: false,
-            })
 
-          // Multiple choice question
+        // Description field
           await supabase
-            .from('fields')
-            .insert({
+          .from('fields')
+          .insert({
               assessment_id: assessment360Id,
-              dimension_id: dimensionId,
-              type: 'multiple_choice',
+            dimension_id: dimensionId,
+            type: 'rich_text',
+              content: question.description,
+            order: order++,
+            number: order - 1,
+            required: false,
+          })
+
+        // Multiple choice question
+          await supabase
+          .from('fields')
+          .insert({
+              assessment_id: assessment360Id,
+            dimension_id: dimensionId,
+            type: 'multiple_choice',
               content: question.text,
-              order: order++,
-              number: order - 1,
-              required: true,
-              anchors: ANCHORS,
-              insights_table: [ANCHOR_INSIGHTS],
-            })
+            order: order++,
+            number: order - 1,
+            required: true,
+            anchors: ANCHORS,
+            insights_table: [ANCHOR_INSIGHTS],
+          })
 
           // Text input field for developmental comments
           await supabase
-            .from('fields')
-            .insert({
+          .from('fields')
+          .insert({
               assessment_id: assessment360Id,
-              dimension_id: dimensionId,
-              type: 'text_input',
+            dimension_id: dimensionId,
+            type: 'text_input',
               content: `Developmental Comments for ${dimensionName}`,
-              order: order++,
-              number: order - 1,
-              required: false,
+            order: order++,
+            number: order - 1,
+            required: false,
             })
 
           fieldCount360++
@@ -1077,9 +1077,9 @@ async function main() {
           status: 'active',
           created_by: adminUser.id,
           number_of_questions: 20, // Randomly select 20 questions per participant
-        })
-        .select('id')
-        .single()
+          })
+          .select('id')
+          .single()
 
       if (createError) throw createError
       assessmentLeadersId = newAssessment.id
@@ -1419,15 +1419,15 @@ async function main() {
       let groupId: string
       if (!existingGroup) {
         const { data: newGroup, error: createError } = await supabase
-          .from('groups')
-          .insert({
-            client_id: clientId,
+      .from('groups')
+      .insert({
+        client_id: clientId,
             name: groupData.name,
             description: groupData.description,
             target_id: targetUserId,
-          })
-          .select('id')
-          .single()
+      })
+      .select('id')
+      .single()
 
         if (createError) throw createError
         groupId = newGroup.id
@@ -1447,24 +1447,24 @@ async function main() {
       groupIds.push(groupId)
 
       // Add/update group members
-      await supabase
-        .from('group_members')
-        .delete()
-        .eq('group_id', groupId)
+    await supabase
+      .from('group_members')
+      .delete()
+      .eq('group_id', groupId)
 
       const memberInserts = groupUsers.map(user => {
         const userIndex = USERS.indexOf(user)
         return {
-          group_id: groupId,
+      group_id: groupId,
           profile_id: userIds[userIndex],
-          position: user.position,
-          leader: user.leader || false,
+      position: user.position,
+      leader: user.leader || false,
         }
       })
 
       await supabase
-        .from('group_members')
-        .insert(memberInserts)
+      .from('group_members')
+      .insert(memberInserts)
 
       console.log(`  ✓ Added ${memberInserts.length} members to ${groupData.name}`)
     }
@@ -1511,7 +1511,7 @@ async function main() {
         if (!existingFeedbackMap.has(overallKey)) {
           await supabase
             .from('feedback_library')
-            .insert({
+          .insert({
               assessment_id: assessmentLeadersId,
               dimension_id: dimension.id,
               type: 'overall',

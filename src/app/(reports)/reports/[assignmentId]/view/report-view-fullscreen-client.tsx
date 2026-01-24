@@ -11,12 +11,15 @@ type ReportLeaderBlockerData = Parameters<typeof ReportLeaderBlockerViewFullscre
 interface ReportViewFullscreenClientProps {
   assignmentId: string
   is360: boolean
+  initialReportData?: unknown
 }
 
-export default function ReportViewFullscreenClient({ assignmentId, is360 }: ReportViewFullscreenClientProps) {
-  const [loading, setLoading] = useState(true)
+export default function ReportViewFullscreenClient({ assignmentId, is360, initialReportData }: ReportViewFullscreenClientProps) {
+  const [loading, setLoading] = useState(!initialReportData)
   const [error, setError] = useState<string | null>(null)
-  const [reportData, setReportData] = useState<Report360Data | ReportLeaderBlockerData | null>(null)
+  const [reportData, setReportData] = useState<Report360Data | ReportLeaderBlockerData | null>(
+    initialReportData ? (initialReportData as Report360Data | ReportLeaderBlockerData) : null
+  )
 
   const loadReport = useCallback(async () => {
     try {
@@ -41,8 +44,11 @@ export default function ReportViewFullscreenClient({ assignmentId, is360 }: Repo
   }, [assignmentId])
 
   useEffect(() => {
-    loadReport()
-  }, [loadReport])
+    // Only fetch if we don't have initial data
+    if (!initialReportData) {
+      loadReport()
+    }
+  }, [loadReport, initialReportData])
 
   // Set data-report-loaded when report data is available and rendered
   useEffect(() => {

@@ -72,24 +72,51 @@ export async function generatePDFFromView(
 
     const page = await context.newPage()
 
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'export-pdf-playwright.ts:73',message:'About to navigate to view URL',data:{viewUrl,hasCookies:!!cookies,cookieCount:cookies?.length||0},timestamp:Date.now(),sessionId:'debug-session',runId:'run4',hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
+
     // Navigate to the fullscreen view
     await page.goto(viewUrl, {
       waitUntil: 'networkidle',
       timeout: 60000,
     })
 
+    // #region agent log
+    const finalUrl = page.url()
+    const pageTitle = await page.title().catch(() => 'unknown')
+    const pageContent = await page.content().catch(() => 'error getting content')
+    const contentLength = pageContent?.length || 0
+    fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'export-pdf-playwright.ts:80',message:'After navigation',data:{finalUrl,pageTitle,contentLength,hasPageContainer:pageContent?.includes('page-container'),hasReportLoaded:pageContent?.includes('data-report-loaded')},timestamp:Date.now(),sessionId:'debug-session',runId:'run4',hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
+
     // Wait for React to hydrate and content to load
     try {
       // Wait for the report to be loaded
       await page.waitForSelector('[data-report-loaded]', { timeout: 30000 })
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'export-pdf-playwright.ts:88',message:'Report loaded indicator found',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run4',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
     } catch (e) {
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'export-pdf-playwright.ts:91',message:'Report loaded indicator not found',data:{error:e instanceof Error?e.message:'unknown'},timestamp:Date.now(),sessionId:'debug-session',runId:'run4',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
       console.warn('Report loaded indicator not found, continuing...')
     }
 
     // Wait for at least one page container
     try {
       await page.waitForSelector('.page-container', { timeout: 30000 })
+      // #region agent log
+      const pageContainerCount = await page.$$eval('.page-container', els => els.length).catch(() => 0)
+      fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'export-pdf-playwright.ts:100',message:'Page containers found',data:{count:pageContainerCount},timestamp:Date.now(),sessionId:'debug-session',runId:'run4',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
     } catch (e) {
+      // #region agent log
+      const pageContainerCount = await page.$$eval('.page-container', els => els.length).catch(() => 0)
+      const bodyText = await page.evaluate(() => document.body?.innerText?.substring(0, 200) || 'no body').catch(() => 'error')
+      fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'export-pdf-playwright.ts:106',message:'No page containers found',data:{pageContainerCount,bodyTextPreview:bodyText,finalUrl:page.url()},timestamp:Date.now(),sessionId:'debug-session',runId:'run4',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
       throw new Error('No page containers found - report may not have loaded')
     }
 

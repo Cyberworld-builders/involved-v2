@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { PdfActionButtons } from '@/components/reports/pdf-action-buttons'
 import ReportViewClient from './report-view-client'
 
 export default async function ReportPage({
@@ -98,16 +99,11 @@ export default async function ReportPage({
             {assessment?.is_360 ? '360 Assessment Report' : 'Assessment Report'} for {assignmentUser?.name || 'Unknown User'}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <Link href={`/reports/${assignmentId}/view`} target="_blank">
             <Button variant="outline">👁️ View Fullscreen</Button>
           </Link>
-          <Link href={`/api/reports/${assignmentId}/export/pdf`} target="_blank">
-            <Button variant="outline">📄 View PDF</Button>
-          </Link>
-          <Link href={`/api/reports/${assignmentId}/export/pdf?download=true`} target="_blank">
-            <Button variant="outline">💾 Download PDF</Button>
-          </Link>
+          <PdfActionButtons assignmentId={assignmentId} />
           <Link href={`/api/reports/${assignmentId}/export/excel`}>
             <Button variant="outline">📊 Export Excel</Button>
           </Link>

@@ -6,6 +6,8 @@ import { generatePDFFromView } from '@/lib/reports/export-pdf-playwright'
 /**
  * GET /api/reports/:assignmentId/export/pdf
  * Export report as PDF
+ * 
+ * This route now serves PDFs from storage if available, otherwise falls back to on-demand generation.
  * Query param ?download=true forces download, otherwise opens in browser viewer
  */
 export async function GET(
@@ -19,14 +21,36 @@ export async function GET(
     const supabase = await createClient()
     const adminClient = createAdminClient()
 
-    // Verify user is authenticated
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
+    // Verify user is authenticated OR service role (for internal Edge Function calls)
+    const authHeader = request.headers.get('authorization')
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'export/pdf/route.ts:25',message:'Auth check',data:{hasAuthHeader:!!authHeader,authHeaderPrefix:authHeader?.substring(0,20)+'...',hasServiceKey:!!serviceRoleKey,serviceKeyPrefix:serviceRoleKey?.substring(0,20)+'...'},timestamp:Date.now(),sessionId:'debug-session',runId:'run3',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
+    
+    // Normalize both strings for comparison (trim whitespace)
+    const normalizedAuthHeader = authHeader?.trim()
+    const normalizedServiceKey = serviceRoleKey?.trim()
+    const expectedAuthHeader = normalizedServiceKey ? `Bearer ${normalizedServiceKey}` : null
+    
+    const isServiceRole = normalizedAuthHeader?.startsWith('Bearer ') && 
+                         normalizedServiceKey &&
+                         normalizedAuthHeader === expectedAuthHeader
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'export/pdf/route.ts:32',message:'Service role check result',data:{isServiceRole,authHeaderLength:authHeader?.length,serviceKeyLength:serviceRoleKey?.length,matches:authHeader===`Bearer ${serviceRoleKey}`},timestamp:Date.now(),sessionId:'debug-session',runId:'run3',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
+    
+    if (!isServiceRole) {
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser()
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      if (authError || !user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
     }
 
     // Get assignment
@@ -50,7 +74,27 @@ export async function GET(
       )
     }
 
-    // Get the base URL for constructing the fullscreen view URL
+    // Check if PDF exists in storage
+    const { data: reportData, error: reportError } = await adminClient
+      .from('report_data')
+      .select('pdf_status, pdf_storage_path')
+      .eq('assignment_id', assignmentId)
+      .single()
+
+    // If PDF is ready in storage, redirect to signed URL
+    if (reportData?.pdf_status === 'ready' && reportData?.pdf_storage_path) {
+      const { data: signedUrlData, error: urlError } = await adminClient.storage
+        .from('reports-pdf')
+        .createSignedUrl(reportData.pdf_storage_path, 3600) // 1 hour expiry
+
+      if (!urlError && signedUrlData) {
+        // Redirect to signed URL (storage/CDN handles the file)
+        return NextResponse.redirect(signedUrlData.signedUrl)
+      }
+    }
+
+    // Fallback: Generate PDF on-demand (for backward compatibility or if storage PDF is missing)
+    // This ensures the route still works even if PDF generation hasn't completed yet
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
                    request.headers.get('origin') || 
@@ -67,7 +111,14 @@ export async function GET(
     }).filter(c => c.name && c.value)
 
     // Construct the fullscreen view URL (using the route group path, no dashboard layout)
-    const viewUrl = `${baseUrl}/reports/${assignmentId}/view`
+    // If service role authentication, add token to query parameter for view page
+    const viewUrl = isServiceRole 
+      ? `${baseUrl}/reports/${assignmentId}/view?service_role_token=${encodeURIComponent(normalizedServiceKey!)}`
+      : `${baseUrl}/reports/${assignmentId}/view`
+
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'export/pdf/route.ts:120',message:'About to generate PDF',data:{viewUrl,isServiceRole,hasCookies:cookieArray.length>0},timestamp:Date.now(),sessionId:'debug-session',runId:'run4',hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
 
     // Generate PDF from the fullscreen view using Playwright
     // This ensures the PDF is identical to what users see

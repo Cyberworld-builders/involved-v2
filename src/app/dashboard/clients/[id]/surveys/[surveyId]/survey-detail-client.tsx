@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
+import { PdfActionButtons } from '@/components/reports/pdf-action-buttons'
 import { Subject } from '@/lib/reports/get-survey-subjects'
 import { ScoreData } from '@/lib/reports/get-survey-scores'
 
@@ -263,11 +264,7 @@ export default function SurveyDetailClient({
                                   View Report
                                 </Button>
                               </Link>
-                              <Link href={`/api/reports/${assignmentId}/export/pdf`} target="_blank">
-                                <Button variant="outline" size="sm" title="Export PDF">
-                                  📄
-                                </Button>
-                              </Link>
+                              <PdfActionButtons assignmentId={assignmentId} size="sm" />
                             </div>
                           ) : (
                             <span className="text-gray-400">No assignment</span>

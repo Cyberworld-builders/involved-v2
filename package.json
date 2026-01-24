@@ -19,7 +19,7 @@
     "test:e2e:duckduckgo": "playwright test --project=duckduckgo",
     "db:migrate": "supabase migration up",
     "db:migrate:refresh": "./scripts/apply-migration.sh",
-    "db:reset": "supabase db reset",
+    "db:reset": "./scripts/reset-and-seed.sh",
     "db:status": "supabase migration list",
     "db:push": "supabase db push",
     "supabase:restart": "supabase stop && supabase start",
