@@ -39,7 +39,7 @@ export async function generatePDFFromViewPuppeteer(
       executablePath = await chromium.default.executablePath()
       args = chromium.default.args
       console.log('[Puppeteer] Using @sparticuz/chromium-min for serverless')
-    } catch (error) {
+    } catch {
       try {
         // Fallback to regular @sparticuz/chromium
         const chromium = await import('@sparticuz/chromium')
@@ -60,7 +60,13 @@ export async function generatePDFFromViewPuppeteer(
     argsCount: args?.length || 0 
   })
   
-  const launchOptions: any = {
+  interface LaunchOptions {
+    headless: boolean
+    executablePath?: string
+    args?: string[]
+  }
+  
+  const launchOptions: LaunchOptions = {
     headless: true,
   }
   
