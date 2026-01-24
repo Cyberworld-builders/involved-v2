@@ -95,10 +95,16 @@ export async function GET(
 
     // Fallback: Generate PDF on-demand (for backward compatibility or if storage PDF is missing)
     // This ensures the route still works even if PDF generation hasn't completed yet
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
+    let baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
                    request.headers.get('origin') || 
                    'http://localhost:3000'
+    
+    // Ensure baseUrl has a protocol (https:// or http://)
+    // If it's just a domain, add https://
+    if (baseUrl && !baseUrl.match(/^https?:\/\//)) {
+      baseUrl = `https://${baseUrl}`
+    }
 
     // Get all cookies from the request to pass to Playwright for authentication
     const requestCookies = request.headers.get('cookie') || ''

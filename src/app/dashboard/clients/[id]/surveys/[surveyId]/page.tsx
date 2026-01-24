@@ -98,7 +98,7 @@ export default async function SurveyDetailPage({ params }: SurveyDetailPageProps
   // #endregion
   
   try {
-    subjects = await getSurveySubjects(validAssignments, assessment)
+    subjects = await getSurveySubjects(validAssignments)
     
     // #region agent log
     console.log('[DEBUG] Got subjects', {

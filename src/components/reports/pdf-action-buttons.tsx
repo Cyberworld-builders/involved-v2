@@ -197,10 +197,10 @@ export function PdfActionButtons({
           <Button variant="destructive" size={size} onClick={handleRetry}>
             Retry PDF
           </Button>
-          {state.lastError && (
+          {state?.lastError && (
             <details className="text-xs text-gray-500">
               <summary className="cursor-pointer">View error details</summary>
-              <p className="mt-1 text-red-600">{state.lastError}</p>
+              <p className="mt-1 text-red-600">{state?.lastError}</p>
             </details>
           )}
         </div>

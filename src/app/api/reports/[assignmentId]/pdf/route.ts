@@ -97,7 +97,7 @@ export async function POST(
     // Get current PDF status
     const { data: currentReportData, error: fetchError } = await adminClient
       .from('report_data')
-      .select('pdf_status, pdf_job_id, assignment_id')
+      .select('pdf_status, pdf_job_id, assignment_id, pdf_version, pdf_generated_at, pdf_storage_path, pdf_last_error')
       .eq('assignment_id', assignmentId)
       .single()
 
@@ -176,6 +176,12 @@ export async function POST(
     // #region agent log
     fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'pdf/route.ts:171',message:'Before URL replacement',data:{baseUrl,hasVercel:!!process.env.VERCEL,hasAppUrl:!!process.env.NEXT_PUBLIC_APP_URL,origin:request.headers.get('origin')},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
     // #endregion
+
+    // Ensure baseUrl has a protocol (https:// or http://)
+    // If it's just a domain, add https://
+    if (baseUrl && !baseUrl.match(/^https?:\/\//)) {
+      baseUrl = `https://${baseUrl}`
+    }
 
     // For local development: Edge Function runs in Docker, needs host.docker.internal to reach host
     // Replace localhost with host.docker.internal when calling from Edge Function

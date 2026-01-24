@@ -24,8 +24,7 @@ export async function getSurveySubjects(
     user_id: string
     target_id: string | null
     completed: boolean
-  }>,
-  assessment: { is_360: boolean }
+  }>
 ): Promise<Subject[]> {
   const adminClient = createAdminClient()
 
