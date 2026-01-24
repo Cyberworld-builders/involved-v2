@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { generatePDFFromView } from '@/lib/reports/export-pdf-playwright'
 
 /**
  * GET /api/reports/:assignmentId/export/pdf
@@ -126,16 +125,34 @@ export async function GET(
     fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'export/pdf/route.ts:120',message:'About to generate PDF',data:{viewUrl,isServiceRole,hasCookies:cookieArray.length>0},timestamp:Date.now(),sessionId:'debug-session',runId:'run4',hypothesisId:'E'})}).catch(()=>{});
     // #endregion
 
-    // Generate PDF from the fullscreen view using Playwright
-    // This ensures the PDF is identical to what users see
-    const pdfBuffer = await generatePDFFromView(
-      viewUrl,
-      cookieArray,
-      {
-        waitForSelector: '[data-report-loaded]',
-        waitForTimeout: 30000,
-      }
-    )
+    // Generate PDF from the fullscreen view
+    // Use Puppeteer in Vercel (serverless), Playwright in local development
+    const isVercel = !!process.env.VERCEL
+    let pdfBuffer: Buffer
+    
+    if (isVercel) {
+      // Use Puppeteer with @sparticuz/chromium for Vercel
+      const { generatePDFFromViewPuppeteer } = await import('@/lib/reports/export-pdf-puppeteer')
+      pdfBuffer = await generatePDFFromViewPuppeteer(
+        viewUrl,
+        cookieArray,
+        {
+          waitForSelector: '[data-report-loaded]',
+          waitForTimeout: 30000,
+        }
+      )
+    } else {
+      // Use Playwright for local development
+      const { generatePDFFromView } = await import('@/lib/reports/export-pdf-playwright')
+      pdfBuffer = await generatePDFFromView(
+        viewUrl,
+        cookieArray,
+        {
+          waitForSelector: '[data-report-loaded]',
+          waitForTimeout: 30000,
+        }
+      )
+    }
 
     // Get assessment title for filename
     const { data: assessment } = await adminClient

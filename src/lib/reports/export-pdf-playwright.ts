@@ -32,13 +32,14 @@ export async function generatePDFFromView(
   
   if (isProduction) {
     try {
-      // Dynamic import to avoid webpack bundling during build
+      // Try chrome-aws-lambda (for AWS Lambda)
       const chromiumPkg = await import('chrome-aws-lambda')
       executablePath = await chromiumPkg.default.executablePath
       args = chromiumPkg.default.args
     } catch (error) {
       console.warn('Failed to get chrome-aws-lambda executable, falling back to default:', error)
-      // Fall back to default Playwright browser
+      // Fall back to default Playwright browser (will fail in Vercel but works locally)
+      // Note: In Vercel, we use Puppeteer instead (see export-pdf-puppeteer.ts)
     }
   }
   
