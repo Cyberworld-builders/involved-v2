@@ -200,76 +200,46 @@ export async function POST(
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'pdf/route.ts:176',message:'About to trigger Edge Function',data:{assignmentId,supabaseUrl:supabaseUrl?.substring(0,30)+'...',hasServiceKey:!!supabaseServiceKey,viewUrl,nextjsApiUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-
-    // Trigger Edge Function asynchronously (don't wait for completion)
-    const edgeFunctionUrl = `${supabaseUrl}/functions/v1/generate-report-pdf`
-    
-    console.log(`[PDF] Triggering Edge Function for assignment ${assignmentId}`, {
-      edgeFunctionUrl,
-      viewUrl,
-      nextjsApiUrl,
-      jobId,
-    })
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'pdf/route.ts:182',message:'Calling Edge Function',data:{edgeFunctionUrl,assignmentId,jobId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-
-    fetch(edgeFunctionUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${supabaseServiceKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        assignment_id: assignmentId,
-        view_url: viewUrl,
-        nextjs_api_url: nextjsApiUrl,
-        job_id: jobId,
-        service_role_key: supabaseServiceKey, // Pass the key so Edge Function can use it for Next.js API calls
-      }),
-    })
-    .then(async (response) => {
-      console.log(`[PDF] Edge Function response: ${response.status} ${response.statusText}`)
-      
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'pdf/route.ts:200',message:'Edge Function response received',data:{status:response.status,statusText:response.statusText,ok:response.ok},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
-      
-      if (!response.ok) {
-        const errorText = await response.text()
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'pdf/route.ts:205',message:'Edge Function returned error',data:{status:response.status,errorText},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
-        
-        throw new Error(`Edge Function returned ${response.status}: ${errorText}`)
-      }
-      
-      const result = await response.json()
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'pdf/route.ts:212',message:'Edge Function succeeded',data:{result},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
-    })
-    .catch(error => {
-      console.error(`[PDF] Edge Function fetch failed:`, error)
-      
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'pdf/route.ts:216',message:'Edge Function fetch failed',data:{error:error.message,stack:error.stack?.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-      
-      console.error('Error triggering PDF generation Edge Function:', error)
-      // Update status to failed if Edge Function call fails
-      adminClient
-        .from('report_data')
-        .update({
-          pdf_status: 'failed',
-          pdf_last_error: `Failed to trigger PDF generation: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    // When PDF_GENERATION_BACKEND=ecs, ECS Fargate service polls Supabase for queued jobs.
+    // Otherwise trigger Supabase Edge Function (legacy).
+    const pdfBackend = process.env.PDF_GENERATION_BACKEND ?? 'edge'
+    if (pdfBackend === 'ecs') {
+      console.log(`[PDF] Queued for ECS PDF service (assignment ${assignmentId}, jobId ${jobId})`)
+    } else {
+      const edgeFunctionUrl = `${supabaseUrl}/functions/v1/generate-report-pdf`
+      console.log(`[PDF] Triggering Edge Function for assignment ${assignmentId}`, { edgeFunctionUrl, viewUrl, nextjsApiUrl, jobId })
+      fetch(edgeFunctionUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          assignment_id: assignmentId,
+          view_url: viewUrl,
+          nextjs_api_url: nextjsApiUrl,
+          job_id: jobId,
+          service_role_key: supabaseServiceKey,
+        }),
+      })
+        .then(async (response) => {
+          console.log(`[PDF] Edge Function response: ${response.status} ${response.statusText}`)
+          if (!response.ok) {
+            const errorText = await response.text()
+            throw new Error(`Edge Function returned ${response.status}: ${errorText}`)
+          }
         })
-        .eq('assignment_id', assignmentId)
-    })
+        .catch((error) => {
+          console.error('[PDF] Edge Function fetch failed:', error)
+          adminClient
+            .from('report_data')
+            .update({
+              pdf_status: 'failed',
+              pdf_last_error: `Failed to trigger PDF generation: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            })
+            .eq('assignment_id', assignmentId)
+        })
+    }
 
     return NextResponse.json({
       status: 'queued',

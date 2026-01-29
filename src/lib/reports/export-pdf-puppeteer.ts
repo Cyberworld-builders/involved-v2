@@ -34,20 +34,29 @@ export async function generatePDFFromViewPuppeteer(
   if (isProduction) {
     try {
       // Try @sparticuz/chromium-min first (includes necessary libraries, works better in Vercel)
-      const chromium = await import('@sparticuz/chromium-min')
+      const chromiumMin = await import('@sparticuz/chromium-min')
+      const chromium = chromiumMin.default
+      
+      // Configure chromium-min for serverless (disable graphics mode)
+      if (typeof chromium.setGraphicMode === 'function') {
+        chromium.setGraphicMode(false)
+      }
+      
       // @sparticuz/chromium-min exports a default object with executablePath() and args
-      executablePath = await chromium.default.executablePath()
-      args = chromium.default.args
+      executablePath = await chromium.executablePath()
+      args = chromium.args
       console.log('[Puppeteer] Using @sparticuz/chromium-min for serverless')
-    } catch {
+    } catch (chromiumMinError) {
+      console.warn('[Puppeteer] Failed to import @sparticuz/chromium-min, trying regular chromium:', chromiumMinError instanceof Error ? chromiumMinError.message : String(chromiumMinError))
       try {
         // Fallback to regular @sparticuz/chromium
-        const chromium = await import('@sparticuz/chromium')
-        executablePath = await chromium.default.executablePath()
-        args = chromium.default.args
-        console.log('[Puppeteer] Using @sparticuz/chromium for serverless')
+        const chromiumPkg = await import('@sparticuz/chromium')
+        const chromium = chromiumPkg.default
+        executablePath = await chromium.executablePath()
+        args = chromium.args
+        console.log('[Puppeteer] Using @sparticuz/chromium for serverless (fallback)')
       } catch (fallbackError) {
-        console.warn('Failed to get @sparticuz/chromium executable:', fallbackError)
+        console.error('[Puppeteer] Failed to get @sparticuz/chromium executable:', fallbackError instanceof Error ? fallbackError.message : String(fallbackError))
         // Will fail, but at least we tried
       }
     }
