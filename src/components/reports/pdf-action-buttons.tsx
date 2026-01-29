@@ -185,8 +185,8 @@ export function PdfActionButtons({
           <Button variant={variant} size={size} onClick={handleDownload}>
             Download
           </Button>
-          <Button variant="ghost" size={size} onClick={handleRetry} title="Regenerate PDF">
-            ↻
+          <Button variant={variant} size={size} onClick={handleRetry} title="Generate a new PDF (replaces current)">
+            Regenerate PDF
           </Button>
         </div>
       )
