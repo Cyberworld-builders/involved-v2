@@ -95,7 +95,7 @@ export async function POST(
     }
 
     // Get current PDF status
-    const { data: currentReportData, error: fetchError } = await adminClient
+    const { data: currentReportData } = await adminClient
       .from('report_data')
       .select('pdf_status, pdf_job_id, assignment_id, pdf_version, pdf_generated_at, pdf_storage_path, pdf_last_error')
       .eq('assignment_id', assignmentId)
@@ -150,7 +150,7 @@ export async function POST(
     const jobId = crypto.randomUUID()
 
     // Atomically transition to 'queued' status
-    const { data: updatedReportData, error: updateError } = await adminClient
+    const { error: updateError } = await adminClient
       .from('report_data')
       .update({
         pdf_status: 'queued',

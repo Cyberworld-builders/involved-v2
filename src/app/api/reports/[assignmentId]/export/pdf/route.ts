@@ -74,7 +74,7 @@ export async function GET(
     }
 
     // Check if PDF exists in storage
-    const { data: reportData, error: reportError } = await adminClient
+    const { data: reportData } = await adminClient
       .from('report_data')
       .select('pdf_status, pdf_storage_path')
       .eq('assignment_id', assignmentId)
