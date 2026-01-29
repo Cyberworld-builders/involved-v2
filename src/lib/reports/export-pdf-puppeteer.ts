@@ -37,9 +37,11 @@ export async function generatePDFFromViewPuppeteer(
       const chromiumMin = await import('@sparticuz/chromium-min')
       const chromium = chromiumMin.default
       
-      // Configure chromium-min for serverless (disable graphics mode)
-      if (typeof chromium.setGraphicMode === 'function') {
-        chromium.setGraphicMode(false)
+      // Configure chromium-min for serverless (disable graphics mode) - it's a setter, not a method
+      try {
+        (chromium as { setGraphicsMode: boolean }).setGraphicsMode = false
+      } catch {
+        /* ignore */
       }
       
       // @sparticuz/chromium-min exports a default object with executablePath() and args
