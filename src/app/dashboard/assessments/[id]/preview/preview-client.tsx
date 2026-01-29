@@ -413,14 +413,11 @@ export default function AssessmentPreviewClient({ assessmentId }: PreviewClientP
           // Calculate total pages: instructions page (if exists) + question pages
           const totalPages = hasInstructions ? questionPages.length + 1 : questionPages.length
           const instructionsPageIndex = 0
-          const firstQuestionPageIndex = hasInstructions ? 1 : 0
 
           // Determine if we're on instructions page or a question page
           const isInstructionsPage = hasInstructions && currentPage === instructionsPageIndex
           const questionPageIndex = hasInstructions ? currentPage - 1 : currentPage
           const currentPageFieldsList = isInstructionsPage ? [] : (questionPages[questionPageIndex] || [])
-          const isLastPage = currentPage === totalPages - 1
-          const isFirstPage = currentPage === 0
 
           // If no pages and no instructions, show empty state
           if (questionPages.length === 0 && !hasInstructions) {
@@ -556,8 +553,8 @@ export default function AssessmentPreviewClient({ assessmentId }: PreviewClientP
           const totalPages = hasInstructions ? questionPages.length + 1 : questionPages.length
           const instructionsPageIndex = 0
           const isInstructionsPage = hasInstructions && currentPage === instructionsPageIndex
-          const isLastPage = currentPage === totalPages - 1
           const isFirstPage = currentPage === 0
+          const isLastPage = currentPage === totalPages - 1
 
           if (totalPages <= 1) return null
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { Dialog, DialogContent } from '@/components/ui/dialog'
-import { REPORT_COLORS, REPORT_TYPOGRAPHY } from '@/lib/reports/report-design-constants'
+import { REPORT_COLORS } from '@/lib/reports/report-design-constants'
 
 interface FeedbackPreviewProps {
   feedback: {

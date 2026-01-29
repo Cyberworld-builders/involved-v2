@@ -1,6 +1,6 @@
 'use client'
 
-import { REPORT_COLORS, REPORT_SPACING } from '@/lib/reports/report-design-constants'
+import { REPORT_COLORS } from '@/lib/reports/report-design-constants'
 
 interface ComparisonChartProps {
   yourScore: number

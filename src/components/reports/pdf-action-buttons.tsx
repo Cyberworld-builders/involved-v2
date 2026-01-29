@@ -31,7 +31,7 @@ export function PdfActionButtons({
 }: PdfActionButtonsProps) {
   const [state, setState] = useState<PdfState | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [, setError] = useState<string | null>(null)
 
   // Fetch PDF status
   const fetchStatus = async () => {

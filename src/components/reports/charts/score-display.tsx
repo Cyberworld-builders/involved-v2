@@ -20,7 +20,7 @@ interface ScoreDisplayProps {
  */
 export default function ScoreDisplay({ 
   score, 
-  maxValue = 5, 
+  maxValue: _maxValue = 5, 
   label,
   size = 'large' 
 }: ScoreDisplayProps) {
@@ -29,8 +29,6 @@ export default function ScoreDisplay({
     : size === 'medium' 
     ? REPORT_TYPOGRAPHY.score.medium 
     : REPORT_TYPOGRAPHY.score.small
-  
-  const height = size === 'large' ? 230 : size === 'medium' ? 100 : 50
   
   return (
     <div

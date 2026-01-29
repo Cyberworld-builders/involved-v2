@@ -17,7 +17,7 @@ import { chromium } from 'playwright-core'
 export async function generatePDFFromView(
   viewUrl: string,
   cookies?: Array<{ name: string; value: string; domain?: string; path?: string }>,
-  options?: {
+  _options?: {
     waitForSelector?: string
     waitForTimeout?: number
   }
@@ -109,7 +109,7 @@ export async function generatePDFFromView(
       const pageContainerCount = await page.$$eval('.page-container', els => els.length).catch(() => 0)
       fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'export-pdf-playwright.ts:100',message:'Page containers found',data:{count:pageContainerCount},timestamp:Date.now(),sessionId:'debug-session',runId:'run4',hypothesisId:'E'})}).catch(()=>{});
       // #endregion
-    } catch (e) {
+    } catch {
       // #region agent log
       const pageContainerCount = await page.$$eval('.page-container', els => els.length).catch(() => 0)
       const bodyText = await page.evaluate(() => document.body?.innerText?.substring(0, 200) || 'no body').catch(() => 'error')
@@ -137,10 +137,10 @@ export async function generatePDFFromView(
       return Promise.all(
         Array.from(document.images).map((img) => {
           if (img.complete) return Promise.resolve()
-          return new Promise((resolve, reject) => {
-            img.onload = resolve
-            img.onerror = resolve // Continue even if image fails
-            setTimeout(resolve, 5000) // Timeout after 5s
+          return new Promise<void>((resolve) => {
+            img.onload = () => resolve()
+            img.onerror = () => resolve() // Continue even if image fails
+            setTimeout(() => resolve(), 5000) // Timeout after 5s
           })
         })
       )
@@ -199,7 +199,7 @@ export async function generatePDFFromView(
     // Wait for network to be idle
     try {
       await page.waitForLoadState('networkidle', { timeout: 15000 })
-    } catch (e) {
+    } catch {
       console.warn('Network idle timeout, continuing...')
     }
 

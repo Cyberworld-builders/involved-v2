@@ -21,7 +21,7 @@ interface PageContainerProps {
  */
 export default function PageContainer({ 
   children, 
-  pageNumber, 
+  pageNumber: _pageNumber, 
   className = '',
   id 
 }: PageContainerProps) {

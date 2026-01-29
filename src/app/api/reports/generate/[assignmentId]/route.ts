@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { generate360Report } from '@/lib/reports/generate-360-report'
 import { generateLeaderBlockerReport } from '@/lib/reports/generate-leader-blocker-report'
-import { assignFeedbackToReport, get360TextFeedback } from '@/lib/reports/assign-feedback'
+import { assignFeedbackToReport } from '@/lib/reports/assign-feedback'
 import { applyTemplateToReport } from '@/lib/reports/apply-template'
 
 /**

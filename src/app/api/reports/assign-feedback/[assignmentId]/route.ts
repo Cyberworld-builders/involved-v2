@@ -91,10 +91,6 @@ export async function POST(
     }
 
     // Update report_data with assigned feedback
-    const feedbackIds = assignedFeedback
-      .filter((f) => f.feedback_id)
-      .map((f) => f.feedback_id)
-
     const { data: existingReportData } = await adminClient
       .from('report_data')
       .select('id')

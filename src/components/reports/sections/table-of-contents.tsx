@@ -1,7 +1,6 @@
 'use client'
 
-import { REPORT_TYPOGRAPHY, REPORT_COLORS, REPORT_SPACING } from '@/lib/reports/report-design-constants'
-import Image from 'next/image'
+import { REPORT_COLORS, REPORT_SPACING } from '@/lib/reports/report-design-constants'
 
 interface TOCSection {
   title: string

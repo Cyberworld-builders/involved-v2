@@ -32,7 +32,7 @@ interface SurveyDetailClientProps {
 
 export default function SurveyDetailClient({
   clientId,
-  surveyId,
+  surveyId: _surveyId,
   assessment,
   assignments: initialAssignments,
   initialSubjects = [],
@@ -48,17 +48,17 @@ export default function SurveyDetailClient({
   // #endregion
   
   // Use initial data from server, or empty if not provided
-  const [subjects, setSubjects] = useState<Subject[]>(initialSubjects)
-  const [scores, setScores] = useState<Map<string, ScoreData>>(() => {
+  const [subjects] = useState<Subject[]>(initialSubjects)
+  const [scores] = useState<Map<string, ScoreData>>(() => {
     const scoresMap = new Map<string, ScoreData>()
     Object.entries(initialScores).forEach(([key, value]) => {
       scoresMap.set(key, value)
     })
     return scoresMap
   })
-  const [isLoading, setIsLoading] = useState(false)
-  const [message, setMessage] = useState('')
-  const supabase = createClient()
+  const [isLoading] = useState(false)
+  const [message] = useState('')
+  const _supabase = createClient()
 
   // #region agent log
   useEffect(() => {

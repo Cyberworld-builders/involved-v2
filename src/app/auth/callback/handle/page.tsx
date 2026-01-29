@@ -32,8 +32,8 @@ function HandleMagicLinkClient() {
         const hashParams = new URLSearchParams(hash.substring(1)) // Remove the #
         const accessToken = hashParams.get('access_token')
         const refreshToken = hashParams.get('refresh_token')
-        const expiresIn = hashParams.get('expires_in')
-        const tokenType = hashParams.get('type') || 'bearer'
+        hashParams.get('expires_in')
+        hashParams.get('type')
 
         if (!accessToken) {
           setStatus('error')

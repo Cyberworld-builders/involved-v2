@@ -1,7 +1,6 @@
 'use client'
 
 import { REPORT_COLORS, REPORT_SPACING } from '@/lib/reports/report-design-constants'
-import Image from 'next/image'
 
 interface BarData {
   label: string

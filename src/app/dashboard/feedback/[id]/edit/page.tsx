@@ -33,7 +33,7 @@ export default async function EditFeedbackPage({
   }
 
   // Get feedback entry
-  const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/feedback/${id}`, {
+  await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/feedback/${id}`, {
     headers: {
       Cookie: `sb-access-token=${user.id}`, // This won't work - need to use server-side fetch
     },

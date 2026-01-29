@@ -45,7 +45,7 @@ export default function FeedbackManageClient({ assessments }: FeedbackManageClie
   const [dimensions, setDimensions] = useState<Dimension[]>([])
   const [loadingDimensions, setLoadingDimensions] = useState(false)
   const [feedbackEntries, setFeedbackEntries] = useState<Record<string, FeedbackEntry[]>>({})
-  const [loadingFeedback, setLoadingFeedback] = useState(false)
+  const [, setLoadingFeedback] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // Editing state

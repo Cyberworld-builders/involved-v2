@@ -80,7 +80,7 @@ If you didn't request this login link, you can safely ignore this email.
             credentials = awsCredentialsProvider({
               roleArn: awsRoleArn,
             })
-          } catch (oidcError) {
+          } catch (_oidcError) {
             if (awsAccessKeyId && awsSecretAccessKey) {
               credentials = {
                 accessKeyId: awsAccessKeyId,

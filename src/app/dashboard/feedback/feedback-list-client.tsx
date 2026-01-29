@@ -43,7 +43,7 @@ interface FeedbackListClientProps {
 }
 
 export default function FeedbackListClient({ assessments }: FeedbackListClientProps) {
-  const router = useRouter()
+  useRouter()
   const [feedback, setFeedback] = useState<FeedbackEntry[]>([])
   const [filteredFeedback, setFilteredFeedback] = useState<FeedbackEntry[]>([])
   const [loading, setLoading] = useState(true)

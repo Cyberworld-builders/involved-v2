@@ -744,7 +744,7 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                       ))}
                     </div>
 
-                    {reportData.dimensions.map((dimension, idx) => {
+                    {reportData.dimensions.map((dimension, _idx) => {
                       const flagged = isFlagged(
                         dimension.target_score,
                         dimension.industry_benchmark,
@@ -867,7 +867,7 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                 }}
               >
                 {reportData.dimensions.map((dimension, idx) => {
-                  const flagged = isFlagged(
+                  const _flagged = isFlagged(
                     dimension.target_score,
                     dimension.industry_benchmark,
                     dimension.geonorm,
@@ -934,7 +934,7 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                             ))}
                           </div>
 
-                          {dimension.subdimensions && dimension.subdimensions.map((subdim, subIdx) => {
+                          {dimension.subdimensions && dimension.subdimensions.map((subdim, _subIdx) => {
                             const subFlagged = isFlagged(
                               subdim.target_score,
                               subdim.industry_benchmark,
