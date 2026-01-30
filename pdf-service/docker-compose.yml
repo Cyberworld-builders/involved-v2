@@ -1,9 +1,12 @@
 # Local testing for PDF service (no ECS).
 # Set env in .env or pass: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, NEXT_PUBLIC_APP_URL
 # NEXT_PUBLIC_APP_URL should be reachable from container (e.g. http://host.docker.internal:3000 when Next.js runs on host)
+# Optional: DOCKER_PLATFORM=linux/amd64 to build for ECS/Fargate; leave unset for host-native (e.g. Apple Silicon).
 services:
   pdf-service:
-    build: .
+    build:
+      context: .
+    platform: ${DOCKER_PLATFORM:-}
     ports:
       - "3001:3001"
     environment:

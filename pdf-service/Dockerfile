@@ -1,5 +1,6 @@
-# Build for Fargate (x86_64). Avoids "exec format error" when image is built on ARM (e.g. Apple Silicon).
-FROM --platform=linux/amd64 node:20-slim
+# Platform is set at build time via docker compose / docker build (see README).
+# Omit DOCKER_PLATFORM for host-native (e.g. Apple Silicon). Set DOCKER_PLATFORM=linux/amd64 for ECS/Fargate.
+FROM node:20-slim
 
 # Install Chromium, curl (for ECS health check), and runtime dependencies for Puppeteer
 RUN apt-get update && apt-get install -y \
