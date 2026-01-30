@@ -106,9 +106,6 @@ export default async function ReportPage({
             <Button variant="outline">👁️ View Fullscreen</Button>
           </Link>
           <PdfActionButtons assignmentId={assignmentId} />
-          <Link href={`/api/reports/${assignmentId}/export/excel`}>
-            <Button variant="outline">📊 Export Excel</Button>
-          </Link>
           <Link href={`/api/reports/${assignmentId}/export/csv`}>
             <Button variant="outline">📋 Export CSV</Button>
           </Link>
