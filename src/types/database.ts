@@ -388,6 +388,7 @@ export interface Database {
           user_id: string
           assessment_id: string
           target_id: string | null
+          group_id: string | null
           custom_fields: Record<string, unknown> | null
           expires: string
           whitelabel: boolean
@@ -405,6 +406,7 @@ export interface Database {
           user_id: string
           assessment_id: string
           target_id?: string | null
+          group_id?: string | null
           custom_fields?: Record<string, unknown> | null
           expires: string
           whitelabel?: boolean
@@ -422,6 +424,7 @@ export interface Database {
           user_id?: string
           assessment_id?: string
           target_id?: string | null
+          group_id?: string | null
           custom_fields?: Record<string, unknown> | null
           expires?: string
           whitelabel?: boolean

@@ -5,7 +5,16 @@
 set -e
 
 echo "🔄 Resetting database..."
-supabase db reset
+RESET_EXIT=0
+supabase db reset || RESET_EXIT=$?
+if [ $RESET_EXIT -ne 0 ]; then
+  echo ""
+  echo "⚠️  supabase db reset exited with code $RESET_EXIT (often 502 during 'Restarting containers...')."
+  echo "   Migrations and seed usually completed. Bringing up services and waiting..."
+  supabase stop 2>/dev/null || true
+  supabase start
+  sleep 10
+fi
 
 # Wait for services to be ready (especially PostgREST)
 echo ""

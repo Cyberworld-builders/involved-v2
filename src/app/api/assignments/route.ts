@@ -151,6 +151,7 @@ export async function POST(request: NextRequest) {
       assessment_ids,
       expires,
       target_id,
+      group_id,
       custom_fields,
       whitelabel = false,
       job_id,
@@ -163,6 +164,7 @@ export async function POST(request: NextRequest) {
       assessment_ids: string[]
       expires: string
       target_id?: string | null
+      group_id?: string | null
       custom_fields?: Record<string, unknown> | null
       whitelabel?: boolean
       job_id?: string | null
@@ -375,6 +377,7 @@ export async function POST(request: NextRequest) {
           completed: false,
           custom_fields: custom_fields || null,
           target_id: target_id || null,
+          group_id: group_id ?? null,
           job_id: job_id || null,
           survey_id: surveyId,
           reminder: reminder || false,

@@ -111,6 +111,7 @@ export async function generate360Report(
       user_id,
       assessment_id,
       target_id,
+      group_id,
       assessment:assessments!assignments_assessment_id_fkey(
         id,
         title
@@ -132,37 +133,36 @@ export async function generate360Report(
   const assessmentData = (assignment.assessment as unknown) as { id: string; title: string } | null
   const targetData = (assignment.target as unknown) as { id: string; name: string; email: string } | null
 
-  // Find the group that has this target (exactly one group per target_id for 360)
-  const { data: groupFromDb, error: groupError } = await adminClient
-    .from('groups')
-    .select('id, name, target_id')
-    .eq('target_id', assignment.target_id)
-    .single()
-
-  // #region agent log
-  const groupErrorDetails = groupError ? (groupError as unknown as { details?: string; message?: string }).details ?? (groupError as Error).message : null;
-  fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'generate-360-report.ts:groupLookup',message:'Group lookup by target_id',data:{assignmentId,targetId:assignment.target_id,groupFound:!!groupFromDb,groupErrorDetails,hasError:!!groupError},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
-
-  if (groupError && !groupFromDb) {
-    const details = (groupError as unknown as { details?: string }).details ?? '';
-    const isMultiple = /multiple|contain \d+ rows/i.test(details) && !/0 rows/.test(details);
-    const isZero = /0 rows|no rows/i.test(details);
-    if (isMultiple) {
+  // Resolve group: by assignment.group_id when set, else by target_id (legacy; use first if multiple)
+  let groupFromDb: { id: string; name: string; target_id: string | null } | null = null
+  const assignmentRow = assignment as { group_id?: string | null }
+  if (assignmentRow.group_id) {
+    const { data: groupById, error: groupByIdError } = await adminClient
+      .from('groups')
+      .select('id, name, target_id')
+      .eq('id', assignmentRow.group_id)
+      .single()
+    if (groupByIdError || !groupById) {
       throw new Error(
-        'Multiple groups are linked to this 360 target. Only one group per target person is supported. Use a different group or remove the duplicate target from the other group.'
+        `Group not found for this assignment (group_id: ${assignmentRow.group_id}). The group may have been deleted.`
       )
     }
-    if (isZero) {
+    groupFromDb = groupById
+  } else {
+    const { data: groupsByTarget } = await adminClient
+      .from('groups')
+      .select('id, name, target_id')
+      .eq('target_id', assignment.target_id)
+    if (!groupsByTarget || groupsByTarget.length === 0) {
       throw new Error(
         'No group is linked to this 360 target. Ensure the group has its target (person being rated) set, and that assignments were created from that group.'
       )
     }
-    throw new Error(`Group lookup failed for 360 target: ${groupError.message}`)
+    groupFromDb = groupsByTarget[0]
   }
 
-  // Get all assignments for this target (all raters' assessments)
-  const { data: allTargetAssignments } = await adminClient
+  // Get all assignments for this target (and this group when known)
+  let allTargetAssignmentsQuery = adminClient
     .from('assignments')
     .select(`
       id,
@@ -178,6 +178,10 @@ export async function generate360Report(
     .eq('target_id', assignment.target_id)
     .eq('assessment_id', assignment.assessment_id)
     .eq('completed', true)
+  if (groupFromDb?.id) {
+    allTargetAssignmentsQuery = allTargetAssignmentsQuery.eq('group_id', groupFromDb.id)
+  }
+  const { data: allTargetAssignments } = await allTargetAssignmentsQuery
 
   if (!allTargetAssignments || allTargetAssignments.length === 0) {
     throw new Error('No completed assignments found for 360 target')

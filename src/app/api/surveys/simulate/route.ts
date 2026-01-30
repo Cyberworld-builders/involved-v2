@@ -89,22 +89,6 @@ async function runSimulation(
     return
   }
 
-  // Validation: 360 — only one group per target; block duplicate target
-  if (assessment.is_360 && group.target_id) {
-    const { data: groupsWithSameTarget } = await adminClient
-      .from('groups')
-      .select('id')
-      .eq('target_id', group.target_id)
-    const otherGroupsWithTarget = (groupsWithSameTarget ?? []).filter((g) => g.id !== group.id)
-    if (otherGroupsWithTarget.length > 0) {
-      writeLine(JSON.stringify({
-        done: true,
-        error: 'Another group already uses this 360 target (same person being rated). Only one group per target is supported for 360 reports. Use a different group or remove the target from the other group.',
-      }))
-      return
-    }
-  }
-
   // Validation: block re-simulation for same group + assessment (existing completed assignments)
   const memberIds = groupMembers.map((m) => m.profile_id)
   let existingQuery = adminClient
@@ -177,7 +161,7 @@ async function runSimulation(
       await adminClient.from('answers').delete().eq('assignment_id', assignmentId)
       await adminClient
         .from('assignments')
-        .update({ survey_id: surveyId })
+        .update({ survey_id: surveyId, group_id: group.id })
         .eq('id', assignmentId)
       writeLine(`    Using existing assignment ${assignmentId.slice(0, 8)}...`)
     } else {
@@ -188,6 +172,7 @@ async function runSimulation(
           user_id: member.profile_id,
           assessment_id: assessment_id,
           target_id: targetIdForAssignment,
+          group_id: group.id,
           survey_id: surveyId,
           expires: expiresAt.toISOString(),
           completed: false,
