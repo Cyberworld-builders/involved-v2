@@ -19,6 +19,11 @@ export async function startJobProcessor(): Promise<void> {
 }
 
 async function pollOnce(): Promise<void> {
+  // #region agent log
+  const supabaseUrl = process.env.SUPABASE_URL ?? '';
+  const supabaseHost = supabaseUrl ? new URL(supabaseUrl).hostname : '(missing)';
+  fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'job-processor.ts:pollOnce',message:'Poll attempt',data:{supabaseHost,hasKey:!!process.env.SUPABASE_SERVICE_ROLE_KEY},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
   const supabase = getSupabaseClient();
   const { data: rows, error } = await supabase
     .from('report_data')
@@ -28,7 +33,24 @@ async function pollOnce(): Promise<void> {
     .limit(1);
 
   if (error) {
-    console.error('[JobProcessor] Poll error:', error.message);
+    // #region agent log
+    const err = error as unknown as Record<string, unknown>;
+    const cause = err.cause ?? (error instanceof Error && 'cause' in error ? (error as Error & { cause?: unknown }).cause : null);
+    const causeStr = cause instanceof Error ? cause.message : cause != null ? String(cause) : null;
+    const causeCode = (cause && typeof cause === 'object' && 'code' in cause ? (cause as { code?: string }).code : null) ?? (err.code as string | undefined) ?? (err.errno as string | undefined);
+    const safeDetail = {
+      message: error.message,
+      causeStr,
+      causeCode,
+      supabaseHost,
+      keys: Object.keys(err),
+      code: err.code,
+      errno: err.errno,
+      details: err.details,
+    };
+    fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'job-processor.ts:pollError',message:'Poll error detail',data:safeDetail,timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
+    console.error('[JobProcessor] Poll error:', JSON.stringify(safeDetail));
     return;
   }
   if (!rows?.length) {

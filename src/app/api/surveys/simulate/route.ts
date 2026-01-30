@@ -89,6 +89,44 @@ async function runSimulation(
     return
   }
 
+  // Validation: 360 — only one group per target; block duplicate target
+  if (assessment.is_360 && group.target_id) {
+    const { data: groupsWithSameTarget } = await adminClient
+      .from('groups')
+      .select('id')
+      .eq('target_id', group.target_id)
+    const otherGroupsWithTarget = (groupsWithSameTarget ?? []).filter((g) => g.id !== group.id)
+    if (otherGroupsWithTarget.length > 0) {
+      writeLine(JSON.stringify({
+        done: true,
+        error: 'Another group already uses this 360 target (same person being rated). Only one group per target is supported for 360 reports. Use a different group or remove the target from the other group.',
+      }))
+      return
+    }
+  }
+
+  // Validation: block re-simulation for same group + assessment (existing completed assignments)
+  const memberIds = groupMembers.map((m) => m.profile_id)
+  let existingQuery = adminClient
+    .from('assignments')
+    .select('id')
+    .eq('assessment_id', assessment_id)
+    .eq('completed', true)
+    .in('user_id', memberIds)
+  if (group.target_id != null) {
+    existingQuery = existingQuery.eq('target_id', group.target_id)
+  } else {
+    existingQuery = existingQuery.is('target_id', null)
+  }
+  const { data: existingForGroup } = await existingQuery.limit(1)
+  if (existingForGroup && existingForGroup.length > 0) {
+    writeLine(JSON.stringify({
+      done: true,
+      error: 'This group has already been simulated for this assessment. Delete the existing test data first (e.g. "Delete Test Data" on the report page) or choose a different group.',
+    }))
+    return
+  }
+
   const { data: fields, error: fieldsError } = await adminClient
     .from('fields')
     .select('id, type, dimension_id, anchors, content, order')

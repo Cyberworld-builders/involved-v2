@@ -132,15 +132,33 @@ export async function generate360Report(
   const assessmentData = (assignment.assessment as unknown) as { id: string; title: string } | null
   const targetData = (assignment.target as unknown) as { id: string; name: string; email: string } | null
 
-  // Find the group that has this target
-  const { data: group } = await adminClient
+  // Find the group that has this target (exactly one group per target_id for 360)
+  const { data: groupFromDb, error: groupError } = await adminClient
     .from('groups')
     .select('id, name, target_id')
     .eq('target_id', assignment.target_id)
     .single()
 
-  if (!group) {
-    throw new Error('Group not found for 360 target')
+  // #region agent log
+  const groupErrorDetails = groupError ? (groupError as unknown as { details?: string; message?: string }).details ?? (groupError as Error).message : null;
+  fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'generate-360-report.ts:groupLookup',message:'Group lookup by target_id',data:{assignmentId,targetId:assignment.target_id,groupFound:!!groupFromDb,groupErrorDetails,hasError:!!groupError},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
+
+  if (groupError && !groupFromDb) {
+    const details = (groupError as unknown as { details?: string }).details ?? '';
+    const isMultiple = /multiple|contain \d+ rows/i.test(details) && !/0 rows/.test(details);
+    const isZero = /0 rows|no rows/i.test(details);
+    if (isMultiple) {
+      throw new Error(
+        'Multiple groups are linked to this 360 target. Only one group per target person is supported. Use a different group or remove the duplicate target from the other group.'
+      )
+    }
+    if (isZero) {
+      throw new Error(
+        'No group is linked to this 360 target. Ensure the group has its target (person being rated) set, and that assignments were created from that group.'
+      )
+    }
+    throw new Error(`Group lookup failed for 360 target: ${groupError.message}`)
   }
 
   // Get all assignments for this target (all raters' assessments)
@@ -165,19 +183,23 @@ export async function generate360Report(
     throw new Error('No completed assignments found for 360 target')
   }
 
-  // Get group members with their positions (raters)
-  const { data: groupMembers } = await adminClient
-    .from('group_members')
-    .select('profile_id, position')
-    .eq('group_id', group.id)
+  // Use linked group when present; otherwise synthetic group so report can still generate (e.g. Vercel when group not linked)
+  const group = groupFromDb ?? { id: '', name: '360 participants', target_id: assignment.target_id }
 
-  // Create rater lookup map
-  // Map: user_id -> rater_type
+  // Get group members with their positions (raters) when we have a real group; otherwise infer from assignments
   const raterMap = new Map<string, 'peer' | 'direct_report' | 'supervisor' | 'self' | 'other'>()
-  groupMembers?.forEach((gm) => {
-    const raterType = mapPositionToRaterType(gm.position)
-    raterMap.set(gm.profile_id, raterType)
-  })
+  if (group.id) {
+    const { data: groupMembers } = await adminClient
+      .from('group_members')
+      .select('profile_id, position')
+      .eq('group_id', group.id)
+    groupMembers?.forEach((gm) => {
+      raterMap.set(gm.profile_id, mapPositionToRaterType(gm.position))
+    })
+  }
+  if (raterMap.size === 0) {
+    allTargetAssignments.forEach((a) => raterMap.set(a.user_id, 'other'))
+  }
 
   // Get all dimensions for this assessment
   const { data: dimensions } = await adminClient
