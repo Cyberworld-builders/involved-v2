@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -37,8 +37,16 @@ export default function ClientSurveySimulator({ clientId }: ClientSurveySimulato
   const [isDeleting, setIsDeleting] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null)
   const [createdAssignments, setCreatedAssignments] = useState<string[]>([])
-  const [progress, setProgress] = useState<string>('')
+  const [logLines, setLogLines] = useState<string[]>([])
+  const logContainerRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
+
+  // Auto-scroll console to bottom when new lines arrive
+  useEffect(() => {
+    if (logContainerRef.current) {
+      logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight
+    }
+  }, [logLines])
 
   useEffect(() => {
     loadGroups()
@@ -132,7 +140,7 @@ export default function ClientSurveySimulator({ clientId }: ClientSurveySimulato
 
     setIsLoading(true)
     setMessage(null)
-    setProgress('Starting simulation...')
+    setLogLines([])
 
     try {
       const response = await fetch('/api/surveys/simulate', {
@@ -146,25 +154,85 @@ export default function ClientSurveySimulator({ clientId }: ClientSurveySimulato
         }),
       })
 
-      const data = await response.json()
-
+      // Non-2xx with JSON body (e.g. 400 validation)
       if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
         throw new Error(data.error || 'Failed to simulate survey')
       }
 
-      setCreatedAssignments(data.assignment_ids || [])
-      setMessage({
-        type: 'success',
-        text: `Successfully simulated survey! Created ${data.assignment_ids?.length || 0} assignments and generated reports.`,
-      })
-      setProgress('')
+      // Stream progress lines
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      if (reader) {
+        let streamFinished = false
+        while (!streamFinished) {
+          const { done, value } = await reader.read()
+          if (done) break
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          buffer = lines.pop() ?? ''
+
+          for (const line of lines) {
+            const trimmed = line.trim()
+            if (!trimmed) continue
+
+            // Final result line is JSON with done
+            if (trimmed.startsWith('{')) {
+              try {
+                const obj = JSON.parse(trimmed) as { done?: boolean; error?: string; assignment_ids?: string[]; reports_generated?: number }
+                if (obj.done) {
+                  if (obj.error) {
+                    setMessage({ type: 'error', text: obj.error })
+                  } else {
+                    setCreatedAssignments(obj.assignment_ids ?? [])
+                    setMessage({
+                      type: 'success',
+                      text: `Successfully simulated survey! Created ${obj.assignment_ids?.length ?? 0} assignments and generated ${obj.reports_generated ?? 0} reports.`,
+                    })
+                  }
+                  streamFinished = true
+                  break
+                }
+              } catch {
+                // Not JSON or parse failed, treat as normal log line
+              }
+            }
+            setLogLines((prev) => [...prev, trimmed])
+          }
+          if (streamFinished) break
+        }
+        // Flush remaining buffer (final JSON or last line)
+        if (!streamFinished && buffer.trim()) {
+          const trimmed = buffer.trim()
+          if (trimmed.startsWith('{')) {
+            try {
+              const obj = JSON.parse(trimmed) as { done?: boolean; error?: string; assignment_ids?: string[]; reports_generated?: number }
+              if (obj.done) {
+                if (obj.error) setMessage({ type: 'error', text: obj.error })
+                else {
+                  setCreatedAssignments(obj.assignment_ids ?? [])
+                  setMessage({
+                    type: 'success',
+                    text: `Successfully simulated survey! Created ${obj.assignment_ids?.length ?? 0} assignments and generated ${obj.reports_generated ?? 0} reports.`,
+                  })
+                }
+              }
+            } catch {
+              setLogLines((prev) => [...prev, trimmed])
+            }
+          } else {
+            setLogLines((prev) => [...prev, trimmed])
+          }
+        }
+      }
     } catch (error) {
       console.error('Error simulating survey:', error)
       setMessage({
         type: 'error',
         text: error instanceof Error ? error.message : 'Failed to simulate survey',
       })
-      setProgress('')
     } finally {
       setIsLoading(false)
     }
@@ -280,10 +348,27 @@ export default function ClientSurveySimulator({ clientId }: ClientSurveySimulato
             </select>
           </div>
 
-          {/* Progress Message */}
-          {progress && (
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
-              <p className="text-sm text-blue-800">{progress}</p>
+          {/* Simulation log (console-style) */}
+          {(logLines.length > 0 || isLoading) && (
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">
+                Simulation log
+              </label>
+              <div
+                ref={logContainerRef}
+                className="rounded-md border border-slate-700 bg-slate-900 p-3 font-mono text-sm text-slate-300 overflow-auto max-h-[320px] min-h-[120px]"
+                role="log"
+                aria-live="polite"
+              >
+                {logLines.length === 0 && isLoading && (
+                  <div className="text-slate-500">Connecting...</div>
+                )}
+                {logLines.map((line, i) => (
+                  <div key={i} className="whitespace-pre-wrap break-all">
+                    {line}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
