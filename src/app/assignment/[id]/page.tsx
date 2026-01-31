@@ -27,7 +27,6 @@ export default async function AssignmentStagePage({ params, searchParams }: Assi
   } = await supabase.auth.getUser()
 
   let username: string | undefined
-  let isValidAccess = false
   let requiresLogin = false
 
   if (user) {
@@ -51,7 +50,6 @@ export default async function AssignmentStagePage({ params, searchParams }: Assi
 
       if (assignment && assignment.user_id === profile.id) {
         // User owns this assignment, allow access
-        isValidAccess = true
         username = profile.username
       }
     }

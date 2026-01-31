@@ -92,14 +92,14 @@ export default function BulkUploadFeedbackClient() {
             <h3 className="text-sm font-medium text-blue-800 mb-2">CSV Format Requirements:</h3>
             <ul className="text-sm text-blue-700 list-disc list-inside space-y-1">
               <li><strong>Assessment</strong> (required): Assessment name or ID</li>
-              <li><strong>Dimension</strong> (required for Specific type): Dimension name, code, or "Overall"</li>
-              <li><strong>Type</strong> (required): "Overall" or "Specific"</li>
+              <li><strong>Dimension</strong> (required for Specific type): Dimension name, code, or &quot;Overall&quot;</li>
+              <li><strong>Type</strong> (required): &quot;Overall&quot; or &quot;Specific&quot;</li>
               <li><strong>Feedback</strong> (required): Feedback content (text)</li>
               <li><strong>Min Score</strong> (optional): Minimum score threshold</li>
               <li><strong>Max Score</strong> (optional): Maximum score threshold</li>
             </ul>
             <p className="text-xs text-blue-600 mt-3">
-              <strong>Note:</strong> The first row should contain column headers. Use "Overall" in the Dimension column for overall feedback.
+              <strong>Note:</strong> The first row should contain column headers. Use &quot;Overall&quot; in the Dimension column for overall feedback.
             </p>
           </div>
 

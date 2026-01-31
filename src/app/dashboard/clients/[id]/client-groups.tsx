@@ -16,7 +16,8 @@ type GroupUpdate = Database['public']['Tables']['groups']['Update']
 interface GroupMember {
   id?: string
   profile_id: string
-  role: string
+  position?: string | null
+  leader?: boolean
   profile?: {
     id: string
     name: string
@@ -92,7 +93,8 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
         group_members(
           id,
           profile_id,
-          role,
+          position,
+          leader,
           profiles(id, name, email, username)
         )
       `)
@@ -122,10 +124,11 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
       const transformed = data.map(group => ({
         ...group,
         target: group.target_id ? (targets[group.target_id] || null) : null,
-        members: group.group_members?.map((gm: GroupMemberRow & { profiles?: Profile }) => ({
+        members: group.group_members?.map((gm: GroupMemberRow & { profiles?: Profile; position?: string | null; leader?: boolean }) => ({
           id: gm.id,
           profile_id: gm.profile_id,
-          role: gm.role || '',
+          position: (gm as { position?: string | null }).position || null,
+          leader: (gm as { leader?: boolean }).leader || false,
           profile: gm.profiles
         })) || []
       }))
@@ -171,7 +174,8 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
         const membersToInsert = groupMembers.map(member => ({
           group_id: newGroup.id,
           profile_id: member.profile_id,
-          role: member.role || '',
+          position: member.position || null,
+          leader: member.leader || false,
         }))
 
         const { error: membersError } = await supabase
@@ -241,7 +245,8 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
         const membersToInsert = groupMembers.map(member => ({
           group_id: editingGroup.id,
           profile_id: member.profile_id,
-          role: member.role || '',
+          position: member.position || null,
+          leader: member.leader || false,
         }))
 
         const { error: membersError } = await supabase
@@ -319,7 +324,8 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
       .filter(user => !groupMembers.some(m => m.profile_id === user.id))
       .map(user => ({
         profile_id: user.id,
-        role: '',
+        position: null,
+        leader: false,
         profile: user
       }))
 
@@ -332,17 +338,23 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
     setGroupMembers(groupMembers.filter((_, i) => i !== index))
   }
 
-  const handleUpdateMemberRole = (index: number, role: string) => {
+  const handleUpdateMemberPosition = (index: number, position: string) => {
     const updated = [...groupMembers]
-    updated[index].role = role
+    updated[index].position = position || null
+    setGroupMembers(updated)
+  }
+
+  const handleUpdateMemberLeader = (index: number, leader: boolean) => {
+    const updated = [...groupMembers]
+    updated[index].leader = leader
     setGroupMembers(updated)
   }
 
   const downloadTemplate = () => {
     const csvContent = [
-      'Group Name,Target Name,Target Email,Name,Email,Position',
-      '"Engineering Team","John Doe","john.doe@example.com","Jane Smith","jane.smith@example.com","Developer"',
-      '"Engineering Team","John Doe","john.doe@example.com","Bob Johnson","bob.johnson@example.com","Manager"'
+      'Group Name,Target Name,Target Email,Name,Email,Position,Leader',
+      '"Engineering Team","John Doe","john.doe@example.com","Jane Smith","jane.smith@example.com","Peer","false"',
+      '"Engineering Team","John Doe","john.doe@example.com","Bob Johnson","bob.johnson@example.com","Supervisor","true"'
     ].join('\n')
 
     const blob = new Blob([csvContent], { type: 'text/csv' })
@@ -375,7 +387,7 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
       const targetGroups = new Map<string, {
         target: { id: string; name: string; email: string }
         group_name: string
-        users: Array<{ id: string; name: string; email: string; role: string }>
+        users: Array<{ id: string; name: string; email: string; position: string; leader: boolean }>
       }>()
 
       // Process rows
@@ -413,8 +425,11 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
         const targetEmail = rowData['Target Email']?.trim() || ''
         const userName = rowData['Name'] || ''
         const userEmail = rowData['Email']?.trim() || ''
-        // Support both "Position" and "Role" headers for backward compatibility
-        const userRole = rowData['Position'] || rowData['Role'] || ''
+        // Support "Position" or "Relationship" headers for rater relationship
+        const userPosition = rowData['Position'] || rowData['Relationship'] || ''
+        // Parse Leader field (accepts true/false, yes/no, 1/0, or empty for false)
+        const leaderValue = rowData['Leader']?.toLowerCase().trim() || ''
+        const isLeader = leaderValue === 'true' || leaderValue === 'yes' || leaderValue === '1'
 
         if ((!userName && !userEmail) || (!targetName && !targetEmail)) continue
 
@@ -446,7 +461,8 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
             id: user.id,
             name: user.name,
             email: user.email,
-            role: userRole
+            position: userPosition,
+            leader: isLeader
           })
         }
       }
@@ -474,7 +490,8 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
         const membersToInsert = groupData.users.map(user => ({
           group_id: newGroup.id,
           profile_id: user.id,
-          role: user.role || '',
+          position: user.position || null,
+          leader: user.leader || false,
         }))
 
         const { error: membersError } = await supabase
@@ -531,7 +548,7 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
         <CardHeader>
           <CardTitle>Bulk Upload Groups</CardTitle>
           <CardDescription>
-            Upload a CSV file to create multiple groups at once. Required fields are: <strong>Group Name</strong>, <strong>Target Name</strong>, <strong>Target Email</strong>, <strong>Name</strong>, and <strong>Email</strong>. <strong>Position</strong> is optional and used for organizational purposes only.
+            Upload a CSV file to create multiple groups at once. Required fields are: <strong>Group Name</strong>, <strong>Target Name</strong>, <strong>Target Email</strong>, <strong>Name</strong>, and <strong>Email</strong>. <strong>Position</strong> (relationship: Peer/Supervisor/Subordinate) and <strong>Leader</strong> are optional. Leader accepts true/false, yes/no, or 1/0.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -576,6 +593,7 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
                       <th className="px-3 py-2 text-left font-medium text-gray-700">Name</th>
                       <th className="px-3 py-2 text-left font-medium text-gray-700">Email</th>
                       <th className="px-3 py-2 text-left font-medium text-gray-700">Position</th>
+                      <th className="px-3 py-2 text-left font-medium text-gray-700">Leader</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -585,7 +603,8 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
                       <td className="px-3 py-2 text-gray-900">john.doe@example.com</td>
                       <td className="px-3 py-2 text-gray-900">Jane Smith</td>
                       <td className="px-3 py-2 text-gray-900">jane.smith@example.com</td>
-                      <td className="px-3 py-2 text-gray-500">Developer</td>
+                      <td className="px-3 py-2 text-gray-500">Peer</td>
+                      <td className="px-3 py-2 text-gray-500">false</td>
                     </tr>
                     <tr>
                       <td className="px-3 py-2 text-gray-900">Engineering Team</td>
@@ -593,7 +612,8 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
                       <td className="px-3 py-2 text-gray-900">john.doe@example.com</td>
                       <td className="px-3 py-2 text-gray-900">Bob Johnson</td>
                       <td className="px-3 py-2 text-gray-900">bob.johnson@example.com</td>
-                      <td className="px-3 py-2 text-gray-500">Manager</td>
+                      <td className="px-3 py-2 text-gray-500">Supervisor</td>
+                      <td className="px-3 py-2 text-gray-500">true</td>
                     </tr>
                   </tbody>
                 </table>
@@ -602,7 +622,7 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
                 <p className="text-xs text-gray-500">
                   <span className="font-medium">Required:</span> Group Name, Target Name, Target Email, Name, Email
                   {' • '}
-                  <span className="font-medium">Optional:</span> Position
+                  <span className="font-medium">Optional:</span> Position (relationship: Peer/Supervisor/Subordinate), Leader (true/false/yes/no/1/0)
                 </p>
               </div>
             </div>
@@ -711,26 +731,42 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
                       >
                         ✕
                       </button>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <h5 className="font-medium text-gray-900">{user.name}</h5>
                           <p className="text-xs text-gray-500">User ID: {user.username || user.id}</p>
                           <p className="text-xs text-gray-500">Email: {user.email}</p>
                         </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-1">
-                            Position In Group
-                          </label>
-                          <input
-                            type="text"
-                            value={member.role}
-                            onChange={(e) => handleUpdateMemberRole(index, e.target.value)}
-                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
-                            placeholder="e.g., Developer, Manager, Team Lead"
-                          />
-                          <p className="text-xs text-gray-500 mt-1">
-                            Optional: Used for organizational purposes and personnel audits. Does not affect assessments or reports.
-                          </p>
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Relationship to Target (Position)
+                            </label>
+                            <input
+                              type="text"
+                              value={member.position || ''}
+                              onChange={(e) => handleUpdateMemberPosition(index, e.target.value)}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                              placeholder="e.g., Peer, Supervisor, Subordinate"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                              Used for 360 reports to determine rater type. Common values: Peer, Supervisor, Subordinate, Self. Custom values allowed.
+                            </p>
+                          </div>
+                          <div>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={member.leader || false}
+                                onChange={(e) => handleUpdateMemberLeader(index, e.target.checked)}
+                                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                              />
+                              <span className="text-xs font-medium text-gray-700">Leader</span>
+                            </label>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Mark this member as a leader in the group
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -820,7 +856,7 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
                   <CardTitle>Import Groups</CardTitle>
                   <CardDescription>
                     Upload a CSV file of groups for faster entry. The first row in the CSV file will be counted as the header.
-                    Required fields are: <strong>Group Name</strong>, <strong>Target Name</strong>, <strong>Target Email</strong>, <strong>Name</strong>, and <strong>Email</strong>. <strong>Position</strong> is optional and used for organizational purposes only.
+                    Required fields are: <strong>Group Name</strong>, <strong>Target Name</strong>, <strong>Target Email</strong>, <strong>Name</strong>, and <strong>Email</strong>. <strong>Role</strong> (organizational), <strong>Position</strong> (relationship: Peer/Supervisor/Subordinate), and <strong>Leader</strong> are optional. Leader accepts true/false, yes/no, or 1/0.
                     <br />
                     Accepted file types: <strong>.csv</strong>
                   </CardDescription>
@@ -872,6 +908,7 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
                           <th className="px-3 py-2 text-left font-medium text-gray-700">Name</th>
                           <th className="px-3 py-2 text-left font-medium text-gray-700">Email</th>
                           <th className="px-3 py-2 text-left font-medium text-gray-700">Position</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700">Leader</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
@@ -881,7 +918,8 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
                           <td className="px-3 py-2 text-gray-900">john.doe@example.com</td>
                           <td className="px-3 py-2 text-gray-900">Jane Smith</td>
                           <td className="px-3 py-2 text-gray-900">jane.smith@example.com</td>
-                          <td className="px-3 py-2 text-gray-500">Developer</td>
+                          <td className="px-3 py-2 text-gray-500">Peer</td>
+                          <td className="px-3 py-2 text-gray-500">false</td>
                         </tr>
                         <tr>
                           <td className="px-3 py-2 text-gray-900">Engineering Team</td>
@@ -889,7 +927,8 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
                           <td className="px-3 py-2 text-gray-900">john.doe@example.com</td>
                           <td className="px-3 py-2 text-gray-900">Bob Johnson</td>
                           <td className="px-3 py-2 text-gray-900">bob.johnson@example.com</td>
-                          <td className="px-3 py-2 text-gray-500">Manager</td>
+                          <td className="px-3 py-2 text-gray-500">Supervisor</td>
+                          <td className="px-3 py-2 text-gray-500">true</td>
                         </tr>
                       </tbody>
                     </table>
@@ -898,7 +937,7 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
                     <p className="text-xs text-gray-500">
                       <span className="font-medium">Required:</span> Group Name, Target Name, Target Email, Name, Email
                       {' • '}
-                      <span className="font-medium">Optional:</span> Position
+                      <span className="font-medium">Optional:</span> Position (relationship: Peer/Supervisor/Subordinate), Leader (true/false/yes/no/1/0)
                     </p>
                   </div>
                 </div>
@@ -953,9 +992,9 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
                               return (
                                 <div key={member.id || member.profile_id}>
                                   {user.name}
-                                  {member.role && (
-                                    <span className={member.role.toLowerCase() === 'self' ? 'text-green-600' : ''}>
-                                      {' '}({member.role})
+                                  {member.position && (
+                                    <span className={member.position.toLowerCase() === 'self' ? 'text-green-600' : ''}>
+                                      {' '}({member.position})
                                     </span>
                                   )}
                                 </div>

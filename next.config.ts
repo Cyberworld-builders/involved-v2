@@ -58,6 +58,11 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns,
   },
+  serverExternalPackages: [
+    '@react-pdf/renderer',
+    'chrome-aws-lambda',
+    'playwright-core',
+  ],
 };
 
 export default nextConfig;

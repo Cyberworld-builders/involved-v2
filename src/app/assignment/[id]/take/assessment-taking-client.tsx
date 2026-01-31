@@ -92,8 +92,9 @@ export default function AssessmentTakingClient({
 
   // Cleanup timeouts on unmount
   useEffect(() => {
+    const ref = saveTimeoutRef
     return () => {
-      const timeouts = saveTimeoutRef.current
+      const timeouts = ref.current
       Object.values(timeouts).forEach(timeout => clearTimeout(timeout))
     }
   }, [])
@@ -435,7 +436,7 @@ export default function AssessmentTakingClient({
       // First, save all answers before completing
       // This ensures all answers are persisted even if user didn't interact with every field
       const answerEntries = Object.entries(answers)
-        .filter(([_, value]) => value !== undefined && value !== null && value !== '')
+        .filter(([, value]) => value !== undefined && value !== null && value !== '')
       
       if (answerEntries.length > 0) {
         if (!assignment?.id) {
@@ -568,7 +569,6 @@ export default function AssessmentTakingClient({
   // Calculate total pages: instructions page (if exists) + question pages
   const totalPages = hasInstructions ? questionPages.length + 1 : questionPages.length
   const instructionsPageIndex = 0
-  const firstQuestionPageIndex = hasInstructions ? 1 : 0
 
   // Determine if we're on instructions page or a question page
   const isInstructionsPage = hasInstructions && currentPage === instructionsPageIndex

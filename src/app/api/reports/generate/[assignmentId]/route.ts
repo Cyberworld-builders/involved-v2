@@ -3,7 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { generate360Report } from '@/lib/reports/generate-360-report'
 import { generateLeaderBlockerReport } from '@/lib/reports/generate-leader-blocker-report'
-import { assignFeedbackToReport, get360TextFeedback } from '@/lib/reports/assign-feedback'
+import { assignFeedbackToReport } from '@/lib/reports/assign-feedback'
+import { applyTemplateToReport } from '@/lib/reports/apply-template'
 
 /**
  * POST /api/reports/generate/:assignmentId
@@ -56,10 +57,13 @@ export async function POST(
       .eq('assignment_id', assignmentId)
       .single()
 
+    // Type assertion for nested object (Supabase returns arrays for relations, but .single() should return objects)
+    const assessment = (assignment.assessment as unknown) as { is_360: boolean } | null
+
     if (!existingReportData || !existingReportData.feedback_assigned || 
         (Array.isArray(existingReportData.feedback_assigned) && existingReportData.feedback_assigned.length === 0)) {
       // Assign feedback for non-360 assessments
-      if (!assignment.assessment?.is_360) {
+      if (!assessment?.is_360) {
         const assignedFeedback = await assignFeedbackToReport(assignmentId, assignment.assessment_id)
         
         // Store assigned feedback
@@ -76,11 +80,54 @@ export async function POST(
 
     // Generate report based on assessment type
     let reportData: unknown
+    let overallScore: number | null = null
 
-    if (assignment.assessment?.is_360) {
+    if (assessment?.is_360) {
       reportData = await generate360Report(assignmentId)
+      // Extract overall_score from 360 report
+      if (reportData && typeof reportData === 'object' && 'overall_score' in reportData) {
+        overallScore = typeof reportData.overall_score === 'number' ? reportData.overall_score : null
+      }
     } else {
       reportData = await generateLeaderBlockerReport(assignmentId)
+      // Extract overall_score from Leader/Blocker report
+      if (reportData && typeof reportData === 'object' && 'overall_score' in reportData) {
+        overallScore = typeof reportData.overall_score === 'number' ? reportData.overall_score : null
+      }
+    }
+
+    // Load template for this assessment (default or first available)
+    const { data: template } = await adminClient
+      .from('report_templates')
+      .select('*')
+      .eq('assessment_id', assignment.assessment_id)
+      .order('is_default', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+
+    // Apply template to report if available
+    if (template && reportData && typeof reportData === 'object') {
+      // Type assertions for applyTemplateToReport
+      type ReportData = {
+        overall_score: number
+        dimensions: Array<{
+          dimension_id: string
+          dimension_name: string
+          [key: string]: unknown
+        }>
+        [key: string]: unknown
+      }
+      type ReportTemplate = {
+        id: string
+        assessment_id: string
+        name: string
+        is_default: boolean
+        components: Record<string, boolean>
+        labels: Record<string, string>
+        styling: Record<string, unknown>
+      }
+      reportData = applyTemplateToReport(reportData as unknown as ReportData, template as unknown as ReportTemplate)
     }
 
     // Store report data
@@ -88,6 +135,7 @@ export async function POST(
       .from('report_data')
       .upsert({
         assignment_id: assignmentId,
+        overall_score: overallScore,
         dimension_scores: reportData,
         calculated_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -100,18 +148,51 @@ export async function POST(
       // Continue anyway - report is generated, just not cached
     }
 
+    // Optionally trigger PDF generation (non-blocking, fire-and-forget)
+    // PDF generation is optional and doesn't block report viewing
+    const shouldAutoGeneratePdf = process.env.AUTO_GENERATE_PDF !== 'false' // Default to true unless explicitly disabled
+    
+    if (shouldAutoGeneratePdf) {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
+                     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+                     'http://localhost:3000'
+      
+      const viewUrl = `${baseUrl}/reports/${assignmentId}/view`
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+      const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+
+      // Trigger PDF generation asynchronously (don't wait for completion)
+      fetch(`${supabaseUrl}/functions/v1/generate-report-pdf`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          assignment_id: assignmentId,
+          view_url: viewUrl,
+          nextjs_api_url: baseUrl,
+        }),
+      }).catch(error => {
+        console.error('Error triggering PDF generation (non-blocking):', error)
+        // Don't fail report generation if PDF trigger fails
+      })
+    }
+
     return NextResponse.json({
       success: true,
       report: reportData,
     })
   } catch (error) {
     console.error('Error generating report:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const statusCode = errorMessage.includes('dimensions') || errorMessage.includes('No dimensions') ? 400 : 500
     return NextResponse.json(
       {
         error: 'Failed to generate report',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        details: errorMessage,
       },
-      { status: 500 }
+      { status: statusCode }
     )
   }
 }

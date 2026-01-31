@@ -35,20 +35,65 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // Check for service role token in query params (for PDF generation from Edge Function)
+  const serviceRoleToken = request.nextUrl.searchParams.get('service_role_token')
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const isServiceRole = serviceRoleToken && 
+                       serviceRoleKey && 
+                       serviceRoleToken === serviceRoleKey
+
+  // #region agent log
+  if (request.nextUrl.pathname.startsWith('/reports') && serviceRoleToken) {
+    console.log('[DEBUG] Middleware - Token comparison:', {
+      tokenLength: serviceRoleToken.length,
+      keyLength: serviceRoleKey?.length || 0,
+      tokenPrefix: serviceRoleToken.substring(0, 20) + '...',
+      keyPrefix: serviceRoleKey?.substring(0, 20) + '...' || 'missing',
+      tokensMatch: serviceRoleToken === serviceRoleKey
+    })
+  }
+  // #endregion
+
+  // #region agent log
+  if (request.nextUrl.pathname.startsWith('/reports')) {
+    console.log('[DEBUG] Middleware - reports path:', {
+      pathname: request.nextUrl.pathname,
+      hasUser: !!user,
+      hasServiceRoleToken: !!serviceRoleToken,
+      hasServiceRoleKey: !!serviceRoleKey,
+      isServiceRole,
+      willRedirect: !user && !isServiceRole && !request.nextUrl.pathname.startsWith('/auth') && !request.nextUrl.pathname.startsWith('/api') && !request.nextUrl.pathname.startsWith('/assignment') && request.nextUrl.pathname !== '/'
+    })
+  }
+  // #endregion
+
   // If user is not authenticated and trying to access protected routes
-  // Exclude /assignment routes and /auth/callback - they handle their own authentication flow
+  // Exclude /assignment routes, /auth/callback, and /reports routes with service_role_token
+  // They handle their own authentication flow
   if (
     !user &&
+    !isServiceRole &&
     !request.nextUrl.pathname.startsWith('/auth') &&
     !request.nextUrl.pathname.startsWith('/api') &&
     !request.nextUrl.pathname.startsWith('/assignment') &&
     request.nextUrl.pathname !== '/'
   ) {
+    // #region agent log
+    if (request.nextUrl.pathname.startsWith('/reports')) {
+      console.log('[DEBUG] Middleware - REDIRECTING to login (no user, no service role)')
+    }
+    // #endregion
     // Redirect to login page
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
     return NextResponse.redirect(url)
   }
+
+  // #region agent log
+  if (request.nextUrl.pathname.startsWith('/reports') && isServiceRole) {
+    console.log('[DEBUG] Middleware - ALLOWING service role access to reports')
+  }
+  // #endregion
 
   // If user is authenticated, check if they have a profile in our profiles table
   if (user && !request.nextUrl.pathname.startsWith('/auth') && !request.nextUrl.pathname.startsWith('/api')) {

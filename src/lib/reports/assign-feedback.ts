@@ -39,9 +39,35 @@ export async function assignFeedbackToReport(
 
   const assignedFeedback: FeedbackAssignment[] = []
 
-  // For each dimension, randomly select ONE specific feedback entry
+  // For each dimension, assign overall and specific feedback
   for (const dimensionScore of dimensionScores) {
     if (!dimensionScore.dimension_id) continue
+
+    // Get overall feedback for this dimension (should be only one)
+    const { data: overallFeedback } = await adminClient
+      .from('feedback_library')
+      .select('id, feedback, min_score, max_score')
+      .eq('assessment_id', assessmentId)
+      .eq('dimension_id', dimensionScore.dimension_id)
+      .eq('type', 'overall')
+      .maybeSingle()
+
+    // Assign overall feedback if it exists and score matches (if score range specified)
+    if (overallFeedback) {
+      const score = dimensionScore.avg_score
+      let eligible = true
+      if (overallFeedback.min_score !== null && score < overallFeedback.min_score) eligible = false
+      if (overallFeedback.max_score !== null && score > overallFeedback.max_score) eligible = false
+
+      if (eligible) {
+        assignedFeedback.push({
+          dimension_id: dimensionScore.dimension_id,
+          feedback_id: overallFeedback.id,
+          feedback_content: overallFeedback.feedback,
+          type: 'overall',
+        })
+      }
+    }
 
     // Get all specific feedback entries for this dimension and assessment
     const { data: specificFeedback } = await adminClient
@@ -67,7 +93,7 @@ export async function assignFeedbackToReport(
       continue
     }
 
-    // Randomly select ONE feedback entry
+    // Randomly select ONE specific feedback entry
     const selected = eligibleFeedback[Math.floor(Math.random() * eligibleFeedback.length)]
 
     assignedFeedback.push({
@@ -76,40 +102,6 @@ export async function assignFeedbackToReport(
       feedback_content: selected.feedback,
       type: 'specific',
     })
-  }
-
-  // Get all overall feedback entries
-  const { data: overallFeedback } = await adminClient
-    .from('feedback_library')
-    .select('id, feedback, min_score, max_score')
-    .eq('assessment_id', assessmentId)
-    .is('dimension_id', null)
-    .eq('type', 'overall')
-
-  if (overallFeedback && overallFeedback.length > 0) {
-    // Calculate overall score (mean of all dimension scores)
-    const overallScore =
-      dimensionScores.reduce((sum, ds) => sum + (ds.avg_score || 0), 0) /
-      dimensionScores.length
-
-    // Filter by score range if specified
-    const eligibleOverall = overallFeedback.filter((f) => {
-      if (f.min_score !== null && overallScore < f.min_score) return false
-      if (f.max_score !== null && overallScore > f.max_score) return false
-      return true
-    })
-
-    if (eligibleOverall.length > 0) {
-      // Randomly select ONE overall feedback entry
-      const selected = eligibleOverall[Math.floor(Math.random() * eligibleOverall.length)]
-
-      assignedFeedback.push({
-        dimension_id: null,
-        feedback_id: selected.id,
-        feedback_content: selected.feedback,
-        type: 'overall',
-      })
-    }
   }
 
   return assignedFeedback
@@ -156,7 +148,9 @@ export async function get360TextFeedback(
   const feedbackByDimension = new Map<string | null, string[]>()
   
   textAnswers.forEach((answer) => {
-    const dimensionId = answer.field?.dimension_id || null
+    // Type assertion for nested object (Supabase returns arrays for relations)
+    const field = (answer.field as unknown) as { dimension_id: string | null; type: string } | null
+    const dimensionId = field?.dimension_id || null
     if (!feedbackByDimension.has(dimensionId)) {
       feedbackByDimension.set(dimensionId, [])
     }

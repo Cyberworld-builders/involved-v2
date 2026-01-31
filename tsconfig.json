@@ -30,6 +30,7 @@
     "**/*.test.tsx",
     "**/e2e/**",
     "**/tests/**",
-    "supabase/functions/**"
+    "supabase/functions/**",
+    "pdf-service"
   ]
 }

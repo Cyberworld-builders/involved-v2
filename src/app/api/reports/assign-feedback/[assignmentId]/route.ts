@@ -57,6 +57,9 @@ export async function POST(
       )
     }
 
+    // Type assertion for nested object (Supabase returns arrays for relations, but .single() should return objects)
+    const assessment = (assignment.assessment as unknown) as { is_360: boolean } | null
+
     let assignedFeedback: Array<{
       dimension_id: string | null
       feedback_id?: string
@@ -65,7 +68,7 @@ export async function POST(
     }> = []
 
     // Check if it's a 360 assessment
-    if (assignment.assessment?.is_360 && assignment.target_id) {
+    if (assessment?.is_360 && assignment.target_id) {
       // For 360 assessments, use text input answers
       const textFeedback = await get360TextFeedback(assignmentId, assignment.target_id)
       assignedFeedback = textFeedback.map((f) => ({
@@ -88,10 +91,6 @@ export async function POST(
     }
 
     // Update report_data with assigned feedback
-    const feedbackIds = assignedFeedback
-      .filter((f) => f.feedback_id)
-      .map((f) => f.feedback_id)
-
     const { data: existingReportData } = await adminClient
       .from('report_data')
       .select('id')

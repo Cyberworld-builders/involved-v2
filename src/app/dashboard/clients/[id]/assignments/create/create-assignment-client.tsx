@@ -36,7 +36,7 @@ interface Group {
   members?: Array<{
     profile_id: string
     profile?: User
-    role?: string | null
+    position?: string | null
   }>
 }
 
@@ -125,7 +125,7 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
             target:profiles!groups_target_id_fkey(id, name, email, username),
             group_members(
               profile_id,
-              role,
+              position,
               profiles(id, name, email, username)
             )
           `)
@@ -141,7 +141,7 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
             target?: User | null
             group_members?: Array<{
               profile_id: string
-              role?: string | null
+              position?: string | null
               profiles?: User | null
             }>
           }) => ({
@@ -153,7 +153,7 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
             members: group.group_members?.map((gm) => ({
               profile_id: gm.profile_id,
               profile: gm.profiles || undefined,
-              role: gm.role || null,
+              position: gm.position || null,
             })) || [],
           }))
           setAvailableGroups(transformedGroups)
@@ -230,15 +230,15 @@ Thank you.`)
         const targetId = group.target_id || null
         const target = group.target || null
 
-        // Get role from group member
-        const role = member.role || ''
+        // Get position from group member (for custom fields)
+        const position = member.position || ''
 
         newUsers.push({
           user_id: member.profile.id,
           user: member.profile,
           target_id: targetId,
           target: target,
-          role: role,
+          role: position, // Use position for role field (backward compatibility with custom fields)
           source: 'group',
           groupId: group.id,
           groupName: group.name,
@@ -337,8 +337,13 @@ Thank you.`)
       const expiresDate = new Date(expirationDate)
       expiresDate.setHours(23, 59, 59, 999) // Set to end of day
 
+      // Generate a survey_id for this batch of assignments
+      // All assignments created in this form submission will share the same survey_id
+      const surveyId = crypto.randomUUID()
+
       // Create assignments using API - one API call per user-assessment combination
       // This allows per-user custom_fields and target_id
+      // All assignments in this batch will share the same survey_id
       const createdAssignments: CreatedAssignment[] = []
       const errors: string[] = []
       const userPasswords = new Map<string, string>() // userId -> temporary password
@@ -372,6 +377,7 @@ Thank you.`)
                 target_id: au.target_id || null,
                 custom_fields: customFields,
                 whitelabel: false,
+                survey_id: surveyId, // All assignments in this batch share the same survey_id
                 reminder: enableReminder,
                 first_reminder_date: enableReminder && firstReminderDate ? `${firstReminderDate}T${firstReminderTime}:00` : null,
                 reminder_frequency: enableReminder ? reminderFrequency : null,
@@ -1179,15 +1185,15 @@ Thank you.`)
                             const targetId = group.target_id || null
                             const target = group.target || null
 
-                            // Get role from group member
-                            const role = member.role || ''
+                            // Get position from group member (for custom fields)
+                            const position = member.position || ''
 
                             newUsers.push({
                               user_id: member.profile.id,
                               user: member.profile,
                               target_id: targetId,
                               target: target,
-                              role: role,
+                              role: position, // Use position for role field (backward compatibility with custom fields)
                               source: 'group',
                               groupId: group.id,
                               groupName: group.name,

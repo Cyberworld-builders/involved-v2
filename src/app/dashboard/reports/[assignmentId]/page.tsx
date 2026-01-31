@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { PdfActionButtons } from '@/components/reports/pdf-action-buttons'
 import ReportViewClient from './report-view-client'
 
 export default async function ReportPage({
@@ -45,7 +46,8 @@ export default async function ReportPage({
       user:profiles!assignments_user_id_fkey(
         id,
         name,
-        email
+        email,
+        client_id
       ),
       assessment:assessments!assignments_assessment_id_fkey(
         id,
@@ -59,6 +61,11 @@ export default async function ReportPage({
   if (assignmentError || !assignment) {
     notFound()
   }
+
+  // Type assertions for nested objects (Supabase returns arrays for relations, but .single() should return objects)
+  const assessment = (assignment.assessment as unknown) as { id: string; title: string; is_360: boolean } | null
+  const assignmentUser = (assignment.user as unknown) as { id: string; name: string; email: string; client_id: string } | null
+  const clientId = assignmentUser?.client_id || profile.client_id
 
   // Check permissions
   const isOwner = assignment.user_id === profile.id
@@ -88,20 +95,27 @@ export default async function ReportPage({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            Assessment Report: {assignment.assessment?.title || 'Unknown Assessment'}
+            Assessment Report: {assessment?.title || 'Unknown Assessment'}
           </h1>
           <p className="text-gray-600">
-            {assignment.assessment?.is_360 ? '360 Assessment Report' : 'Assessment Report'} for {assignment.user?.name || 'Unknown User'}
+            {assessment?.is_360 ? '360 Assessment Report' : 'Assessment Report'} for {assignmentUser?.name || 'Unknown User'}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Link href="/dashboard/assignments">
+        <div className="flex gap-2 items-center">
+          <Link href={`/reports/${assignmentId}/view`} target="_blank">
+            <Button variant="outline">👁️ View Fullscreen</Button>
+          </Link>
+          <PdfActionButtons assignmentId={assignmentId} />
+          <Link href={`/api/reports/${assignmentId}/export/csv`}>
+            <Button variant="outline">📋 Export CSV</Button>
+          </Link>
+          <Link href={`/dashboard/clients/${clientId}?tab=assignments`}>
             <Button variant="outline">Back to Assignments</Button>
           </Link>
         </div>
       </div>
 
-      <ReportViewClient assignmentId={assignmentId} is360={assignment.assessment?.is_360 || false} />
+      <ReportViewClient assignmentId={assignmentId} is360={assessment?.is_360 || false} />
     </div>
   )
 }

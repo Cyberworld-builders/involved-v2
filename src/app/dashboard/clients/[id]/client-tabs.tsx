@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import ClientUsers from './client-users'
 import ClientGroups from './client-groups'
 import ClientAssignments from './client-assignments'
+import ClientReports from './client-reports'
+import ClientSurveySimulator from './client-survey-simulator'
 
 interface ClientTabsProps {
   clientId: string
@@ -25,9 +27,10 @@ interface ClientTabsProps {
     created_at: string
     updated_at: string
   }
+  isSuperAdmin?: boolean
 }
 
-export default function ClientTabs({ clientId, activeTab: initialTab, client }: ClientTabsProps) {
+export default function ClientTabs({ clientId, activeTab: initialTab, client, isSuperAdmin = false }: ClientTabsProps) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState(initialTab)
 
@@ -40,6 +43,8 @@ export default function ClientTabs({ clientId, activeTab: initialTab, client }: 
     { id: 'users', label: 'Users' },
     { id: 'groups', label: 'Groups' },
     { id: 'assignments', label: 'Assignments' },
+    { id: 'reports', label: 'Reports' },
+    ...(isSuperAdmin ? [{ id: 'simulate', label: 'Simulate Survey' }] : []),
   ]
 
   const handleTabChange = (tabId: string) => {
@@ -212,6 +217,8 @@ export default function ClientTabs({ clientId, activeTab: initialTab, client }: 
         {activeTab === 'users' && <ClientUsers clientId={clientId} />}
         {activeTab === 'groups' && <ClientGroups clientId={clientId} />}
         {activeTab === 'assignments' && <ClientAssignments clientId={clientId} />}
+        {activeTab === 'reports' && <ClientReports clientId={clientId} />}
+        {activeTab === 'simulate' && isSuperAdmin && <ClientSurveySimulator clientId={clientId} />}
       </div>
     </div>
   )

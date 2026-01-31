@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { generate360Report } from '@/lib/reports/generate-360-report'
 import { generateLeaderBlockerReport } from '@/lib/reports/generate-leader-blocker-report'
+import { applyTemplateToReport } from '@/lib/reports/apply-template'
 
 /**
  * GET /api/reports/:assignmentId
@@ -63,14 +64,60 @@ export async function GET(
         reportData.calculated_at &&
         new Date(reportData.calculated_at) < new Date(assignment.completed_at))
 
+    // Type assertion for nested object (Supabase returns arrays for relations, but .single() should return objects)
+    const assessment = (assignment.assessment as unknown) as { is_360: boolean } | null
+
     if (needsRegeneration) {
       // Generate report
       let report: unknown
+      let overallScore: number | null = null
 
-      if (assignment.assessment?.is_360) {
+      if (assessment?.is_360) {
         report = await generate360Report(assignmentId)
+        // Extract overall_score from 360 report
+        if (report && typeof report === 'object' && 'overall_score' in report) {
+          overallScore = typeof report.overall_score === 'number' ? report.overall_score : null
+        }
       } else {
         report = await generateLeaderBlockerReport(assignmentId)
+        // Extract overall_score from Leader/Blocker report
+        if (report && typeof report === 'object' && 'overall_score' in report) {
+          overallScore = typeof report.overall_score === 'number' ? report.overall_score : null
+        }
+      }
+
+      // Load template for this assessment (default or first available)
+      const { data: template } = await adminClient
+        .from('report_templates')
+        .select('*')
+        .eq('assessment_id', assignment.assessment_id)
+        .order('is_default', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      // Apply template to report if available
+      if (template && report && typeof report === 'object') {
+        // Type assertions for applyTemplateToReport
+        type ReportData = {
+          overall_score: number
+          dimensions: Array<{
+            dimension_id: string
+            dimension_name: string
+            [key: string]: unknown
+          }>
+          [key: string]: unknown
+        }
+        type ReportTemplate = {
+          id: string
+          assessment_id: string
+          name: string
+          is_default: boolean
+          components: Record<string, boolean>
+          labels: Record<string, string>
+          styling: Record<string, unknown>
+        }
+        report = applyTemplateToReport(report as unknown as ReportData, template as unknown as ReportTemplate)
       }
 
       // Store report data
@@ -78,6 +125,7 @@ export async function GET(
         .from('report_data')
         .upsert({
           assignment_id: assignmentId,
+          overall_score: overallScore,
           dimension_scores: report,
           calculated_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),

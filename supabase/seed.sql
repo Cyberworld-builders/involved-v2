@@ -1,22 +1,9 @@
 -- Seed file for initial database data
 -- This file is automatically run after migrations during `supabase db reset`
 
--- IMPORTANT: To create an admin user, you have two options:
---
--- Option 1: Use Supabase Dashboard (Recommended)
--- 1. Go to Authentication > Users in Supabase Dashboard
--- 2. Click "Add User" > "Create new user"
--- 3. Email: admin@involved.com
--- 4. Password: (set a secure password)
--- 5. Auto Confirm User: Yes
--- 6. After creating, run the SQL below to update the profile
---
--- Option 2: Use Supabase CLI
--- Run: npx supabase auth admin create-user --email admin@involved.com --password "YourPassword"
--- Then run the SQL below to update the profile
-
--- After creating the auth user via Dashboard or CLI, run this to set up the admin profile:
--- (Replace 'admin@involved.com' with the email you used)
+-- Create admin user for seed.sql (admin@involved.com)
+-- Note: The 360-demo seeder creates its own admin user (admin@demo.com)
+-- This admin user is for general use and will be created if it doesn't exist
 
 DO $$
 DECLARE
@@ -41,6 +28,9 @@ BEGIN
   FROM auth.users
   WHERE email = admin_email;
   
+  -- If admin user doesn't exist, we'll skip the profile update
+  -- The 360-demo seeder will create its own admin user (admin@demo.com)
+  -- This seed file focuses on admin@involved.com for general use
   IF admin_user_id IS NOT NULL THEN
     -- Update the profile to be admin (only if columns exist)
     IF has_role_column AND has_access_level_column THEN

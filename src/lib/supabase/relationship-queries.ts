@@ -260,21 +260,21 @@ export async function getGroupsByUserId(
  * @param supabase - Supabase client instance
  * @param groupId - The group UUID
  * @param userId - The user/profile UUID
- * @param role - The role in the group (default: 'member')
+ * @param position - The position/relationship in the group (optional, for 360 reports)
  * @returns Created group member record
  */
 export async function assignUserToGroup(
   supabase: SupabaseClient<Database>,
   groupId: string,
   userId: string,
-  role: string = 'member'
+  position?: string | null
 ): Promise<GroupMember> {
   const { data, error } = await supabase
     .from('group_members')
     .insert({
       group_id: groupId,
       profile_id: userId,
-      role,
+      position: position || null,
     })
     .select()
     .single()
@@ -317,7 +317,7 @@ export async function removeUserFromGroup(
  * Get all managers in a specific group
  * @param supabase - Supabase client instance
  * @param groupId - The group UUID
- * @returns Array of group members with manager/leader roles
+ * @returns Array of group members with leader flag set to true
  */
 export async function getManagersByGroupId(
   supabase: SupabaseClient<Database>,
@@ -327,7 +327,7 @@ export async function getManagersByGroupId(
     .from('group_members')
     .select('*')
     .eq('group_id', groupId)
-    .in('role', ['leader', 'manager'])
+    .eq('leader', true)
 
   if (error) {
     throw new Error(`Failed to fetch managers by group: ${error.message}`)
@@ -340,7 +340,7 @@ export async function getManagersByGroupId(
  * Get all groups where a user is a manager
  * @param supabase - Supabase client instance
  * @param userId - The user/profile UUID
- * @returns Array of group memberships where user is a manager/leader
+ * @returns Array of group memberships where user is a leader
  */
 export async function getGroupsWhereUserIsManager(
   supabase: SupabaseClient<Database>,
@@ -350,7 +350,7 @@ export async function getGroupsWhereUserIsManager(
     .from('group_members')
     .select('*')
     .eq('profile_id', userId)
-    .in('role', ['leader', 'manager'])
+    .eq('leader', true)
 
   if (error) {
     throw new Error(`Failed to fetch managed groups by user: ${error.message}`)
@@ -364,14 +364,12 @@ export async function getGroupsWhereUserIsManager(
  * @param supabase - Supabase client instance
  * @param groupId - The group UUID
  * @param userId - The user/profile UUID
- * @param role - The manager role (default: 'leader')
- * @returns Created or updated group member record
+ * @returns Created or updated group member record with leader flag set to true
  */
 export async function assignManagerToGroup(
   supabase: SupabaseClient<Database>,
   groupId: string,
-  userId: string,
-  role: 'leader' | 'manager' = 'leader'
+  userId: string
 ): Promise<GroupMember> {
   // Check if user is already in the group
   const { data: existing } = await supabase
@@ -382,10 +380,10 @@ export async function assignManagerToGroup(
     .single()
 
   if (existing) {
-    // Update existing membership to manager role
+    // Update existing membership to set leader flag
     const { data, error } = await supabase
       .from('group_members')
-      .update({ role })
+      .update({ leader: true })
       .eq('group_id', groupId)
       .eq('profile_id', userId)
       .select()
@@ -397,13 +395,13 @@ export async function assignManagerToGroup(
 
     return data
   } else {
-    // Create new membership with manager role
+    // Create new membership with leader flag set
     const { data, error } = await supabase
       .from('group_members')
       .insert({
         group_id: groupId,
         profile_id: userId,
-        role,
+        leader: true,
       })
       .select()
       .single()
@@ -417,25 +415,28 @@ export async function assignManagerToGroup(
 }
 
 /**
- * Remove a manager from a group
+ * Remove a manager from a group (sets leader flag to false)
  * @param supabase - Supabase client instance
  * @param groupId - The group UUID
  * @param userId - The user/profile UUID
- * @returns void
+ * @returns Updated group member record
  */
 export async function removeManagerFromGroup(
   supabase: SupabaseClient<Database>,
   groupId: string,
   userId: string
-): Promise<void> {
-  const { error } = await supabase
+): Promise<GroupMember> {
+  const { data, error } = await supabase
     .from('group_members')
-    .delete()
+    .update({ leader: false })
     .eq('group_id', groupId)
     .eq('profile_id', userId)
-    .in('role', ['leader', 'manager'])
+    .select()
+    .single()
 
   if (error) {
     throw new Error(`Failed to remove manager from group: ${error.message}`)
   }
+
+  return data
 }

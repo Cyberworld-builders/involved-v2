@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getUserProfile } from '@/lib/utils/get-user-profile'
 import { Database } from '@/types/database'
+import GenerateReportButton from './generate-report-button'
 
 type Assessment = Database['public']['Tables']['assessments']['Row']
 type Profile = Database['public']['Tables']['profiles']['Row']
@@ -92,6 +93,26 @@ export default async function AssignmentDetailPage({ params }: AssignmentPagePro
 
   const assignmentUser = assignment.user as Profile
   const assignmentAssessment = assignment.assessment as Assessment
+
+  // Check if report exists and if dimensions exist for the assessment
+  const { createAdminClient } = await import('@/lib/supabase/admin')
+  const adminClient = createAdminClient()
+  const [reportDataResult, dimensionsResult] = await Promise.all([
+    adminClient
+      .from('report_data')
+      .select('id, calculated_at')
+      .eq('assignment_id', id)
+      .single(),
+    adminClient
+      .from('dimensions')
+      .select('id')
+      .eq('assessment_id', assignment.assessment_id)
+      .is('parent_id', null)
+      .limit(1)
+  ])
+
+  const hasReport = !!reportDataResult.data
+  const hasDimensions = !!dimensionsResult.data && dimensionsResult.data.length > 0
 
   return (
     <div className="space-y-6">
@@ -257,6 +278,26 @@ export default async function AssignmentDetailPage({ params }: AssignmentPagePro
             >
               <Button>View Assignment</Button>
             </a>
+          )}
+          {assignment.completed && (
+            <>
+              {hasReport ? (
+                <Link href={`/dashboard/reports/${id}`}>
+                  <Button>View Report</Button>
+                </Link>
+              ) : hasDimensions ? (
+                <GenerateReportButton assignmentId={id} />
+              ) : (
+                <div className="flex flex-col items-end gap-2">
+                  <Button disabled variant="outline" title="Assessment has no dimensions configured">
+                    Generate Report (Unavailable)
+                  </Button>
+                  <p className="text-sm text-gray-500 max-w-xs text-right">
+                    This assessment has no dimensions configured. Please add dimensions to the assessment before generating a report.
+                  </p>
+                </div>
+              )}
+            </>
           )}
           {(isSuperAdmin || isClientAdmin) && (
             <>

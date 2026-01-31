@@ -33,8 +33,6 @@ export default function CreateFeedbackClient({ assessments }: CreateFeedbackClie
   const [dimensionId, setDimensionId] = useState<string | null>(null)
   const [type, setType] = useState<'overall' | 'specific'>('specific')
   const [feedback, setFeedback] = useState('')
-  const [minScore, setMinScore] = useState<string>('')
-  const [maxScore, setMaxScore] = useState<string>('')
 
   // Dimensions for selected assessment
   const [dimensions, setDimensions] = useState<Dimension[]>([])
@@ -62,12 +60,6 @@ export default function CreateFeedbackClient({ assessments }: CreateFeedbackClie
     loadDimensions()
   }, [assessmentId])
 
-  // Reset dimension when type changes to overall
-  useEffect(() => {
-    if (type === 'overall') {
-      setDimensionId(null)
-    }
-  }, [type])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -88,8 +80,8 @@ export default function CreateFeedbackClient({ assessments }: CreateFeedbackClie
       return
     }
 
-    if (type === 'specific' && !dimensionId) {
-      setError('Please select a dimension for specific feedback')
+    if (!dimensionId) {
+      setError('Please select a dimension')
       setLoading(false)
       return
     }
@@ -102,11 +94,11 @@ export default function CreateFeedbackClient({ assessments }: CreateFeedbackClie
         },
         body: JSON.stringify({
           assessment_id: assessmentId,
-          dimension_id: dimensionId || null,
+          dimension_id: dimensionId,
           type,
           feedback,
-          min_score: minScore ? parseFloat(minScore) : null,
-          max_score: maxScore ? parseFloat(maxScore) : null,
+          min_score: null,
+          max_score: null,
         }),
       })
 
@@ -184,32 +176,35 @@ export default function CreateFeedbackClient({ assessments }: CreateFeedbackClie
             </p>
           </div>
 
-          {type === 'specific' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Dimension <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={dimensionId || ''}
-                onChange={(e) => setDimensionId(e.target.value || null)}
-                required
-                disabled={!assessmentId || dimensions.length === 0}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100"
-              >
-                <option value="">Select a dimension</option>
-                {dimensions.map((dimension) => (
-                  <option key={dimension.id} value={dimension.id}>
-                    {dimension.name} ({dimension.code})
-                  </option>
-                ))}
-              </select>
-              {assessmentId && dimensions.length === 0 && (
-                <p className="text-xs text-gray-500 mt-1">
-                  No dimensions found for this assessment. Please add dimensions to the assessment first.
-                </p>
-              )}
-            </div>
-          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Dimension <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={dimensionId || ''}
+              onChange={(e) => setDimensionId(e.target.value || null)}
+              required
+              disabled={!assessmentId || dimensions.length === 0}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100"
+            >
+              <option value="">Select a dimension</option>
+              {dimensions.map((dimension) => (
+                <option key={dimension.id} value={dimension.id}>
+                  {dimension.name} ({dimension.code})
+                </option>
+              ))}
+            </select>
+            {assessmentId && dimensions.length === 0 && (
+              <p className="text-xs text-gray-500 mt-1">
+                No dimensions found for this assessment. Please add dimensions to the assessment first.
+              </p>
+            )}
+            <p className="text-xs text-gray-500 mt-1">
+              {type === 'overall' 
+                ? 'Overall feedback provides high-level, strategic guidance for this dimension. Each dimension can only have one overall feedback entry.'
+                : 'Specific feedback provides detailed, actionable guidance for this dimension.'}
+            </p>
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -225,41 +220,6 @@ export default function CreateFeedbackClient({ assessments }: CreateFeedbackClie
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Minimum Score (optional)
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={minScore}
-                onChange={(e) => setMinScore(e.target.value)}
-                placeholder="e.g., 1.0"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Only assign this feedback if score is at least this value
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Maximum Score (optional)
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={maxScore}
-                onChange={(e) => setMaxScore(e.target.value)}
-                placeholder="e.g., 5.0"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Only assign this feedback if score is at most this value
-              </p>
-            </div>
-          </div>
 
           <div className="flex gap-4">
             <Button type="submit" disabled={loading}>

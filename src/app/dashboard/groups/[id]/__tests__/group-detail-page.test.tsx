@@ -56,7 +56,8 @@ const mockGroup = {
     {
       id: 'member-1',
       profile_id: 'user-1',
-      role: 'Developer',
+      position: 'Peer',
+      leader: false,
       profiles: {
         id: 'user-1',
         name: 'John Doe',
@@ -67,7 +68,8 @@ const mockGroup = {
     {
       id: 'member-2',
       profile_id: 'user-2',
-      role: 'Manager',
+      position: 'Supervisor',
+      leader: true,
       profiles: {
         id: 'user-2',
         name: 'Jane Smith',
@@ -406,7 +408,8 @@ describe('GroupPage', () => {
         {
           id: 'member-1',
           profile_id: 'user-1',
-          role: null,
+          position: null,
+          leader: false,
           profiles: null,
         },
       ],

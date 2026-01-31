@@ -570,14 +570,16 @@ describe('Group-User Assignment Queries', () => {
           id: 'member1',
           group_id: 'group1',
           profile_id: 'user1',
-          role: 'member',
+          position: null,
+          leader: false,
           created_at: '2024-01-01T00:00:00Z',
         },
         {
           id: 'member2',
           group_id: 'group1',
           profile_id: 'user2',
-          role: 'member',
+          position: null,
+          leader: false,
           created_at: '2024-01-01T00:00:00Z',
         },
       ]
@@ -634,14 +636,16 @@ describe('Group-User Assignment Queries', () => {
           id: 'member1',
           group_id: 'group1',
           profile_id: 'user1',
-          role: 'member',
+          position: null,
+          leader: false,
           created_at: '2024-01-01T00:00:00Z',
         },
         {
           id: 'member2',
           group_id: 'group2',
           profile_id: 'user1',
-          role: 'member',
+          position: null,
+          leader: false,
           created_at: '2024-01-01T00:00:00Z',
         },
       ]
@@ -692,12 +696,13 @@ describe('Group-User Assignment Queries', () => {
   })
 
   describe('assignUserToGroup', () => {
-    it('should assign a user to a group with default member role', async () => {
+    it('should assign a user to a group without position', async () => {
       const mockGroupMember: GroupMember = {
         id: 'member1',
         group_id: 'group1',
         profile_id: 'user1',
-        role: 'member',
+        position: null,
+        leader: false,
         created_at: '2024-01-01T00:00:00Z',
       }
 
@@ -714,15 +719,16 @@ describe('Group-User Assignment Queries', () => {
       const result = await assignUserToGroup(mockSupabase, 'group1', 'user1')
 
       expect(result).toEqual(mockGroupMember)
-      expect(result.role).toBe('member')
+      expect(result.position).toBeNull()
     })
 
-    it('should assign a user to a group with custom role', async () => {
+    it('should assign a user to a group with position', async () => {
       const mockGroupMember: GroupMember = {
         id: 'member1',
         group_id: 'group1',
         profile_id: 'user1',
-        role: 'leader',
+        position: 'Peer',
+        leader: false,
         created_at: '2024-01-01T00:00:00Z',
       }
 
@@ -736,10 +742,10 @@ describe('Group-User Assignment Queries', () => {
         })),
       } as unknown as SupabaseClient<Database>
 
-      const result = await assignUserToGroup(mockSupabase, 'group1', 'user1', 'leader')
+      const result = await assignUserToGroup(mockSupabase, 'group1', 'user1', 'Peer')
 
       expect(result).toEqual(mockGroupMember)
-      expect(result.role).toBe('leader')
+      expect(result.position).toBe('Peer')
     })
 
     it('should throw error when assignment fails', async () => {
@@ -812,14 +818,16 @@ describe('Group-Manager Assignment Queries', () => {
           id: 'member1',
           group_id: 'group1',
           profile_id: 'user1',
-          role: 'leader',
+          position: null,
+          leader: true,
           created_at: '2024-01-01T00:00:00Z',
         },
         {
           id: 'member2',
           group_id: 'group1',
           profile_id: 'user2',
-          role: 'manager',
+          position: null,
+          leader: true,
           created_at: '2024-01-01T00:00:00Z',
         },
       ]
@@ -882,14 +890,16 @@ describe('Group-Manager Assignment Queries', () => {
           id: 'member1',
           group_id: 'group1',
           profile_id: 'user1',
-          role: 'leader',
+          position: null,
+          leader: true,
           created_at: '2024-01-01T00:00:00Z',
         },
         {
           id: 'member2',
           group_id: 'group2',
           profile_id: 'user1',
-          role: 'manager',
+          position: null,
+          leader: true,
           created_at: '2024-01-01T00:00:00Z',
         },
       ]
@@ -990,7 +1000,8 @@ describe('Group-Manager Assignment Queries', () => {
         id: 'member1',
         group_id: 'group1',
         profile_id: 'user1',
-        role: 'member',
+        position: null,
+        leader: false,
         created_at: '2024-01-01T00:00:00Z',
       }
 
@@ -1078,7 +1089,7 @@ describe('Group-Manager Assignment Queries', () => {
       )
 
       expect(result).toEqual(mockGroupMember)
-      expect(result.role).toBe('manager')
+      expect(result.leader).toBe(true)
     })
 
     it('should throw error when update fails', async () => {
@@ -1086,7 +1097,8 @@ describe('Group-Manager Assignment Queries', () => {
         id: 'member1',
         group_id: 'group1',
         profile_id: 'user1',
-        role: 'member',
+        position: null,
+        leader: false,
         created_at: '2024-01-01T00:00:00Z',
       }
 
