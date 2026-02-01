@@ -732,7 +732,6 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                             fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
                             fontSize: '12px',
                             color: REPORT_COLORS.textPrimary,
-                            background: REPORT_COLORS.lightGray,
                             textIndent: '-2px',
                             paddingTop: `${dimCount * 52 + gapBelowBars}px`,
                           }}
@@ -967,7 +966,6 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                                   fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
                                   fontSize: '12px',
                                   color: REPORT_COLORS.textPrimary,
-                                  background: REPORT_COLORS.lightGray,
                                   textIndent: '-2px',
                                   paddingTop: `${Math.max(220, subdimCount * 52 + gapBelowBars)}px`,
                                 }}
@@ -1283,7 +1281,6 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                                           fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
                                           fontSize: '12px',
                                           color: REPORT_COLORS.textPrimary,
-                                          background: REPORT_COLORS.lightGray,
                                           textIndent: '-2px',
                                           paddingTop: '238px',
                                         }}
@@ -1618,15 +1615,14 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                                     fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
                                     fontSize: '12px',
                                     color: REPORT_COLORS.textPrimary,
-                                    background: REPORT_COLORS.lightGray,
                                     textIndent: '-2px',
                                     paddingTop: '238px',
                                   }}
                                 >
-                                  <span>{value}</span>
-                                </div>
-                              ))}
-                            </div>
+                                <span>{value}</span>
+                              </div>
+                            ))}
+                          </div>
 
                             {/* Your Score Bar */}
                             <div

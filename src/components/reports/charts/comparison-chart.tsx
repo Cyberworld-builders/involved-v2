@@ -83,7 +83,6 @@ export default function ComparisonChart({
                     fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
                     fontSize: '12px',
                     color: REPORT_COLORS.textPrimary,
-                    background: REPORT_COLORS.lightGray,
                     textIndent: '-2px',
                     paddingTop: `${lineNumbersTop}px`,
                   }}
