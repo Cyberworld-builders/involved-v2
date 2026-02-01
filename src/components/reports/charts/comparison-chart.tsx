@@ -32,9 +32,10 @@ export default function ComparisonChart({
   const barHeight = 50
   const rowHeight = 67
   const gapBelowBars = 32
+  const lineExtension = 24
   const barsAreaHeight = (groupAverage !== undefined ? 3 : benchmark !== undefined ? 2 : 1) * rowHeight + 24
-  const lineNumbersTop = barsAreaHeight + gapBelowBars
-  const graphHeight = lineNumbersTop + 24
+  const lineNumbersTop = barsAreaHeight + gapBelowBars + lineExtension
+  const graphHeight = lineNumbersTop + 24 + lineExtension
   
   const yourPercent = (yourScore / maxValue) * 100
   const groupPercent = groupAverage ? (groupAverage / maxValue) * 100 : 0
@@ -60,7 +61,7 @@ export default function ComparisonChart({
         )}
 
         <div className="bars" style={{ width: `${chartWidth}px`, height: `${graphHeight}px` }}>
-          <div className="graph" style={{ position: 'relative', width: `${chartWidth}px`, height: `${graphHeight}px` }}>
+          <div className="graph" style={{ position: 'relative', width: `${chartWidth}px`, height: `${graphHeight}px`, overflow: 'visible' }}>
             {/* Grid Lines */}
             <div
               className="graph-lines"
@@ -69,6 +70,7 @@ export default function ComparisonChart({
                 width: `${chartWidth}px`,
                 height: `${graphHeight}px`,
                 left: 0,
+                top: -lineExtension,
               }}
             >
               {[0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5].map((value) => (
@@ -80,6 +82,7 @@ export default function ComparisonChart({
                     width: '2px',
                     height: 0,
                     left: `${(value / maxValue) * 100}%`,
+                    top: 0,
                     fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
                     fontSize: '12px',
                     color: REPORT_COLORS.textPrimary,
