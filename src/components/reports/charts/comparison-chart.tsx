@@ -184,24 +184,24 @@ export default function ComparisonChart({
           </div>
         </div>
 
-        {/* Legend - centered */}
+        {/* Legend - one row, equal-width containers, top-aligned, text wraps within each */}
         <div
           className="legend"
           style={{
             position: 'relative',
             display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-            alignItems: 'center',
+            flexWrap: 'nowrap',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
             width: '100%',
-            gap: '40px',
             marginTop: '20px',
             fontSize: '14px',
             fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+            gap: '16px',
           }}
         >
           {groupAverage !== undefined && (
-            <span className="item group" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+            <span className="item group" style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', flex: '1 1 0', minWidth: 0 }}>
               <span
                 style={{
                   display: 'block',
@@ -209,12 +209,13 @@ export default function ComparisonChart({
                   background: REPORT_COLORS.primaryBlue,
                   width: '13px',
                   height: '13px',
+                  marginTop: '2px',
                 }}
               />
-              Group Average
+              <span style={{ lineHeight: 1.3, wordBreak: 'break-word' }}>Group Average</span>
             </span>
           )}
-          <span className="item you" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+          <span className="item you" style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', flex: '1 1 0', minWidth: 0 }}>
             <span
               style={{
                 display: 'block',
@@ -222,12 +223,13 @@ export default function ComparisonChart({
                 background: REPORT_COLORS.darkBlue,
                 width: '13px',
                 height: '13px',
+                marginTop: '2px',
               }}
             />
-            Your Scores
+            <span style={{ lineHeight: 1.3, wordBreak: 'break-word' }}>Your Scores</span>
           </span>
           {benchmark !== undefined && (
-            <span className="item benchmark" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+            <span className="item benchmark" style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', flex: '1 1 0', minWidth: 0 }}>
               <span
                 style={{
                   display: 'block',
@@ -235,9 +237,10 @@ export default function ComparisonChart({
                   background: REPORT_COLORS.orangeRed,
                   width: '13px',
                   height: '13px',
+                  marginTop: '2px',
                 }}
               />
-              Industry Benchmark
+              <span style={{ lineHeight: 1.3, wordBreak: 'break-word' }}>Industry Benchmark</span>
             </span>
           )}
         </div>
