@@ -1478,7 +1478,7 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                         </div>
 
                         {/* Overall, Actionable, and Thoughts directly below chart */}
-                        <div className="feedbacks" style={{ marginTop: '24px', clear: 'both' }}>
+                        <div className="feedbacks" style={{ marginTop: '96px', clear: 'both' }}>
                           <FeedbackSection
                             number="01"
                             title="Overall Feedback"
