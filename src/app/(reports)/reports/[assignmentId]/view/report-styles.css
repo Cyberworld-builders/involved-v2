@@ -541,13 +541,26 @@
   background: url('/images/reports/triangle-orange-large.png') no-repeat scroll 0 0 transparent;
 }
 
+/* Subdimension chart: one caret per flagged bar (CSS only, no duplicate inline) */
+.leader-subdimension-chart .chart .graph-row .bar .inner.flagged::after {
+  content: '';
+  width: 19px;
+  height: 19px;
+  display: block;
+  position: absolute;
+  right: -27px;
+  top: 15px;
+  background: url('/images/reports/triangle-orange-large.png') no-repeat scroll 0 0 transparent;
+}
+
 .leader-overall-score-chart .legend {
   position: relative;
-  display: block;
-  text-align: center;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
   font-size: 14px;
-  left: 170px;
-  top: 70px;
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 

@@ -27,6 +27,7 @@ interface SubdimensionReport {
   group_score?: number | null
   specific_feedback: string | null
   specific_feedback_id: string | null
+  overall_feedback?: string | null
 }
 
 interface DimensionReport {
@@ -274,10 +275,10 @@ export async function generateLeaderBlockerReport(
         (groupScore !== null && targetScore < (groupScore - 0.49))
     }
 
-    // Get overall feedback for this dimension (only for parent dimensions)
-    const overallFeedback = !isSubdimension ? assignedFeedback.find(
+    // Get overall feedback for this dimension (parent and subdimension)
+    const overallFeedback = assignedFeedback.find(
       (f) => f.dimension_id === dimension.id && f.type === 'overall'
-    ) : null
+    )
 
     // Get specific feedback for this dimension
     const specificFeedback = assignedFeedback.find(
@@ -295,6 +296,7 @@ export async function generateLeaderBlockerReport(
       group_score: groupScore,
       specific_feedback: specificFeedback?.feedback_content || null,
       specific_feedback_id: specificFeedback?.feedback_id || null,
+      ...(isSubdimension ? { overall_feedback: overallFeedback?.feedback_content || null } : {}),
     }
 
     if (isSubdimension) {

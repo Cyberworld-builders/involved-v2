@@ -107,7 +107,8 @@ export default function ComparisonChart({
                     className="inner"
                     style={{
                       position: 'relative',
-                      width: `${groupPercent}%`,
+                      width: `${Math.max(groupPercent, 8)}%`,
+                      minWidth: '56px',
                       height: `${barHeight}px`,
                       background: REPORT_COLORS.primaryBlue,
                       color: REPORT_COLORS.white,
@@ -115,7 +116,7 @@ export default function ComparisonChart({
                       fontSize: '20px',
                       lineHeight: '27px',
                       textAlign: 'right',
-                      padding: '3px 0 0 0',
+                      padding: '3px 12px 0 0',
                       margin: 0,
                     }}
                   >
@@ -132,7 +133,8 @@ export default function ComparisonChart({
                   className={`inner ${yourScoreFlagged ? 'flagged' : ''}`}
                   style={{
                     position: 'relative',
-                    width: `${yourPercent}%`,
+                    width: `${Math.max(yourPercent, 8)}%`,
+                    minWidth: '56px',
                     height: `${barHeight}px`,
                     background: REPORT_COLORS.darkBlue,
                     color: REPORT_COLORS.white,
@@ -140,25 +142,11 @@ export default function ComparisonChart({
                     fontSize: '20px',
                     lineHeight: '27px',
                     textAlign: 'right',
-                    padding: '3px 0 0 0',
+                    padding: '3px 12px 0 0',
                     margin: 0,
                   }}
                 >
                   {yourScore.toFixed(1)}
-                  {yourScoreFlagged && (
-                    <div
-                      style={{
-                        content: '',
-                        width: '19px',
-                        height: '19px',
-                        display: 'block',
-                        position: 'absolute',
-                        right: '-27px',
-                        top: '15px',
-                        background: `url('/images/reports/triangle-orange-large.png') no-repeat scroll 0 0 transparent`,
-                      }}
-                    />
-                  )}
                 </div>
               </div>
             </div>
@@ -171,7 +159,8 @@ export default function ComparisonChart({
                     className="inner"
                     style={{
                       position: 'relative',
-                      width: `${benchmarkPercent}%`,
+                      width: `${Math.max(benchmarkPercent, 8)}%`,
+                      minWidth: '56px',
                       height: `${barHeight}px`,
                       background: REPORT_COLORS.orangeRed,
                       color: REPORT_COLORS.white,
@@ -179,7 +168,7 @@ export default function ComparisonChart({
                       fontSize: '20px',
                       lineHeight: '27px',
                       textAlign: 'right',
-                      padding: '3px 0 0 0',
+                      padding: '3px 12px 0 0',
                       margin: 0,
                     }}
                   >
@@ -191,63 +180,57 @@ export default function ComparisonChart({
           </div>
         </div>
 
-        {/* Legend */}
+        {/* Legend - centered */}
         <div
           className="legend"
           style={{
             position: 'relative',
-            display: 'block',
-            textAlign: 'center',
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            alignItems: 'center',
+            width: '100%',
+            gap: '40px',
+            marginTop: '20px',
             fontSize: '14px',
-            left: '170px',
-            top: '70px',
             fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
           }}
         >
           {groupAverage !== undefined && (
-            <span className="item group" style={{ display: 'inline-block', position: 'relative', marginRight: '60px' }}>
+            <span className="item group" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
               <span
                 style={{
-                  content: '',
                   display: 'block',
-                  position: 'absolute',
+                  flexShrink: 0,
                   background: REPORT_COLORS.primaryBlue,
                   width: '13px',
                   height: '13px',
-                  left: '-22px',
-                  top: '6px',
                 }}
               />
               Group Average
             </span>
           )}
-          <span className="item you" style={{ display: 'inline-block', position: 'relative', margin: '0 60px' }}>
+          <span className="item you" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
             <span
               style={{
-                content: '',
                 display: 'block',
-                position: 'absolute',
+                flexShrink: 0,
                 background: REPORT_COLORS.darkBlue,
                 width: '13px',
                 height: '13px',
-                left: '-22px',
-                top: '6px',
               }}
             />
             Your Scores
           </span>
           {benchmark !== undefined && (
-            <span className="item benchmark" style={{ display: 'inline-block', position: 'relative', textAlign: 'left' }}>
+            <span className="item benchmark" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
               <span
                 style={{
-                  content: '',
                   display: 'block',
-                  position: 'absolute',
+                  flexShrink: 0,
                   background: REPORT_COLORS.orangeRed,
                   width: '13px',
                   height: '13px',
-                  left: '-22px',
-                  top: '6px',
                 }}
               />
               Industry Benchmark
