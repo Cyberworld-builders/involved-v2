@@ -531,32 +531,13 @@
 }
 
 .leader-overall-score-chart .legend .item {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   position: relative;
   margin: 0 60px;
 }
 
-.leader-overall-score-chart .legend .item::before {
-  content: '';
-  display: block;
-  position: absolute;
-  width: 13px;
-  height: 13px;
-  left: -22px;
-  top: 6px;
-}
-
-.leader-overall-score-chart .legend .item.group::before {
-  background: var(--report-color-primary-blue);
-}
-
-.leader-overall-score-chart .legend .item.you::before {
-  background: var(--report-color-dark-blue);
-}
-
-.leader-overall-score-chart .legend .item.benchmark::before {
-  background: var(--report-color-orange-red);
-}
+/* Color squares are rendered inline by ComparisonChart; no ::before to avoid duplicates */
 
 /* Feedback Sections */
 .feedbacks {
