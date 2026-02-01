@@ -704,8 +704,9 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
 
                 {(() => {
                   const dimCount = reportData.dimensions.length
-                  const graphHeight = Math.max(190, dimCount * 52 + 50)
-                  const barsHeight = dimCount * 52 + 40
+                  const gapBelowBars = 32
+                  const graphHeight = Math.max(190, dimCount * 52 + gapBelowBars + 28)
+                  const barsHeight = dimCount * 52 + gapBelowBars + 18
                   return (
                 <div className="bars" style={{ width: '563px', height: `${barsHeight}px`, float: 'left' }}>
                   <div className="graph" style={{ position: 'relative', width: '563px', height: `${graphHeight}px` }}>
@@ -733,7 +734,7 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                             color: REPORT_COLORS.textPrimary,
                             background: REPORT_COLORS.lightGray,
                             textIndent: '-2px',
-                            paddingTop: `${dimCount * 52 + 12}px`,
+                            paddingTop: `${dimCount * 52 + gapBelowBars}px`,
                           }}
                         >
                           <span>{value}</span>
@@ -878,8 +879,9 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                     dimension.group_score
                   )
                   const subdimCount = dimension.subdimensions?.length ?? 0
-                  const graphHeight = Math.max(190, subdimCount * 52 + 40)
-                  const barsHeight = subdimCount * 52 + 30
+                  const gapBelowBars = 32
+                  const graphHeight = Math.max(190, subdimCount * 52 + gapBelowBars + 28)
+                  const barsHeight = subdimCount * 52 + gapBelowBars + 18
 
                   return (
                     <div
@@ -967,7 +969,7 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                                   color: REPORT_COLORS.textPrimary,
                                   background: REPORT_COLORS.lightGray,
                                   textIndent: '-2px',
-                                  paddingTop: `${Math.max(220, subdimCount * 52 + 10)}px`,
+                                  paddingTop: `${Math.max(220, subdimCount * 52 + gapBelowBars)}px`,
                                 }}
                               >
                                 <span>{value}</span>
@@ -1258,14 +1260,14 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
 
                           <div className="leader-subdimension-chart">
                             <div className="chart">
-                              <div className="bars" style={{ width: '704px', height: '218px' }}>
-                                <div className="graph" style={{ position: 'relative', width: '704px', height: '218px' }}>
+                              <div className="bars" style={{ width: '704px', height: '258px' }}>
+                                <div className="graph" style={{ position: 'relative', width: '704px', height: '258px' }}>
                                   <div
                                     className="graph-lines"
                                     style={{
                                       position: 'absolute',
                                       width: '704px',
-                                      height: '218px',
+                                      height: '258px',
                                       left: 0,
                                     }}
                                   >
@@ -1283,7 +1285,7 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                                           color: REPORT_COLORS.textPrimary,
                                           background: REPORT_COLORS.lightGray,
                                           textIndent: '-2px',
-                                          paddingTop: '218px',
+                                          paddingTop: '238px',
                                         }}
                                       >
                                         <span>{value}</span>
@@ -1593,14 +1595,14 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
 
                     <div className="leader-subdimension-chart">
                       <div className="chart">
-                        <div className="bars" style={{ width: '704px', height: '218px' }}>
-                          <div className="graph" style={{ position: 'relative', width: '704px', height: '218px' }}>
+                        <div className="bars" style={{ width: '704px', height: '258px' }}>
+                          <div className="graph" style={{ position: 'relative', width: '704px', height: '258px' }}>
                             <div
                               className="graph-lines"
                               style={{
                                 position: 'absolute',
                                 width: '704px',
-                                height: '218px',
+                                height: '258px',
                                 left: 0,
                               }}
                             >
@@ -1618,7 +1620,7 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                                     color: REPORT_COLORS.textPrimary,
                                     background: REPORT_COLORS.lightGray,
                                     textIndent: '-2px',
-                                    paddingTop: '218px',
+                                    paddingTop: '238px',
                                   }}
                                 >
                                   <span>{value}</span>

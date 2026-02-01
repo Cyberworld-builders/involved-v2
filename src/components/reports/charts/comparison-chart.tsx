@@ -31,6 +31,10 @@ export default function ComparisonChart({
   const chartWidth = 704
   const barHeight = 50
   const rowHeight = 67
+  const gapBelowBars = 32
+  const barsAreaHeight = (groupAverage !== undefined ? 3 : benchmark !== undefined ? 2 : 1) * rowHeight + 24
+  const lineNumbersTop = barsAreaHeight + gapBelowBars
+  const graphHeight = lineNumbersTop + 24
   
   const yourPercent = (yourScore / maxValue) * 100
   const groupPercent = groupAverage ? (groupAverage / maxValue) * 100 : 0
@@ -55,15 +59,15 @@ export default function ComparisonChart({
           </div>
         )}
 
-        <div className="bars" style={{ width: `${chartWidth}px`, height: '218px' }}>
-          <div className="graph" style={{ position: 'relative', width: `${chartWidth}px`, height: '218px' }}>
+        <div className="bars" style={{ width: `${chartWidth}px`, height: `${graphHeight}px` }}>
+          <div className="graph" style={{ position: 'relative', width: `${chartWidth}px`, height: `${graphHeight}px` }}>
             {/* Grid Lines */}
             <div
               className="graph-lines"
               style={{
                 position: 'absolute',
                 width: `${chartWidth}px`,
-                height: '218px',
+                height: `${graphHeight}px`,
                 left: 0,
               }}
             >
@@ -81,7 +85,7 @@ export default function ComparisonChart({
                     color: REPORT_COLORS.textPrimary,
                     background: REPORT_COLORS.lightGray,
                     textIndent: '-2px',
-                    paddingTop: '218px',
+                    paddingTop: `${lineNumbersTop}px`,
                   }}
                 >
                   <span
