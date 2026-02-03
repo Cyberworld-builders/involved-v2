@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 import { validateAssignmentURL } from '@/lib/assignments/url-generator'
 import AssignmentStageClient from './assignment-stage-client'
 
@@ -112,16 +113,10 @@ export default async function AssignmentStagePage({ params, searchParams }: Assi
       )
     }
 
-    // Check if assignment is completed or expired
+    // Check if assignment is completed — show same completion UI as after finishing
     if (assignment.completed) {
-      return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6 text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Assignment Completed</h1>
-            <p className="text-gray-600 mb-4">This assignment has already been completed.</p>
-          </div>
-        </div>
-      )
+      const queryString = new URLSearchParams(query as Record<string, string>).toString()
+      redirect(`/assignment/${assignmentId}/complete?${queryString}`)
     }
 
     if (new Date(assignment.expires) < new Date()) {
@@ -223,16 +218,10 @@ export default async function AssignmentStagePage({ params, searchParams }: Assi
     }
   }
 
-  // Check if assignment is completed
+  // Check if assignment is completed — show same completion UI as after finishing
   if (assignment.completed) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6 text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Assignment Completed</h1>
-          <p className="text-gray-600 mb-4">This assignment has already been completed.</p>
-        </div>
-      </div>
-    )
+    const queryString = new URLSearchParams(query as Record<string, string>).toString()
+    redirect(`/assignment/${assignmentId}/complete?${queryString}`)
   }
 
   // Check if assignment has expired

@@ -100,9 +100,9 @@ export default async function AssessmentTakingPage({ params, searchParams }: Ass
     redirect(`/assignment/${assignmentId}?${new URLSearchParams(query as Record<string, string>).toString()}`)
   }
 
-  // Check if assignment is completed
+  // Check if assignment is completed — show same completion UI (detail + dashboard link)
   if (assignment.completed) {
-    redirect(`/assignment/${assignmentId}?${new URLSearchParams(query as Record<string, string>).toString()}`)
+    redirect(`/assignment/${assignmentId}/complete?${new URLSearchParams(query as Record<string, string>).toString()}`)
   }
 
   // Check if assignment has expired
