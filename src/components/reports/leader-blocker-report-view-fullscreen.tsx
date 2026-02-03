@@ -268,7 +268,7 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
   // Empty state: show cover and a single message when no dimension data is available
   if (hasNoDimensions) {
     return (
-      <div style={{ backgroundColor: REPORT_COLORS.white }} data-report-pages="2">
+      <div style={{ backgroundColor: REPORT_COLORS.white }} data-report-pages="2" suppressHydrationWarning>
         <CoverPage
           assessmentTitle={reportData.assessment_title}
           userName={reportData.user_name}
@@ -304,7 +304,7 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
   }
 
   return (
-    <div style={{ backgroundColor: REPORT_COLORS.white }} data-report-pages={`${expectedPages}`}>
+    <div style={{ backgroundColor: REPORT_COLORS.white }} data-report-pages={String(expectedPages)} suppressHydrationWarning>
       {/* Cover Page */}
       <CoverPage
         assessmentTitle={reportData.assessment_title}

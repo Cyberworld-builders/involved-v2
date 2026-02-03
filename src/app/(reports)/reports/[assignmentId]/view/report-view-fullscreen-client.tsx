@@ -102,7 +102,11 @@ export default function ReportViewFullscreenClient({ assignmentId, is360, initia
   }
 
   return (
-    <div className="min-h-screen bg-white print:bg-white" data-report-loaded="true">
+    <div
+      className="min-h-screen bg-white print:bg-white"
+      data-report-loaded="true"
+      suppressHydrationWarning
+    >
       {is360 ? (
         <Report360ViewFullscreen reportData={reportData as Report360Data} />
       ) : (

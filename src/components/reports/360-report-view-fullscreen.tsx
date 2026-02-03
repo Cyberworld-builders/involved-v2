@@ -128,7 +128,11 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
   const noResponsesYet = reportData.dimensions.length === 0 || (reportData.participant_response_summary?.completed === 0)
 
   return (
-    <div style={{ backgroundColor: REPORT_COLORS.white }} data-report-pages={String(pageNumber + (reportData.dimensions.length > 0 ? reportData.dimensions.length * 2 : 1))}>
+    <div
+      style={{ backgroundColor: REPORT_COLORS.white }}
+      data-report-pages={String(pageNumber + (reportData.dimensions.length > 0 ? reportData.dimensions.length * 2 : 1))}
+      suppressHydrationWarning
+    >
       {/* Cover Page */}
       <CoverPage
         assessmentTitle={reportData.assessment_title}
