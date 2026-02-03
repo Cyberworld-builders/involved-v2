@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Database } from '@/types/database'
 import RichTextEditor from '@/components/rich-text-editor'
 
@@ -61,6 +62,7 @@ export default function CreateAssignmentClient() {
   const [availableGroups, setAvailableGroups] = useState<GroupWithMembers[]>([])
   const [showAddUserModal, setShowAddUserModal] = useState(false)
   const [showAddGroupModal, setShowAddGroupModal] = useState(false)
+  const [showAssignConfirmDialog, setShowAssignConfirmDialog] = useState(false)
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([])
   const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>([])
 
@@ -224,8 +226,13 @@ Thank you.`)
     ))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    setShowAssignConfirmDialog(true)
+  }
+
+  const performSubmit = async () => {
+    setShowAssignConfirmDialog(false)
     setIsLoading(true)
     setMessage('')
 
@@ -269,13 +276,13 @@ Thank you.`)
 
       for (const au of assignmentUsers) {
         // Prepare custom_fields for this user (if any assessment requires it)
-        const selectedAssessments = assessments.filter(a => selectedAssessmentIds.includes(a.id))
-        const requiresTarget = selectedAssessments.some(a => a.target === '1' || a.target === '2' || a.is_360)
+        const selectedAssessmentsForUser = assessments.filter(a => selectedAssessmentIds.includes(a.id))
+        const requiresTargetForUser = selectedAssessmentsForUser.some(a => a.target === '1' || a.target === '2' || a.is_360)
         
         let customFields = null
-        if (au.target && requiresTarget) {
+        if (au.target && requiresTargetForUser) {
           // Use the first assessment that requires target to determine custom_fields format
-          const firstRequiringTarget = selectedAssessments.find(a => a.target === '1' || a.target === '2' || a.is_360)
+          const firstRequiringTarget = selectedAssessmentsForUser.find(a => a.target === '1' || a.target === '2' || a.is_360)
           if (firstRequiringTarget) {
             customFields = {
               type: ['name', 'email', 'role'],
@@ -676,6 +683,37 @@ Thank you.`)
           </div>
         )}
       </form>
+
+      {/* Confirm before submit */}
+      <Dialog open={showAssignConfirmDialog} onOpenChange={setShowAssignConfirmDialog}>
+        <DialogContent
+          title="Confirm assignment"
+          description="This will create assignments and send emails to the selected users if email is enabled. Double-check your survey group and settings before continuing."
+          onClose={() => setShowAssignConfirmDialog(false)}
+        >
+          <div className="flex flex-col gap-4">
+            <p className="text-sm text-gray-600">
+              You are about to assign {selectedAssessmentIds.length} assessment{selectedAssessmentIds.length !== 1 ? 's' : ''} to {assignmentUsers.length} user{assignmentUsers.length !== 1 ? 's' : ''}.
+              {sendEmail && ' Emails will be sent to each user.'}
+            </p>
+            <div className="flex justify-end gap-3 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowAssignConfirmDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={() => void performSubmit()}
+              >
+                Create assignments
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Add Users Modal */}
       {showAddUserModal && (

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 import RichTextEditor from '@/components/rich-text-editor'
 
 interface CreateAssignmentClientProps {
@@ -85,6 +86,7 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
   const [availableGroups, setAvailableGroups] = useState<Group[]>([])
   const [showAddUserModal, setShowAddUserModal] = useState(false)
   const [showAddGroupModal, setShowAddGroupModal] = useState(false)
+  const [showAssignConfirmDialog, setShowAssignConfirmDialog] = useState(false)
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([])
   const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>([])
 
@@ -273,20 +275,20 @@ Thank you.`)
     return assessment.target !== null && assessment.target !== '' || assessment.is_360 === true
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    
-    // Prevent duplicate submissions
-    if (isSubmitting || isLoading) {
-      console.warn('Form submission already in progress, ignoring duplicate submit')
-      return
-    }
-    
+    if (isSubmitting || isLoading) return
+    setShowAssignConfirmDialog(true)
+  }
+
+  const performSubmit = async () => {
+    setShowAssignConfirmDialog(false)
+    if (isSubmitting || isLoading) return
     setIsSubmitting(true)
     setIsLoading(true)
     setMessage('')
-    
+
     try {
       console.log('Form submitted!', {
         selectedAssessmentIds,
@@ -1007,6 +1009,37 @@ Thank you.`)
             </div>
           )}
         </form>
+
+        {/* Confirm before submit */}
+        <Dialog open={showAssignConfirmDialog} onOpenChange={setShowAssignConfirmDialog}>
+          <DialogContent
+            title="Confirm assignment"
+            description="This will create assignments and send emails to the selected users if email is enabled. Double-check your survey group and settings before continuing."
+            onClose={() => setShowAssignConfirmDialog(false)}
+          >
+            <div className="flex flex-col gap-4">
+              <p className="text-sm text-gray-600">
+                You are about to create {totalAssignmentsToCreate} assignment{totalAssignmentsToCreate !== 1 ? 's' : ''} for {assignmentUsers.length} user{assignmentUsers.length !== 1 ? 's' : ''}.
+                {sendEmail && ' Emails will be sent to each user.'}
+              </p>
+              <div className="flex justify-end gap-3 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowAssignConfirmDialog(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => void performSubmit()}
+                >
+                  Create assignments
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Add Users Modal */}
         {showAddUserModal && (
