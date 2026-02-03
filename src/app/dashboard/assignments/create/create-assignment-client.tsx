@@ -181,11 +181,20 @@ export default function CreateAssignmentClient() {
 You have been assigned the following assessment(s):
 {assessments}
 
-Please complete these assessments by {expiration-date}.
+Please click the link above to take you to the dashboard to log in. Please complete your
+assignments by {expiration-date}.
 
-If you have any questions, please contact your administrator.
+You can access your assignments at any time from your dashboard ({dashboard-link}).
 
-Thank you.`)
+SAVE this email and BOOKMARK your login page. If you have been assigned multiple
+assessments, this will help you navigate to the login page.
+
+If you have any questions, please contact us at: support@involvedtalent.com
+
+Thank you!
+
+-Involved Talent Team
+© {year} Involved Talent`)
       } catch (error) {
         console.error('Error loading data:', error)
         setMessage('Failed to load data')
@@ -438,7 +447,7 @@ Thank you.`)
                 toName: user.user.name,
                 username: user.user.username,
                 subject: emailSubject || 'New assessments have been assigned to you',
-                body: emailBody || 'Hello {name}, you have been assigned {assessments}. Please complete by {expiration-date}.',
+                body: emailBody || 'Hello {name}, you have been assigned {assessments}. Please complete by {expiration-date}. Dashboard: {dashboard-link}. © {year} Involved Talent.',
                 assignments: userAssignments,
                 expirationDate: expirationDate,
                 password: password,
@@ -663,7 +672,7 @@ Thank you.`)
                     placeholder="Hello {name}, you have been assigned {assessments}. Please complete by {expiration-date}."
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Available shortcodes: {'{name}'}, {'{username}'}, {'{email}'}, {'{assessments}'}, {'{expiration-date}'}, {'{password}'}
+                    Available shortcodes: {'{name}'}, {'{username}'}, {'{email}'}, {'{assessments}'}, {'{expiration-date}'}, {'{password}'}, {'{dashboard-link}'}, {'{year}'}
                   </p>
                 </div>
               </div>

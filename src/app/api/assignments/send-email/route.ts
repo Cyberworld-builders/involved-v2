@@ -25,7 +25,9 @@ function replaceShortcodes(
   email: string,
   assessments: string,
   expirationDate: string,
-  password?: string
+  password: string | undefined,
+  dashboardLink: string,
+  year: number
 ): string {
   let processed = body
     .replace(/{name}/g, name)
@@ -33,7 +35,9 @@ function replaceShortcodes(
     .replace(/{email}/g, email)
     .replace(/{assessments}/g, assessments)
     .replace(/{expiration-date}/g, expirationDate)
-  
+    .replace(/{dashboard-link}/g, dashboardLink)
+    .replace(/{year}/g, String(year))
+
   // Replace password if provided
   if (password) {
     processed = processed.replace(/{password}/g, password)
@@ -41,7 +45,7 @@ function replaceShortcodes(
     // Remove password placeholder if no password provided
     processed = processed.replace(/{password}/g, '')
   }
-  
+
   return processed
 }
 
@@ -102,6 +106,7 @@ export async function POST(request: NextRequest) {
 
     // Use provided username or derive from email
     const username = providedUsername || to.split('@')[0]
+    const year = new Date().getFullYear()
 
     // Replace shortcodes in email body (use HTML version for assessments)
     let processedBody = replaceShortcodes(
@@ -111,7 +116,9 @@ export async function POST(request: NextRequest) {
       to,
       `<ul>${assessmentsList}</ul>`,
       formattedExpiration,
-      password
+      password,
+      dashboardUrl,
+      year
     )
     
     // Add fallback plain text links at the bottom of HTML body (in case HTML links are blocked)
@@ -131,7 +138,9 @@ export async function POST(request: NextRequest) {
       to,
       assessmentsListText,
       formattedExpiration,
-      password
+      password,
+      dashboardUrl,
+      year
     )
     
     // Add fallback plain text links at the bottom of plain text body
