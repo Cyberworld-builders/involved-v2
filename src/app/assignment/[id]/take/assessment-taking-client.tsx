@@ -164,9 +164,6 @@ export default function AssessmentTakingClient({
           <p className="text-gray-600">
             This assessment is best completed on a computer or tablet. Please open this link on a desktop or laptop to continue.
           </p>
-          <p className="mt-4 text-sm text-gray-500">
-            You can bookmark this page or copy the link and open it on your desktop browser.
-          </p>
         </div>
       </div>
     )
