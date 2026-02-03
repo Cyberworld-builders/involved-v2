@@ -263,7 +263,46 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
   }
   
   const expectedPages = calculateExpectedPages()
-  
+  const hasNoDimensions = reportData.dimensions.length === 0
+
+  // Empty state: show cover and a single message when no dimension data is available
+  if (hasNoDimensions) {
+    return (
+      <div style={{ backgroundColor: REPORT_COLORS.white }} data-report-pages="2">
+        <CoverPage
+          assessmentTitle={reportData.assessment_title}
+          userName={reportData.user_name}
+          reportType={reportType}
+          pageNumber={1}
+        />
+        <PageContainer pageNumber={2} id="2">
+          <PageWrapper>
+            <PageHeader
+              pageNumber={2}
+              logo={`involve-${reportType}-logo-small.png`}
+              logoWidth={reportType === 'leader' ? 166 : 174}
+            />
+            <div
+              className="page-content"
+              style={{
+                letterSpacing: '0.5px',
+                fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                fontSize: REPORT_TYPOGRAPHY.body.fontSize,
+                lineHeight: REPORT_TYPOGRAPHY.body.lineHeight,
+                margin: '70px 0 40px',
+              }}
+            >
+              <p>
+                No dimension scores available yet. The report will update when the assessment is completed.
+              </p>
+            </div>
+            <PageFooter pageNumber={2} />
+          </PageWrapper>
+        </PageContainer>
+      </div>
+    )
+  }
+
   return (
     <div style={{ backgroundColor: REPORT_COLORS.white }} data-report-pages={`${expectedPages}`}>
       {/* Cover Page */}
