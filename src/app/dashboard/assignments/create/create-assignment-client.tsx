@@ -39,6 +39,14 @@ interface AssignmentUser {
   group_id?: string // If from group, track which group
 }
 
+interface SurveyOption {
+  survey_id: string
+  assessment_ids: string[]
+  expires: string
+  user_ids: string[]
+  label: string
+}
+
 export default function CreateAssignmentClient() {
   const router = useRouter()
   const supabase = createClient()
@@ -65,6 +73,10 @@ export default function CreateAssignmentClient() {
   const [showAssignConfirmDialog, setShowAssignConfirmDialog] = useState(false)
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([])
   const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>([])
+  // Add to existing survey
+  const [existingSurveyId, setExistingSurveyId] = useState<string | null>(null)
+  const [surveysList, setSurveysList] = useState<SurveyOption[]>([])
+  const [selectedSurveyMeta, setSelectedSurveyMeta] = useState<{ assessment_ids: string[]; expires: string; user_ids: string[] } | null>(null)
 
   useEffect(() => {
     const loadData = async () => {
@@ -128,6 +140,35 @@ export default function CreateAssignmentClient() {
             setAvailableGroups((groupsData as GroupWithMembers[]) || [])
           }
         }
+
+        // Load assignments to build existing surveys list (for "Add to existing survey" dropdown)
+        const assignmentsRes = await fetch('/api/assignments')
+        const assignmentsData = await assignmentsRes.json().catch(() => ({}))
+        const allAssignments = Array.isArray(assignmentsData.assignments) ? assignmentsData.assignments : []
+        const bySurvey = new Map<string, { assessment_ids: Set<string>; expires: string; user_ids: Set<string>; assessmentTitles: string[] }>()
+        for (const a of allAssignments as Array<{ survey_id: string | null; assessment_id: string; user_id: string; expires: string; assessment?: { title?: string } }>) {
+          if (!a.survey_id) continue
+          if (!bySurvey.has(a.survey_id)) {
+            bySurvey.set(a.survey_id, { assessment_ids: new Set(), expires: a.expires, user_ids: new Set(), assessmentTitles: [] })
+          }
+          const g = bySurvey.get(a.survey_id)!
+          g.assessment_ids.add(a.assessment_id)
+          g.user_ids.add(a.user_id)
+          if (a.assessment?.title && !g.assessmentTitles.includes(a.assessment.title)) {
+            g.assessmentTitles.push(a.assessment.title)
+          }
+        }
+        const surveys: SurveyOption[] = []
+        bySurvey.forEach((g, survey_id) => {
+          const assessment_ids = Array.from(g.assessment_ids)
+          const user_ids = Array.from(g.user_ids)
+          const expiresDate = g.expires.slice(0, 10)
+          const label = g.assessmentTitles.length
+            ? `${g.assessmentTitles[0]}${g.assessmentTitles.length > 1 ? ` (+${g.assessmentTitles.length - 1} more)` : ''} – expires ${expiresDate} – ${user_ids.length} participant${user_ids.length !== 1 ? 's' : ''}`
+            : `Survey – expires ${expiresDate} – ${user_ids.length} participant${user_ids.length !== 1 ? 's' : ''}`
+          surveys.push({ survey_id, assessment_ids, expires: g.expires, user_ids, label })
+        })
+        setSurveysList(surveys)
 
         // Set default expiration to tomorrow
         const tomorrow = new Date()
@@ -245,6 +286,18 @@ Thank you.`)
         throw new Error('Please add at least one user or group to assign to')
       }
 
+      // When adding to existing survey, block if any selected user is already in that survey
+      if (existingSurveyId && selectedSurveyMeta) {
+        const existingUserIds = new Set(selectedSurveyMeta.user_ids)
+        const duplicates = assignmentUsers.filter((au) => existingUserIds.has(au.user_id))
+        if (duplicates.length > 0) {
+          const names = duplicates.map((au) => au.user.name || au.user.email).join(', ')
+          setMessage(`The following people already have assignments in this survey: ${names}. Please remove them from the list or choose "No — create a new survey" to assign them to a new survey.`)
+          setIsLoading(false)
+          return
+        }
+      }
+
       // Check if any selected assessments require targets
       const selectedAssessments = assessments.filter(a => selectedAssessmentIds.includes(a.id))
       const requiresTarget = selectedAssessments.some(a => a.target === '1' || a.target === '2' || a.is_360)
@@ -292,21 +345,28 @@ Thank you.`)
         }
 
         // Create all assessments for this user in one API call
+        const body: Record<string, unknown> = {
+          user_ids: [au.user_id],
+          assessment_ids: selectedAssessmentIds,
+          expires: expiresDate.toISOString(),
+          target_id: au.target_id || null,
+          custom_fields: customFields,
+          whitelabel: false,
+        }
+        if (existingSurveyId) {
+          body.survey_id = existingSurveyId
+        }
         const promise = fetch('/api/assignments', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            user_ids: [au.user_id],
-            assessment_ids: selectedAssessmentIds,
-            expires: expiresDate.toISOString(),
-            target_id: au.target_id || null,
-            custom_fields: customFields,
-            whitelabel: false,
-          }),
+          body: JSON.stringify(body),
         }).then(async (response) => {
           const data = await response.json()
+          if (response.status === 409) {
+            throw new Error(data.error || 'Some users already have assignments in this survey.')
+          }
           if (response.ok && data.assignments) {
             // Collect passwords from response
             if (data.userPasswords && typeof data.userPasswords === 'object') {
@@ -429,14 +489,24 @@ Thank you.`)
         </Link>
       </div>
 
-      {/* Message */}
+      {/* Fixed message (toaster) */}
       {message && (
-        <div className={`p-4 rounded-md ${
-          message.includes('successfully') 
-            ? 'bg-green-50 text-green-800 border border-green-200' 
-            : 'bg-red-50 text-red-800 border border-red-200'
-        }`}>
-          {message}
+        <div
+          className={`fixed top-4 right-4 z-50 max-w-md shadow-lg rounded-md p-4 flex items-start gap-3 ${
+            message.includes('successfully')
+              ? 'bg-green-50 text-green-800 border border-green-200'
+              : 'bg-red-50 text-red-800 border border-red-200'
+          }`}
+        >
+          <p className="flex-1 text-sm">{message}</p>
+          <button
+            type="button"
+            onClick={() => setMessage('')}
+            className="flex-shrink-0 text-gray-500 hover:text-gray-700"
+            aria-label="Dismiss"
+          >
+            ×
+          </button>
         </div>
       )}
 
@@ -448,6 +518,44 @@ Thank you.`)
             <CardDescription>Select assessments and set expiration date</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* Add to existing survey */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Add to existing survey?
+              </label>
+              <select
+                value={existingSurveyId ?? ''}
+                onChange={(e) => {
+                  const v = e.target.value
+                  if (!v) {
+                    setExistingSurveyId(null)
+                    setSelectedSurveyMeta(null)
+                    return
+                  }
+                  const survey = surveysList.find((s) => s.survey_id === v)
+                  if (survey) {
+                    setExistingSurveyId(survey.survey_id)
+                    setSelectedSurveyMeta({ assessment_ids: survey.assessment_ids, expires: survey.expires, user_ids: survey.user_ids })
+                    setSelectedAssessmentIds(survey.assessment_ids)
+                    setExpirationDate(survey.expires.slice(0, 10))
+                  }
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
+              >
+                <option value="">No — create a new survey</option>
+                {surveysList.map((s) => (
+                  <option key={s.survey_id} value={s.survey_id}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+              {existingSurveyId && (
+                <p className="text-sm text-amber-700 mt-2">
+                  Assessment(s) and expiration are set by the existing survey. Add users or groups below.
+                </p>
+              )}
+            </div>
+
             {/* Assessments Selection */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -472,11 +580,13 @@ Thank you.`)
                     multiple
                     value={selectedAssessmentIds}
                     onChange={(e) => {
+                      if (existingSurveyId) return
                       const selected = Array.from(e.target.selectedOptions, option => option.value)
                       setSelectedAssessmentIds(selected)
                     }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
+                    className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium ${existingSurveyId ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                     size={Math.min(assessments.length, 10)}
+                    disabled={!!existingSurveyId}
                   >
                     {assessments.map((assessment) => (
                       <option key={assessment.id} value={assessment.id}>
@@ -503,9 +613,10 @@ Thank you.`)
                 <input
                   type="date"
                   value={expirationDate}
-                  onChange={(e) => setExpirationDate(e.target.value)}
+                  onChange={(e) => { if (!existingSurveyId) setExpirationDate(e.target.value) }}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium"
+                  className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-medium ${existingSurveyId ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                  readOnly={!!existingSurveyId}
                 />
               </div>
             )}
@@ -687,13 +798,17 @@ Thank you.`)
       {/* Confirm before submit */}
       <Dialog open={showAssignConfirmDialog} onOpenChange={setShowAssignConfirmDialog}>
         <DialogContent
-          title="Confirm assignment"
-          description="This will create assignments and send emails to the selected users if email is enabled. Double-check your survey group and settings before continuing."
+          title={existingSurveyId ? 'Add to existing survey' : 'Confirm assignment'}
+          description={existingSurveyId
+            ? 'This will add the selected users to the existing survey. Emails will be sent if enabled.'
+            : 'This will create assignments and send emails to the selected users if email is enabled. Double-check your survey group and settings before continuing.'}
           onClose={() => setShowAssignConfirmDialog(false)}
         >
           <div className="flex flex-col gap-4">
             <p className="text-sm text-gray-600">
-              You are about to assign {selectedAssessmentIds.length} assessment{selectedAssessmentIds.length !== 1 ? 's' : ''} to {assignmentUsers.length} user{assignmentUsers.length !== 1 ? 's' : ''}.
+              {existingSurveyId
+                ? `You are adding ${assignmentUsers.length} user${assignmentUsers.length !== 1 ? 's' : ''} to this survey.`
+                : `You are about to assign ${selectedAssessmentIds.length} assessment${selectedAssessmentIds.length !== 1 ? 's' : ''} to ${assignmentUsers.length} user${assignmentUsers.length !== 1 ? 's' : ''}.`}
               {sendEmail && ' Emails will be sent to each user.'}
             </p>
             <div className="flex justify-end gap-3 pt-2">
@@ -708,7 +823,7 @@ Thank you.`)
                 type="button"
                 onClick={() => void performSubmit()}
               >
-                Create assignments
+                {existingSurveyId ? 'Add to survey' : 'Create assignments'}
               </Button>
             </div>
           </div>
