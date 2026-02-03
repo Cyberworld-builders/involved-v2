@@ -15,11 +15,19 @@ interface ReportViewFullscreenClientProps {
 }
 
 export default function ReportViewFullscreenClient({ assignmentId, is360, initialReportData }: ReportViewFullscreenClientProps) {
+  const [mounted, setMounted] = useState(false)
   const [loading, setLoading] = useState(!initialReportData)
   const [error, setError] = useState<string | null>(null)
   const [reportData, setReportData] = useState<Report360Data | ReportLeaderBlockerData | null>(
     initialReportData ? (initialReportData as Report360Data | ReportLeaderBlockerData) : null
   )
+
+  // Defer report render until after mount to avoid hydration mismatch (React #418) when
+  // server and client disagree (e.g. large payload, serialization, or locale). PDF flow
+  // waits for .page-container, which appears once this effect runs and report renders.
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const loadReport = useCallback(async () => {
     try {
@@ -101,12 +109,21 @@ export default function ReportViewFullscreenClient({ assignmentId, is360, initia
     )
   }
 
+  // Only render the full report after mount. This avoids hydration mismatch (React #418):
+  // server and client both render the same placeholder first, then client paints the report.
+  // PDF service waits for .page-container, which appears after this client-only render.
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white" data-report-loaded="true">
+        <div className="text-center text-gray-500">
+          <p>Preparing report...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div
-      className="min-h-screen bg-white print:bg-white"
-      data-report-loaded="true"
-      suppressHydrationWarning
-    >
+    <div className="min-h-screen bg-white print:bg-white" data-report-loaded="true">
       {is360 ? (
         <Report360ViewFullscreen reportData={reportData as Report360Data} />
       ) : (
