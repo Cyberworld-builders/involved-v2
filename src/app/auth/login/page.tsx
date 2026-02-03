@@ -31,7 +31,8 @@ export default function LoginPage() {
         setMessage(error.message)
       } else {
         setMessage('Login successful! Redirecting...')
-        // Redirect to dashboard
+        // Refresh so middleware/server see the new session (fixes redirect hang on Vercel)
+        await router.refresh()
         router.push('/dashboard')
       }
     } catch {
