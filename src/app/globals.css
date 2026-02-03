@@ -206,3 +206,8 @@ body {
 .rich-text-content a:hover {
   color: #4338ca;
 }
+
+/* Align question number with first line when content starts with a heading */
+.question-with-number .rich-text-content > *:first-child {
+  margin-top: 0;
+}

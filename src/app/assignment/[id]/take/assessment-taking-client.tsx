@@ -685,7 +685,7 @@ export default function AssessmentTakingClient({
                 {/* Question Number and Content */}
                 <div className="mb-4">
                   {questionType?.showContent && (
-                    <div className="flex items-start">
+                    <div className="question-with-number flex items-start">
                       {((assessment as typeof assessment & { show_question_numbers?: boolean })?.show_question_numbers !== false) && isActualQuestion && questionType?.showPage && pageQuestionCounter > 0 && (
                         <span className="text-lg font-semibold text-gray-900 mr-2 flex-shrink-0">
                           {pageQuestionCounter}.
