@@ -90,6 +90,9 @@ export const REPORT_SPACING = {
   // Content Area
   contentWidth: 704, // 850 - (73 * 2)
   contentHeight: 960, // Approximate content height
+
+  // Footer: space between last content and page number (footer is fixed to bottom)
+  footerAreaHeight: 64,
   
   // Margins
   sectionMargin: 20,

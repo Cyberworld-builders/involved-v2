@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -159,6 +160,13 @@ export default function ProfilePasswordUpdateClient() {
           >
             {loading ? 'Updating Password...' : 'Update Password'}
           </Button>
+
+          <p className="mt-4 text-center text-sm text-gray-600">
+            Forgot your password?{' '}
+            <Link href="/auth/request-password-reset" className="text-indigo-600 hover:text-indigo-500">
+              Send a reset link
+            </Link>
+          </p>
         </form>
       </CardContent>
     </Card>

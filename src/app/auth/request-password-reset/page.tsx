@@ -5,7 +5,11 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
-export default function ForgotPasswordPage() {
+/**
+ * Request a password reset email. Only linked from the profile page.
+ * Sends the Supabase password recovery email (reset link).
+ */
+export default function RequestPasswordResetPage() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
@@ -24,30 +28,28 @@ export default function ForgotPasswordPage() {
     setLoading(true)
 
     try {
-      const returnUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/dashboard`
-      const response = await fetch('/api/auth/request-login-link', {
+      const response = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, returnUrl }),
+        body: JSON.stringify({ email }),
       })
 
       const data = await response.json().catch(() => ({}))
 
-      // For security, do not reveal whether the email exists.
       if (!response.ok) {
         if (response.status === 400 && data?.error) {
           setError(String(data.error))
         } else {
-          setMessage("If an account exists with that email, you'll receive a login link shortly.")
+          setMessage("If an account exists for that email, you'll receive a password reset link shortly.")
         }
         return
       }
 
-      setMessage("If an account exists with that email, you'll receive a login link shortly.")
+      setMessage("If an account exists for that email, you'll receive a password reset link shortly.")
     } catch {
-      setMessage("If an account exists with that email, you'll receive a login link shortly.")
+      setMessage("If an account exists for that email, you'll receive a password reset link shortly.")
     } finally {
       setLoading(false)
     }
@@ -57,19 +59,19 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md">
         <div className="mb-4">
-          <Link href="/auth/login" className="text-sm text-indigo-600 hover:text-indigo-500 flex items-center">
+          <Link href="/dashboard/profile" className="text-sm text-indigo-600 hover:text-indigo-500 flex items-center">
             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Back to sign in
+            Back to profile
           </Link>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl text-center text-gray-900">Request a login link</CardTitle>
+            <CardTitle className="text-2xl text-center text-gray-900">Reset password</CardTitle>
             <CardDescription className="text-center text-gray-600">
-              Enter your email and we&apos;ll send you a temporary login link. No password needed.
+              We&apos;ll send you a link to set a new password.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -105,13 +107,13 @@ export default function ForgotPasswordPage() {
               )}
 
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Sending…' : 'Send login link'}
+                {loading ? 'Sending…' : 'Send reset link'}
               </Button>
             </form>
 
             <div className="mt-6 text-center">
-              <Link href="/auth/login" className="text-sm text-indigo-600 hover:text-indigo-500">
-                Return to sign in
+              <Link href="/dashboard/profile" className="text-sm text-indigo-600 hover:text-indigo-500">
+                Return to profile
               </Link>
             </div>
           </CardContent>
@@ -120,4 +122,3 @@ export default function ForgotPasswordPage() {
     </div>
   )
 }
-

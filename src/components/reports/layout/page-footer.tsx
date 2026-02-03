@@ -22,6 +22,8 @@ export default function PageFooter({ pageNumber }: PageFooterProps) {
       style={{
         position: 'absolute',
         bottom: 0,
+        left: '50%',
+        transform: 'translateX(-50%)',
         width: `${REPORT_LAYOUT.footerWidth}px`,
         fontFamily: REPORT_TYPOGRAPHY.footer.fontSize,
         fontSize: REPORT_TYPOGRAPHY.footer.fontSize,

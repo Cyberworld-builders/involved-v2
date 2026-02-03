@@ -260,9 +260,14 @@ export async function generatePDFFromView(
           bottom: 0 !important;
           position: absolute !important;
         }
-        /* Ensure page-wrapper doesn't overflow container */
+        /* Reserve space above footer so content doesn't overlap page number */
         .page-wrapper {
-          padding-bottom: 59px !important;
+          padding-bottom: 64px !important;
+          box-sizing: border-box !important;
+        }
+        .page-footer {
+          left: 50% !important;
+          transform: translateX(-50%) !important;
         }
         @media print {
           .report-view-container {
@@ -303,9 +308,14 @@ export async function generatePDFFromView(
             bottom: 0 !important;
             position: absolute !important;
           }
-          /* Ensure page-wrapper doesn't overflow container */
+          /* Reserve space above footer so content doesn't overlap page number */
           .page-wrapper {
-            padding-bottom: 59px !important;
+            padding-bottom: 64px !important;
+            box-sizing: border-box !important;
+          }
+          .page-footer {
+            left: 50% !important;
+            transform: translateX(-50%) !important;
           }
         }
       `

@@ -29,9 +29,10 @@
 }
 
 .page-wrapper {
-  padding: 59px 73px;
+  padding: 59px 73px 64px 73px;
   position: relative;
   height: 960px;
+  box-sizing: border-box;
 }
 
 /* Page Header */
@@ -65,10 +66,12 @@
   overflow: hidden;
 }
 
-/* Page Footer */
+/* Page Footer - fixed to bottom of page, space reserved above via .page-wrapper padding-bottom */
 .page-footer {
   position: absolute;
   bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
   width: 704px;
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 14px;

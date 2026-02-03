@@ -31,11 +31,13 @@ export default function ComparisonChart({
   const chartWidth = 704
   const barHeight = 50
   const rowHeight = 67
-  const gapBelowBars = 32
-  const lineExtension = 24
-  const barsAreaHeight = (groupAverage !== undefined ? 3 : benchmark !== undefined ? 2 : 1) * rowHeight + 24
-  const lineNumbersTop = barsAreaHeight + gapBelowBars + lineExtension
-  const graphHeight = lineNumbersTop + 24 + lineExtension
+  const barCount = groupAverage !== undefined ? 3 : benchmark !== undefined ? 2 : 1
+  const barRegionHeight = barCount * rowHeight
+  const lineExtension = 40
+  const lineNumbersGap = 34
+  const lineTotalHeight = barRegionHeight + 2 * lineExtension
+  const graphHeight = lineTotalHeight + lineNumbersGap
+  const linePaddingTop = lineTotalHeight - 14
   
   const yourPercent = (yourScore / maxValue) * 100
   const groupPercent = groupAverage ? (groupAverage / maxValue) * 100 : 0
@@ -60,6 +62,7 @@ export default function ComparisonChart({
           </div>
         )}
 
+        <div style={{ marginTop: '32px' }}>
         <div className="bars" style={{ width: `${chartWidth}px`, height: `${graphHeight}px` }}>
           <div className="graph" style={{ position: 'relative', width: `${chartWidth}px`, height: `${graphHeight}px`, overflow: 'visible' }}>
             {/* Grid Lines */}
@@ -68,7 +71,7 @@ export default function ComparisonChart({
               style={{
                 position: 'absolute',
                 width: `${chartWidth}px`,
-                height: `${graphHeight}px`,
+                height: `${lineTotalHeight}px`,
                 left: 0,
                 top: -lineExtension,
               }}
@@ -87,7 +90,7 @@ export default function ComparisonChart({
                     fontSize: '12px',
                     color: REPORT_COLORS.textPrimary,
                     textIndent: '-2px',
-                    paddingTop: `${lineNumbersTop}px`,
+                    paddingTop: `${linePaddingTop}px`,
                   }}
                 >
                   <span
@@ -105,9 +108,23 @@ export default function ComparisonChart({
               ))}
             </div>
 
+            {/* Bars: centered in line area via flexbox (no explicit top) */}
+            <div
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                width: `${chartWidth}px`,
+                height: `${lineTotalHeight}px`,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+              }}
+            >
+              <div style={{ height: `${barRegionHeight}px` }}>
             {/* Group Average Bar */}
             {groupAverage !== undefined && (
-              <div className="graph-row" style={{ position: 'relative', width: `${chartWidth}px`, height: `${rowHeight}px`, top: '4px' }}>
+              <div className="graph-row" style={{ position: 'relative', width: `${chartWidth}px`, height: `${rowHeight}px`, top: 0 }}>
                 <div className="bar" style={{ position: 'absolute', width: `${chartWidth}px`, left: 0, height: `${rowHeight}px`, top: '10px' }}>
                   <div
                     className="inner"
@@ -133,7 +150,7 @@ export default function ComparisonChart({
             )}
 
             {/* Your Score Bar */}
-            <div className="graph-row" style={{ position: 'relative', width: `${chartWidth}px`, height: `${rowHeight}px`, top: '4px' }}>
+            <div className="graph-row" style={{ position: 'relative', width: `${chartWidth}px`, height: `${rowHeight}px`, top: 0 }}>
               <div className="bar" style={{ position: 'absolute', width: `${chartWidth}px`, left: 0, height: `${rowHeight}px`, top: '10px' }}>
                 <div
                   className={`inner ${yourScoreFlagged ? 'flagged' : ''}`}
@@ -159,7 +176,7 @@ export default function ComparisonChart({
 
             {/* Benchmark Bar */}
             {benchmark !== undefined && (
-              <div className="graph-row" style={{ position: 'relative', width: `${chartWidth}px`, height: `${rowHeight}px`, top: '4px' }}>
+              <div className="graph-row" style={{ position: 'relative', width: `${chartWidth}px`, height: `${rowHeight}px`, top: 0 }}>
                 <div className="bar" style={{ position: 'absolute', width: `${chartWidth}px`, left: 0, height: `${rowHeight}px`, top: '10px' }}>
                   <div
                     className="inner"
@@ -183,7 +200,10 @@ export default function ComparisonChart({
                 </div>
               </div>
             )}
+              </div>
+            </div>
           </div>
+        </div>
         </div>
 
         {/* Legend - one row, equal-width containers, top-aligned, text wraps within each */}
