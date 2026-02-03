@@ -175,26 +175,10 @@ export default function CreateAssignmentClient() {
         tomorrow.setDate(tomorrow.getDate() + 1)
         setExpirationDate(tomorrow.toISOString().split('T')[0])
 
-        // Set default email body
-        setEmailBody(`Hello {name},
-
-You have been assigned the following assessment(s):
-{assessments}
-
-Please click the link above to take you to the dashboard to log in. Please complete your
-assignments by {expiration-date}.
-
-You can access your assignments at any time from your dashboard ({dashboard-link}).
-
-SAVE this email and BOOKMARK your login page. If you have been assigned multiple
-assessments, this will help you navigate to the login page.
-
-If you have any questions, please contact us at: support@involvedtalent.com
-
-Thank you!
-
--Involved Talent Team
-© {year} Involved Talent`)
+        // Set default email body (HTML so RichTextEditor preserves paragraphs)
+        setEmailBody(
+          '<p>Hello {name},</p><p>You have been assigned the following assessment(s):</p><p>{assessments}</p><p>Please click the link above to take you to the dashboard to log in. Please complete your assignments by {expiration-date}.</p><p>You can access your assignments at any time from your dashboard ({dashboard-link}).</p><p>SAVE this email and BOOKMARK your login page. If you have been assigned multiple assessments, this will help you navigate to the login page.</p><p>If you have any questions, please contact us at: support@involvedtalent.com</p><p>Thank you!</p><p>-Involved Talent Team</p><p>© {year} Involved Talent</p>'
+        )
       } catch (error) {
         console.error('Error loading data:', error)
         setMessage('Failed to load data')

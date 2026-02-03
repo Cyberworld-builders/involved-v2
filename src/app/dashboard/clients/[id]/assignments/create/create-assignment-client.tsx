@@ -80,25 +80,9 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
   const [expirationDate, setExpirationDate] = useState('')
   const [sendEmail, setSendEmail] = useState(false)
   const [emailSubject, setEmailSubject] = useState('New assessments have been assigned to you')
-  const [emailBody, setEmailBody] = useState(`Hello {name},
-
-You have been assigned the following assessment(s):
-{assessments}
-
-Please click the link above to take you to the dashboard to log in. Please complete your
-assignments by {expiration-date}.
-
-You can access your assignments at any time from your dashboard ({dashboard-link}).
-
-SAVE this email and BOOKMARK your login page. If you have been assigned multiple
-assessments, this will help you navigate to the login page.
-
-If you have any questions, please contact us at: support@involvedtalent.com
-
-Thank you!
-
--Involved Talent Team
-© {year} Involved Talent`)
+  const [emailBody, setEmailBody] = useState(
+    '<p>Hello {name},</p><p>You have been assigned the following assessment(s):</p><p>{assessments}</p><p>Please click the link above to take you to the dashboard to log in. Please complete your assignments by {expiration-date}.</p><p>You can access your assignments at any time from your dashboard ({dashboard-link}).</p><p>SAVE this email and BOOKMARK your login page. If you have been assigned multiple assessments, this will help you navigate to the login page.</p><p>If you have any questions, please contact us at: support@involvedtalent.com</p><p>Thank you!</p><p>-Involved Talent Team</p><p>© {year} Involved Talent</p>'
+  )
   const [enableReminder, setEnableReminder] = useState(false)
   const [firstReminderDate, setFirstReminderDate] = useState('')
   const [firstReminderTime, setFirstReminderTime] = useState('09:00')
@@ -229,26 +213,10 @@ Thank you!
         defaultFirstReminder.setDate(defaultFirstReminder.getDate() + 3)
         setFirstReminderDate(defaultFirstReminder.toISOString().split('T')[0])
 
-        // Set default email body
-        setEmailBody(`Hello {name},
-
-You have been assigned the following assessment(s):
-{assessments}
-
-Please click the link above to take you to the dashboard to log in. Please complete your
-assignments by {expiration-date}.
-
-You can access your assignments at any time from your dashboard ({dashboard-link}).
-
-SAVE this email and BOOKMARK your login page. If you have been assigned multiple
-assessments, this will help you navigate to the login page.
-
-If you have any questions, please contact us at: support@involvedtalent.com
-
-Thank you!
-
--Involved Talent Team
-© {year} Involved Talent`)
+        // Set default email body (HTML so RichTextEditor preserves paragraphs)
+        setEmailBody(
+          '<p>Hello {name},</p><p>You have been assigned the following assessment(s):</p><p>{assessments}</p><p>Please click the link above to take you to the dashboard to log in. Please complete your assignments by {expiration-date}.</p><p>You can access your assignments at any time from your dashboard ({dashboard-link}).</p><p>SAVE this email and BOOKMARK your login page. If you have been assigned multiple assessments, this will help you navigate to the login page.</p><p>If you have any questions, please contact us at: support@involvedtalent.com</p><p>Thank you!</p><p>-Involved Talent Team</p><p>© {year} Involved Talent</p>'
+        )
       } catch (error) {
         console.error('Error loading data:', error)
         setMessage('Failed to load data')
