@@ -45,7 +45,7 @@ export default function ScoreDisplay({
         justifyContent: 'center',
       }}
     >
-      <span style={{ display: 'block' }}>{score.toFixed(1)}</span>
+      <span style={{ display: 'block' }}>{(score ?? 0).toFixed(1)}</span>
       {label && (
         <span
           style={{

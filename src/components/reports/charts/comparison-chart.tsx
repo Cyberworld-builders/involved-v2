@@ -143,7 +143,7 @@ export default function ComparisonChart({
                       margin: 0,
                     }}
                   >
-                    {groupAverage.toFixed(1)}
+                    {(groupAverage ?? 0).toFixed(1)}
                   </div>
                 </div>
               </div>
@@ -169,7 +169,7 @@ export default function ComparisonChart({
                     margin: 0,
                   }}
                 >
-                  {yourScore.toFixed(1)}
+                  {(yourScore ?? 0).toFixed(1)}
                 </div>
               </div>
             </div>
@@ -195,7 +195,7 @@ export default function ComparisonChart({
                       margin: 0,
                     }}
                   >
-                    {benchmark.toFixed(1)}
+                    {(benchmark ?? 0).toFixed(1)}
                   </div>
                 </div>
               </div>

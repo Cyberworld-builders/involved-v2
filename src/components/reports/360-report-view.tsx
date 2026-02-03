@@ -55,7 +55,7 @@ export default function Report360View({ reportData }: Report360ViewProps) {
             <div>
               <p className="text-sm text-gray-600">Overall Score</p>
               <p className="text-3xl font-bold text-indigo-600">
-                {reportData.overall_score.toFixed(2)}
+                {(reportData.overall_score ?? 0).toFixed(2)}
               </p>
             </div>
             <div>
@@ -77,41 +77,41 @@ export default function Report360View({ reportData }: Report360ViewProps) {
             {/* Overall Score */}
             <div>
               <p className="text-sm text-gray-600 mb-1">Overall Score</p>
-              <p className="text-2xl font-bold">{dimension.overall_score.toFixed(2)}</p>
+              <p className="text-2xl font-bold">{(dimension.overall_score ?? 0).toFixed(2)}</p>
             </div>
 
             {/* Rater Breakdown */}
             <div>
               <p className="text-sm font-medium text-gray-700 mb-2">Breakdown by Rater Type</p>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                {dimension.rater_breakdown.peer !== null && (
+                {dimension.rater_breakdown?.peer != null && (
                   <div className="text-center p-3 bg-gray-50 rounded">
                     <p className="text-xs text-gray-600">Peer</p>
-                    <p className="text-lg font-semibold">{dimension.rater_breakdown.peer.toFixed(2)}</p>
+                    <p className="text-lg font-semibold">{(dimension.rater_breakdown.peer ?? 0).toFixed(2)}</p>
                   </div>
                 )}
-                {dimension.rater_breakdown.direct_report !== null && (
+                {dimension.rater_breakdown?.direct_report != null && (
                   <div className="text-center p-3 bg-gray-50 rounded">
                     <p className="text-xs text-gray-600">Direct Report</p>
-                    <p className="text-lg font-semibold">{dimension.rater_breakdown.direct_report.toFixed(2)}</p>
+                    <p className="text-lg font-semibold">{(dimension.rater_breakdown.direct_report ?? 0).toFixed(2)}</p>
                   </div>
                 )}
-                {dimension.rater_breakdown.supervisor !== null && (
+                {dimension.rater_breakdown?.supervisor != null && (
                   <div className="text-center p-3 bg-gray-50 rounded">
                     <p className="text-xs text-gray-600">Supervisor</p>
-                    <p className="text-lg font-semibold">{dimension.rater_breakdown.supervisor.toFixed(2)}</p>
+                    <p className="text-lg font-semibold">{(dimension.rater_breakdown.supervisor ?? 0).toFixed(2)}</p>
                   </div>
                 )}
-                {dimension.rater_breakdown.self !== null && (
+                {dimension.rater_breakdown?.self != null && (
                   <div className="text-center p-3 bg-gray-50 rounded">
                     <p className="text-xs text-gray-600">Self</p>
-                    <p className="text-lg font-semibold">{dimension.rater_breakdown.self.toFixed(2)}</p>
+                    <p className="text-lg font-semibold">{(dimension.rater_breakdown.self ?? 0).toFixed(2)}</p>
                   </div>
                 )}
-                {dimension.rater_breakdown.other !== null && (
+                {dimension.rater_breakdown?.other != null && (
                   <div className="text-center p-3 bg-gray-50 rounded">
                     <p className="text-xs text-gray-600">Other</p>
-                    <p className="text-lg font-semibold">{dimension.rater_breakdown.other.toFixed(2)}</p>
+                    <p className="text-lg font-semibold">{(dimension.rater_breakdown.other ?? 0).toFixed(2)}</p>
                   </div>
                 )}
               </div>
@@ -119,31 +119,31 @@ export default function Report360View({ reportData }: Report360ViewProps) {
 
             {/* Benchmarks and GEOnorm */}
             <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-              {dimension.industry_benchmark !== null && (
+              {dimension.industry_benchmark != null && (
                 <div>
                   <p className="text-sm text-gray-600">Industry Benchmark</p>
                   <p className="text-xl font-semibold">
-                    {dimension.industry_benchmark.toFixed(2)}
-                    {dimension.overall_score < dimension.industry_benchmark && (
+                    {(dimension.industry_benchmark ?? 0).toFixed(2)}
+                    {(dimension.overall_score ?? 0) < (dimension.industry_benchmark ?? 0) && (
                       <span className="ml-2 text-red-600 text-sm">↓ Below</span>
                     )}
-                    {dimension.overall_score >= dimension.industry_benchmark && (
+                    {(dimension.overall_score ?? 0) >= (dimension.industry_benchmark ?? 0) && (
                       <span className="ml-2 text-green-600 text-sm">↑ Above</span>
                     )}
                   </p>
                 </div>
               )}
-              {dimension.geonorm !== null && (
+              {dimension.geonorm != null && (
                 <div>
                   <p className="text-sm text-gray-600">
-                    Group Norm (n={dimension.geonorm_participant_count})
+                    Group Norm (n={dimension.geonorm_participant_count ?? 0})
                   </p>
                   <p className="text-xl font-semibold">
-                    {dimension.geonorm.toFixed(2)}
-                    {dimension.overall_score < dimension.geonorm && (
+                    {(dimension.geonorm ?? 0).toFixed(2)}
+                    {(dimension.overall_score ?? 0) < (dimension.geonorm ?? 0) && (
                       <span className="ml-2 text-red-600 text-sm">↓ Below</span>
                     )}
-                    {dimension.overall_score >= dimension.geonorm && (
+                    {(dimension.overall_score ?? 0) >= (dimension.geonorm ?? 0) && (
                       <span className="ml-2 text-green-600 text-sm">↑ Above</span>
                     )}
                   </p>
@@ -161,7 +161,7 @@ export default function Report360View({ reportData }: Report360ViewProps) {
             )}
 
             {/* Text Feedback */}
-            {dimension.text_feedback.length > 0 && (
+            {(dimension.text_feedback?.length ?? 0) > 0 && (
               <div className="pt-4 border-t">
                 <p className="text-sm font-medium text-gray-700 mb-2">Feedback from Raters</p>
                 <div className="space-y-2">

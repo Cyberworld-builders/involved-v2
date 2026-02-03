@@ -51,7 +51,7 @@ export default function ReportLeaderBlockerView({ reportData }: ReportLeaderBloc
             <div>
               <p className="text-sm text-gray-600">Overall Score</p>
               <p className="text-3xl font-bold text-indigo-600">
-                {reportData.overall_score.toFixed(2)}
+                {(reportData.overall_score ?? 0).toFixed(2)}
               </p>
             </div>
             {reportData.group_name && (
@@ -76,33 +76,33 @@ export default function ReportLeaderBlockerView({ reportData }: ReportLeaderBloc
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <p className="text-sm text-gray-600 mb-1">Your Score</p>
-                <p className="text-2xl font-bold">{dimension.target_score.toFixed(2)}</p>
+                <p className="text-2xl font-bold">{(dimension.target_score ?? 0).toFixed(2)}</p>
               </div>
-              {dimension.industry_benchmark !== null && (
+              {dimension.industry_benchmark != null && (
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Industry Benchmark</p>
                   <p className="text-xl font-semibold">
-                    {dimension.industry_benchmark.toFixed(2)}
-                    {dimension.target_score < dimension.industry_benchmark && (
+                    {(dimension.industry_benchmark ?? 0).toFixed(2)}
+                    {(dimension.target_score ?? 0) < (dimension.industry_benchmark ?? 0) && (
                       <span className="ml-2 text-red-600 text-sm">↓ Below</span>
                     )}
-                    {dimension.target_score >= dimension.industry_benchmark && (
+                    {(dimension.target_score ?? 0) >= (dimension.industry_benchmark ?? 0) && (
                       <span className="ml-2 text-green-600 text-sm">↑ Above</span>
                     )}
                   </p>
                 </div>
               )}
-              {dimension.geonorm !== null && (
+              {dimension.geonorm != null && (
                 <div>
                   <p className="text-sm text-gray-600 mb-1">
-                    Group Norm (n={dimension.geonorm_participant_count})
+                    Group Norm (n={dimension.geonorm_participant_count ?? 0})
                   </p>
                   <p className="text-xl font-semibold">
-                    {dimension.geonorm.toFixed(2)}
-                    {dimension.target_score < dimension.geonorm && (
+                    {(dimension.geonorm ?? 0).toFixed(2)}
+                    {(dimension.target_score ?? 0) < (dimension.geonorm ?? 0) && (
                       <span className="ml-2 text-red-600 text-sm">↓ Below</span>
                     )}
-                    {dimension.target_score >= dimension.geonorm && (
+                    {(dimension.target_score ?? 0) >= (dimension.geonorm ?? 0) && (
                       <span className="ml-2 text-green-600 text-sm">↑ Above</span>
                     )}
                   </p>
@@ -117,39 +117,39 @@ export default function ReportLeaderBlockerView({ reportData }: ReportLeaderBloc
                 <div>
                   <div className="flex justify-between text-xs text-gray-600 mb-1">
                     <span>Your Score</span>
-                    <span>{dimension.target_score.toFixed(2)}</span>
+                    <span>{(dimension.target_score ?? 0).toFixed(2)}</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-4">
                     <div
                       className="bg-indigo-600 h-4 rounded-full"
-                      style={{ width: `${Math.min((dimension.target_score / 5) * 100, 100)}%` }}
+                      style={{ width: `${Math.min(((dimension.target_score ?? 0) / 5) * 100, 100)}%` }}
                     />
                   </div>
                 </div>
-                {dimension.industry_benchmark !== null && (
+                {dimension.industry_benchmark != null && (
                   <div>
                     <div className="flex justify-between text-xs text-gray-600 mb-1">
                       <span>Industry Benchmark</span>
-                      <span>{dimension.industry_benchmark.toFixed(2)}</span>
+                      <span>{(dimension.industry_benchmark ?? 0).toFixed(2)}</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-4">
                       <div
                         className="bg-blue-500 h-4 rounded-full"
-                        style={{ width: `${Math.min((dimension.industry_benchmark / 5) * 100, 100)}%` }}
+                        style={{ width: `${Math.min(((dimension.industry_benchmark ?? 0) / 5) * 100, 100)}%` }}
                       />
                     </div>
                   </div>
                 )}
-                {dimension.geonorm !== null && (
+                {dimension.geonorm != null && (
                   <div>
                     <div className="flex justify-between text-xs text-gray-600 mb-1">
                       <span>Group Norm</span>
-                      <span>{dimension.geonorm.toFixed(2)}</span>
+                      <span>{(dimension.geonorm ?? 0).toFixed(2)}</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-4">
                       <div
                         className="bg-green-500 h-4 rounded-full"
-                        style={{ width: `${Math.min((dimension.geonorm / 5) * 100, 100)}%` }}
+                        style={{ width: `${Math.min(((dimension.geonorm ?? 0) / 5) * 100, 100)}%` }}
                       />
                     </div>
                   </div>

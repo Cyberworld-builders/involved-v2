@@ -192,7 +192,7 @@ export default function HorizontalBarChart({
                     boxSizing: 'border-box',
                   }}
                 >
-                  {showScoreInBar && barData.score.toFixed(1)}
+                  {showScoreInBar && (barData.score ?? 0).toFixed(1)}
                 </div>
               </div>
             </div>

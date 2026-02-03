@@ -404,8 +404,8 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                             flexShrink: 0,
                           }}
                         >
-                          {dimension.industry_benchmark !== null 
-                            ? dimension.industry_benchmark.toFixed(2)
+                          {dimension.industry_benchmark != null 
+                            ? (dimension.industry_benchmark ?? 0).toFixed(2)
                             : '0.00'}
                         </div>
                         <div
@@ -454,7 +454,7 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                               flexShrink: 0,
                             }}
                           >
-                            {dimension.geonorm.toFixed(2)}
+                            {(dimension.geonorm ?? 0).toFixed(2)}
                           </div>
                           <div
                             className="norm-label"
