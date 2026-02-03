@@ -3,7 +3,10 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { Monitor } from 'lucide-react'
 import { QUESTION_TYPES } from '@/components/forms/assessment-form'
+
+const MOBILE_MAX_WIDTH = 768
 
 interface Anchor {
   id: string
@@ -87,8 +90,17 @@ export default function AssessmentTakingClient({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [logoError, setLogoError] = useState(false)
   const [backgroundError, setBackgroundError] = useState(false)
+  const [isMobile, setIsMobile] = useState<boolean | null>(null)
   const questionsSectionRef = useRef<HTMLDivElement>(null)
   const saveTimeoutRef = useRef<Record<string, NodeJS.Timeout>>({})
+
+  // Detect mobile viewport — assessments are not yet supported on mobile
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < MOBILE_MAX_WIDTH)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   // Cleanup timeouts on unmount
   useEffect(() => {
@@ -133,6 +145,28 @@ export default function AssessmentTakingClient({
         <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6 text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">No Questions Available</h1>
           <p className="text-gray-600 mb-4">This assessment does not have any questions configured.</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Assessments are not yet supported on mobile — direct users to open on desktop
+  if (isMobile === true) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center">
+          <div className="flex justify-center mb-6">
+            <div className="rounded-full bg-gray-100 p-4">
+              <Monitor className="h-12 w-12 text-gray-600" aria-hidden />
+            </div>
+          </div>
+          <h1 className="text-xl font-bold text-gray-900 mb-3">Open on a desktop</h1>
+          <p className="text-gray-600">
+            This assessment is best completed on a computer or tablet. Please open this link on a desktop or laptop to continue.
+          </p>
+          <p className="mt-4 text-sm text-gray-500">
+            You can bookmark this page or copy the link and open it on your desktop browser.
+          </p>
         </div>
       </div>
     )
