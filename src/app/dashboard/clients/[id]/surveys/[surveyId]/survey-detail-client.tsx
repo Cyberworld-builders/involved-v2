@@ -1,11 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 import Link from 'next/link'
-import { ChevronDown, ChevronRight, ExternalLink } from 'lucide-react'
+import { ChevronDown, ChevronRight, ExternalLink, Trash2 } from 'lucide-react'
 import { PdfActionButtons } from '@/components/reports/pdf-action-buttons'
 import { Subject } from '@/lib/reports/get-survey-subjects'
 import { ScoreData } from '@/lib/reports/get-survey-scores'
@@ -40,12 +42,13 @@ interface SurveyDetailClientProps {
 
 export default function SurveyDetailClient({
   clientId,
-  surveyId: _surveyId,
+  surveyId,
   assessment,
   assignments: initialAssignments,
   initialSubjects = [],
   initialScores = {},
 }: SurveyDetailClientProps) {
+  const router = useRouter()
   // #region agent log
   console.log('[DEBUG] SurveyDetailClient rendered', {
     initialSubjectsCount: initialSubjects.length,
@@ -82,6 +85,34 @@ export default function SurveyDetailClient({
   // Keep this useEffect empty for now, or remove if not needed
 
   const [expandedAssignmentIds, setExpandedAssignmentIds] = useState<Set<string>>(new Set())
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  const handleDeleteSurvey = async () => {
+    setIsDeleting(true)
+    setDeleteError(null)
+    try {
+      const res = await fetch(`/api/clients/${clientId}/surveys/${surveyId}`, { method: 'DELETE' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setDeleteError(data?.error || `Delete failed (${res.status})`)
+        return
+      }
+      router.push(`/dashboard/clients/${clientId}?tab=reports`)
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Failed to delete survey')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const closeDeleteDialog = () => {
+    if (!isDeleting) {
+      setDeleteDialogOpen(false)
+      setDeleteError(null)
+    }
+  }
 
   const toggleExpanded = (id: string) => {
     setExpandedAssignmentIds((prev) => {
@@ -147,6 +178,16 @@ export default function SurveyDetailClient({
             })}
           </p>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+          onClick={() => setDeleteDialogOpen(true)}
+          aria-label="Delete survey"
+        >
+          <Trash2 className="h-4 w-4 mr-2" />
+          Delete survey
+        </Button>
       </div>
 
       {/* Message */}
@@ -435,6 +476,43 @@ export default function SurveyDetailClient({
           </div>
         </CardContent>
       </Card>
+
+      {/* Delete survey confirmation */}
+      <Dialog open={deleteDialogOpen} onOpenChange={(open) => !open && closeDeleteDialog()}>
+        <DialogContent
+          title="Delete survey?"
+          description="This action cannot be undone."
+          onClose={closeDeleteDialog}
+        >
+          <p className="text-sm text-gray-700 mb-4">
+            This will permanently delete this survey and:
+          </p>
+          <ul className="list-disc list-inside text-sm text-gray-700 space-y-1 mb-4">
+            <li>All <strong>{totalCount}</strong> assignment(s) in it</li>
+            <li>All answers and report data (and cached scores) for those assignments</li>
+            <li>Any generated report PDFs for those assignments</li>
+          </ul>
+          <p className="text-sm font-medium text-gray-900 mb-1">Survey:</p>
+          <p className="text-sm text-gray-600 mb-4">
+            {assessment.title} — {surveyDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+          {deleteError && (
+            <p className="text-sm text-red-600 mb-4">{deleteError}</p>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={closeDeleteDialog} disabled={isDeleting}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteSurvey}
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Deleting…' : 'Delete survey'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
