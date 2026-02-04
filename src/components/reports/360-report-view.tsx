@@ -22,7 +22,7 @@ export default function Report360View({ reportData }: Report360ViewProps) {
   }
 
   const dimensions = reportData.dimensions ?? []
-  const isEmptyReport = dimensions.length === 0 && (reportData as Record<string, unknown>).assessment_title == null
+  const isEmptyReport = dimensions.length === 0 && (reportData as unknown as Record<string, unknown>).assessment_title == null
 
   return (
     <div className="space-y-6">

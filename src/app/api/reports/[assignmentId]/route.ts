@@ -166,13 +166,13 @@ export async function GET(
     }
 
     // Return cached report data
-    const cachedReport = reportData.dimension_scores
+    const reportPayload = reportData.dimension_scores
     const payload: { report: unknown; cached: boolean; _debug?: unknown } = {
-      report: cachedReport,
+      report: reportPayload,
       cached: true,
     }
     if (debug) {
-      const r = cachedReport as Record<string, unknown> | null
+      const r = reportPayload as Record<string, unknown> | null
       payload._debug = {
         assignmentId,
         assessment_id: assignment.assessment_id,
