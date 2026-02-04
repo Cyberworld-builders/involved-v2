@@ -106,15 +106,15 @@ export default function EmailDashboardClient() {
       {data?.aggregate != null && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-            <p className="text-sm font-medium text-gray-500">SES delivery attempts (last 14 days)</p>
+            <p className="text-sm font-medium text-gray-700">SES delivery attempts (last 14 days)</p>
             <p className="mt-1 text-2xl font-semibold text-gray-900">{data.aggregate.sent.toLocaleString()}</p>
           </div>
           <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-            <p className="text-sm font-medium text-gray-500">SES bounces (last 14 days)</p>
+            <p className="text-sm font-medium text-gray-700">SES bounces (last 14 days)</p>
             <p className="mt-1 text-2xl font-semibold text-gray-900">{data.aggregate.bounces.toLocaleString()}</p>
           </div>
           <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-            <p className="text-sm font-medium text-gray-500">SES complaints (last 14 days)</p>
+            <p className="text-sm font-medium text-gray-700">SES complaints (last 14 days)</p>
             <p className="mt-1 text-2xl font-semibold text-gray-900">{data.aggregate.complaints.toLocaleString()}</p>
           </div>
         </div>
@@ -124,29 +124,29 @@ export default function EmailDashboardClient() {
       <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
           <div>
-            <label className="block text-xs font-medium text-gray-500">From date</label>
+            <label className="block text-xs font-medium text-gray-700">From date</label>
             <input
               type="date"
               value={from}
               onChange={(e) => setFrom(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500">To date</label>
+            <label className="block text-xs font-medium text-gray-700">To date</label>
             <input
               type="date"
               value={to}
               onChange={(e) => setTo(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500">Type</label>
+            <label className="block text-xs font-medium text-gray-700">Type</label>
             <select
               value={emailType}
               onChange={(e) => setEmailType(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900"
             >
               <option value="">All</option>
               {EMAIL_TYPES.map((t) => (
@@ -157,21 +157,21 @@ export default function EmailDashboardClient() {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500">Recipient (search)</label>
+            <label className="block text-xs font-medium text-gray-700">Recipient (search)</label>
             <input
               type="text"
               placeholder="Email..."
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500">Status</label>
+            <label className="block text-xs font-medium text-gray-700">Status</label>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900"
             >
               <option value="">All</option>
               <option value="sent">Sent</option>
@@ -222,7 +222,7 @@ export default function EmailDashboardClient() {
           </div>
         )}
         {loading ? (
-          <div className="px-4 py-8 text-center text-gray-500">Loading…</div>
+          <div className="px-4 py-8 text-center text-gray-700">Loading…</div>
         ) : (
           <>
             <div className="overflow-x-auto">
@@ -232,7 +232,7 @@ export default function EmailDashboardClient() {
                     {visibleColumns.map((col) => (
                       <th
                         key={col}
-                        className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 sm:px-4"
+                        className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-700 sm:px-4"
                       >
                         {COLUMN_LABELS[col]}
                       </th>
@@ -242,7 +242,7 @@ export default function EmailDashboardClient() {
                 <tbody className="divide-y divide-gray-200 bg-white">
                   {data?.logs.length === 0 ? (
                     <tr>
-                      <td colSpan={visibleColumns.length} className="px-4 py-8 text-center text-gray-500">
+                      <td colSpan={visibleColumns.length} className="px-4 py-8 text-center text-gray-700">
                         No email logs in this range.
                       </td>
                     </tr>
@@ -291,7 +291,7 @@ export default function EmailDashboardClient() {
                           </td>
                         )}
                         {visibleColumns.includes('provider_message_id') && (
-                          <td className="px-3 py-2 text-sm sm:px-4">
+                          <td className="px-3 py-2 text-sm text-gray-900 sm:px-4">
                             {row.provider_message_id ? (
                               <button
                                 type="button"
@@ -314,8 +314,8 @@ export default function EmailDashboardClient() {
             </div>
             {/* Pagination */}
             {data && data.total > pageSize && (
-              <div className="flex items-center justify-between border-t border-gray-200 px-4 py-2">
-                <p className="text-sm text-gray-600">
+              <div className="flex items-center justify-between border-t border-gray-200 px-4 py-2 text-gray-900">
+                <p className="text-sm text-gray-700">
                   Showing {page * pageSize + 1}–{Math.min((page + 1) * pageSize, data.total)} of {data.total}
                 </p>
                 <div className="flex gap-2">
@@ -323,7 +323,7 @@ export default function EmailDashboardClient() {
                     type="button"
                     disabled={!canPrev}
                     onClick={() => setPage((p) => p - 1)}
-                    className="rounded border border-gray-300 px-2 py-1 text-sm disabled:opacity-50"
+                    className="rounded border border-gray-300 px-2 py-1 text-sm text-gray-900 disabled:opacity-50"
                   >
                     Previous
                   </button>
@@ -331,7 +331,7 @@ export default function EmailDashboardClient() {
                     type="button"
                     disabled={!canNext}
                     onClick={() => setPage((p) => p + 1)}
-                    className="rounded border border-gray-300 px-2 py-1 text-sm disabled:opacity-50"
+                    className="rounded border border-gray-300 px-2 py-1 text-sm text-gray-900 disabled:opacity-50"
                   >
                     Next
                   </button>
