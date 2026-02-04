@@ -77,8 +77,31 @@ export default function ProfilePasswordUpdateClient() {
     }
   }
 
+  const bannerText = error || message
+  const isSuccess = !error && !!message
+
   return (
-    <Card>
+    <>
+      {/* Fixed message (toaster) */}
+      {bannerText && (
+        <div
+          className={`fixed top-4 right-4 z-50 max-w-md shadow-lg rounded-md p-4 flex items-start gap-3 ${
+            isSuccess ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'
+          }`}
+        >
+          <p className="flex-1 text-sm">{bannerText}</p>
+          <button
+            type="button"
+            onClick={() => { setError(''); setMessage('') }}
+            className="flex-shrink-0 text-gray-500 hover:text-gray-700"
+            aria-label="Dismiss"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      <Card>
       <CardHeader>
         <CardTitle>Change Password</CardTitle>
         <CardDescription>
@@ -141,18 +164,6 @@ export default function ProfilePasswordUpdateClient() {
             />
           </div>
 
-          {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-sm text-red-800">{error}</p>
-            </div>
-          )}
-
-          {message && (
-            <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-              <p className="text-sm text-green-800">{message}</p>
-            </div>
-          )}
-
           <Button
             type="submit"
             className="w-full"
@@ -170,5 +181,6 @@ export default function ProfilePasswordUpdateClient() {
         </form>
       </CardContent>
     </Card>
+    </>
   )
 }

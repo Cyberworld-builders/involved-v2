@@ -44,6 +44,27 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      {/* Fixed message (toaster) */}
+      {message && (
+        <div
+          className={`fixed top-4 right-4 z-50 max-w-md shadow-lg rounded-md p-4 flex items-start gap-3 ${
+            message.includes('successful')
+              ? 'bg-green-50 text-green-800 border border-green-200'
+              : 'bg-red-50 text-red-800 border border-red-200'
+          }`}
+        >
+          <p className="flex-1 text-sm">{message}</p>
+          <button
+            type="button"
+            onClick={() => setMessage('')}
+            className="flex-shrink-0 text-gray-500 hover:text-gray-700"
+            aria-label="Dismiss"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       <div className="w-full max-w-md">
         <div className="mb-4">
           <Link href="/" className="text-sm text-indigo-600 hover:text-indigo-500 flex items-center">
@@ -104,12 +125,6 @@ export default function LoginPage() {
                 Need a login link?
               </Link>
             </div>
-
-            {message && (
-              <div className={`text-sm ${message.includes('successful') ? 'text-green-600' : 'text-red-600'}`}>
-                {message}
-              </div>
-            )}
 
             <Button
               type="submit"
