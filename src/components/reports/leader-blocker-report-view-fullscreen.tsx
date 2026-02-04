@@ -208,9 +208,7 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
       for (const dimension of reportData.dimensions) {
         pages++ // Parent dimension overall page
         if (dimension.subdimensions) {
-          for (const _subdim of dimension.subdimensions) {
-            pages++ // Subdimension page (feedback is on same page)
-          }
+          pages += dimension.subdimensions.length // Subdimension pages (feedback on same page)
         }
       }
     } else {

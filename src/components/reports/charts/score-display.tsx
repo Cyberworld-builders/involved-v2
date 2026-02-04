@@ -20,7 +20,7 @@ interface ScoreDisplayProps {
  */
 export default function ScoreDisplay({ 
   score, 
-  maxValue: _maxValue = 5, 
+  maxValue = 5, 
   label,
   size = 'large' 
 }: ScoreDisplayProps) {
@@ -46,7 +46,7 @@ export default function ScoreDisplay({
       }}
     >
       <span style={{ display: 'block' }}>{(score ?? 0).toFixed(1)}</span>
-      {label && (
+      {(label ?? `out of ${maxValue}`) && (
         <span
           style={{
             fontSize: '16px',
@@ -55,7 +55,7 @@ export default function ScoreDisplay({
             marginTop: size === 'large' ? '8px' : '4px',
           }}
         >
-          {label}
+          {label ?? `out of ${maxValue}`}
         </span>
       )}
     </div>

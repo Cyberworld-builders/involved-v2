@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 
 export type PdfStatus = 'not_requested' | 'queued' | 'generating' | 'ready' | 'failed'
@@ -34,7 +34,7 @@ export function PdfActionButtons({
   const [, setError] = useState<string | null>(null)
 
   // Fetch PDF status
-  const fetchStatus = async () => {
+  const fetchStatus = useCallback(async () => {
     try {
       const response = await fetch(`/api/reports/${assignmentId}/pdf`)
       if (!response.ok) {
@@ -57,12 +57,12 @@ export function PdfActionButtons({
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [assignmentId])
 
   // Initial fetch
   useEffect(() => {
     fetchStatus()
-  }, [assignmentId])
+  }, [fetchStatus])
 
   // Poll when queued or generating
   useEffect(() => {
@@ -73,7 +73,7 @@ export function PdfActionButtons({
 
       return () => clearInterval(interval)
     }
-  }, [state?.status, assignmentId])
+  }, [state?.status, fetchStatus])
 
   // Request PDF generation
   const handleGenerate = async () => {

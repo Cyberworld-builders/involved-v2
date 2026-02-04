@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -62,19 +62,7 @@ export default function FeedbackListClient({ assessments }: FeedbackListClientPr
   // Preview state
   const [previewFeedback, setPreviewFeedback] = useState<FeedbackEntry | null>(null)
 
-  useEffect(() => {
-    loadFeedback()
-  }, [])
-
-  useEffect(() => {
-    applyFilters()
-  }, [feedback, filterAssessment, filterType, filterDimension, searchTerm])
-
-  useEffect(() => {
-    loadDimensions()
-  }, [filterAssessment])
-
-  const loadFeedback = async () => {
+  const loadFeedback = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch('/api/feedback')
@@ -92,9 +80,13 @@ export default function FeedbackListClient({ assessments }: FeedbackListClientPr
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const loadDimensions = async () => {
+  useEffect(() => {
+    loadFeedback()
+  }, [loadFeedback])
+
+  const loadDimensions = useCallback(async () => {
     if (filterAssessment === 'all') {
       setAvailableDimensions([])
       setFilterDimension('all')
@@ -119,9 +111,13 @@ export default function FeedbackListClient({ assessments }: FeedbackListClientPr
     } finally {
       setLoadingDimensions(false)
     }
-  }
+  }, [filterAssessment])
 
-  const applyFilters = () => {
+  useEffect(() => {
+    loadDimensions()
+  }, [loadDimensions])
+
+  const applyFilters = useCallback(() => {
     let filtered = [...feedback]
 
     // Filter by assessment
@@ -148,7 +144,11 @@ export default function FeedbackListClient({ assessments }: FeedbackListClientPr
     }
 
     setFilteredFeedback(filtered)
-  }
+  }, [feedback, filterAssessment, filterType, filterDimension, searchTerm])
+
+  useEffect(() => {
+    applyFilters()
+  }, [applyFilters])
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this feedback entry?')) {

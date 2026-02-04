@@ -86,8 +86,8 @@ export async function GET(request: NextRequest) {
         .map((r) => r.related_entity_id as string)
     )]
 
-    let assignments: Record<string, { title?: string }> = {}
-    let invites: Record<string, { email?: string }> = {}
+    const assignments: Record<string, { title?: string }> = {}
+    const invites: Record<string, { email?: string }> = {}
 
     if (assignmentIds.length > 0) {
       const { data: assignmentsData } = await admin
@@ -96,9 +96,10 @@ export async function GET(request: NextRequest) {
         .in('id', assignmentIds)
       if (assignmentsData) {
         for (const a of assignmentsData) {
-          const ass = a as { id: string; assessments: { title: string } | null }
-          assignments[ass.id] = {
-            title: ass.assessments?.title ?? undefined,
+          const row = a as { id: string; assessments: { title: string } | { title: string }[] | null }
+          const assessment = Array.isArray(row.assessments) ? row.assessments[0] : row.assessments
+          assignments[row.id] = {
+            title: assessment?.title ?? undefined,
           }
         }
       }
@@ -110,8 +111,9 @@ export async function GET(request: NextRequest) {
         .in('id', inviteIds)
       if (invitesData) {
         for (const inv of invitesData) {
-          const i = inv as { id: string; profiles: { email: string } | null }
-          invites[i.id] = { email: i.profiles?.email }
+          const row = inv as { id: string; profiles: { email: string } | { email: string }[] | null }
+          const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles
+          invites[row.id] = { email: profile?.email }
         }
       }
     }

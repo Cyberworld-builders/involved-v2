@@ -12,15 +12,10 @@ import { chromium } from 'playwright-core'
  * 
  * @param viewUrl - Full URL to the fullscreen report view
  * @param cookies - Array of cookie objects for authentication
- * @param options - Additional options for PDF generation
  */
 export async function generatePDFFromView(
   viewUrl: string,
-  cookies?: Array<{ name: string; value: string; domain?: string; path?: string }>,
-  _options?: {
-    waitForSelector?: string
-    waitForTimeout?: number
-  }
+  cookies?: Array<{ name: string; value: string; domain?: string; path?: string }>
 ): Promise<Buffer> {
   console.log('[Playwright] Starting PDF generation from view URL:', viewUrl)
   
