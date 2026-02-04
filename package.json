@@ -26,7 +26,8 @@
     "sb:link:dev": "scripts/link-sb-dev.sh",
     "sb:link:staging": "scripts/link-sb-staging.sh",
     "supabase:restart": "supabase stop && supabase start",
-    "seed:360-demo": "tsx scripts/seed-360-demo.ts"
+    "seed:360-demo": "tsx scripts/seed-360-demo.ts",
+    "seed:partial-report": "tsx scripts/seed-partial-report-scenario.ts"
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.948.0",

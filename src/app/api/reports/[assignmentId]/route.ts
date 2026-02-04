@@ -42,7 +42,9 @@ export async function GET(
       )
     }
 
-    if (!assignment.completed) {
+    const assessment = (assignment.assessment as unknown) as { is_360: boolean } | null
+    // For 360 assessments, allow viewing report when not completed so we can show partial (0 responses)
+    if (!assignment.completed && !assessment?.is_360) {
       return NextResponse.json(
         { error: 'Assignment must be completed before viewing report' },
         { status: 400 }
@@ -63,9 +65,6 @@ export async function GET(
       (assignment.completed_at &&
         reportData.calculated_at &&
         new Date(reportData.calculated_at) < new Date(assignment.completed_at))
-
-    // Type assertion for nested object (Supabase returns arrays for relations, but .single() should return objects)
-    const assessment = (assignment.assessment as unknown) as { is_360: boolean } | null
 
     if (needsRegeneration) {
       // Generate report

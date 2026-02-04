@@ -294,6 +294,34 @@ export async function deleteTestInvite(profileId: string): Promise<boolean> {
 }
 
 /**
+ * Find an assignment ID that will yield a partial 360 report (zero completed raters).
+ * Use for E2E tests that need to open the report view with partial data.
+ *
+ * @returns Assignment ID or null if none (run npm run seed:partial-report first)
+ */
+export async function getPartial360AssignmentId(): Promise<string | null> {
+  const client = getAdminClient()
+  if (!client) return null
+
+  const { data: rows } = await client
+    .from('assignments')
+    .select(`
+      id,
+      assessment:assessments!assignments_assessment_id_fkey(is_360)
+    `)
+    .not('target_id', 'is', null)
+    .not('group_id', 'is', null)
+    .eq('completed', false)
+    .limit(1)
+
+  const assignment = Array.isArray(rows) ? rows[0] : rows
+  if (!assignment) return null
+  const assessment = (assignment as { assessment?: { is_360?: boolean } }).assessment
+  if (!assessment?.is_360) return null
+  return (assignment as { id: string }).id
+}
+
+/**
  * Clean up test data
  * 
  * Removes test data created during test runs.

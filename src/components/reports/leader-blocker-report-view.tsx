@@ -1,35 +1,7 @@
 'use client'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-
-interface DimensionReport {
-  dimension_id: string
-  dimension_name: string
-  dimension_code: string
-  target_score: number
-  industry_benchmark: number | null
-  geonorm: number | null
-  geonorm_participant_count: number
-  improvement_needed: boolean
-  specific_feedback: string | null
-  specific_feedback_id: string | null
-}
-
-interface ReportLeaderBlockerData {
-  assignment_id: string
-  user_id: string
-  user_name: string
-  user_email: string
-  assessment_id: string
-  assessment_title: string
-  group_id: string | null
-  group_name: string | null
-  overall_score: number
-  dimensions: DimensionReport[]
-  overall_feedback: string | null
-  overall_feedback_id: string | null
-  generated_at: string
-}
+import type { ReportLeaderBlockerData } from '@/lib/reports/types'
 
 interface ReportLeaderBlockerViewProps {
   reportData: ReportLeaderBlockerData

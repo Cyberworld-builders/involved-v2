@@ -1,39 +1,7 @@
 'use client'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-
-interface DimensionReport {
-  dimension_id: string
-  dimension_name: string
-  dimension_code: string
-  overall_score: number
-  rater_breakdown: {
-    peer: number | null
-    direct_report: number | null
-    supervisor: number | null
-    self: number | null
-    other: number | null
-  }
-  industry_benchmark: number | null
-  geonorm: number | null
-  geonorm_participant_count: number
-  improvement_needed: boolean
-  text_feedback: string[]
-}
-
-interface Report360Data {
-  assignment_id: string
-  target_id: string
-  target_name: string
-  target_email: string
-  assessment_id: string
-  assessment_title: string
-  group_id: string
-  group_name: string
-  overall_score: number
-  dimensions: DimensionReport[]
-  generated_at: string
-}
+import type { Report360Data } from '@/lib/reports/types'
 
 interface Report360ViewProps {
   reportData: Report360Data

@@ -14,57 +14,15 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { calculateGEOnorms } from './calculate-geonorms'
+import type { DimensionReport360, Report360Data } from './types'
 
+/** Internal aggregation shape (arrays per rater type); converted to RaterBreakdown360 in output. */
 interface RaterTypeBreakdown {
   peer: number[]
   direct_report: number[]
   supervisor: number[]
   self: number[]
   other: number[]
-}
-
-interface DimensionReport {
-  dimension_id: string
-  dimension_name: string
-  dimension_code: string
-  overall_score: number
-  rater_breakdown: {
-    peer: number | null
-    direct_report: number | null
-    supervisor: number | null
-    self: number | null
-    other: number | null
-    all_raters: number | null
-  }
-  industry_benchmark: number | null
-  geonorm: number | null
-  geonorm_participant_count: number
-  improvement_needed: boolean
-  text_feedback: string[]
-  description?: string
-  feedback?: {
-    Self: string[]
-    'Direct Report': string[]
-    Others: string[]
-  }
-}
-
-interface Report360Data {
-  assignment_id: string
-  target_id: string
-  target_name: string
-  target_email: string
-  assessment_id: string
-  assessment_title: string
-  group_id: string
-  group_name: string
-  overall_score: number
-  dimensions: DimensionReport[]
-  generated_at: string
-  /** True when no or partial responses; report shows placeholders */
-  partial?: boolean
-  /** When partial, indicates how many responses received vs total expected */
-  participant_response_summary?: { completed: number; total: number }
 }
 
 /**
@@ -255,7 +213,7 @@ export async function generate360Report(
       other: null,
       all_raters: null,
     }
-    const dimensionReportsPartial: DimensionReport[] = dimensions.map((dim) => ({
+    const dimensionReportsPartial: DimensionReport360[] = dimensions.map((dim) => ({
       dimension_id: dim.id,
       dimension_name: dim.name,
       dimension_code: dim.code,
@@ -402,7 +360,7 @@ export async function generate360Report(
   })
 
   // Build dimension reports
-  const dimensionReports: DimensionReport[] = []
+  const dimensionReports: DimensionReport360[] = []
 
   for (const dimension of dimensions) {
     // Get scores for this dimension from all assignments

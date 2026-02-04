@@ -16,60 +16,14 @@ import HorizontalBarChart from './charts/horizontal-bar-chart'
 import ScoreDisplay from './charts/score-display'
 import FeedbackSection from './sections/feedback-section'
 import Image from 'next/image'
+import type {
+  DimensionReportLeaderBlocker,
+  ReportLeaderBlockerData,
+  SubdimensionReportLeaderBlocker,
+} from '@/lib/reports/types'
 
 const SUBDIMENSION_PLACEHOLDER_DEFINITION =
   'This is a placeholder definition for a dimension that has not been defined.'
-
-interface SubdimensionReport {
-  dimension_id: string
-  dimension_name: string
-  dimension_code: string
-  target_score: number
-  industry_benchmark: number | null
-  geonorm: number | null
-  improvement_needed: boolean
-  group_score?: number | null
-  specific_feedback: string | null
-  specific_feedback_id: string | null
-  overall_feedback?: string | null
-  definition?: string | null
-}
-
-interface DimensionReport {
-  dimension_id: string
-  dimension_name: string
-  dimension_code: string
-  target_score: number
-  industry_benchmark: number | null
-  geonorm: number | null
-  geonorm_participant_count: number
-  improvement_needed: boolean
-  overall_feedback: string | null
-  overall_feedback_id: string | null
-  specific_feedback: string | null
-  specific_feedback_id: string | null
-  group_score?: number | null
-  definition?: string
-  subdimensions?: SubdimensionReport[]
-}
-
-interface ReportLeaderBlockerData {
-  assignment_id: string
-  user_id: string
-  user_name: string
-  user_email: string
-  assessment_id: string
-  assessment_title: string
-  group_id: string | null
-  group_name: string | null
-  overall_score: number
-  dimensions: DimensionReport[]
-  overall_feedback: string | null
-  overall_feedback_id: string | null
-  generated_at: string
-  // Determine if this is a blocker report
-  is_blocker?: boolean
-}
 
 interface ReportLeaderBlockerViewFullscreenProps {
   reportData: ReportLeaderBlockerData
@@ -97,17 +51,17 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
       
       // Calculate pages for dimensions
       const dimensionPages: Array<{ 
-        dimension: DimensionReport
+        dimension: DimensionReportLeaderBlocker
         overallPage: number
         subdimensionPages: Array<{ 
-          subdim: SubdimensionReport
+          subdim: SubdimensionReportLeaderBlocker
           page: number
         }>
       }> = []
       
       for (const dimension of reportData.dimensions) {
         const overallPage = currentPage++
-        const subdimensionPages: Array<{ subdim: SubdimensionReport; page: number }> = []
+        const subdimensionPages: Array<{ subdim: SubdimensionReportLeaderBlocker; page: number }> = []
         
         if (dimension.subdimensions && dimension.subdimensions.length > 0) {
           for (const subdim of dimension.subdimensions) {
@@ -137,7 +91,7 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
       
       // Calculate pages for dimensions
       const dimensionPages: Array<{ 
-        dimension: DimensionReport
+        dimension: DimensionReportLeaderBlocker
         page: number
         feedbackPage?: number
       }> = []
@@ -171,7 +125,7 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
         {
           title: 'Dimension Scores With Feedback:',
           page: 0,
-          subSections: (pageNumbers.dimensionPages as Array<{ dimension: DimensionReport; overallPage: number; subdimensionPages: Array<{ subdim: SubdimensionReport; page: number }> }>).flatMap((dp) => {
+          subSections: (pageNumbers.dimensionPages as Array<{ dimension: DimensionReportLeaderBlocker; overallPage: number; subdimensionPages: Array<{ subdim: SubdimensionReportLeaderBlocker; page: number }> }>).flatMap((dp) => {
             const subsections: Array<{ title: string; page: number }> = []
             subsections.push({ title: dp.dimension.dimension_name, page: dp.overallPage })
             if (dp.subdimensionPages && dp.subdimensionPages.length > 0) {
@@ -197,7 +151,7 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
         {
           title: 'Involved-Blockers Dimensions:',
           page: 0,
-          subSections: (pageNumbers.dimensionPages as Array<{ dimension: DimensionReport; page: number }>).map((dp) => ({
+          subSections: (pageNumbers.dimensionPages as Array<{ dimension: DimensionReportLeaderBlocker; page: number }>).map((dp) => ({
             title: dp.dimension.dimension_name,
             page: dp.page,
           })),
@@ -891,7 +845,7 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
       {reportData.dimensions.map((dimension, dimIdx) => {
         if (!isBlocker) {
           // Leaders: Parent dimension overall page + subdimension pages
-          const dp = (pageNumbers.dimensionPages as Array<{ dimension: DimensionReport; overallPage: number; subdimensionPages: Array<{ subdim: SubdimensionReport; page: number }> }>)[dimIdx]
+          const dp = (pageNumbers.dimensionPages as Array<{ dimension: DimensionReportLeaderBlocker; overallPage: number; subdimensionPages: Array<{ subdim: SubdimensionReportLeaderBlocker; page: number }> }>)[dimIdx]
           const parentFlagged = isFlagged(
             dimension.target_score,
             dimension.industry_benchmark,
@@ -1218,7 +1172,7 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
           )
         } else {
           // Blockers: Dimension page + feedback page
-          const dp = (pageNumbers.dimensionPages as Array<{ dimension: DimensionReport; page: number; feedbackPage?: number }>)[dimIdx]
+          const dp = (pageNumbers.dimensionPages as Array<{ dimension: DimensionReportLeaderBlocker; page: number; feedbackPage?: number }>)[dimIdx]
           const flagged = isFlagged(
             dimension.target_score,
             dimension.industry_benchmark,

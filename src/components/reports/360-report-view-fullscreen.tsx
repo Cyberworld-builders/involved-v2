@@ -15,55 +15,7 @@ import HorizontalBarChart from './charts/horizontal-bar-chart'
 import ScoreDisplay from './charts/score-display'
 import FeedbackSection from './sections/feedback-section'
 import Image from 'next/image'
-
-interface DimensionReport {
-  dimension_id: string
-  dimension_name: string
-  dimension_code: string
-  overall_score: number
-  rater_breakdown: {
-    peer: number | null
-    direct_report: number | null
-    supervisor: number | null
-    self: number | null
-    other: number | null
-    all_raters: number | null
-  }
-  industry_benchmark: number | null
-  geonorm: number | null
-  geonorm_participant_count: number
-  improvement_needed: boolean
-  text_feedback: string[]
-  description?: string
-  feedback?: {
-    Self: string[]
-    'Direct Report': string[]
-    Others: string[]
-  }
-  // Legacy structure expects these fields
-  definition?: string
-  flagged?: Record<string, boolean>
-  percent?: Record<string, number>
-  score?: Record<string, number>
-}
-
-interface Report360Data {
-  assignment_id: string
-  target_id: string
-  target_name: string
-  target_email: string
-  assessment_id: string
-  assessment_title: string
-  group_id: string
-  group_name: string
-  overall_score: number
-  dimensions: DimensionReport[]
-  generated_at: string
-  // Legacy expects client info
-  client_name?: string
-  partial?: boolean
-  participant_response_summary?: { completed: number; total: number }
-}
+import type { DimensionReport360, Report360Data } from '@/lib/reports/types'
 
 interface Report360ViewFullscreenProps {
   reportData: Report360Data
@@ -73,7 +25,7 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
   let pageNumber = 1
 
   // Transform dimension data to match legacy structure for charts
-  const transformDimensionForChart = (dim: DimensionReport) => {
+  const transformDimensionForChart = (dim: DimensionReport360) => {
     const scores: Array<{ label: string; score: number; flagged?: boolean }> = []
     
     // Add "All Raters" as the first bar (overall score)
@@ -111,7 +63,7 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
   }
 
   // Organize feedback by rater type
-  const organizeFeedback = (dim: DimensionReport) => {
+  const organizeFeedback = (dim: DimensionReport360) => {
     // Use feedback organized by rater type if available, otherwise fall back to text_feedback
     if (dim.feedback) {
       return dim.feedback

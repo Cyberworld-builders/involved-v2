@@ -57,6 +57,13 @@ async function globalSetup(config: FullConfig) {
       } else {
         console.log(`ℹ️  Test user already exists: ${testEmail}`)
       }
+      // Ensure E2E user can view any report (e.g. partial report from seed)
+      const { createClient } = await import('@supabase/supabase-js')
+      const admin = createClient(supabaseUrl!, supabaseServiceKey!, { auth: { autoRefreshToken: false, persistSession: false } })
+      const { data: profile } = await admin.from('profiles').select('id').eq('auth_user_id', result.user.id).single()
+      if (profile) {
+        await admin.from('profiles').update({ access_level: 'super_admin' }).eq('id', profile.id)
+      }
     } else {
       console.warn('⚠️  Could not create test user via Admin API')
       console.warn('   Falling back to browser-based authentication...')

@@ -15,54 +15,11 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { calculateGEOnorms } from './calculate-geonorms'
-
-interface SubdimensionReport {
-  dimension_id: string
-  dimension_name: string
-  dimension_code: string
-  target_score: number
-  industry_benchmark: number | null
-  geonorm: number | null
-  improvement_needed: boolean
-  group_score?: number | null
-  specific_feedback: string | null
-  specific_feedback_id: string | null
-  overall_feedback?: string | null
-}
-
-interface DimensionReport {
-  dimension_id: string
-  dimension_name: string
-  dimension_code: string
-  target_score: number
-  industry_benchmark: number | null
-  geonorm: number | null
-  geonorm_participant_count: number
-  improvement_needed: boolean
-  overall_feedback: string | null
-  overall_feedback_id: string | null
-  specific_feedback: string | null
-  specific_feedback_id: string | null
-  group_score?: number | null
-  subdimensions?: SubdimensionReport[]
-}
-
-interface ReportLeaderBlockerData {
-  assignment_id: string
-  user_id: string
-  user_name: string
-  user_email: string
-  assessment_id: string
-  assessment_title: string
-  group_id: string | null
-  group_name: string | null
-  overall_score: number
-  dimensions: DimensionReport[]
-  overall_feedback: string | null
-  overall_feedback_id: string | null
-  generated_at: string
-  is_blocker?: boolean
-}
+import type {
+  DimensionReportLeaderBlocker,
+  ReportLeaderBlockerData,
+  SubdimensionReportLeaderBlocker,
+} from './types'
 
 /**
  * Generate Leader/Blocker report data for an assignment
@@ -250,7 +207,7 @@ export async function generateLeaderBlockerReport(
   const buildDimensionReport = (
     dimension: { id: string; name: string; code: string; parent_id: string | null },
     isSubdimension: boolean = false
-  ): DimensionReport | SubdimensionReport | null => {
+  ): DimensionReportLeaderBlocker | SubdimensionReportLeaderBlocker | null => {
     const scoreData = dimensionScores?.find((ds) => ds.dimension_id === dimension.id)
     if (!scoreData) return null
 
@@ -300,7 +257,7 @@ export async function generateLeaderBlockerReport(
     }
 
     if (isSubdimension) {
-      return baseReport as SubdimensionReport
+      return baseReport as SubdimensionReportLeaderBlocker
     }
 
     return {
@@ -308,11 +265,11 @@ export async function generateLeaderBlockerReport(
       geonorm_participant_count: geonorm?.participant_count || 0,
       overall_feedback: overallFeedback?.feedback_content || null,
       overall_feedback_id: overallFeedback?.feedback_id || null,
-    } as DimensionReport
+    } as DimensionReportLeaderBlocker
   }
 
   // Build dimension reports with hierarchy
-  const dimensionReports: DimensionReport[] = []
+  const dimensionReports: DimensionReportLeaderBlocker[] = []
 
   for (const dimension of topLevelDimensions) {
     const parentReport = buildDimensionReport(dimension, false)
@@ -320,22 +277,22 @@ export async function generateLeaderBlockerReport(
 
     // For Leaders: add subdimensions if they exist
     if (!isBlocker && childrenByParent.has(dimension.id)) {
-      const subdimensions: SubdimensionReport[] = []
+      const subdimensions: SubdimensionReportLeaderBlocker[] = []
       const children = childrenByParent.get(dimension.id)!
       
       for (const child of children) {
         const subdimReport = buildDimensionReport(child, true)
         if (subdimReport) {
-          subdimensions.push(subdimReport as SubdimensionReport)
+          subdimensions.push(subdimReport as SubdimensionReportLeaderBlocker)
         }
       }
 
       if (subdimensions.length > 0) {
-        (parentReport as DimensionReport).subdimensions = subdimensions
+        (parentReport as DimensionReportLeaderBlocker).subdimensions = subdimensions
       }
     }
 
-    dimensionReports.push(parentReport as DimensionReport)
+    dimensionReports.push(parentReport as DimensionReportLeaderBlocker)
   }
 
   // Calculate overall score

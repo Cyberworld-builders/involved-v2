@@ -5,69 +5,7 @@
  */
 
 import ExcelJS from 'exceljs'
-
-interface DimensionReport360 {
-  dimension_id: string
-  dimension_name: string
-  dimension_code: string
-  overall_score: number
-  rater_breakdown: {
-    peer: number | null
-    direct_report: number | null
-    supervisor: number | null
-    self: number | null
-    other: number | null
-    all_raters: number | null
-  }
-  industry_benchmark: number | null
-  geonorm: number | null
-  geonorm_participant_count: number
-  improvement_needed: boolean
-  text_feedback: string[]
-}
-
-interface Report360Data {
-  assignment_id: string
-  target_id: string
-  target_name: string
-  target_email: string
-  assessment_id: string
-  assessment_title: string
-  group_id: string
-  group_name: string
-  overall_score: number
-  dimensions: DimensionReport360[]
-  generated_at: string
-}
-
-interface DimensionReportLeader {
-  dimension_id: string
-  dimension_name: string
-  dimension_code: string
-  target_score: number
-  industry_benchmark: number | null
-  geonorm: number | null
-  geonorm_participant_count: number
-  improvement_needed: boolean
-  specific_feedback: string | null
-  specific_feedback_id: string | null
-}
-
-interface ReportLeaderBlockerData {
-  assignment_id: string
-  user_id: string
-  user_name: string
-  user_email: string
-  assessment_id: string
-  assessment_title: string
-  group_id: string | null
-  group_name: string | null
-  overall_score: number
-  dimensions: DimensionReportLeader[]
-  overall_feedback: string | null
-  overall_feedback_id: string | null
-  generated_at: string
-}
+import type { Report360Data, ReportLeaderBlockerData } from './types'
 
 /**
  * Generate Excel workbook for 360 report

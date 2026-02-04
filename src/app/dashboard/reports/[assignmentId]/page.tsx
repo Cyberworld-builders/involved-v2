@@ -75,7 +75,8 @@ export default async function ReportPage({
     redirect('/dashboard')
   }
 
-  if (!assignment.completed) {
+  // For non-360 assessments, require completed assignment. For 360, allow viewing partial report (0 responses).
+  if (!assignment.completed && !assessment?.is_360) {
     return (
       <div className="space-y-6">
         <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
