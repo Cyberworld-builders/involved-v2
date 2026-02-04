@@ -3,6 +3,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import Report360ViewFullscreen from '@/components/reports/360-report-view-fullscreen'
 import ReportLeaderBlockerViewFullscreen from '@/components/reports/leader-blocker-report-view-fullscreen'
+import {
+  useReportDebug,
+  setReportDebugGlobal,
+  reportDataSummary,
+} from '@/lib/reports/report-debug'
 
 // Import types from report components
 type Report360Data = Parameters<typeof Report360ViewFullscreen>[0]['reportData']
@@ -15,12 +20,32 @@ interface ReportViewFullscreenClientProps {
 }
 
 export default function ReportViewFullscreenClient({ assignmentId, is360, initialReportData }: ReportViewFullscreenClientProps) {
+  const reportDebug = useReportDebug()
   const [mounted, setMounted] = useState(false)
   const [loading, setLoading] = useState(!initialReportData)
   const [error, setError] = useState<string | null>(null)
   const [reportData, setReportData] = useState<Report360Data | ReportLeaderBlockerData | null>(
     initialReportData ? (initialReportData as Report360Data | ReportLeaderBlockerData) : null
   )
+
+  useEffect(() => {
+    if (!reportDebug) return
+    console.log('[Report Debug] fullscreen init', {
+      assignmentId,
+      is360,
+      hasInitialReportData: !!initialReportData,
+    })
+    if (initialReportData) {
+      console.log('[Report Debug] initialReportData summary', reportDataSummary(initialReportData))
+      setReportDebugGlobal({
+        assignmentId,
+        is360,
+        source: 'fullscreen',
+        reportData: initialReportData,
+        timestamp: new Date().toISOString(),
+      })
+    }
+  }, [reportDebug, assignmentId, is360, initialReportData])
 
   // Defer report render until after mount to avoid hydration mismatch (React #418) when
   // server and client disagree (e.g. large payload, serialization, or locale). PDF flow
@@ -30,26 +55,65 @@ export default function ReportViewFullscreenClient({ assignmentId, is360, initia
   }, [])
 
   const loadReport = useCallback(async () => {
+    const url = reportDebug
+      ? `/api/reports/${assignmentId}?report_debug=1`
+      : `/api/reports/${assignmentId}`
     try {
       setLoading(true)
       setError(null)
 
-      const response = await fetch(`/api/reports/${assignmentId}`)
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to load report')
+      if (reportDebug) {
+        console.log('[Report Debug] fetch start', { assignmentId, is360, url })
       }
 
-      const data = await response.json()
-      setReportData(data.report)
+      const response = await fetch(url)
+
+      if (reportDebug) {
+        console.log('[Report Debug] response', {
+          status: response.status,
+          ok: response.ok,
+          statusText: response.statusText,
+        })
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        if (reportDebug) {
+          console.log('[Report Debug] load error', {
+            status: response.status,
+            errorBody: errorData,
+          })
+        }
+        throw new Error((errorData as { error?: string }).error || 'Failed to load report')
+      }
+
+      const data = (await response.json()) as { report?: unknown; cached?: boolean; _debug?: unknown }
+      if (reportDebug) {
+        console.log('[Report Debug] api response', data)
+        console.log('[Report Debug] reportData summary', reportDataSummary(data.report))
+        setReportDebugGlobal({
+          assignmentId,
+          is360,
+          source: 'fullscreen',
+          apiResponse: data,
+          reportData: data.report,
+          timestamp: new Date().toISOString(),
+        })
+      }
+      setReportData(data.report as Report360Data | ReportLeaderBlockerData)
     } catch (err) {
+      if (reportDebug) {
+        console.log('[Report Debug] load error', {
+          error: err,
+          message: err instanceof Error ? err.message : String(err),
+        })
+      }
       console.error('Error loading report:', err)
       setError(err instanceof Error ? err.message : 'Failed to load report')
     } finally {
       setLoading(false)
     }
-  }, [assignmentId])
+  }, [assignmentId, is360, reportDebug])
 
   useEffect(() => {
     // Only fetch if we don't have initial data
@@ -61,6 +125,19 @@ export default function ReportViewFullscreenClient({ assignmentId, is360, initia
   // Set data-report-loaded when report data is available and rendered
   useEffect(() => {
     if (reportData && !loading) {
+      if (reportDebug) {
+        console.log('[Report Debug] fullscreen rendering view', {
+          is360,
+          reportDataSummary: reportDataSummary(reportData),
+        })
+        setReportDebugGlobal({
+          assignmentId,
+          is360,
+          source: 'fullscreen',
+          reportData,
+          timestamp: new Date().toISOString(),
+        })
+      }
       // Small delay to ensure DOM is updated
       setTimeout(() => {
         const container = document.querySelector('[data-report-loaded]')
@@ -73,7 +150,7 @@ export default function ReportViewFullscreenClient({ assignmentId, is360, initia
         }
       }, 100)
     }
-  }, [reportData, loading])
+  }, [reportData, loading, reportDebug, assignmentId, is360])
 
   if (loading) {
     return (

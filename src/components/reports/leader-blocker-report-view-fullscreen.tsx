@@ -21,6 +21,7 @@ import type {
   ReportLeaderBlockerData,
   SubdimensionReportLeaderBlocker,
 } from '@/lib/reports/types'
+import { getReportDebug } from '@/lib/reports/report-debug'
 
 const SUBDIMENSION_PLACEHOLDER_DEFINITION =
   'This is a placeholder definition for a dimension that has not been defined.'
@@ -30,6 +31,18 @@ interface ReportLeaderBlockerViewFullscreenProps {
 }
 
 export default function ReportLeaderBlockerViewFullscreen({ reportData }: ReportLeaderBlockerViewFullscreenProps) {
+  if (getReportDebug()) {
+    const r = reportData as unknown as Record<string, unknown>
+    console.log('[Report Debug] view received', {
+      component: 'leader-blocker-fullscreen',
+      reportDataKeys: Object.keys(r),
+      dimensionsLength: r.dimensions != null && Array.isArray(r.dimensions) ? r.dimensions.length : undefined,
+      partial: r.partial,
+      overall_score: r.overall_score,
+    })
+    console.log('[Report Debug] full reportData for view', reportData)
+  }
+
   const isBlocker = reportData.is_blocker || reportData.assessment_title.toLowerCase().includes('blocker')
   const reportType = isBlocker ? 'blockers' : 'leader'
 

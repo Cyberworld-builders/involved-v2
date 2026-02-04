@@ -2,12 +2,25 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import type { Report360Data } from '@/lib/reports/types'
+import { getReportDebug } from '@/lib/reports/report-debug'
 
 interface Report360ViewProps {
   reportData: Report360Data
 }
 
 export default function Report360View({ reportData }: Report360ViewProps) {
+  if (getReportDebug()) {
+    const r = reportData as unknown as Record<string, unknown>
+    console.log('[Report Debug] view received', {
+      component: '360-dashboard',
+      reportDataKeys: Object.keys(r),
+      dimensionsLength: r.dimensions != null && Array.isArray(r.dimensions) ? r.dimensions.length : undefined,
+      partial: r.partial,
+      overall_score: r.overall_score,
+    })
+    console.log('[Report Debug] full reportData for view', reportData)
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}

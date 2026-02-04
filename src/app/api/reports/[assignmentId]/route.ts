@@ -9,12 +9,21 @@ import { applyTemplateToReport } from '@/lib/reports/apply-template'
  * GET /api/reports/:assignmentId
  * Get report data for an assignment (generate if needed)
  */
+function reportDebugRequested(request: NextRequest): boolean {
+  try {
+    return request.url.includes('report_debug=1')
+  } catch {
+    return false
+  }
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ assignmentId: string }> }
 ) {
   try {
     const { assignmentId } = await params
+    const debug = reportDebugRequested(request)
     const supabase = await createClient()
     const adminClient = createAdminClient()
 
@@ -132,17 +141,42 @@ export async function GET(
           onConflict: 'assignment_id',
         })
 
-      return NextResponse.json({
+      const payload: { report: unknown; cached: boolean; _debug?: unknown } = {
         report,
         cached: false,
-      })
+      }
+      if (debug) {
+        const r = report as Record<string, unknown>
+        payload._debug = {
+          assignmentId,
+          assessment_id: assignment.assessment_id,
+          completed: assignment.completed,
+          is_360: assessment?.is_360,
+          reportKeys: report != null && typeof report === 'object' ? Object.keys(r) : [],
+          dimensionsCount: Array.isArray(r?.dimensions) ? r.dimensions.length : undefined,
+        }
+      }
+      return NextResponse.json(payload)
     }
 
     // Return cached report data
-    return NextResponse.json({
-      report: reportData.dimension_scores,
+    const cachedReport = reportData.dimension_scores
+    const payload: { report: unknown; cached: boolean; _debug?: unknown } = {
+      report: cachedReport,
       cached: true,
-    })
+    }
+    if (debug) {
+      const r = cachedReport as Record<string, unknown> | null
+      payload._debug = {
+        assignmentId,
+        assessment_id: assignment.assessment_id,
+        completed: assignment.completed,
+        is_360: assessment?.is_360,
+        reportKeys: r != null && typeof r === 'object' ? Object.keys(r) : [],
+        dimensionsCount: r?.dimensions != null && Array.isArray(r.dimensions) ? r.dimensions.length : undefined,
+      }
+    }
+    return NextResponse.json(payload)
   } catch (error) {
     console.error('Error getting report:', error)
     return NextResponse.json(

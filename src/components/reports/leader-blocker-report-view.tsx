@@ -2,12 +2,25 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import type { ReportLeaderBlockerData } from '@/lib/reports/types'
+import { getReportDebug } from '@/lib/reports/report-debug'
 
 interface ReportLeaderBlockerViewProps {
   reportData: ReportLeaderBlockerData
 }
 
 export default function ReportLeaderBlockerView({ reportData }: ReportLeaderBlockerViewProps) {
+  if (getReportDebug()) {
+    const r = reportData as unknown as Record<string, unknown>
+    console.log('[Report Debug] view received', {
+      component: 'leader-blocker-dashboard',
+      reportDataKeys: Object.keys(r),
+      dimensionsLength: r.dimensions != null && Array.isArray(r.dimensions) ? r.dimensions.length : undefined,
+      partial: r.partial,
+      overall_score: r.overall_score,
+    })
+    console.log('[Report Debug] full reportData for view', reportData)
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}

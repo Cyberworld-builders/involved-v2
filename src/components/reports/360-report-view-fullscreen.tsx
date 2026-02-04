@@ -16,12 +16,25 @@ import ScoreDisplay from './charts/score-display'
 import FeedbackSection from './sections/feedback-section'
 import Image from 'next/image'
 import type { DimensionReport360, Report360Data } from '@/lib/reports/types'
+import { getReportDebug } from '@/lib/reports/report-debug'
 
 interface Report360ViewFullscreenProps {
   reportData: Report360Data
 }
 
 export default function Report360ViewFullscreen({ reportData }: Report360ViewFullscreenProps) {
+  if (getReportDebug()) {
+    const r = reportData as unknown as Record<string, unknown>
+    console.log('[Report Debug] view received', {
+      component: '360-fullscreen',
+      reportDataKeys: Object.keys(r),
+      dimensionsLength: r.dimensions != null && Array.isArray(r.dimensions) ? r.dimensions.length : undefined,
+      partial: r.partial,
+      overall_score: r.overall_score,
+    })
+    console.log('[Report Debug] full reportData for view', reportData)
+  }
+
   let pageNumber = 1
 
   // Transform dimension data to match legacy structure for charts
