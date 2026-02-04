@@ -5,9 +5,25 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
+import { ChevronDown, ChevronRight, ExternalLink } from 'lucide-react'
 import { PdfActionButtons } from '@/components/reports/pdf-action-buttons'
 import { Subject } from '@/lib/reports/get-survey-subjects'
 import { ScoreData } from '@/lib/reports/get-survey-scores'
+
+export type SurveyAssignment = {
+  id: string
+  user_id: string
+  target_id: string | null
+  assessment_id: string
+  completed: boolean
+  completed_at: string | null
+  created_at: string
+  started_at?: string | null
+  user_name?: string | null
+  user_email?: string | null
+  target_name?: string | null
+  target_email?: string | null
+}
 
 interface SurveyDetailClientProps {
   clientId: string
@@ -17,15 +33,7 @@ interface SurveyDetailClientProps {
     title: string
     is_360: boolean
   }
-  assignments: Array<{
-    id: string
-    user_id: string
-    target_id: string | null
-    assessment_id: string
-    completed: boolean
-    completed_at: string | null
-    created_at: string
-  }>
+  assignments: SurveyAssignment[]
   initialSubjects?: Subject[]
   initialScores?: Record<string, ScoreData>
 }
@@ -72,6 +80,17 @@ export default function SurveyDetailClient({
 
   // No longer need to fetch data client-side since it's passed from server
   // Keep this useEffect empty for now, or remove if not needed
+
+  const [expandedAssignmentIds, setExpandedAssignmentIds] = useState<Set<string>>(new Set())
+
+  const toggleExpanded = (id: string) => {
+    setExpandedAssignmentIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   const completedCount = initialAssignments.filter(a => a.completed).length
   const totalCount = initialAssignments.length
@@ -285,41 +304,134 @@ export default function SurveyDetailClient({
         <CardHeader>
           <CardTitle>Data Collection Status</CardTitle>
           <CardDescription>
-            Status of all assignments in this survey
+            Status of all assignments in this survey. Expand a row to see details and open the assignment.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {initialAssignments.map((assignment) => (
-              <div
-                key={assignment.id}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-md"
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-3 h-3 rounded-full ${
-                    assignment.completed ? 'bg-green-500' : 'bg-gray-300 border-2 border-gray-400'
-                  }`} />
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">
-                      Assignment #{assignment.id.slice(0, 8)}...
+            {initialAssignments.map((assignment) => {
+              const isExpanded = expandedAssignmentIds.has(assignment.id)
+              const raterLabel = assignment.user_name || assignment.user_email || assignment.user_id?.slice(0, 8) || '—'
+              const targetLabel = assessment.is_360
+                ? (assignment.target_name || assignment.target_email || (assignment.target_id ? assignment.target_id.slice(0, 8) : null) || '—')
+                : null
+              return (
+                <div
+                  key={assignment.id}
+                  className="rounded-md border border-gray-200 bg-gray-50 overflow-hidden"
+                >
+                  <button
+                    type="button"
+                    onClick={() => toggleExpanded(assignment.id)}
+                    className="w-full flex items-center justify-between p-3 text-left hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex-shrink-0">
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4 text-gray-500" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4 text-gray-500" />
+                        )}
+                      </div>
+                      <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                        assignment.completed ? 'bg-green-500' : 'bg-gray-300 border-2 border-gray-400'
+                      }`} />
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium text-gray-900 truncate">
+                          #{assignment.id.slice(0, 8)}… • {new Date(assignment.created_at).toLocaleDateString()}
+                          {targetLabel && (
+                            <span className="text-gray-500 font-normal">
+                              {' '}• Rater: {raterLabel}
+                              {' '}• Target: {targetLabel}
+                            </span>
+                          )}
+                          {!targetLabel && (
+                            <span className="text-gray-500 font-normal">
+                              {' '}• {raterLabel}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Created {new Date(assignment.created_at).toLocaleString()}
+                          {assignment.completed_at && (
+                            <> • Completed {new Date(assignment.completed_at).toLocaleString()}</>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-500">
-                      Created: {new Date(assignment.created_at).toLocaleString()}
-                      {assignment.completed_at && (
-                        <> • Completed: {new Date(assignment.completed_at).toLocaleString()}</>
+                    <div className="flex-shrink-0 ml-2">
+                      {assignment.completed ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                          Completed
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+                          Pending
+                        </span>
                       )}
                     </div>
-                  </div>
-                </div>
-                <div className="text-sm text-gray-600">
-                  {assignment.completed ? (
-                    <span className="text-green-600 font-medium">Completed</span>
-                  ) : (
-                    <span className="text-gray-400">Pending</span>
+                  </button>
+                  {isExpanded && (
+                    <div className="border-t border-gray-200 bg-white px-4 py-3 text-sm">
+                      <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+                        <div>
+                          <dt className="text-gray-500 font-medium">Assignment ID</dt>
+                          <dd className="text-gray-900 font-mono text-xs break-all">{assignment.id}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-gray-500 font-medium">Rater</dt>
+                          <dd className="text-gray-900">
+                            {assignment.user_name ?? '—'}
+                            {assignment.user_email && (
+                              <span className="block text-gray-500 text-xs">{assignment.user_email}</span>
+                            )}
+                          </dd>
+                        </div>
+                        {assessment.is_360 && (
+                          <div>
+                            <dt className="text-gray-500 font-medium">Target</dt>
+                            <dd className="text-gray-900">
+                              {assignment.target_name ?? '—'}
+                              {assignment.target_email && (
+                                <span className="block text-gray-500 text-xs">{assignment.target_email}</span>
+                              )}
+                            </dd>
+                          </div>
+                        )}
+                        <div>
+                          <dt className="text-gray-500 font-medium">Created</dt>
+                          <dd className="text-gray-900">{new Date(assignment.created_at).toLocaleString()}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-gray-500 font-medium">Started</dt>
+                          <dd className="text-gray-900">
+                            {assignment.started_at
+                              ? new Date(assignment.started_at).toLocaleString()
+                              : '—'}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-gray-500 font-medium">Completed</dt>
+                          <dd className="text-gray-900">
+                            {assignment.completed_at
+                              ? new Date(assignment.completed_at).toLocaleString()
+                              : '—'}
+                          </dd>
+                        </div>
+                      </dl>
+                      <div className="mt-3 pt-3 border-t border-gray-100">
+                        <Link href={`/dashboard/clients/${clientId}/assignments/${assignment.id}`}>
+                          <Button variant="outline" size="sm" className="gap-2">
+                            <ExternalLink className="h-4 w-4" />
+                            View Assignment
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
                   )}
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </CardContent>
       </Card>
