@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
+import { logEmail } from '@/lib/email-log'
 
 interface SendEmailRequest {
   to: string
@@ -13,6 +14,8 @@ interface SendEmailRequest {
   }>
   expirationDate: string
   password?: string
+  /** Optional first assignment id for email_logs related_entity_id */
+  assignmentId?: string
 }
 
 /**
@@ -70,7 +73,7 @@ function formatExpirationDate(dateString: string): string {
 export async function POST(request: NextRequest) {
   try {
     const body: SendEmailRequest = await request.json()
-    const { to, toName, username: providedUsername, subject, body: emailBody, assignments, expirationDate, password } = body
+    const { to, toName, username: providedUsername, subject, body: emailBody, assignments, expirationDate, password, assignmentId } = body
 
     const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || request.nextUrl?.origin || 'http://localhost:3000').replace(/\/$/, '')
     const dashboardUrl = `${baseUrl}/dashboard`
@@ -278,7 +281,16 @@ export async function POST(request: NextRequest) {
 
         const response = await sesClient.send(sendCommand)
         console.log('✅ Email sent via AWS SES. Message ID:', response.MessageId)
-        
+
+        await logEmail({
+          emailType: 'assignment',
+          recipientEmail: to,
+          subject,
+          providerMessageId: response.MessageId ?? undefined,
+          relatedEntityType: assignmentId ? 'assignment' : null,
+          relatedEntityId: assignmentId ?? null,
+        })
+
         return NextResponse.json({
           success: true,
           message: 'Email sent successfully',
@@ -320,6 +332,16 @@ export async function POST(request: NextRequest) {
         }
 
         console.log('✅ Email sent via Resend. Message ID:', data?.id)
+
+        await logEmail({
+          emailType: 'assignment',
+          recipientEmail: to,
+          subject,
+          providerMessageId: data?.id ?? undefined,
+          relatedEntityType: assignmentId ? 'assignment' : null,
+          relatedEntityId: assignmentId ?? null,
+        })
+
         return NextResponse.json({
           success: true,
           message: 'Email sent successfully',

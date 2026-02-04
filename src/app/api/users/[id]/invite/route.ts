@@ -184,6 +184,7 @@ export async function POST(
         inviteUrl,
         expirationDate: expiresAt,
         organizationName: process.env.NEXT_PUBLIC_APP_NAME || 'Involved Talent',
+        userInviteId: invite.id,
       })
 
       if (!emailResult.success) {

@@ -18,6 +18,7 @@ import dns from 'dns'
 import { promisify } from 'util'
 import { Resend } from 'resend'
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
+import { logEmail, type EmailLogType } from '@/lib/email-log'
 
 const resolve4 = promisify(dns.resolve4)
 
@@ -28,6 +29,14 @@ export interface InviteEmailData {
   inviteUrl: string
   expirationDate: Date
   organizationName?: string
+  /** If provided, stored in email_logs as related_entity_id for the invite row */
+  userInviteId?: string
+}
+
+export interface SendEmailLogMetadata {
+  emailType: EmailLogType
+  relatedEntityType?: string | null
+  relatedEntityId?: string | null
 }
 
 export interface EmailTemplate {
@@ -491,11 +500,14 @@ async function sendEmailViaSES(
  * 
  * This function prefers AWS SES SDK (if credentials are available) to avoid DNS resolution
  * issues in serverless environments like Vercel. Falls back to SMTP for local development.
+ * When logMetadata is provided, a row is written to email_logs (with provider_message_id
+ * from SES/Resend) for the admin email dashboard.
  * 
  * @param to - Recipient email address
  * @param subject - Email subject
  * @param htmlBody - HTML body content
  * @param textBody - Plain text body content
+ * @param options - Optional; logMetadata writes to email_logs after successful send
  * @returns Delivery result
  * 
  * @example
@@ -503,14 +515,16 @@ async function sendEmailViaSES(
  *   'user@example.com',
  *   'Welcome!',
  *   '<p>Hello</p>',
- *   'Hello'
+ *   'Hello',
+ *   { logMetadata: { emailType: 'invite', relatedEntityId: inviteId } }
  * )
  */
 export async function sendEmail(
   to: string,
   subject: string,
   htmlBody: string,
-  textBody: string
+  textBody: string,
+  options?: { logMetadata?: SendEmailLogMetadata }
 ): Promise<EmailDeliveryResult> {
   // Validate inputs
   if (!to || typeof to !== 'string') {
@@ -569,6 +583,14 @@ export async function sendEmail(
     try {
       const result = await sendEmailViaSES(to, subject, htmlBody, textBody)
       console.log('[Email Service] AWS SES send successful:', result.messageId)
+      if (result.success && options?.logMetadata) {
+        await logEmail({
+          ...options.logMetadata,
+          recipientEmail: to,
+          subject,
+          providerMessageId: result.messageId,
+        })
+      }
       return result
     } catch (error) {
       console.error('[Email Service] AWS SES failed:', error)
@@ -577,7 +599,16 @@ export async function sendEmail(
       if (useResend) {
         console.log('[Email Service] Falling back to Resend')
         try {
-          return await sendEmailViaResend(to, subject, htmlBody, textBody)
+          const result = await sendEmailViaResend(to, subject, htmlBody, textBody)
+          if (result.success && options?.logMetadata) {
+            await logEmail({
+              ...options.logMetadata,
+              recipientEmail: to,
+              subject,
+              providerMessageId: result.messageId,
+            })
+          }
+          return result
         } catch (resendError) {
           return {
             success: false,
@@ -598,6 +629,14 @@ export async function sendEmail(
       try {
         const result = await sendEmailViaResend(to, subject, htmlBody, textBody)
         console.log('[Email Service] Resend send successful:', result.messageId)
+        if (result.success && options?.logMetadata) {
+          await logEmail({
+            ...options.logMetadata,
+            recipientEmail: to,
+            subject,
+            providerMessageId: result.messageId,
+          })
+        }
         return result
       } catch (error) {
         console.error('[Email Service] Resend failed:', error)
@@ -629,10 +668,20 @@ export async function sendEmail(
     if (isLocal) {
       console.log('📧 Email sent to Mailpit. View at http://127.0.0.1:54324')
     }
-    
+
+    const messageId = info.messageId || `email-${Date.now()}-${crypto.randomUUID()}`
+    if (options?.logMetadata) {
+      await logEmail({
+        ...options.logMetadata,
+        recipientEmail: to,
+        subject,
+        providerMessageId: messageId,
+      })
+    }
+
     return {
       success: true,
-      messageId: info.messageId || `email-${Date.now()}-${crypto.randomUUID()}`,
+      messageId,
     }
   } catch (error) {
     console.error('Error sending email:', error)
@@ -679,12 +728,19 @@ export async function sendEmail(
 export async function sendInviteEmail(data: InviteEmailData): Promise<EmailDeliveryResult> {
   // Generate the email template
   const template = generateInviteEmail(data)
-  
-  // Send the email
+
+  const logMetadata = {
+    emailType: 'invite' as const,
+    relatedEntityType: data.userInviteId ? 'user_invite' : null,
+    relatedEntityId: data.userInviteId ?? null,
+  }
+
+  // Send the email (and log to email_logs when logMetadata is used)
   return await sendEmail(
     data.recipientEmail,
     template.subject,
     template.htmlBody,
-    template.textBody
+    template.textBody,
+    { logMetadata }
   )
 }
