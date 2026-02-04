@@ -26,10 +26,7 @@ export default function Header({ className }: HeaderProps) {
           {/* Navigation Actions */}
           <div className="flex items-center space-x-4">
             <Link href="/auth/login">
-              <Button variant="ghost">Login</Button>
-            </Link>
-            <Link href="/auth/signup">
-              <Button>Sign Up</Button>
+              <Button>Login</Button>
             </Link>
           </div>
         </div>

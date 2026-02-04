@@ -134,15 +134,6 @@ export default function LoginPage() {
               {loading ? 'Signing in...' : 'Sign in'}
             </Button>
           </form>
-
-          <div className="mt-6 text-center">
-            <a
-              href="/auth/signup"
-              className="text-sm text-indigo-600 hover:text-indigo-500"
-            >
-              Don&apos;t have an account? Sign up
-            </a>
-          </div>
         </CardContent>
         </Card>
       </div>

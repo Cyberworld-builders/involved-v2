@@ -64,13 +64,8 @@ export default function Home() {
         </div>
 
         <div className="text-center flex flex-col sm:flex-row justify-center items-center gap-4">
-          <Link href="/auth/signup">
-            <Button size="lg" className="w-full sm:w-auto">
-              Get Started
-            </Button>
-          </Link>
           <Link href="/auth/login">
-            <Button variant="outline" size="lg" className="w-full sm:w-auto">
+            <Button size="lg" className="w-full sm:w-auto">
               Sign In
             </Button>
           </Link>
