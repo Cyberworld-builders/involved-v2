@@ -85,6 +85,8 @@ export default function SurveyDetailClient({
   // Keep this useEffect empty for now, or remove if not needed
 
   const [expandedAssignmentIds, setExpandedAssignmentIds] = useState<Set<string>>(new Set())
+  const [selectedReportAssignmentIds, setSelectedReportAssignmentIds] = useState<Set<string>>(new Set())
+  const [isBulkPdfLoading, setIsBulkPdfLoading] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
@@ -147,6 +149,58 @@ export default function SurveyDetailClient({
       a.target_id === subject.id && subject.assignment_ids.includes(a.id)
     )
     return anyAssignment?.id || null
+  }
+
+  const selectableReportAssignmentIds = new Set(
+    subjects.map((s) => getAssignmentIdForSubject(s)).filter((id): id is string => id != null)
+  )
+  const selectAllReportsChecked = selectableReportAssignmentIds.size > 0 &&
+    selectedReportAssignmentIds.size === selectableReportAssignmentIds.size
+  const selectAllReportsIndeterminate =
+    selectedReportAssignmentIds.size > 0 && selectedReportAssignmentIds.size < selectableReportAssignmentIds.size
+
+  const handleSelectAllReports = (checked: boolean) => {
+    if (checked) {
+      setSelectedReportAssignmentIds(new Set(selectableReportAssignmentIds))
+    } else {
+      setSelectedReportAssignmentIds(new Set())
+    }
+  }
+
+  const handleSelectReport = (assignmentId: string, checked: boolean) => {
+    setSelectedReportAssignmentIds((prev) => {
+      const next = new Set(prev)
+      if (checked) next.add(assignmentId)
+      else next.delete(assignmentId)
+      return next
+    })
+  }
+
+  const handleBulkGeneratePdfs = async () => {
+    if (selectedReportAssignmentIds.size === 0) return
+    setIsBulkPdfLoading(true)
+    setMessage('')
+    try {
+      const res = await fetch('/api/reports/pdf/queue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assignment_ids: Array.from(selectedReportAssignmentIds) }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setMessage(data?.error || `Request failed (${res.status})`)
+        return
+      }
+      const { queued = 0, skipped = 0 } = data
+      setMessage(
+        `Successfully queued ${queued} PDF(s) for generation.${skipped > 0 ? ` ${skipped} already queued or ready.` : ''} They will be generated in the background.`
+      )
+      setSelectedReportAssignmentIds(new Set())
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Failed to queue PDFs')
+    } finally {
+      setIsBulkPdfLoading(false)
+    }
   }
 
   if (isLoading) {
@@ -251,14 +305,26 @@ export default function SurveyDetailClient({
       {/* Subjects/Targets Table */}
       <Card>
         <CardHeader>
-          <CardTitle>
-            {assessment.is_360 ? 'Targets Being Rated' : 'Leaders/Blockers Being Rated'}
-          </CardTitle>
-          <CardDescription>
-            {assessment.is_360 
-              ? 'People being rated in this 360 assessment'
-              : 'People being rated in this assessment. Each person may have multiple data points from different raters.'}
-          </CardDescription>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <CardTitle>
+                {assessment.is_360 ? 'Targets Being Rated' : 'Leaders/Blockers Being Rated'}
+              </CardTitle>
+              <CardDescription>
+                {assessment.is_360 
+                  ? 'People being rated in this 360 assessment'
+                  : 'People being rated in this assessment. Each person may have multiple data points from different raters.'}
+              </CardDescription>
+            </div>
+            <Button
+              onClick={handleBulkGeneratePdfs}
+              disabled={selectedReportAssignmentIds.size === 0 || isBulkPdfLoading}
+              variant="outline"
+              size="sm"
+            >
+              {isBulkPdfLoading ? 'Queuing…' : 'Generate PDFs for selected'}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {/* #region agent log */}
@@ -280,6 +346,21 @@ export default function SurveyDetailClient({
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectAllReportsChecked}
+                          ref={(el) => {
+                            if (el) el.indeterminate = selectAllReportsIndeterminate
+                          }}
+                          onChange={(e) => handleSelectAllReports(e.target.checked)}
+                          className="rounded border-gray-300"
+                          aria-label="Select all reports"
+                        />
+                        <span className="sr-only">Select</span>
+                      </label>
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Name
                     </th>
@@ -303,9 +384,26 @@ export default function SurveyDetailClient({
                   {subjects.map((subject) => {
                     const scoreData = scores.get(subject.id)
                     const assignmentId = getAssignmentIdForSubject(subject)
+                    const canSelect = assignmentId != null
+                    const isSelected = assignmentId != null && selectedReportAssignmentIds.has(assignmentId)
 
                     return (
                       <tr key={subject.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-4 whitespace-nowrap w-10">
+                          {canSelect ? (
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={(e) => handleSelectReport(assignmentId!, e.target.checked)}
+                                className="rounded border-gray-300"
+                                aria-label={`Select report for ${subject.name}`}
+                              />
+                            </label>
+                          ) : (
+                            <span className="sr-only">No report to select</span>
+                          )}
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
                             {subject.name}
