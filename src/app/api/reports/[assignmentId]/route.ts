@@ -68,9 +68,15 @@ export async function GET(
       .single()
 
     // Check if report data is stale (compare calculated_at with completed_at)
+    const cachedReport = reportData?.dimension_scores as Record<string, unknown> | null | undefined
+    const cachedIsEmpty =
+      cachedReport == null ||
+      typeof cachedReport !== 'object' ||
+      (assessment?.is_360 && (!Array.isArray(cachedReport.dimensions) || cachedReport.dimensions.length === 0))
     const needsRegeneration =
       !reportData ||
       !reportData.dimension_scores ||
+      cachedIsEmpty ||
       (assignment.completed_at &&
         reportData.calculated_at &&
         new Date(reportData.calculated_at) < new Date(assignment.completed_at))
