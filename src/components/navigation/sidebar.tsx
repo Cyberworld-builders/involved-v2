@@ -121,13 +121,25 @@ export default function Sidebar({ className, isOpen = true, onClose, userProfile
     },
   ]
 
+  // Super-admin only: email dashboard
+  const superAdminNavigation: NavigationItem[] =
+    accessLevel === 'super_admin'
+      ? [
+          {
+            name: 'Email',
+            href: '/dashboard/admin/emails',
+            icon: '📧',
+          },
+        ]
+      : []
+
   // Determine which navigation items to show
   // Only calculate navigation after access level is loaded to prevent race condition
   const navigation: NavigationItem[] = isLoading || accessLevel === null
     ? [] // Don't show any navigation items until access level is determined
     : accessLevel === 'member'
       ? [...assignmentsNavigation, ...profileNavigation] // Members see My Assignments and Profile
-      : [...adminNavigation, ...assignmentsNavigation, ...profileNavigation] // Admins see admin items + My Assignments (if not super_admin) + Profile
+      : [...adminNavigation, ...superAdminNavigation, ...assignmentsNavigation, ...profileNavigation] // Admins see admin items + Email (super_admin only) + My Assignments (if not super_admin) + Profile
 
   return (
     <>

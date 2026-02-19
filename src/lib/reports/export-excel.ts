@@ -5,69 +5,7 @@
  */
 
 import ExcelJS from 'exceljs'
-
-interface DimensionReport360 {
-  dimension_id: string
-  dimension_name: string
-  dimension_code: string
-  overall_score: number
-  rater_breakdown: {
-    peer: number | null
-    direct_report: number | null
-    supervisor: number | null
-    self: number | null
-    other: number | null
-    all_raters: number | null
-  }
-  industry_benchmark: number | null
-  geonorm: number | null
-  geonorm_participant_count: number
-  improvement_needed: boolean
-  text_feedback: string[]
-}
-
-interface Report360Data {
-  assignment_id: string
-  target_id: string
-  target_name: string
-  target_email: string
-  assessment_id: string
-  assessment_title: string
-  group_id: string
-  group_name: string
-  overall_score: number
-  dimensions: DimensionReport360[]
-  generated_at: string
-}
-
-interface DimensionReportLeader {
-  dimension_id: string
-  dimension_name: string
-  dimension_code: string
-  target_score: number
-  industry_benchmark: number | null
-  geonorm: number | null
-  geonorm_participant_count: number
-  improvement_needed: boolean
-  specific_feedback: string | null
-  specific_feedback_id: string | null
-}
-
-interface ReportLeaderBlockerData {
-  assignment_id: string
-  user_id: string
-  user_name: string
-  user_email: string
-  assessment_id: string
-  assessment_title: string
-  group_id: string | null
-  group_name: string | null
-  overall_score: number
-  dimensions: DimensionReportLeader[]
-  overall_feedback: string | null
-  overall_feedback_id: string | null
-  generated_at: string
-}
+import type { Report360Data, ReportLeaderBlockerData } from './types'
 
 /**
  * Generate Excel workbook for 360 report
@@ -105,21 +43,37 @@ export async function generate360ReportExcel(reportData: Report360Data): Promise
     { header: 'Improvement Needed', key: 'improvement', width: 18 },
   ]
   
-  reportData.dimensions.forEach((dim) => {
+  if (reportData.dimensions.length === 0) {
     dimensionSheet.addRow({
-      dimension: dim.dimension_name,
-      code: dim.dimension_code,
-      all_raters: (dim.rater_breakdown.all_raters ?? dim.overall_score).toFixed(2),
-      peer: dim.rater_breakdown.peer?.toFixed(2) || 'N/A',
-      direct_report: dim.rater_breakdown.direct_report?.toFixed(2) || 'N/A',
-      supervisor: dim.rater_breakdown.supervisor?.toFixed(2) || 'N/A',
-      self: dim.rater_breakdown.self?.toFixed(2) || 'N/A',
-      other: dim.rater_breakdown.other?.toFixed(2) || 'N/A',
-      benchmark: dim.industry_benchmark?.toFixed(2) || 'N/A',
-      geonorm: dim.geonorm ? `${dim.geonorm.toFixed(2)} (n=${dim.geonorm_participant_count})` : 'N/A',
-      improvement: dim.improvement_needed ? 'Yes' : 'No',
+      dimension: 'No data',
+      code: '',
+      all_raters: '0',
+      peer: 'N/A',
+      direct_report: 'N/A',
+      supervisor: 'N/A',
+      self: 'N/A',
+      other: 'N/A',
+      benchmark: 'N/A',
+      geonorm: 'N/A',
+      improvement: 'No',
     })
-  })
+  } else {
+    reportData.dimensions.forEach((dim) => {
+      dimensionSheet.addRow({
+        dimension: dim.dimension_name,
+        code: dim.dimension_code,
+        all_raters: (dim.rater_breakdown?.all_raters ?? dim.overall_score ?? 0).toFixed(2),
+        peer: dim.rater_breakdown?.peer?.toFixed(2) || 'N/A',
+        direct_report: dim.rater_breakdown?.direct_report?.toFixed(2) || 'N/A',
+        supervisor: dim.rater_breakdown?.supervisor?.toFixed(2) || 'N/A',
+        self: dim.rater_breakdown?.self?.toFixed(2) || 'N/A',
+        other: dim.rater_breakdown?.other?.toFixed(2) || 'N/A',
+        benchmark: dim.industry_benchmark?.toFixed(2) || 'N/A',
+        geonorm: dim.geonorm != null ? `${dim.geonorm.toFixed(2)} (n=${dim.geonorm_participant_count ?? 0})` : 'N/A',
+        improvement: dim.improvement_needed ? 'Yes' : 'No',
+      })
+    })
+  }
   
   // Feedback sheet
   const feedbackSheet = workbook.addWorksheet('Feedback')
@@ -128,16 +82,19 @@ export async function generate360ReportExcel(reportData: Report360Data): Promise
     { header: 'Feedback', key: 'feedback', width: 80 },
   ]
   
-  reportData.dimensions.forEach((dim) => {
-    if (dim.text_feedback.length > 0) {
-      dim.text_feedback.forEach((feedback) => {
-        feedbackSheet.addRow({
-          dimension: dim.dimension_name,
-          feedback: feedback.replace(/<[^>]*>/g, ''),
+  if (reportData.dimensions.length > 0) {
+    reportData.dimensions.forEach((dim) => {
+      const feedbacks = dim.text_feedback ?? []
+      if (feedbacks.length > 0) {
+        feedbacks.forEach((feedback) => {
+          feedbackSheet.addRow({
+            dimension: dim.dimension_name,
+            feedback: feedback.replace(/<[^>]*>/g, ''),
+          })
         })
-      })
-    }
-  })
+      }
+    })
+  }
   
   const buffer = await workbook.xlsx.writeBuffer()
   return Buffer.from(buffer)
@@ -177,17 +134,29 @@ export async function generateLeaderBlockerReportExcel(reportData: ReportLeaderB
     { header: 'Feedback', key: 'feedback', width: 60 },
   ]
   
-  reportData.dimensions.forEach((dim) => {
+  if (reportData.dimensions.length === 0) {
     dimensionSheet.addRow({
-      dimension: dim.dimension_name,
-      code: dim.dimension_code,
-      score: dim.target_score.toFixed(2),
-      benchmark: dim.industry_benchmark?.toFixed(2) || 'N/A',
-      geonorm: dim.geonorm ? `${dim.geonorm.toFixed(2)} (n=${dim.geonorm_participant_count})` : 'N/A',
-      improvement: dim.improvement_needed ? 'Yes' : 'No',
-      feedback: dim.specific_feedback ? dim.specific_feedback.replace(/<[^>]*>/g, '') : 'N/A',
+      dimension: 'No data',
+      code: '',
+      score: '0',
+      benchmark: 'N/A',
+      geonorm: 'N/A',
+      improvement: 'No',
+      feedback: 'N/A',
     })
-  })
+  } else {
+    reportData.dimensions.forEach((dim) => {
+      dimensionSheet.addRow({
+        dimension: dim.dimension_name,
+        code: dim.dimension_code,
+        score: (dim.target_score ?? 0).toFixed(2),
+        benchmark: dim.industry_benchmark?.toFixed(2) || 'N/A',
+        geonorm: dim.geonorm != null ? `${dim.geonorm.toFixed(2)} (n=${dim.geonorm_participant_count ?? 0})` : 'N/A',
+        improvement: dim.improvement_needed ? 'Yes' : 'No',
+        feedback: dim.specific_feedback ? dim.specific_feedback.replace(/<[^>]*>/g, '') : 'N/A',
+      })
+    })
+  }
   
   // Overall feedback sheet
   if (reportData.overall_feedback) {

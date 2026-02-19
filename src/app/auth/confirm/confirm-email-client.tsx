@@ -128,12 +128,7 @@ export default function ConfirmEmailClient() {
                     />
                   </svg>
                   <p className="text-sm text-red-600">{message}</p>
-                  <div className="mt-6 space-y-2">
-                    <Link href="/auth/signup">
-                      <Button variant="outline" className="w-full">
-                        Back to Sign Up
-                      </Button>
-                    </Link>
+                  <div className="mt-6">
                     <Link href="/auth/login">
                       <Button variant="outline" className="w-full">
                         Go to Login

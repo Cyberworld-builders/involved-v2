@@ -1,13 +1,31 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 import Link from 'next/link'
+import { ChevronDown, ChevronRight, ExternalLink, Trash2 } from 'lucide-react'
 import { PdfActionButtons } from '@/components/reports/pdf-action-buttons'
 import { Subject } from '@/lib/reports/get-survey-subjects'
 import { ScoreData } from '@/lib/reports/get-survey-scores'
+
+export type SurveyAssignment = {
+  id: string
+  user_id: string
+  target_id: string | null
+  assessment_id: string
+  completed: boolean
+  completed_at: string | null
+  created_at: string
+  started_at?: string | null
+  user_name?: string | null
+  user_email?: string | null
+  target_name?: string | null
+  target_email?: string | null
+}
 
 interface SurveyDetailClientProps {
   clientId: string
@@ -17,27 +35,20 @@ interface SurveyDetailClientProps {
     title: string
     is_360: boolean
   }
-  assignments: Array<{
-    id: string
-    user_id: string
-    target_id: string | null
-    assessment_id: string
-    completed: boolean
-    completed_at: string | null
-    created_at: string
-  }>
+  assignments: SurveyAssignment[]
   initialSubjects?: Subject[]
   initialScores?: Record<string, ScoreData>
 }
 
 export default function SurveyDetailClient({
   clientId,
-  surveyId: _surveyId,
+  surveyId,
   assessment,
   assignments: initialAssignments,
   initialSubjects = [],
   initialScores = {},
 }: SurveyDetailClientProps) {
+  const router = useRouter()
   // #region agent log
   console.log('[DEBUG] SurveyDetailClient rendered', {
     initialSubjectsCount: initialSubjects.length,
@@ -57,7 +68,7 @@ export default function SurveyDetailClient({
     return scoresMap
   })
   const [isLoading] = useState(false)
-  const [message] = useState('')
+  const [message, setMessage] = useState('')
   const _supabase = createClient()
 
   // #region agent log
@@ -72,6 +83,47 @@ export default function SurveyDetailClient({
 
   // No longer need to fetch data client-side since it's passed from server
   // Keep this useEffect empty for now, or remove if not needed
+
+  const [expandedAssignmentIds, setExpandedAssignmentIds] = useState<Set<string>>(new Set())
+  const [selectedReportAssignmentIds, setSelectedReportAssignmentIds] = useState<Set<string>>(new Set())
+  const [isBulkPdfLoading, setIsBulkPdfLoading] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  const handleDeleteSurvey = async () => {
+    setIsDeleting(true)
+    setDeleteError(null)
+    try {
+      const res = await fetch(`/api/clients/${clientId}/surveys/${surveyId}`, { method: 'DELETE' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setDeleteError(data?.error || `Delete failed (${res.status})`)
+        return
+      }
+      router.push(`/dashboard/clients/${clientId}?tab=reports`)
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Failed to delete survey')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const closeDeleteDialog = () => {
+    if (!isDeleting) {
+      setDeleteDialogOpen(false)
+      setDeleteError(null)
+    }
+  }
+
+  const toggleExpanded = (id: string) => {
+    setExpandedAssignmentIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   const completedCount = initialAssignments.filter(a => a.completed).length
   const totalCount = initialAssignments.length
@@ -97,6 +149,58 @@ export default function SurveyDetailClient({
       a.target_id === subject.id && subject.assignment_ids.includes(a.id)
     )
     return anyAssignment?.id || null
+  }
+
+  const selectableReportAssignmentIds = new Set(
+    subjects.map((s) => getAssignmentIdForSubject(s)).filter((id): id is string => id != null)
+  )
+  const selectAllReportsChecked = selectableReportAssignmentIds.size > 0 &&
+    selectedReportAssignmentIds.size === selectableReportAssignmentIds.size
+  const selectAllReportsIndeterminate =
+    selectedReportAssignmentIds.size > 0 && selectedReportAssignmentIds.size < selectableReportAssignmentIds.size
+
+  const handleSelectAllReports = (checked: boolean) => {
+    if (checked) {
+      setSelectedReportAssignmentIds(new Set(selectableReportAssignmentIds))
+    } else {
+      setSelectedReportAssignmentIds(new Set())
+    }
+  }
+
+  const handleSelectReport = (assignmentId: string, checked: boolean) => {
+    setSelectedReportAssignmentIds((prev) => {
+      const next = new Set(prev)
+      if (checked) next.add(assignmentId)
+      else next.delete(assignmentId)
+      return next
+    })
+  }
+
+  const handleBulkGeneratePdfs = async () => {
+    if (selectedReportAssignmentIds.size === 0) return
+    setIsBulkPdfLoading(true)
+    setMessage('')
+    try {
+      const res = await fetch('/api/reports/pdf/queue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assignment_ids: Array.from(selectedReportAssignmentIds) }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setMessage(data?.error || `Request failed (${res.status})`)
+        return
+      }
+      const { queued = 0, skipped = 0 } = data
+      setMessage(
+        `Successfully queued ${queued} PDF(s) for generation.${skipped > 0 ? ` ${skipped} already queued or ready.` : ''} They will be generated in the background.`
+      )
+      setSelectedReportAssignmentIds(new Set())
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Failed to queue PDFs')
+    } finally {
+      setIsBulkPdfLoading(false)
+    }
   }
 
   if (isLoading) {
@@ -128,12 +232,36 @@ export default function SurveyDetailClient({
             })}
           </p>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+          onClick={() => setDeleteDialogOpen(true)}
+          aria-label="Delete survey"
+        >
+          <Trash2 className="h-4 w-4 mr-2" />
+          Delete survey
+        </Button>
       </div>
 
-      {/* Message */}
+      {/* Fixed message (toaster) */}
       {message && (
-        <div className="p-4 rounded-md bg-red-50 text-red-800 border border-red-200">
-          {message}
+        <div
+          className={`fixed top-4 right-4 z-50 max-w-md shadow-lg rounded-md p-4 flex items-start gap-3 ${
+            message.includes('successfully')
+              ? 'bg-green-50 text-green-800 border border-green-200'
+              : 'bg-red-50 text-red-800 border border-red-200'
+          }`}
+        >
+          <p className="flex-1 text-sm">{message}</p>
+          <button
+            type="button"
+            onClick={() => setMessage('')}
+            className="flex-shrink-0 text-gray-500 hover:text-gray-700"
+            aria-label="Dismiss"
+          >
+            ×
+          </button>
         </div>
       )}
 
@@ -177,14 +305,26 @@ export default function SurveyDetailClient({
       {/* Subjects/Targets Table */}
       <Card>
         <CardHeader>
-          <CardTitle>
-            {assessment.is_360 ? 'Targets Being Rated' : 'Leaders/Blockers Being Rated'}
-          </CardTitle>
-          <CardDescription>
-            {assessment.is_360 
-              ? 'People being rated in this 360 assessment'
-              : 'People being rated in this assessment. Each person may have multiple data points from different raters.'}
-          </CardDescription>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <CardTitle>
+                {assessment.is_360 ? 'Targets Being Rated' : 'Leaders/Blockers Being Rated'}
+              </CardTitle>
+              <CardDescription>
+                {assessment.is_360 
+                  ? 'People being rated in this 360 assessment'
+                  : 'People being rated in this assessment. Each person may have multiple data points from different raters.'}
+              </CardDescription>
+            </div>
+            <Button
+              onClick={handleBulkGeneratePdfs}
+              disabled={selectedReportAssignmentIds.size === 0 || isBulkPdfLoading}
+              variant="outline"
+              size="sm"
+            >
+              {isBulkPdfLoading ? 'Queuing…' : 'Generate PDFs for selected'}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {/* #region agent log */}
@@ -206,6 +346,21 @@ export default function SurveyDetailClient({
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectAllReportsChecked}
+                          ref={(el) => {
+                            if (el) el.indeterminate = selectAllReportsIndeterminate
+                          }}
+                          onChange={(e) => handleSelectAllReports(e.target.checked)}
+                          className="rounded border-gray-300"
+                          aria-label="Select all reports"
+                        />
+                        <span className="sr-only">Select</span>
+                      </label>
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Name
                     </th>
@@ -229,9 +384,26 @@ export default function SurveyDetailClient({
                   {subjects.map((subject) => {
                     const scoreData = scores.get(subject.id)
                     const assignmentId = getAssignmentIdForSubject(subject)
+                    const canSelect = assignmentId != null
+                    const isSelected = assignmentId != null && selectedReportAssignmentIds.has(assignmentId)
 
                     return (
                       <tr key={subject.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-4 whitespace-nowrap w-10">
+                          {canSelect ? (
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={(e) => handleSelectReport(assignmentId!, e.target.checked)}
+                                className="rounded border-gray-300"
+                                aria-label={`Select report for ${subject.name}`}
+                              />
+                            </label>
+                          ) : (
+                            <span className="sr-only">No report to select</span>
+                          )}
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
                             {subject.name}
@@ -285,44 +457,174 @@ export default function SurveyDetailClient({
         <CardHeader>
           <CardTitle>Data Collection Status</CardTitle>
           <CardDescription>
-            Status of all assignments in this survey
+            Status of all assignments in this survey. Expand a row to see details and open the assignment.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {initialAssignments.map((assignment) => (
-              <div
-                key={assignment.id}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-md"
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-3 h-3 rounded-full ${
-                    assignment.completed ? 'bg-green-500' : 'bg-gray-300 border-2 border-gray-400'
-                  }`} />
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">
-                      Assignment #{assignment.id.slice(0, 8)}...
+            {initialAssignments.map((assignment) => {
+              const isExpanded = expandedAssignmentIds.has(assignment.id)
+              const raterLabel = assignment.user_name || assignment.user_email || assignment.user_id?.slice(0, 8) || '—'
+              const targetLabel = assessment.is_360
+                ? (assignment.target_name || assignment.target_email || (assignment.target_id ? assignment.target_id.slice(0, 8) : null) || '—')
+                : null
+              return (
+                <div
+                  key={assignment.id}
+                  className="rounded-md border border-gray-200 bg-gray-50 overflow-hidden"
+                >
+                  <button
+                    type="button"
+                    onClick={() => toggleExpanded(assignment.id)}
+                    className="w-full flex items-center justify-between p-3 text-left hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex-shrink-0">
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4 text-gray-500" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4 text-gray-500" />
+                        )}
+                      </div>
+                      <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                        assignment.completed ? 'bg-green-500' : 'bg-gray-300 border-2 border-gray-400'
+                      }`} />
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium text-gray-900 truncate">
+                          #{assignment.id.slice(0, 8)}… • {new Date(assignment.created_at).toLocaleDateString()}
+                          {targetLabel && (
+                            <span className="text-gray-500 font-normal">
+                              {' '}• Rater: {raterLabel}
+                              {' '}• Target: {targetLabel}
+                            </span>
+                          )}
+                          {!targetLabel && (
+                            <span className="text-gray-500 font-normal">
+                              {' '}• {raterLabel}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Created {new Date(assignment.created_at).toLocaleString()}
+                          {assignment.completed_at && (
+                            <> • Completed {new Date(assignment.completed_at).toLocaleString()}</>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-500">
-                      Created: {new Date(assignment.created_at).toLocaleString()}
-                      {assignment.completed_at && (
-                        <> • Completed: {new Date(assignment.completed_at).toLocaleString()}</>
+                    <div className="flex-shrink-0 ml-2">
+                      {assignment.completed ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                          Completed
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+                          Pending
+                        </span>
                       )}
                     </div>
-                  </div>
-                </div>
-                <div className="text-sm text-gray-600">
-                  {assignment.completed ? (
-                    <span className="text-green-600 font-medium">Completed</span>
-                  ) : (
-                    <span className="text-gray-400">Pending</span>
+                  </button>
+                  {isExpanded && (
+                    <div className="border-t border-gray-200 bg-white px-4 py-3 text-sm">
+                      <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+                        <div>
+                          <dt className="text-gray-500 font-medium">Assignment ID</dt>
+                          <dd className="text-gray-900 font-mono text-xs break-all">{assignment.id}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-gray-500 font-medium">Rater</dt>
+                          <dd className="text-gray-900">
+                            {assignment.user_name ?? '—'}
+                            {assignment.user_email && (
+                              <span className="block text-gray-500 text-xs">{assignment.user_email}</span>
+                            )}
+                          </dd>
+                        </div>
+                        {assessment.is_360 && (
+                          <div>
+                            <dt className="text-gray-500 font-medium">Target</dt>
+                            <dd className="text-gray-900">
+                              {assignment.target_name ?? '—'}
+                              {assignment.target_email && (
+                                <span className="block text-gray-500 text-xs">{assignment.target_email}</span>
+                              )}
+                            </dd>
+                          </div>
+                        )}
+                        <div>
+                          <dt className="text-gray-500 font-medium">Created</dt>
+                          <dd className="text-gray-900">{new Date(assignment.created_at).toLocaleString()}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-gray-500 font-medium">Started</dt>
+                          <dd className="text-gray-900">
+                            {assignment.started_at
+                              ? new Date(assignment.started_at).toLocaleString()
+                              : '—'}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-gray-500 font-medium">Completed</dt>
+                          <dd className="text-gray-900">
+                            {assignment.completed_at
+                              ? new Date(assignment.completed_at).toLocaleString()
+                              : '—'}
+                          </dd>
+                        </div>
+                      </dl>
+                      <div className="mt-3 pt-3 border-t border-gray-100">
+                        <Link href={`/dashboard/clients/${clientId}/assignments/${assignment.id}`}>
+                          <Button variant="outline" size="sm" className="gap-2">
+                            <ExternalLink className="h-4 w-4" />
+                            View Assignment
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
                   )}
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </CardContent>
       </Card>
+
+      {/* Delete survey confirmation */}
+      <Dialog open={deleteDialogOpen} onOpenChange={(open) => !open && closeDeleteDialog()}>
+        <DialogContent
+          title="Delete survey?"
+          description="This action cannot be undone."
+          onClose={closeDeleteDialog}
+        >
+          <p className="text-sm text-gray-700 mb-4">
+            This will permanently delete this survey and:
+          </p>
+          <ul className="list-disc list-inside text-sm text-gray-700 space-y-1 mb-4">
+            <li>All <strong>{totalCount}</strong> assignment(s) in it</li>
+            <li>All answers and report data (and cached scores) for those assignments</li>
+            <li>Any generated report PDFs for those assignments</li>
+          </ul>
+          <p className="text-sm font-medium text-gray-900 mb-1">Survey:</p>
+          <p className="text-sm text-gray-600 mb-4">
+            {assessment.title} — {surveyDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+          {deleteError && (
+            <p className="text-sm text-red-600 mb-4">{deleteError}</p>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={closeDeleteDialog} disabled={isDeleting}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteSurvey}
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Deleting…' : 'Delete survey'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

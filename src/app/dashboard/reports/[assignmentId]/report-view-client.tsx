@@ -5,6 +5,11 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Report360View from '@/components/reports/360-report-view'
 import ReportLeaderBlockerView from '@/components/reports/leader-blocker-report-view'
+import {
+  useReportDebug,
+  setReportDebugGlobal,
+  reportDataSummary,
+} from '@/lib/reports/report-debug'
 
 // Import types from report components
 type Report360Data = Parameters<typeof Report360View>[0]['reportData']
@@ -16,32 +21,73 @@ interface ReportViewClientProps {
 }
 
 export default function ReportViewClient({ assignmentId, is360 }: ReportViewClientProps) {
+  const reportDebug = useReportDebug()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [reportData, setReportData] = useState<Report360Data | ReportLeaderBlockerData | null>(null)
   const [regenerating, setRegenerating] = useState(false)
 
   const loadReport = useCallback(async () => {
+    const url = reportDebug
+      ? `/api/reports/${assignmentId}?report_debug=1`
+      : `/api/reports/${assignmentId}`
     try {
       setLoading(true)
       setError(null)
 
-      const response = await fetch(`/api/reports/${assignmentId}`)
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to load report')
+      if (reportDebug) {
+        console.log('[Report Debug] fetch start', { assignmentId, is360, url })
       }
 
-      const data = await response.json()
-      setReportData(data.report)
+      const response = await fetch(url)
+
+      if (reportDebug) {
+        console.log('[Report Debug] response', {
+          status: response.status,
+          ok: response.ok,
+          statusText: response.statusText,
+        })
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        if (reportDebug) {
+          console.log('[Report Debug] load error', {
+            status: response.status,
+            errorBody: errorData,
+          })
+        }
+        throw new Error((errorData as { error?: string }).error || 'Failed to load report')
+      }
+
+      const data = (await response.json()) as { report?: unknown; cached?: boolean; _debug?: unknown }
+      if (reportDebug) {
+        console.log('[Report Debug] api response', data)
+        const summary = reportDataSummary(data.report)
+        console.log('[Report Debug] reportData summary', summary)
+        setReportDebugGlobal({
+          assignmentId,
+          is360,
+          source: 'dashboard',
+          apiResponse: data,
+          reportData: data.report,
+          timestamp: new Date().toISOString(),
+        })
+      }
+      setReportData(data.report as Report360Data | ReportLeaderBlockerData)
     } catch (err) {
+      if (reportDebug) {
+        console.log('[Report Debug] load error', {
+          error: err,
+          message: err instanceof Error ? err.message : String(err),
+        })
+      }
       console.error('Error loading report:', err)
       setError(err instanceof Error ? err.message : 'Failed to load report')
     } finally {
       setLoading(false)
     }
-  }, [assignmentId])
+  }, [assignmentId, is360, reportDebug])
 
   const regenerateReport = useCallback(async () => {
     try {
@@ -114,6 +160,13 @@ export default function ReportViewClient({ assignmentId, is360 }: ReportViewClie
         </CardContent>
       </Card>
     )
+  }
+
+  if (reportDebug) {
+    console.log('[Report Debug] rendering view', {
+      is360,
+      reportDataSummary: reportDataSummary(reportData),
+    })
   }
 
   return (

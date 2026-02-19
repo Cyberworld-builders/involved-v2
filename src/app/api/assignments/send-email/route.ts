@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
+import { logEmail } from '@/lib/email-log'
 
 interface SendEmailRequest {
   to: string
@@ -13,6 +14,8 @@ interface SendEmailRequest {
   }>
   expirationDate: string
   password?: string
+  /** Optional first assignment id for email_logs related_entity_id */
+  assignmentId?: string
 }
 
 /**
@@ -25,7 +28,9 @@ function replaceShortcodes(
   email: string,
   assessments: string,
   expirationDate: string,
-  password?: string
+  password: string | undefined,
+  dashboardLink: string,
+  year: number
 ): string {
   let processed = body
     .replace(/{name}/g, name)
@@ -33,7 +38,9 @@ function replaceShortcodes(
     .replace(/{email}/g, email)
     .replace(/{assessments}/g, assessments)
     .replace(/{expiration-date}/g, expirationDate)
-  
+    .replace(/{dashboard-link}/g, dashboardLink)
+    .replace(/{year}/g, String(year))
+
   // Replace password if provided
   if (password) {
     processed = processed.replace(/{password}/g, password)
@@ -41,7 +48,7 @@ function replaceShortcodes(
     // Remove password placeholder if no password provided
     processed = processed.replace(/{password}/g, '')
   }
-  
+
   return processed
 }
 
@@ -66,13 +73,16 @@ function formatExpirationDate(dateString: string): string {
 export async function POST(request: NextRequest) {
   try {
     const body: SendEmailRequest = await request.json()
-    const { to, toName, username: providedUsername, subject, body: emailBody, assignments, expirationDate, password } = body
+    const { to, toName, username: providedUsername, subject, body: emailBody, assignments, expirationDate, password, assignmentId } = body
 
-    // Format assessments list with clickable links (HTML format)
+    const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || request.nextUrl?.origin || 'http://localhost:3000').replace(/\/$/, '')
+    const dashboardUrl = `${baseUrl}/dashboard`
+
+    // Format assessments list with clickable links + raw URL for Outlook (HTML format)
     const assessmentsList = assignments
       .map((a) => {
         if (a.url) {
-          return `<li><a href="${a.url}" style="color: #4F46E5; text-decoration: underline;">${a.assessmentTitle}</a></li>`
+          return `<li><a href="${a.url}" style="color: #4F46E5; text-decoration: underline;">${a.assessmentTitle}</a><br><span style="font-size: 12px; color: #666;">If the link doesn't work, copy and paste this into your browser:</span><br><span style="word-break: break-all; font-size: 12px;">${a.url}</span></li>`
         }
         return `<li>${a.assessmentTitle}</li>`
       })
@@ -99,6 +109,7 @@ export async function POST(request: NextRequest) {
 
     // Use provided username or derive from email
     const username = providedUsername || to.split('@')[0]
+    const year = new Date().getFullYear()
 
     // Replace shortcodes in email body (use HTML version for assessments)
     let processedBody = replaceShortcodes(
@@ -108,13 +119,19 @@ export async function POST(request: NextRequest) {
       to,
       `<ul>${assessmentsList}</ul>`,
       formattedExpiration,
-      password
+      password,
+      dashboardUrl,
+      year
     )
     
     // Add fallback plain text links at the bottom of HTML body (in case HTML links are blocked)
+    const fallbackInstruction = "If links don't work in your email client, copy and paste the link(s) below into your browser."
     if (fallbackLinks) {
-      processedBody += `\n\n---\n\nIf the links above don't work, copy and paste these URLs into your browser:\n\n${fallbackLinks}`
+      processedBody += `\n\n---\n\n${fallbackInstruction}\n\n${fallbackLinks}`
     }
+
+    // Add dashboard link (secondary) so users can find all assignments
+    processedBody += `\n\n---\n\nYou can also open your dashboard to see all your assignments: ${dashboardUrl}`
     
     // Create plain text version for text/plain email body
     let processedBodyText = replaceShortcodes(
@@ -124,13 +141,16 @@ export async function POST(request: NextRequest) {
       to,
       assessmentsListText,
       formattedExpiration,
-      password
+      password,
+      dashboardUrl,
+      year
     )
     
     // Add fallback plain text links at the bottom of plain text body
     if (fallbackLinks) {
-      processedBodyText += `\n\n---\n\nIf the links above don't work, copy and paste these URLs into your browser:\n\n${fallbackLinks}`
+      processedBodyText += `\n\n---\n\n${fallbackInstruction}\n\n${fallbackLinks}`
     }
+    processedBodyText += `\n\n---\n\nYou can also open your dashboard to see all your assignments: ${dashboardUrl}`
 
     // Check if email service is configured
     // Priority: AWS SES with OIDC (AWS_ROLE_ARN) > AWS SES with access keys > Resend > SendGrid > SMTP
@@ -261,7 +281,16 @@ export async function POST(request: NextRequest) {
 
         const response = await sesClient.send(sendCommand)
         console.log('✅ Email sent via AWS SES. Message ID:', response.MessageId)
-        
+
+        await logEmail({
+          emailType: 'assignment',
+          recipientEmail: to,
+          subject,
+          providerMessageId: response.MessageId ?? undefined,
+          relatedEntityType: assignmentId ? 'assignment' : null,
+          relatedEntityId: assignmentId ?? null,
+        })
+
         return NextResponse.json({
           success: true,
           message: 'Email sent successfully',
@@ -303,6 +332,16 @@ export async function POST(request: NextRequest) {
         }
 
         console.log('✅ Email sent via Resend. Message ID:', data?.id)
+
+        await logEmail({
+          emailType: 'assignment',
+          recipientEmail: to,
+          subject,
+          providerMessageId: data?.id ?? undefined,
+          relatedEntityType: assignmentId ? 'assignment' : null,
+          relatedEntityId: assignmentId ?? null,
+        })
+
         return NextResponse.json({
           success: true,
           message: 'Email sent successfully',

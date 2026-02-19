@@ -4,7 +4,9 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 import Link from 'next/link'
+import { Trash2 } from 'lucide-react'
 
 interface ClientReportsProps {
   clientId: string
@@ -26,7 +28,41 @@ export default function ClientReports({ clientId }: ClientReportsProps) {
   const [message, setMessage] = useState('')
   const [filterAssessmentId, setFilterAssessmentId] = useState<string>('')
   const [availableAssessments, setAvailableAssessments] = useState<Array<{ id: string; title: string }>>([])
+  const [surveyToDelete, setSurveyToDelete] = useState<Survey | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const supabase = createClient()
+
+  const handleDeleteSurvey = async () => {
+    if (!surveyToDelete) return
+    setIsDeleting(true)
+    setDeleteError(null)
+    try {
+      const res = await fetch(
+        `/api/clients/${clientId}/surveys/${surveyToDelete.survey_id}`,
+        { method: 'DELETE' }
+      )
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setDeleteError(data?.error || `Delete failed (${res.status})`)
+        return
+      }
+      setSurveys((prev) => prev.filter((s) => s.survey_id !== surveyToDelete.survey_id))
+      setSurveyToDelete(null)
+      setMessage('Survey deleted successfully.')
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Failed to delete survey')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const closeDeleteDialog = () => {
+    if (!isDeleting) {
+      setSurveyToDelete(null)
+      setDeleteError(null)
+    }
+  }
 
   const loadSurveys = async () => {
     setIsLoading(true)
@@ -225,14 +261,24 @@ export default function ClientReports({ clientId }: ClientReportsProps) {
         </div>
       </div>
 
-      {/* Message */}
+      {/* Fixed message (toaster) */}
       {message && (
-        <div className={`p-4 rounded-md ${
-          message.includes('successfully') 
-            ? 'bg-green-50 text-green-800 border border-green-200' 
-            : 'bg-red-50 text-red-800 border border-red-200'
-        }`}>
-          {message}
+        <div
+          className={`fixed top-4 right-4 z-50 max-w-md shadow-lg rounded-md p-4 flex items-start gap-3 ${
+            message.includes('successfully')
+              ? 'bg-green-50 text-green-800 border border-green-200'
+              : 'bg-red-50 text-red-800 border border-red-200'
+          }`}
+        >
+          <p className="flex-1 text-sm">{message}</p>
+          <button
+            type="button"
+            onClick={() => setMessage('')}
+            className="flex-shrink-0 text-gray-500 hover:text-gray-700"
+            aria-label="Dismiss"
+          >
+            ×
+          </button>
         </div>
       )}
 
@@ -360,11 +406,22 @@ export default function ClientReports({ clientId }: ClientReportsProps) {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <Link href={`/dashboard/clients/${clientId}/surveys/${survey.survey_id}`}>
-                            <Button variant="outline" size="sm">
-                              View Survey
+                          <div className="flex items-center gap-2">
+                            <Link href={`/dashboard/clients/${clientId}/surveys/${survey.survey_id}`}>
+                              <Button variant="outline" size="sm">
+                                View Survey
+                              </Button>
+                            </Link>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              onClick={() => setSurveyToDelete(survey)}
+                              aria-label="Delete survey"
+                            >
+                              <Trash2 className="h-4 w-4" />
                             </Button>
-                          </Link>
+                          </div>
                         </td>
                       </tr>
                     )
@@ -375,6 +432,47 @@ export default function ClientReports({ clientId }: ClientReportsProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete survey confirmation */}
+      <Dialog open={!!surveyToDelete} onOpenChange={(open) => !open && closeDeleteDialog()}>
+        <DialogContent
+          title="Delete survey?"
+          description="This action cannot be undone."
+          onClose={closeDeleteDialog}
+        >
+          {surveyToDelete && (
+            <>
+              <p className="text-sm text-gray-700 mb-4">
+                This will permanently delete this survey and:
+              </p>
+              <ul className="list-disc list-inside text-sm text-gray-700 space-y-1 mb-4">
+                <li>All <strong>{surveyToDelete.total_assignments}</strong> assignment(s) in it</li>
+                <li>All answers and report data (and cached scores) for those assignments</li>
+                <li>Any generated report PDFs for those assignments</li>
+              </ul>
+              <p className="text-sm font-medium text-gray-900 mb-1">Survey:</p>
+              <p className="text-sm text-gray-600 mb-4">
+                {surveyToDelete.assessment_title} — {new Date(surveyToDelete.first_assignment_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              </p>
+              {deleteError && (
+                <p className="text-sm text-red-600 mb-4">{deleteError}</p>
+              )}
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={closeDeleteDialog} disabled={isDeleting}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteSurvey}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? 'Deleting…' : 'Delete survey'}
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

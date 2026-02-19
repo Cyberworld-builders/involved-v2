@@ -146,14 +146,7 @@ export async function GET(
       // Use Playwright for local development
       console.log(`[PDF] Using Playwright for local PDF generation`)
       const { generatePDFFromView } = await import('@/lib/reports/export-pdf-playwright')
-      pdfBuffer = await generatePDFFromView(
-        viewUrl,
-        cookieArray,
-        {
-          waitForSelector: '[data-report-loaded]',
-          waitForTimeout: 30000,
-        }
-      )
+      pdfBuffer = await generatePDFFromView(viewUrl, cookieArray)
     }
 
     // Get assessment title for filename

@@ -117,6 +117,13 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse
   }
 
+  // Public signup is disabled; redirect signup URL to login
+  if (request.nextUrl.pathname === '/auth/signup') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/auth/login'
+    return NextResponse.redirect(url)
+  }
+
   // If user is authenticated and on auth pages, redirect to dashboard
   if (
     user &&

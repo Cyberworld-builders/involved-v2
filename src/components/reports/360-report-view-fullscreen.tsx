@@ -15,63 +15,30 @@ import HorizontalBarChart from './charts/horizontal-bar-chart'
 import ScoreDisplay from './charts/score-display'
 import FeedbackSection from './sections/feedback-section'
 import Image from 'next/image'
-
-interface DimensionReport {
-  dimension_id: string
-  dimension_name: string
-  dimension_code: string
-  overall_score: number
-  rater_breakdown: {
-    peer: number | null
-    direct_report: number | null
-    supervisor: number | null
-    self: number | null
-    other: number | null
-    all_raters: number | null
-  }
-  industry_benchmark: number | null
-  geonorm: number | null
-  geonorm_participant_count: number
-  improvement_needed: boolean
-  text_feedback: string[]
-  description?: string
-  feedback?: {
-    Self: string[]
-    'Direct Report': string[]
-    Others: string[]
-  }
-  // Legacy structure expects these fields
-  definition?: string
-  flagged?: Record<string, boolean>
-  percent?: Record<string, number>
-  score?: Record<string, number>
-}
-
-interface Report360Data {
-  assignment_id: string
-  target_id: string
-  target_name: string
-  target_email: string
-  assessment_id: string
-  assessment_title: string
-  group_id: string
-  group_name: string
-  overall_score: number
-  dimensions: DimensionReport[]
-  generated_at: string
-  // Legacy expects client info
-  client_name?: string
-}
+import type { DimensionReport360, Report360Data } from '@/lib/reports/types'
+import { getReportDebug } from '@/lib/reports/report-debug'
 
 interface Report360ViewFullscreenProps {
   reportData: Report360Data
 }
 
 export default function Report360ViewFullscreen({ reportData }: Report360ViewFullscreenProps) {
+  if (getReportDebug()) {
+    const r = reportData as unknown as Record<string, unknown>
+    console.log('[Report Debug] view received', {
+      component: '360-fullscreen',
+      reportDataKeys: Object.keys(r),
+      dimensionsLength: r.dimensions != null && Array.isArray(r.dimensions) ? r.dimensions.length : undefined,
+      partial: r.partial,
+      overall_score: r.overall_score,
+    })
+    console.log('[Report Debug] full reportData for view', reportData)
+  }
+
   let pageNumber = 1
 
   // Transform dimension data to match legacy structure for charts
-  const transformDimensionForChart = (dim: DimensionReport) => {
+  const transformDimensionForChart = (dim: DimensionReport360) => {
     const scores: Array<{ label: string; score: number; flagged?: boolean }> = []
     
     // Add "All Raters" as the first bar (overall score)
@@ -109,7 +76,7 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
   }
 
   // Organize feedback by rater type
-  const organizeFeedback = (dim: DimensionReport) => {
+  const organizeFeedback = (dim: DimensionReport360) => {
     // Use feedback organized by rater type if available, otherwise fall back to text_feedback
     if (dim.feedback) {
       return dim.feedback
@@ -122,8 +89,15 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
     }
   }
 
+  const showPartialBanner = reportData.partial === true && reportData.participant_response_summary
+  const noResponsesYet = reportData.dimensions.length === 0 || (reportData.participant_response_summary?.completed === 0)
+
   return (
-    <div style={{ backgroundColor: REPORT_COLORS.white }} data-report-pages={`${pageNumber + reportData.dimensions.length * 2}`}>
+    <div
+      style={{ backgroundColor: REPORT_COLORS.white }}
+      data-report-pages={String(pageNumber + (reportData.dimensions.length > 0 ? reportData.dimensions.length * 2 : 1))}
+      suppressHydrationWarning
+    >
       {/* Cover Page */}
       <CoverPage
         assessmentTitle={reportData.assessment_title}
@@ -133,9 +107,26 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
       />
 
       {/* Overview Page */}
-      <PageContainer pageNumber={pageNumber} id={`${pageNumber}`}>
+      <PageContainer pageNumber={pageNumber} id={String(pageNumber)}>
         <PageWrapper>
           <PageHeader pageNumber={pageNumber} logo="involve-360-logo-small.png" />
+
+          {/* Partial report banner */}
+          {showPartialBanner && reportData.participant_response_summary && (
+            <div
+              style={{
+                marginBottom: '20px',
+                padding: '12px 16px',
+                backgroundColor: '#FEF3C7',
+                border: '1px solid #F59E0B',
+                borderRadius: '4px',
+                fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                fontSize: REPORT_TYPOGRAPHY.body.fontSize,
+              }}
+            >
+              <strong>Partial report:</strong> {reportData.participant_response_summary.completed} of {reportData.participant_response_summary.total} responses received. The report will update as more responses are completed.
+            </div>
+          )}
 
           {/* Title */}
           <div
@@ -169,23 +160,31 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
               margin: '20px 0 40px',
             }}
           >
-            <p>
-              This is your {reportData.assessment_title} report. This report should be used as a critical piece of your overall leadership development{reportData.client_name ? ` at ${reportData.client_name}` : ''}.
-            </p>
-            <p>
-              Stakeholders (e.g., supervisor, peers, subordinates, customers) familiar with your work completed the 360-evaluation to provide you an analytically robust picture of your strengths and improvement opportunities. Additionally, each of your raters was asked to provide qualitative feedback, which can greatly augment your quantitative scores. Taken together, this report provides you a wealth of information to not only significantly develop your own leadership, but also drive critical business outcomes.
-            </p>
-            <p>
-              Each individual competency score is presented with corresponding rater feedback and suggestions. Your scores are compared to (1) norms for similar jobs/positions and (2) the average of your colleagues that have also recently completed the 360-feedback survey{reportData.client_name ? ` at ${reportData.client_name}` : ''}. Anchoring your scores with industry norms and your company averages provides a much more accurate representation of where your scores stand and provides enhanced motivation to accelerate your leadership involvement.
-            </p>
+            {noResponsesYet ? (
+              <p style={{ marginTop: '24px' }}>
+                No responses have been submitted yet for this 360 assessment. The report will update as responses are completed.
+              </p>
+            ) : (
+              <>
+                <p>
+                  This is your {reportData.assessment_title} report. This report should be used as a critical piece of your overall leadership development{reportData.client_name ? ` at ${reportData.client_name}` : ''}.
+                </p>
+                <p>
+                  Stakeholders (e.g., supervisor, peers, subordinates, customers) familiar with your work completed the 360-evaluation to provide you an analytically robust picture of your strengths and improvement opportunities. Additionally, each of your raters was asked to provide qualitative feedback, which can greatly augment your quantitative scores. Taken together, this report provides you a wealth of information to not only significantly develop your own leadership, but also drive critical business outcomes.
+                </p>
+                <p>
+                  Each individual competency score is presented with corresponding rater feedback and suggestions. Your scores are compared to (1) norms for similar jobs/positions and (2) the average of your colleagues that have also recently completed the 360-feedback survey{reportData.client_name ? ` at ${reportData.client_name}` : ''}. Anchoring your scores with industry norms and your company averages provides a much more accurate representation of where your scores stand and provides enhanced motivation to accelerate your leadership involvement.
+                </p>
+              </>
+            )}
           </div>
 
           <PageFooter pageNumber={pageNumber} />
         </PageWrapper>
       </PageContainer>
 
-      {/* For Each Dimension */}
-      {reportData.dimensions.map((dimension) => {
+      {/* For Each Dimension (skip when no dimension data) */}
+      {reportData.dimensions.length > 0 && reportData.dimensions.map((dimension) => {
         const dimensionPage = pageNumber++
 
         // Competency Scores Page
@@ -370,8 +369,8 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                             flexShrink: 0,
                           }}
                         >
-                          {dimension.industry_benchmark !== null 
-                            ? dimension.industry_benchmark.toFixed(2)
+                          {dimension.industry_benchmark != null 
+                            ? (dimension.industry_benchmark ?? 0).toFixed(2)
                             : '0.00'}
                         </div>
                         <div
@@ -420,7 +419,7 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                               flexShrink: 0,
                             }}
                           >
-                            {dimension.geonorm.toFixed(2)}
+                            {(dimension.geonorm ?? 0).toFixed(2)}
                           </div>
                           <div
                             className="norm-label"

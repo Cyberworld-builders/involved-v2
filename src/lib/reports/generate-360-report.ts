@@ -14,53 +14,15 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { calculateGEOnorms } from './calculate-geonorms'
+import type { DimensionReport360, Report360Data } from './types'
 
+/** Internal aggregation shape (arrays per rater type); converted to RaterBreakdown360 in output. */
 interface RaterTypeBreakdown {
   peer: number[]
   direct_report: number[]
   supervisor: number[]
   self: number[]
   other: number[]
-}
-
-interface DimensionReport {
-  dimension_id: string
-  dimension_name: string
-  dimension_code: string
-  overall_score: number
-  rater_breakdown: {
-    peer: number | null
-    direct_report: number | null
-    supervisor: number | null
-    self: number | null
-    other: number | null
-    all_raters: number | null
-  }
-  industry_benchmark: number | null
-  geonorm: number | null
-  geonorm_participant_count: number
-  improvement_needed: boolean
-  text_feedback: string[]
-  description?: string
-  feedback?: {
-    Self: string[]
-    'Direct Report': string[]
-    Others: string[]
-  }
-}
-
-interface Report360Data {
-  assignment_id: string
-  target_id: string
-  target_name: string
-  target_email: string
-  assessment_id: string
-  assessment_title: string
-  group_id: string
-  group_name: string
-  overall_score: number
-  dimensions: DimensionReport[]
-  generated_at: string
 }
 
 /**
@@ -181,31 +143,33 @@ export async function generate360Report(
   if (groupFromDb?.id) {
     allTargetAssignmentsQuery = allTargetAssignmentsQuery.eq('group_id', groupFromDb.id)
   }
-  const { data: allTargetAssignments } = await allTargetAssignmentsQuery
+  let { data: allTargetAssignments } = await allTargetAssignmentsQuery
 
-  if (!allTargetAssignments || allTargetAssignments.length === 0) {
-    throw new Error('No completed assignments found for 360 target')
+  // When group filter yielded zero, retry without group so partial completion still produces a report
+  if (groupFromDb?.id && (!allTargetAssignments || allTargetAssignments.length === 0)) {
+    const { data: fallbackAssignments } = await adminClient
+      .from('assignments')
+      .select(`
+        id,
+        user_id,
+        target_id,
+        completed,
+        user:profiles!assignments_user_id_fkey(
+          id,
+          name,
+          email
+        )
+      `)
+      .eq('target_id', assignment.target_id)
+      .eq('assessment_id', assignment.assessment_id)
+      .eq('completed', true)
+    allTargetAssignments = fallbackAssignments || []
   }
 
   // Use linked group when present; otherwise synthetic group so report can still generate (e.g. Vercel when group not linked)
   const group = groupFromDb ?? { id: '', name: '360 participants', target_id: assignment.target_id }
 
-  // Get group members with their positions (raters) when we have a real group; otherwise infer from assignments
-  const raterMap = new Map<string, 'peer' | 'direct_report' | 'supervisor' | 'self' | 'other'>()
-  if (group.id) {
-    const { data: groupMembers } = await adminClient
-      .from('group_members')
-      .select('profile_id, position')
-      .eq('group_id', group.id)
-    groupMembers?.forEach((gm) => {
-      raterMap.set(gm.profile_id, mapPositionToRaterType(gm.position))
-    })
-  }
-  if (raterMap.size === 0) {
-    allTargetAssignments.forEach((a) => raterMap.set(a.user_id, 'other'))
-  }
-
-  // Get all dimensions for this assessment
+  // Get all dimensions for this assessment (needed for both full and partial report)
   const { data: dimensions } = await adminClient
     .from('dimensions')
     .select('id, name, code, parent_id')
@@ -230,8 +194,80 @@ export async function generate360Report(
 
   const dimensionIds = dimensions.map((d) => d.id)
 
+  // When no completed assignments, return a partial report so the UI can show "no data yet" instead of throwing
+  const completedCount = allTargetAssignments?.length ?? 0
+  if (completedCount === 0) {
+    const { data: benchmarks } = await adminClient
+      .from('benchmarks')
+      .select('dimension_id, value')
+      .in('dimension_id', dimensionIds)
+    const benchmarkMapPartial = new Map<string, number>()
+    benchmarks?.forEach((b) => {
+      benchmarkMapPartial.set(b.dimension_id, b.value)
+    })
+    const emptyRaterBreakdown = {
+      peer: null,
+      direct_report: null,
+      supervisor: null,
+      self: null,
+      other: null,
+      all_raters: null,
+    }
+    const dimensionReportsPartial: DimensionReport360[] = dimensions.map((dim) => ({
+      dimension_id: dim.id,
+      dimension_name: dim.name,
+      dimension_code: dim.code,
+      overall_score: 0,
+      rater_breakdown: emptyRaterBreakdown,
+      industry_benchmark: benchmarkMapPartial.get(dim.id) ?? null,
+      geonorm: null,
+      geonorm_participant_count: 0,
+      improvement_needed: false,
+      text_feedback: [],
+      feedback: { Self: [], 'Direct Report': [], Others: [] },
+    }))
+    let totalExpected = 0
+    if (group.id) {
+      const { data: groupMembers } = await adminClient
+        .from('group_members')
+        .select('profile_id')
+        .eq('group_id', group.id)
+      totalExpected = groupMembers?.length ?? 0
+    }
+    return {
+      assignment_id: assignmentId,
+      target_id: assignment.target_id,
+      target_name: targetData?.name || 'Unknown',
+      target_email: targetData?.email || '',
+      assessment_id: assignment.assessment_id,
+      assessment_title: assessmentData?.title || 'Unknown Assessment',
+      group_id: group.id,
+      group_name: group.name,
+      overall_score: 0,
+      dimensions: dimensionReportsPartial,
+      generated_at: new Date().toISOString(),
+      partial: true,
+      participant_response_summary: { completed: 0, total: totalExpected },
+    }
+  }
+
+  // Get group members with their positions (raters) when we have a real group; otherwise infer from assignments
+  const raterMap = new Map<string, 'peer' | 'direct_report' | 'supervisor' | 'self' | 'other'>()
+  if (group.id) {
+    const { data: groupMembers } = await adminClient
+      .from('group_members')
+      .select('profile_id, position')
+      .eq('group_id', group.id)
+    groupMembers?.forEach((gm) => {
+      raterMap.set(gm.profile_id, mapPositionToRaterType(gm.position))
+    })
+  }
+  if (raterMap.size === 0) {
+    allTargetAssignments!.forEach((a) => raterMap.set(a.user_id, 'other'))
+  }
+
   // Get all dimension scores for all target assignments
-  const assignmentIds = allTargetAssignments.map((a) => a.id)
+  const assignmentIds = allTargetAssignments!.map((a) => a.id)
   const { data: allDimensionScores } = await adminClient
     .from('assignment_dimension_scores')
     .select('assignment_id, dimension_id, avg_score')
@@ -301,7 +337,7 @@ export async function generate360Report(
     if (!answer.value) return
     
     // Find the assignment to get rater type
-    const answerAssignment = allTargetAssignments.find((a) => a.id === answer.assignment_id)
+    const answerAssignment = allTargetAssignments?.find((a) => a.id === answer.assignment_id)
     if (!answerAssignment) return
     
     // Determine rater type
@@ -324,7 +360,7 @@ export async function generate360Report(
   })
 
   // Build dimension reports
-  const dimensionReports: DimensionReport[] = []
+  const dimensionReports: DimensionReport360[] = []
 
   for (const dimension of dimensions) {
     // Get scores for this dimension from all assignments
@@ -355,7 +391,7 @@ export async function generate360Report(
     const allRaterScores: number[] = []
     
     scoresForDimension.forEach((ds) => {
-      const assignment = allTargetAssignments.find((a) => a.id === ds.assignment_id)
+      const assignment = allTargetAssignments?.find((a) => a.id === ds.assignment_id)
       if (!assignment) return
 
       // Check for self-assessment first (user rating themselves)
@@ -435,6 +471,16 @@ export async function generate360Report(
         dimensionReports.length
       : 0
 
+  let totalExpected = 0
+  if (group.id) {
+    const { data: groupMembers } = await adminClient
+      .from('group_members')
+      .select('profile_id')
+      .eq('group_id', group.id)
+    totalExpected = groupMembers?.length ?? 0
+  }
+  const isPartial = totalExpected > 0 && completedCount < totalExpected
+
   return {
     assignment_id: assignmentId,
     target_id: assignment.target_id,
@@ -447,5 +493,9 @@ export async function generate360Report(
     overall_score: overallScore,
     dimensions: dimensionReports,
     generated_at: new Date().toISOString(),
+    ...(isPartial && {
+      partial: true,
+      participant_response_summary: { completed: completedCount, total: totalExpected },
+    }),
   }
 }

@@ -22,9 +22,10 @@ export default function PageWrapper({ children, className = '' }: PageWrapperPro
     <div
       className={`page-wrapper ${className}`}
       style={{
-        padding: `${REPORT_SPACING.pagePaddingTop}px ${REPORT_SPACING.pagePaddingRight}px`,
+        padding: `${REPORT_SPACING.pagePaddingTop}px ${REPORT_SPACING.pagePaddingRight}px ${REPORT_SPACING.footerAreaHeight}px ${REPORT_SPACING.pagePaddingLeft}px`,
         position: 'relative',
         height: `${REPORT_SPACING.contentHeight}px`,
+        boxSizing: 'border-box',
       }}
     >
       {children}

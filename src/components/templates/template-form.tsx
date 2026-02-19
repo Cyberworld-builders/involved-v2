@@ -43,7 +43,6 @@ const DEFAULT_LABELS = {
 }
 
 export default function TemplateForm({
-  assessmentId: _assessmentId,
   templateId,
   initialData,
   onSubmit,

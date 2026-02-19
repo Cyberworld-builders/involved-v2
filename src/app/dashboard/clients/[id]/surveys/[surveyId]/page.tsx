@@ -36,7 +36,7 @@ export default async function SurveyDetailPage({ params }: SurveyDetailPageProps
     redirect(`/dashboard/clients/${clientId}?tab=reports`)
   }
 
-  // Get all assignments for this survey
+  // Get all assignments for this survey (with rater and target names for Data Collection Status)
   const { data: assignments, error: assignmentsError } = await adminClient
     .from('assignments')
     .select(`
@@ -46,7 +46,10 @@ export default async function SurveyDetailPage({ params }: SurveyDetailPageProps
       assessment_id,
       completed,
       completed_at,
-      created_at
+      created_at,
+      started_at,
+      user:profiles!assignments_user_id_fkey(id, name, email),
+      target:profiles!assignments_target_id_fkey(id, name, email)
     `)
     .eq('survey_id', surveyId)
     .order('created_at', { ascending: true })
@@ -66,11 +69,37 @@ export default async function SurveyDetailPage({ params }: SurveyDetailPageProps
   }
 
   const clientUserIds = new Set(clientUsers.map(u => u.id))
-  const validAssignments = assignments.filter(a => clientUserIds.has(a.user_id))
+  const validAssignmentsRaw = assignments.filter(a => clientUserIds.has(a.user_id))
 
-  if (validAssignments.length === 0) {
+  if (validAssignmentsRaw.length === 0) {
     redirect(`/dashboard/clients/${clientId}?tab=reports`)
   }
+
+  // Normalize assignments for client: flatten user/target relation (Supabase may return array or object)
+  type AssignmentRow = (typeof assignments)[0] & {
+    user?: { id: string; name: string; email: string } | Array<{ id: string; name: string; email: string }>
+    target?: { id: string; name: string; email: string } | Array<{ id: string; name: string; email: string }> | null
+    started_at?: string | null
+  }
+  const validAssignments = validAssignmentsRaw.map((a) => {
+    const row = a as unknown as AssignmentRow
+    const user = row.user != null ? (Array.isArray(row.user) ? row.user[0] : row.user) : null
+    const target = row.target != null ? (Array.isArray(row.target) ? row.target[0] : row.target) : null
+    return {
+      id: row.id,
+      user_id: row.user_id,
+      target_id: row.target_id,
+      assessment_id: row.assessment_id,
+      completed: row.completed,
+      completed_at: row.completed_at,
+      created_at: row.created_at,
+      started_at: row.started_at ?? null,
+      user_name: user?.name ?? null,
+      user_email: user?.email ?? null,
+      target_name: target?.name ?? null,
+      target_email: target?.email ?? null,
+    }
+  })
 
   // Type assertion for assessment
   const assessment = (firstAssignment.assessment as unknown) as {

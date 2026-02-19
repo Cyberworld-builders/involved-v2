@@ -9,12 +9,21 @@ import { applyTemplateToReport } from '@/lib/reports/apply-template'
  * GET /api/reports/:assignmentId
  * Get report data for an assignment (generate if needed)
  */
+function reportDebugRequested(request: NextRequest): boolean {
+  try {
+    return request.url.includes('report_debug=1')
+  } catch {
+    return false
+  }
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ assignmentId: string }> }
 ) {
   try {
     const { assignmentId } = await params
+    const debug = reportDebugRequested(request)
     const supabase = await createClient()
     const adminClient = createAdminClient()
 
@@ -42,7 +51,9 @@ export async function GET(
       )
     }
 
-    if (!assignment.completed) {
+    const assessment = (assignment.assessment as unknown) as { is_360: boolean } | null
+    // For 360 assessments, allow viewing report when not completed so we can show partial (0 responses)
+    if (!assignment.completed && !assessment?.is_360) {
       return NextResponse.json(
         { error: 'Assignment must be completed before viewing report' },
         { status: 400 }
@@ -57,15 +68,18 @@ export async function GET(
       .single()
 
     // Check if report data is stale (compare calculated_at with completed_at)
+    const cachedReport = reportData?.dimension_scores as Record<string, unknown> | null | undefined
+    const cachedIsEmpty =
+      cachedReport == null ||
+      typeof cachedReport !== 'object' ||
+      (assessment?.is_360 && (!Array.isArray(cachedReport.dimensions) || cachedReport.dimensions.length === 0))
     const needsRegeneration =
       !reportData ||
       !reportData.dimension_scores ||
+      cachedIsEmpty ||
       (assignment.completed_at &&
         reportData.calculated_at &&
         new Date(reportData.calculated_at) < new Date(assignment.completed_at))
-
-    // Type assertion for nested object (Supabase returns arrays for relations, but .single() should return objects)
-    const assessment = (assignment.assessment as unknown) as { is_360: boolean } | null
 
     if (needsRegeneration) {
       // Generate report
@@ -133,17 +147,42 @@ export async function GET(
           onConflict: 'assignment_id',
         })
 
-      return NextResponse.json({
+      const payload: { report: unknown; cached: boolean; _debug?: unknown } = {
         report,
         cached: false,
-      })
+      }
+      if (debug) {
+        const r = report as Record<string, unknown>
+        payload._debug = {
+          assignmentId,
+          assessment_id: assignment.assessment_id,
+          completed: assignment.completed,
+          is_360: assessment?.is_360,
+          reportKeys: report != null && typeof report === 'object' ? Object.keys(r) : [],
+          dimensionsCount: Array.isArray(r?.dimensions) ? r.dimensions.length : undefined,
+        }
+      }
+      return NextResponse.json(payload)
     }
 
     // Return cached report data
-    return NextResponse.json({
-      report: reportData.dimension_scores,
+    const reportPayload = reportData.dimension_scores
+    const payload: { report: unknown; cached: boolean; _debug?: unknown } = {
+      report: reportPayload,
       cached: true,
-    })
+    }
+    if (debug) {
+      const r = reportPayload as Record<string, unknown> | null
+      payload._debug = {
+        assignmentId,
+        assessment_id: assignment.assessment_id,
+        completed: assignment.completed,
+        is_360: assessment?.is_360,
+        reportKeys: r != null && typeof r === 'object' ? Object.keys(r) : [],
+        dimensionsCount: r?.dimensions != null && Array.isArray(r.dimensions) ? r.dimensions.length : undefined,
+      }
+    }
+    return NextResponse.json(payload)
   } catch (error) {
     console.error('Error getting report:', error)
     return NextResponse.json(

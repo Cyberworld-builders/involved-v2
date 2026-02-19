@@ -29,12 +29,14 @@ function formatFrequency(frequency: string): string {
 
 /**
  * Generate reminder email HTML body
+ * Uses inline styles on the button for Outlook compatibility; includes raw URL and dashboard link.
  */
 function generateReminderEmailBody(
   userName: string,
   assessmentTitle: string,
   assignmentUrl: string,
-  frequency: string
+  frequency: string,
+  dashboardUrl: string
 ): string {
   const formattedFrequency = formatFrequency(frequency)
   
@@ -46,7 +48,6 @@ function generateReminderEmailBody(
       <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .button { display: inline-block; padding: 12px 24px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
         .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666; }
       </style>
     </head>
@@ -57,8 +58,12 @@ function generateReminderEmailBody(
         <p>This is a friendly reminder that you have an incomplete assessment assignment:</p>
         <p><strong>${assessmentTitle}</strong></p>
         <p>Please complete this assessment at your earliest convenience.</p>
-        <a href="${assignmentUrl}" class="button">Complete Assessment</a>
+        <a href="${assignmentUrl}" style="display: inline-block; padding: 12px 24px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0;">Complete Assessment</a>
+        <p style="font-size: 12px; color: #666;">If the button doesn't work, copy and paste this link into your browser:</p>
+        <p style="word-break: break-all; font-size: 12px;">${assignmentUrl}</p>
         <p>You will receive reminders every ${formattedFrequency} until this assessment is completed.</p>
+        <p style="margin-top: 20px;">You can also open your dashboard to see all your assignments: <a href="${dashboardUrl}" style="color: #4F46E5; text-decoration: underline;">${dashboardUrl}</a></p>
+        <p style="font-size: 12px;">Or copy this link: ${dashboardUrl}</p>
         <div class="footer">
           <p>If you have any questions, please contact your administrator.</p>
           <p>This is an automated reminder email.</p>
@@ -76,7 +81,8 @@ function generateReminderEmailText(
   userName: string,
   assessmentTitle: string,
   assignmentUrl: string,
-  frequency: string
+  frequency: string,
+  dashboardUrl: string
 ): string {
   const formattedFrequency = formatFrequency(frequency)
   
@@ -93,7 +99,11 @@ Please complete this assessment at your earliest convenience.
 
 Access your assessment here: ${assignmentUrl}
 
+If the link doesn't work, copy and paste the URL above into your browser.
+
 You will receive reminders every ${formattedFrequency} until this assessment is completed.
+
+You can also open your dashboard to see all your assignments: ${dashboardUrl}
 
 If you have any questions, please contact your administrator.
 
@@ -116,6 +126,9 @@ serve(async (req) => {
       assignment_url,
       reminder_frequency,
     } = body
+
+    const baseUrl = (Deno.env.get('NEXT_PUBLIC_APP_URL') || Deno.env.get('APP_URL') || 'http://localhost:3000').replace(/\/$/, '')
+    const dashboardUrl = `${baseUrl}/dashboard`
 
     // Get email configuration from environment
     const awsRoleArn = Deno.env.get('AWS_ROLE_ARN')?.trim()
@@ -231,13 +244,15 @@ serve(async (req) => {
       user_name,
       assessment_title,
       assignment_url,
-      reminder_frequency
+      reminder_frequency,
+      dashboardUrl
     )
     const textBody = generateReminderEmailText(
       user_name,
       assessment_title,
       assignment_url,
-      reminder_frequency
+      reminder_frequency,
+      dashboardUrl
     )
 
     // Send email

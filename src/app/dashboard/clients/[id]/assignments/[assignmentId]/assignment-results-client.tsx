@@ -407,7 +407,7 @@ export default function AssignmentResultsClient({
               {/* Question Number and Content */}
               <div className="mb-4">
                 {questionType?.showContent && (
-                  <div className="flex items-start">
+                  <div className="question-with-number flex items-start">
                     {isActualQuestion && questionType?.showPage && questionCounter > 0 && (
                       <span className="text-lg font-semibold text-gray-900 mr-2 flex-shrink-0">
                         {questionCounter}.

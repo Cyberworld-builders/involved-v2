@@ -24,38 +24,59 @@ export default function ForgotPasswordPage() {
     setLoading(true)
 
     try {
-      const response = await fetch('/api/auth/reset-password', {
+      const returnUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/dashboard`
+      const response = await fetch('/api/auth/request-login-link', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, returnUrl }),
       })
+
+      const data = await response.json().catch(() => ({}))
 
       // For security, do not reveal whether the email exists.
       if (!response.ok) {
-        const data = await response.json().catch(() => ({}))
-        // Only surface validation errors; otherwise keep messaging generic.
         if (response.status === 400 && data?.error) {
           setError(String(data.error))
         } else {
-          setMessage(
-            "If an account exists for that email, you'll receive a password reset link shortly."
-          )
+          setMessage("If an account exists with that email, you'll receive a login link shortly.")
         }
         return
       }
 
-      setMessage("If an account exists for that email, you'll receive a password reset link shortly.")
+      setMessage("If an account exists with that email, you'll receive a login link shortly.")
     } catch {
-      setMessage("If an account exists for that email, you'll receive a password reset link shortly.")
+      setMessage("If an account exists with that email, you'll receive a login link shortly.")
     } finally {
       setLoading(false)
     }
   }
 
+  const bannerText = error || message
+  const isSuccess = !error && !!message
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      {/* Fixed message (toaster) */}
+      {bannerText && (
+        <div
+          className={`fixed top-4 right-4 z-50 max-w-md shadow-lg rounded-md p-4 flex items-start gap-3 ${
+            isSuccess ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'
+          }`}
+        >
+          <p className="flex-1 text-sm">{bannerText}</p>
+          <button
+            type="button"
+            onClick={() => { setError(''); setMessage('') }}
+            className="flex-shrink-0 text-gray-500 hover:text-gray-700"
+            aria-label="Dismiss"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       <div className="w-full max-w-md">
         <div className="mb-4">
           <Link href="/auth/login" className="text-sm text-indigo-600 hover:text-indigo-500 flex items-center">
@@ -68,9 +89,9 @@ export default function ForgotPasswordPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl text-center text-gray-900">Forgot Password</CardTitle>
+            <CardTitle className="text-2xl text-center text-gray-900">Request a login link</CardTitle>
             <CardDescription className="text-center text-gray-600">
-              Enter your email and we&apos;ll send you a reset link.
+              Enter your email and we&apos;ll send you a temporary login link. No password needed.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -93,20 +114,8 @@ export default function ForgotPasswordPage() {
                 />
               </div>
 
-              {error && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-                  <p className="text-sm text-red-800">{error}</p>
-                </div>
-              )}
-
-              {message && (
-                <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-                  <p className="text-sm text-green-800">{message}</p>
-                </div>
-              )}
-
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Sending…' : 'Send reset link'}
+                {loading ? 'Sending…' : 'Send login link'}
               </Button>
             </form>
 

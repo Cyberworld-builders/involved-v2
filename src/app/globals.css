@@ -12,10 +12,11 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Dashboard and app content are light UI; avoid light text when system prefers dark */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #ffffff;
+    --foreground: #171717;
   }
 }
 
@@ -205,4 +206,9 @@ body {
 
 .rich-text-content a:hover {
   color: #4338ca;
+}
+
+/* Align question number with first line when content starts with a heading */
+.question-with-number .rich-text-content > *:first-child {
+  margin-top: 0;
 }

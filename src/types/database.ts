@@ -658,6 +658,45 @@ export interface Database {
         }
         Relationships: []
       }
+      email_logs: {
+        Row: {
+          id: string
+          email_type: string
+          recipient_email: string
+          subject: string
+          provider_message_id: string | null
+          sent_at: string
+          related_entity_type: string | null
+          related_entity_id: string | null
+          status: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          email_type: string
+          recipient_email: string
+          subject?: string
+          provider_message_id?: string | null
+          sent_at?: string
+          related_entity_type?: string | null
+          related_entity_id?: string | null
+          status?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          email_type?: string
+          recipient_email?: string
+          subject?: string
+          provider_message_id?: string | null
+          sent_at?: string
+          related_entity_type?: string | null
+          related_entity_id?: string | null
+          status?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -12,15 +12,10 @@ import { chromium } from 'playwright-core'
  * 
  * @param viewUrl - Full URL to the fullscreen report view
  * @param cookies - Array of cookie objects for authentication
- * @param options - Additional options for PDF generation
  */
 export async function generatePDFFromView(
   viewUrl: string,
-  cookies?: Array<{ name: string; value: string; domain?: string; path?: string }>,
-  _options?: {
-    waitForSelector?: string
-    waitForTimeout?: number
-  }
+  cookies?: Array<{ name: string; value: string; domain?: string; path?: string }>
 ): Promise<Buffer> {
   console.log('[Playwright] Starting PDF generation from view URL:', viewUrl)
   
@@ -260,9 +255,14 @@ export async function generatePDFFromView(
           bottom: 0 !important;
           position: absolute !important;
         }
-        /* Ensure page-wrapper doesn't overflow container */
+        /* Reserve space above footer so content doesn't overlap page number */
         .page-wrapper {
-          padding-bottom: 59px !important;
+          padding-bottom: 64px !important;
+          box-sizing: border-box !important;
+        }
+        .page-footer {
+          left: 50% !important;
+          transform: translateX(-50%) !important;
         }
         @media print {
           .report-view-container {
@@ -303,9 +303,14 @@ export async function generatePDFFromView(
             bottom: 0 !important;
             position: absolute !important;
           }
-          /* Ensure page-wrapper doesn't overflow container */
+          /* Reserve space above footer so content doesn't overlap page number */
           .page-wrapper {
-            padding-bottom: 59px !important;
+            padding-bottom: 64px !important;
+            box-sizing: border-box !important;
+          }
+          .page-footer {
+            left: 50% !important;
+            transform: translateX(-50%) !important;
           }
         }
       `

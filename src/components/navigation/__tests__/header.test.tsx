@@ -85,38 +85,11 @@ describe('Header Component', () => {
       expect(loginButton).toBeInTheDocument()
     })
 
-    it('should render sign up button', () => {
-      render(<Header />)
-      const signupButton = screen.getByRole('button', { name: /sign up/i })
-      expect(signupButton).toBeInTheDocument()
-    })
-
     it('should have login link with correct href', () => {
       render(<Header />)
       const loginButton = screen.getByRole('button', { name: /login/i })
       const loginLink = loginButton.closest('a')
       expect(loginLink).toHaveAttribute('href', '/auth/login')
-    })
-
-    it('should have sign up link with correct href', () => {
-      render(<Header />)
-      const signupButton = screen.getByRole('button', { name: /sign up/i })
-      const signupLink = signupButton.closest('a')
-      expect(signupLink).toHaveAttribute('href', '/auth/signup')
-    })
-
-    it('should render login button with ghost variant', () => {
-      render(<Header />)
-      const loginButton = screen.getByRole('button', { name: /login/i })
-      // Button component styling is applied
-      expect(loginButton).toBeInTheDocument()
-    })
-
-    it('should render sign up button with default variant', () => {
-      render(<Header />)
-      const signupButton = screen.getByRole('button', { name: /sign up/i })
-      // Button component styling is applied
-      expect(signupButton).toBeInTheDocument()
     })
   })
 
@@ -217,18 +190,15 @@ describe('Header Component', () => {
     it('should have clickable buttons for screen readers', () => {
       render(<Header />)
       const loginButton = screen.getByRole('button', { name: /login/i })
-      const signupButton = screen.getByRole('button', { name: /sign up/i })
-      
       expect(loginButton).toBeInTheDocument()
-      expect(signupButton).toBeInTheDocument()
     })
 
     it('should have proper link semantics for navigation', () => {
       render(<Header />)
       const links = screen.getAllByRole('link')
       
-      // Should have logo link and two button links
-      expect(links.length).toBeGreaterThanOrEqual(3)
+      // Should have logo link and login button link
+      expect(links.length).toBeGreaterThanOrEqual(2)
     })
   })
 
@@ -268,7 +238,6 @@ describe('Header Component', () => {
       expect(screen.getByRole('navigation')).toBeInTheDocument()
       expect(screen.getByText('Involved Talent')).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /login/i })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /sign up/i })).toBeInTheDocument()
     })
 
     it('should maintain proper DOM structure', () => {

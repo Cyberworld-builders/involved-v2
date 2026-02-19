@@ -356,6 +356,40 @@ export async function POST(request: NextRequest) {
     // Otherwise, generate a new one
     const surveyId = survey_id || randomUUID()
 
+    // When adding to an existing survey, reject if any requested user already has an assignment in this survey
+    if (survey_id) {
+      const { data: existingInSurvey } = await adminClient
+        .from('assignments')
+        .select('user_id, assessment_id')
+        .eq('survey_id', survey_id)
+        .in('assessment_id', assessment_ids)
+
+      const existingSet = new Set(
+        (existingInSurvey || []).map((a) => `${a.user_id}:${a.assessment_id}`)
+      )
+      const duplicateUserIds = new Set<string>()
+      for (const userId of user_ids) {
+        for (const assessmentId of assessment_ids) {
+          if (existingSet.has(`${userId}:${assessmentId}`)) {
+            duplicateUserIds.add(userId)
+            break
+          }
+        }
+      }
+      if (duplicateUserIds.size > 0) {
+        const names = users
+          .filter((u) => duplicateUserIds.has(u.id))
+          .map((u) => u.username || u.email || u.id)
+        const namesList = names.join(', ')
+        return NextResponse.json(
+          {
+            error: `The following users already have assignments in this survey: ${namesList}. Please remove them from the list or create a new survey.`,
+          },
+          { status: 409 }
+        )
+      }
+    }
+
     // Generate assignments
     const assignments: AssignmentInsert[] = []
     const assignmentUrls: Array<{ id: string; url: string }> = []

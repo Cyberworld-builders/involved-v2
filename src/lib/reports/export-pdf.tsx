@@ -139,67 +139,7 @@ const styles = StyleSheet.create({
   },
 })
 
-interface DimensionReport360 {
-  dimension_id: string
-  dimension_name: string
-  dimension_code: string
-  overall_score: number
-  rater_breakdown: {
-    peer: number | null
-    direct_report: number | null
-    supervisor: number | null
-    self: number | null
-    other: number | null
-  }
-  industry_benchmark: number | null
-  geonorm: number | null
-  geonorm_participant_count: number
-  improvement_needed: boolean
-  text_feedback: string[]
-}
-
-interface Report360Data {
-  assignment_id: string
-  target_id: string
-  target_name: string
-  target_email: string
-  assessment_id: string
-  assessment_title: string
-  group_id: string
-  group_name: string
-  overall_score: number
-  dimensions: DimensionReport360[]
-  generated_at: string
-}
-
-interface DimensionReportLeader {
-  dimension_id: string
-  dimension_name: string
-  dimension_code: string
-  target_score: number
-  industry_benchmark: number | null
-  geonorm: number | null
-  geonorm_participant_count: number
-  improvement_needed: boolean
-  specific_feedback: string | null
-  specific_feedback_id: string | null
-}
-
-interface ReportLeaderBlockerData {
-  assignment_id: string
-  user_id: string
-  user_name: string
-  user_email: string
-  assessment_id: string
-  assessment_title: string
-  group_id: string | null
-  group_name: string | null
-  overall_score: number
-  dimensions: DimensionReportLeader[]
-  overall_feedback: string | null
-  overall_feedback_id: string | null
-  generated_at: string
-}
+import type { Report360Data, ReportLeaderBlockerData } from './types'
 
 /**
  * Generate PDF buffer for 360 report
@@ -214,7 +154,7 @@ export async function generate360ReportPDF(reportData: Report360Data): Promise<B
         </Text>
 
         <View style={styles.section}>
-          <Text style={styles.score}>{reportData.overall_score.toFixed(2)}</Text>
+          <Text style={styles.score}>{(reportData.overall_score ?? 0).toFixed(2)}</Text>
           <Text style={styles.subtitle}>Overall Score</Text>
         </View>
 
@@ -222,50 +162,50 @@ export async function generate360ReportPDF(reportData: Report360Data): Promise<B
           <Text style={styles.sectionTitle}>Group: {reportData.group_name}</Text>
         </View>
 
-        {reportData.dimensions.map((dimension) => (
+        {(reportData.dimensions ?? []).map((dimension) => (
           <View key={dimension.dimension_id} style={styles.dimensionCard} break>
             <Text style={styles.dimensionTitle}>{dimension.dimension_name}</Text>
             <Text style={styles.dimensionScore}>
-              Score: {dimension.overall_score.toFixed(2)}
+              Score: {(dimension.overall_score ?? 0).toFixed(2)}
             </Text>
 
             <View style={styles.section}>
               <Text style={{ fontSize: 12, fontWeight: 'bold', marginBottom: 5 }}>
                 Rater Breakdown:
               </Text>
-              {dimension.rater_breakdown.peer !== null && (
+              {dimension.rater_breakdown?.peer != null && (
                 <Text style={styles.comparison}>
-                  Peer: {dimension.rater_breakdown.peer.toFixed(2)}
+                  Peer: {(dimension.rater_breakdown.peer ?? 0).toFixed(2)}
                 </Text>
               )}
-              {dimension.rater_breakdown.direct_report !== null && (
+              {dimension.rater_breakdown?.direct_report != null && (
                 <Text style={styles.comparison}>
-                  Direct Report: {dimension.rater_breakdown.direct_report.toFixed(2)}
+                  Direct Report: {(dimension.rater_breakdown.direct_report ?? 0).toFixed(2)}
                 </Text>
               )}
-              {dimension.rater_breakdown.supervisor !== null && (
+              {dimension.rater_breakdown?.supervisor != null && (
                 <Text style={styles.comparison}>
-                  Supervisor: {dimension.rater_breakdown.supervisor.toFixed(2)}
+                  Supervisor: {(dimension.rater_breakdown.supervisor ?? 0).toFixed(2)}
                 </Text>
               )}
-              {dimension.rater_breakdown.self !== null && (
+              {dimension.rater_breakdown?.self != null && (
                 <Text style={styles.comparison}>
-                  Self: {dimension.rater_breakdown.self.toFixed(2)}
+                  Self: {(dimension.rater_breakdown.self ?? 0).toFixed(2)}
                 </Text>
               )}
             </View>
 
-            {dimension.industry_benchmark !== null && (
+            {dimension.industry_benchmark != null && (
               <Text style={styles.comparison}>
-                Industry Benchmark: {dimension.industry_benchmark.toFixed(2)}
-                {dimension.overall_score < dimension.industry_benchmark ? ' (Below)' : ' (Above)'}
+                Industry Benchmark: {(dimension.industry_benchmark ?? 0).toFixed(2)}
+                {(dimension.overall_score ?? 0) < (dimension.industry_benchmark ?? 0) ? ' (Below)' : ' (Above)'}
               </Text>
             )}
 
-            {dimension.geonorm !== null && (
+            {dimension.geonorm != null && (
               <Text style={styles.comparison}>
-                Group Norm (n={dimension.geonorm_participant_count}): {dimension.geonorm.toFixed(2)}
-                {dimension.overall_score < dimension.geonorm ? ' (Below)' : ' (Above)'}
+                Group Norm (n={dimension.geonorm_participant_count ?? 0}): {(dimension.geonorm ?? 0).toFixed(2)}
+                {(dimension.overall_score ?? 0) < (dimension.geonorm ?? 0) ? ' (Below)' : ' (Above)'}
               </Text>
             )}
 
@@ -275,7 +215,7 @@ export async function generate360ReportPDF(reportData: Report360Data): Promise<B
               </Text>
             )}
 
-            {dimension.text_feedback.length > 0 && (
+            {(dimension.text_feedback?.length ?? 0) > 0 && (
               <View style={styles.feedback}>
                 <Text style={{ fontWeight: 'bold', marginBottom: 5 }}>Feedback from Raters:</Text>
                 {dimension.text_feedback.map((feedback, idx) => (
@@ -309,7 +249,7 @@ export async function generateLeaderBlockerReportPDF(reportData: ReportLeaderBlo
         </Text>
 
         <View style={styles.section}>
-          <Text style={styles.score}>{reportData.overall_score.toFixed(2)}</Text>
+          <Text style={styles.score}>{(reportData.overall_score ?? 0).toFixed(2)}</Text>
           <Text style={styles.subtitle}>Overall Score</Text>
         </View>
 
@@ -319,19 +259,19 @@ export async function generateLeaderBlockerReportPDF(reportData: ReportLeaderBlo
           </View>
         )}
 
-        {reportData.dimensions.map((dimension) => (
+        {(reportData.dimensions ?? []).map((dimension) => (
           <View key={dimension.dimension_id} style={styles.dimensionCard} break>
             <Text style={styles.dimensionTitle}>{dimension.dimension_name}</Text>
             <Text style={styles.dimensionScore}>
-              Your Score: {dimension.target_score.toFixed(2)}
+              Your Score: {(dimension.target_score ?? 0).toFixed(2)}
             </Text>
 
             <View style={styles.row}>
               <Text style={styles.label}>Industry Benchmark:</Text>
               <Text style={styles.value}>
-                {dimension.industry_benchmark !== null
-                  ? `${dimension.industry_benchmark.toFixed(2)} ${
-                      dimension.target_score < dimension.industry_benchmark ? '(Below)' : '(Above)'
+                {dimension.industry_benchmark != null
+                  ? `${(dimension.industry_benchmark ?? 0).toFixed(2)} ${
+                      (dimension.target_score ?? 0) < (dimension.industry_benchmark ?? 0) ? '(Below)' : '(Above)'
                     }`
                   : 'N/A'}
               </Text>
@@ -340,9 +280,9 @@ export async function generateLeaderBlockerReportPDF(reportData: ReportLeaderBlo
             <View style={styles.row}>
               <Text style={styles.label}>Group Norm:</Text>
               <Text style={styles.value}>
-                {dimension.geonorm !== null
-                  ? `${dimension.geonorm.toFixed(2)} (n=${dimension.geonorm_participant_count}) ${
-                      dimension.target_score < dimension.geonorm ? '(Below)' : '(Above)'
+                {dimension.geonorm != null
+                  ? `${(dimension.geonorm ?? 0).toFixed(2)} (n=${dimension.geonorm_participant_count ?? 0}) ${
+                      (dimension.target_score ?? 0) < (dimension.geonorm ?? 0) ? '(Below)' : '(Above)'
                     }`
                   : 'N/A'}
               </Text>

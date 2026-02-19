@@ -1,0 +1,134 @@
+'use client'
+
+import { useState } from 'react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+
+/**
+ * Request a password reset email. Only linked from the profile page.
+ * Sends the Supabase password recovery email (reset link).
+ */
+export default function RequestPasswordResetPage() {
+  const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setMessage('')
+
+    if (!email) {
+      setError('Email is required')
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      })
+
+      const data = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        if (response.status === 400 && data?.error) {
+          setError(String(data.error))
+        } else {
+          setMessage("If an account exists for that email, you'll receive a password reset link shortly.")
+        }
+        return
+      }
+
+      setMessage("If an account exists for that email, you'll receive a password reset link shortly.")
+    } catch {
+      setMessage("If an account exists for that email, you'll receive a password reset link shortly.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const bannerText = error || message
+  const isSuccess = !error && !!message
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      {/* Fixed message (toaster) */}
+      {bannerText && (
+        <div
+          className={`fixed top-4 right-4 z-50 max-w-md shadow-lg rounded-md p-4 flex items-start gap-3 ${
+            isSuccess ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'
+          }`}
+        >
+          <p className="flex-1 text-sm">{bannerText}</p>
+          <button
+            type="button"
+            onClick={() => { setError(''); setMessage('') }}
+            className="flex-shrink-0 text-gray-500 hover:text-gray-700"
+            aria-label="Dismiss"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      <div className="w-full max-w-md">
+        <div className="mb-4">
+          <Link href="/dashboard/profile" className="text-sm text-indigo-600 hover:text-indigo-500 flex items-center">
+            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to profile
+          </Link>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl text-center text-gray-900">Reset password</CardTitle>
+            <CardDescription className="text-center text-gray-600">
+              We&apos;ll send you a link to set a new password.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-900">
+                  Email address
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Enter your email"
+                  disabled={loading}
+                />
+              </div>
+
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Sending…' : 'Send reset link'}
+              </Button>
+            </form>
+
+            <div className="mt-6 text-center">
+              <Link href="/dashboard/profile" className="text-sm text-indigo-600 hover:text-indigo-500">
+                Return to profile
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}

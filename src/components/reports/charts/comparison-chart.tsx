@@ -31,6 +31,13 @@ export default function ComparisonChart({
   const chartWidth = 704
   const barHeight = 50
   const rowHeight = 67
+  const barCount = groupAverage !== undefined ? 3 : benchmark !== undefined ? 2 : 1
+  const barRegionHeight = barCount * rowHeight
+  const lineExtension = 40
+  const lineNumbersGap = 34
+  const lineTotalHeight = barRegionHeight + 2 * lineExtension
+  const graphHeight = lineTotalHeight + lineNumbersGap
+  const linePaddingTop = lineTotalHeight - 14
   
   const yourPercent = (yourScore / maxValue) * 100
   const groupPercent = groupAverage ? (groupAverage / maxValue) * 100 : 0
@@ -55,16 +62,18 @@ export default function ComparisonChart({
           </div>
         )}
 
-        <div className="bars" style={{ width: `${chartWidth}px`, height: '218px' }}>
-          <div className="graph" style={{ position: 'relative', width: `${chartWidth}px`, height: '218px' }}>
+        <div style={{ marginTop: '32px' }}>
+        <div className="bars" style={{ width: `${chartWidth}px`, height: `${graphHeight}px` }}>
+          <div className="graph" style={{ position: 'relative', width: `${chartWidth}px`, height: `${graphHeight}px`, overflow: 'visible' }}>
             {/* Grid Lines */}
             <div
               className="graph-lines"
               style={{
                 position: 'absolute',
                 width: `${chartWidth}px`,
-                height: '218px',
+                height: `${lineTotalHeight}px`,
                 left: 0,
+                top: -lineExtension,
               }}
             >
               {[0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5].map((value) => (
@@ -76,12 +85,12 @@ export default function ComparisonChart({
                     width: '2px',
                     height: 0,
                     left: `${(value / maxValue) * 100}%`,
+                    top: 0,
                     fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
                     fontSize: '12px',
                     color: REPORT_COLORS.textPrimary,
-                    background: REPORT_COLORS.lightGray,
                     textIndent: '-2px',
-                    paddingTop: '218px',
+                    paddingTop: `${linePaddingTop}px`,
                   }}
                 >
                   <span
@@ -99,15 +108,30 @@ export default function ComparisonChart({
               ))}
             </div>
 
+            {/* Bars: centered in line area via flexbox (no explicit top) */}
+            <div
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                width: `${chartWidth}px`,
+                height: `${lineTotalHeight}px`,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+              }}
+            >
+              <div style={{ height: `${barRegionHeight}px` }}>
             {/* Group Average Bar */}
             {groupAverage !== undefined && (
-              <div className="graph-row" style={{ position: 'relative', width: `${chartWidth}px`, height: `${rowHeight}px`, top: '4px' }}>
+              <div className="graph-row" style={{ position: 'relative', width: `${chartWidth}px`, height: `${rowHeight}px`, top: 0 }}>
                 <div className="bar" style={{ position: 'absolute', width: `${chartWidth}px`, left: 0, height: `${rowHeight}px`, top: '10px' }}>
                   <div
                     className="inner"
                     style={{
                       position: 'relative',
-                      width: `${groupPercent}%`,
+                      width: `${Math.max(groupPercent, 8)}%`,
+                      minWidth: '56px',
                       height: `${barHeight}px`,
                       background: REPORT_COLORS.primaryBlue,
                       color: REPORT_COLORS.white,
@@ -115,24 +139,25 @@ export default function ComparisonChart({
                       fontSize: '20px',
                       lineHeight: '27px',
                       textAlign: 'right',
-                      padding: '3px 0 0 0',
+                      padding: '3px 12px 0 0',
                       margin: 0,
                     }}
                   >
-                    {groupAverage.toFixed(1)}
+                    {(groupAverage ?? 0).toFixed(1)}
                   </div>
                 </div>
               </div>
             )}
 
             {/* Your Score Bar */}
-            <div className="graph-row" style={{ position: 'relative', width: `${chartWidth}px`, height: `${rowHeight}px`, top: '4px' }}>
+            <div className="graph-row" style={{ position: 'relative', width: `${chartWidth}px`, height: `${rowHeight}px`, top: 0 }}>
               <div className="bar" style={{ position: 'absolute', width: `${chartWidth}px`, left: 0, height: `${rowHeight}px`, top: '10px' }}>
                 <div
                   className={`inner ${yourScoreFlagged ? 'flagged' : ''}`}
                   style={{
                     position: 'relative',
-                    width: `${yourPercent}%`,
+                    width: `${Math.max(yourPercent, 8)}%`,
+                    minWidth: '56px',
                     height: `${barHeight}px`,
                     background: REPORT_COLORS.darkBlue,
                     color: REPORT_COLORS.white,
@@ -140,38 +165,25 @@ export default function ComparisonChart({
                     fontSize: '20px',
                     lineHeight: '27px',
                     textAlign: 'right',
-                    padding: '3px 0 0 0',
+                    padding: '3px 12px 0 0',
                     margin: 0,
                   }}
                 >
-                  {yourScore.toFixed(1)}
-                  {yourScoreFlagged && (
-                    <div
-                      style={{
-                        content: '',
-                        width: '19px',
-                        height: '19px',
-                        display: 'block',
-                        position: 'absolute',
-                        right: '-27px',
-                        top: '15px',
-                        background: `url('/images/reports/triangle-orange-large.png') no-repeat scroll 0 0 transparent`,
-                      }}
-                    />
-                  )}
+                  {(yourScore ?? 0).toFixed(1)}
                 </div>
               </div>
             </div>
 
             {/* Benchmark Bar */}
             {benchmark !== undefined && (
-              <div className="graph-row" style={{ position: 'relative', width: `${chartWidth}px`, height: `${rowHeight}px`, top: '4px' }}>
+              <div className="graph-row" style={{ position: 'relative', width: `${chartWidth}px`, height: `${rowHeight}px`, top: 0 }}>
                 <div className="bar" style={{ position: 'absolute', width: `${chartWidth}px`, left: 0, height: `${rowHeight}px`, top: '10px' }}>
                   <div
                     className="inner"
                     style={{
                       position: 'relative',
-                      width: `${benchmarkPercent}%`,
+                      width: `${Math.max(benchmarkPercent, 8)}%`,
+                      minWidth: '56px',
                       height: `${barHeight}px`,
                       background: REPORT_COLORS.orangeRed,
                       color: REPORT_COLORS.white,
@@ -179,78 +191,78 @@ export default function ComparisonChart({
                       fontSize: '20px',
                       lineHeight: '27px',
                       textAlign: 'right',
-                      padding: '3px 0 0 0',
+                      padding: '3px 12px 0 0',
                       margin: 0,
                     }}
                   >
-                    {benchmark.toFixed(1)}
+                    {(benchmark ?? 0).toFixed(1)}
                   </div>
                 </div>
               </div>
             )}
+              </div>
+            </div>
           </div>
         </div>
+        </div>
 
-        {/* Legend */}
+        {/* Legend - one row, equal-width containers, top-aligned, text wraps within each */}
         <div
           className="legend"
           style={{
             position: 'relative',
-            display: 'block',
-            textAlign: 'center',
+            display: 'flex',
+            flexWrap: 'nowrap',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            width: '100%',
+            marginTop: '20px',
             fontSize: '14px',
-            left: '170px',
-            top: '70px',
             fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+            gap: '16px',
           }}
         >
           {groupAverage !== undefined && (
-            <span className="item group" style={{ display: 'inline-block', position: 'relative', marginRight: '60px' }}>
+            <span className="item group" style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', flex: '1 1 0', minWidth: 0 }}>
               <span
                 style={{
-                  content: '',
                   display: 'block',
-                  position: 'absolute',
+                  flexShrink: 0,
                   background: REPORT_COLORS.primaryBlue,
                   width: '13px',
                   height: '13px',
-                  left: '-22px',
-                  top: '6px',
+                  marginTop: '2px',
                 }}
               />
-              Group Average
+              <span style={{ lineHeight: 1.3, wordBreak: 'break-word' }}>Group Average</span>
             </span>
           )}
-          <span className="item you" style={{ display: 'inline-block', position: 'relative', margin: '0 60px' }}>
+          <span className="item you" style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', flex: '1 1 0', minWidth: 0 }}>
             <span
               style={{
-                content: '',
                 display: 'block',
-                position: 'absolute',
+                flexShrink: 0,
                 background: REPORT_COLORS.darkBlue,
                 width: '13px',
                 height: '13px',
-                left: '-22px',
-                top: '6px',
+                marginTop: '2px',
               }}
             />
-            Your Scores
+            <span style={{ lineHeight: 1.3, wordBreak: 'break-word' }}>Your Scores</span>
           </span>
           {benchmark !== undefined && (
-            <span className="item benchmark" style={{ display: 'inline-block', position: 'relative', textAlign: 'left' }}>
+            <span className="item benchmark" style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', flex: '1 1 0', minWidth: 0 }}>
               <span
                 style={{
-                  content: '',
                   display: 'block',
-                  position: 'absolute',
+                  flexShrink: 0,
                   background: REPORT_COLORS.orangeRed,
                   width: '13px',
                   height: '13px',
-                  left: '-22px',
-                  top: '6px',
+                  marginTop: '2px',
                 }}
               />
-              Industry Benchmark
+              <span style={{ lineHeight: 1.3, wordBreak: 'break-word' }}>Industry Benchmark</span>
             </span>
           )}
         </div>

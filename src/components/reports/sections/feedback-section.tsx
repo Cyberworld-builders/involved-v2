@@ -30,7 +30,7 @@ export default function FeedbackSection({
     <div
       className="feedback"
       style={{
-        marginBottom: '20px',
+        marginBottom: '32px',
       }}
     >
       {/* Number */}

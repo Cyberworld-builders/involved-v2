@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
+import { logEmail } from '@/lib/email-log'
 
 interface SendMagicLinkEmailRequest {
   to: string
@@ -129,7 +130,14 @@ If you didn't request this login link, you can safely ignore this email.
 
         const response = await sesClient.send(sendCommand)
         console.log('✅ Magic link email sent via AWS SES. Message ID:', response.MessageId)
-        
+
+        await logEmail({
+          emailType: 'magic_link',
+          recipientEmail: to,
+          subject: 'Your Login Link',
+          providerMessageId: response.MessageId ?? undefined,
+        })
+
         return NextResponse.json({
           success: true,
           message: 'Email sent successfully',
@@ -159,6 +167,14 @@ If you didn't request this login link, you can safely ignore this email.
         }
 
         console.log('✅ Magic link email sent via Resend. Message ID:', data?.id)
+
+        await logEmail({
+          emailType: 'magic_link',
+          recipientEmail: to,
+          subject: 'Your Login Link',
+          providerMessageId: data?.id ?? undefined,
+        })
+
         return NextResponse.json({
           success: true,
           message: 'Email sent successfully',

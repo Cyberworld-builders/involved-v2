@@ -136,7 +136,8 @@ This link will expire in 1 hour.
 If you didn't request a password reset, you can safely ignore this email.
 
 This is an automated message. Please do not reply to this email.
-      `.trim()
+      `.trim(),
+      { logMetadata: { emailType: 'password_reset' } }
     )
 
     if (!emailResult.success) {
