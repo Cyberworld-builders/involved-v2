@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -49,6 +49,7 @@ interface SurveyOption {
 
 export default function CreateAssignmentClient() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingData, setIsLoadingData] = useState(true)
@@ -170,10 +171,28 @@ export default function CreateAssignmentClient() {
         })
         setSurveysList(surveys)
 
-        // Set default expiration to tomorrow
-        const tomorrow = new Date()
-        tomorrow.setDate(tomorrow.getDate() + 1)
-        setExpirationDate(tomorrow.toISOString().split('T')[0])
+        // Auto-select survey from URL params (e.g., from assignment edit page)
+        const surveyIdParam = searchParams.get('survey_id')
+        if (surveyIdParam) {
+          const matchingSurvey = surveys.find(s => s.survey_id === surveyIdParam)
+          if (matchingSurvey) {
+            setExistingSurveyId(matchingSurvey.survey_id)
+            setSelectedAssessmentIds(matchingSurvey.assessment_ids)
+            setSelectedSurveyMeta({
+              assessment_ids: matchingSurvey.assessment_ids,
+              expires: matchingSurvey.expires,
+              user_ids: matchingSurvey.user_ids,
+            })
+            setExpirationDate(matchingSurvey.expires.slice(0, 10))
+          }
+        }
+
+        // Set default expiration to tomorrow (unless already set by survey param)
+        if (!surveyIdParam || !surveys.find(s => s.survey_id === surveyIdParam)) {
+          const tomorrow = new Date()
+          tomorrow.setDate(tomorrow.getDate() + 1)
+          setExpirationDate(tomorrow.toISOString().split('T')[0])
+        }
 
         // Set default email body (HTML so RichTextEditor preserves paragraphs)
         setEmailBody(

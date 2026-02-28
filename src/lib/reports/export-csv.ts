@@ -34,8 +34,8 @@ export function generate360ReportCSV(reportData: Report360Data): string {
       escapeCsvField(reportData.target_name),
       escapeCsvField(reportData.target_email),
       escapeCsvField(reportData.group_name),
-      escapeCsvField(reportData.overall_score.toFixed(2)),
-      escapeCsvField(new Date(reportData.generated_at).toLocaleString()),
+      escapeCsvField((reportData.overall_score ?? 0).toFixed(2)),
+      escapeCsvField(reportData.generated_at ? new Date(reportData.generated_at).toLocaleString() : 'N/A'),
     ].join(',')
   )
   
@@ -100,8 +100,8 @@ export function generateLeaderBlockerReportCSV(reportData: ReportLeaderBlockerDa
       escapeCsvField(reportData.user_name),
       escapeCsvField(reportData.user_email),
       escapeCsvField(reportData.group_name || 'N/A'),
-      escapeCsvField(reportData.overall_score.toFixed(2)),
-      escapeCsvField(new Date(reportData.generated_at).toLocaleString()),
+      escapeCsvField((reportData.overall_score ?? 0).toFixed(2)),
+      escapeCsvField(reportData.generated_at ? new Date(reportData.generated_at).toLocaleString() : 'N/A'),
     ].join(',')
   )
   

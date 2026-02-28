@@ -459,7 +459,12 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
           .sort(([idA], [idB]) => getDimensionLevel(idA) - getDimensionLevel(idB))
 
         // Insert dimensions level by level, mapping temporary IDs to database UUIDs
-        
+
+        // Track original form order for sort_order
+        const originalOrder = data.dimensions
+          .filter(dim => dim.name && dim.code)
+          .map(dim => dim.id)
+
         for (const [tempId, dimData] of sortedDimensions) {
           // Map parent_id from temporary ID to database UUID if it exists
           let parentId: string | null = null
@@ -478,6 +483,7 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
               name: dimData.name,
               code: dimData.code,
               parent_id: parentId,
+              sort_order: originalOrder.indexOf(tempId) + 1,
             })
             .select('id')
             .single()

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
 import { logEmail } from '@/lib/email-log'
+import { getAppUrl } from '@/lib/config'
 
 interface SendEmailRequest {
   to: string
@@ -75,19 +76,30 @@ export async function POST(request: NextRequest) {
     const body: SendEmailRequest = await request.json()
     const { to, toName, username: providedUsername, subject, body: emailBody, assignments, expirationDate, password, assignmentId } = body
 
-    const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || request.nextUrl?.origin || 'http://localhost:3000').replace(/\/$/, '')
+    const baseUrl = getAppUrl()
     const dashboardUrl = `${baseUrl}/dashboard`
 
-    // Format assessments list with clickable links + raw URL for Outlook (HTML format)
+    // Format assessments list as clear buttons (table-based for Outlook)
     const assessmentsList = assignments
       .map((a) => {
         if (a.url) {
-          return `<li><a href="${a.url}" style="color: #4F46E5; text-decoration: underline;">${a.assessmentTitle}</a><br><span style="font-size: 12px; color: #666;">If the link doesn't work, copy and paste this into your browser:</span><br><span style="word-break: break-all; font-size: 12px;">${a.url}</span></li>`
+          return `<tr><td style="padding: 8px 0;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="background-color: #4F46E5; border-radius: 4px;">
+                  <a href="${a.url}" target="_blank" style="display: inline-block; padding: 10px 20px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px;">${a.assessmentTitle}</a>
+                </td>
+              </tr>
+            </table>
+          </td></tr>`
         }
-        return `<li>${a.assessmentTitle}</li>`
+        return `<tr><td style="padding: 8px 0;">${a.assessmentTitle}</td></tr>`
       })
       .join('\n')
-    
+
+    // Wrap in a table
+    const assessmentsHtml = `<table role="presentation" cellpadding="0" cellspacing="0" border="0">${assessmentsList}</table>`
+
     // Also create a plain text version for text/plain email body
     const assessmentsListText = assignments
       .map((a) => {
@@ -97,7 +109,7 @@ export async function POST(request: NextRequest) {
         return `- ${a.assessmentTitle}`
       })
       .join('\n')
-    
+
     // Create fallback plain text links at the bottom (in case HTML links are blocked)
     const fallbackLinks = assignments
       .filter((a) => a.url)
@@ -117,7 +129,7 @@ export async function POST(request: NextRequest) {
       toName,
       username,
       to,
-      `<ul>${assessmentsList}</ul>`,
+      assessmentsHtml,
       formattedExpiration,
       password,
       dashboardUrl,

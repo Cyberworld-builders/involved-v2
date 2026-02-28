@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getAppUrl } from '@/lib/config'
 
 /**
  * GET /api/reports/:assignmentId/export/pdf
@@ -23,24 +24,16 @@ export async function GET(
     // Verify user is authenticated OR service role (for internal Edge Function calls)
     const authHeader = request.headers.get('authorization')
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'export/pdf/route.ts:25',message:'Auth check',data:{hasAuthHeader:!!authHeader,authHeaderPrefix:authHeader?.substring(0,20)+'...',hasServiceKey:!!serviceRoleKey,serviceKeyPrefix:serviceRoleKey?.substring(0,20)+'...'},timestamp:Date.now(),sessionId:'debug-session',runId:'run3',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
-    
+
     // Normalize both strings for comparison (trim whitespace)
     const normalizedAuthHeader = authHeader?.trim()
     const normalizedServiceKey = serviceRoleKey?.trim()
     const expectedAuthHeader = normalizedServiceKey ? `Bearer ${normalizedServiceKey}` : null
-    
-    const isServiceRole = normalizedAuthHeader?.startsWith('Bearer ') && 
+
+    const isServiceRole = normalizedAuthHeader?.startsWith('Bearer ') &&
                          normalizedServiceKey &&
                          normalizedAuthHeader === expectedAuthHeader
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'export/pdf/route.ts:32',message:'Service role check result',data:{isServiceRole,authHeaderLength:authHeader?.length,serviceKeyLength:serviceRoleKey?.length,matches:authHeader===`Bearer ${serviceRoleKey}`},timestamp:Date.now(),sessionId:'debug-session',runId:'run3',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
-    
+
     if (!isServiceRole) {
       const {
         data: { user },
@@ -66,7 +59,9 @@ export async function GET(
       )
     }
 
-    if (!assignment.completed) {
+    // For 360 assessments, allow export even when not fully completed (partial reports)
+    const assessmentInfo = (assignment.assessment as unknown) as { is_360: boolean } | null
+    if (!assignment.completed && !assessmentInfo?.is_360) {
       return NextResponse.json(
         { error: 'Assignment must be completed before exporting report' },
         { status: 400 }
@@ -94,16 +89,7 @@ export async function GET(
 
     // Fallback: Generate PDF on-demand (for backward compatibility or if storage PDF is missing)
     // This ensures the route still works even if PDF generation hasn't completed yet
-    let baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
-                   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-                   request.headers.get('origin') || 
-                   'http://localhost:3000'
-    
-    // Ensure baseUrl has a protocol (https:// or http://)
-    // If it's just a domain, add https://
-    if (baseUrl && !baseUrl.match(/^https?:\/\//)) {
-      baseUrl = `https://${baseUrl}`
-    }
+    const baseUrl = getAppUrl()
 
     // Get all cookies from the request to pass to Playwright for authentication
     const requestCookies = request.headers.get('cookie') || ''
@@ -120,10 +106,6 @@ export async function GET(
     const viewUrl = isServiceRole 
       ? `${baseUrl}/reports/${assignmentId}/view?service_role_token=${encodeURIComponent(normalizedServiceKey!)}`
       : `${baseUrl}/reports/${assignmentId}/view`
-
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'export/pdf/route.ts:120',message:'About to generate PDF',data:{viewUrl,isServiceRole,hasCookies:cookieArray.length>0},timestamp:Date.now(),sessionId:'debug-session',runId:'run4',hypothesisId:'E'})}).catch(()=>{});
-    // #endregion
 
     // Generate PDF from the fullscreen view
     // Use Puppeteer in Vercel (serverless), Playwright in local development

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getAppUrl } from '@/lib/config'
 
 interface RequestLoginLinkBody {
   email: string
@@ -28,13 +29,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the base URL for redirect
-    let baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    
-    // Ensure baseUrl has a protocol
-    if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
-      baseUrl = `https://${baseUrl}`
-    }
-    
+    const baseUrl = getAppUrl()
+
     // Use a clean callback URL without query parameters to avoid issues with Supabase redirect URL validation
     const callbackUrl = new URL('/auth/callback', baseUrl).toString()
 
