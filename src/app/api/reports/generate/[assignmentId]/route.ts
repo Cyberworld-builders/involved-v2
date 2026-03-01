@@ -5,6 +5,7 @@ import { generate360Report } from '@/lib/reports/generate-360-report'
 import { generateLeaderBlockerReport } from '@/lib/reports/generate-leader-blocker-report'
 import { assignFeedbackToReport } from '@/lib/reports/assign-feedback'
 import { applyTemplateToReport } from '@/lib/reports/apply-template'
+import { getAppUrl } from '@/lib/config'
 
 /**
  * POST /api/reports/generate/:assignmentId
@@ -43,7 +44,11 @@ export async function POST(
       )
     }
 
-    if (!assignment.completed) {
+    // Type assertion for nested object
+    const assessment = (assignment.assessment as unknown) as { is_360: boolean } | null
+
+    // For 360 assessments, allow generation even when not fully completed (partial reports)
+    if (!assignment.completed && !assessment?.is_360) {
       return NextResponse.json(
         { error: 'Assignment must be completed before generating report' },
         { status: 400 }
@@ -57,10 +62,7 @@ export async function POST(
       .eq('assignment_id', assignmentId)
       .single()
 
-    // Type assertion for nested object (Supabase returns arrays for relations, but .single() should return objects)
-    const assessment = (assignment.assessment as unknown) as { is_360: boolean } | null
-
-    if (!existingReportData || !existingReportData.feedback_assigned || 
+    if (!existingReportData || !existingReportData.feedback_assigned ||
         (Array.isArray(existingReportData.feedback_assigned) && existingReportData.feedback_assigned.length === 0)) {
       // Assign feedback for non-360 assessments
       if (!assessment?.is_360) {
@@ -153,9 +155,7 @@ export async function POST(
     const shouldAutoGeneratePdf = process.env.AUTO_GENERATE_PDF !== 'false' // Default to true unless explicitly disabled
     
     if (shouldAutoGeneratePdf) {
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
-                     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-                     'http://localhost:3000'
+      const baseUrl = getAppUrl()
       
       const viewUrl = `${baseUrl}/reports/${assignmentId}/view`
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -186,13 +186,14 @@ export async function POST(
   } catch (error) {
     console.error('Error generating report:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    const statusCode = errorMessage.includes('dimensions') || errorMessage.includes('No dimensions') ? 400 : 500
+    // Return 400 for data/configuration issues the user can fix
+    const isUserFixable = /dimension|group|target|invalid|not found|not configured/i.test(errorMessage)
     return NextResponse.json(
       {
         error: 'Failed to generate report',
         details: errorMessage,
       },
-      { status: statusCode }
+      { status: isUserFixable ? 400 : 500 }
     )
   }
 }

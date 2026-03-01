@@ -28,10 +28,10 @@ export async function GET(
     // Get dimensions for the assessment
     const { data: dimensions, error: dimensionsError } = await adminClient
       .from('dimensions')
-      .select('id, name, code, parent_id')
+      .select('id, name, code, parent_id, sort_order')
       .eq('assessment_id', id)
       .is('parent_id', null) // Only get top-level dimensions (or all if needed)
-      .order('name', { ascending: true })
+      .order('sort_order', { ascending: true })
 
     if (dimensionsError) {
       console.error('Error fetching dimensions:', dimensionsError)

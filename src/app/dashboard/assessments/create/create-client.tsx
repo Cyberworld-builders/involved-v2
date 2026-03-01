@@ -150,6 +150,11 @@ export default function CreateAssessmentClient() {
         const sortedDimensions = Array.from(tempIdMap.entries())
           .sort(([idA], [idB]) => getDimensionLevel(idA) - getDimensionLevel(idB))
 
+        // Track original form order for sort_order
+        const originalOrder = data.dimensions
+          .filter(dim => dim.name && dim.code)
+          .map(dim => dim.id)
+
         // Insert dimensions level by level, mapping temporary IDs to database UUIDs
         for (const [tempId, dimData] of sortedDimensions) {
           // Map parent_id from temporary ID to database UUID if it exists
@@ -169,6 +174,7 @@ export default function CreateAssessmentClient() {
               name: dimData.name,
               code: dimData.code,
               parent_id: parentId,
+              sort_order: originalOrder.indexOf(tempId) + 1,
             })
             .select('id')
             .single()

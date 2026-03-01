@@ -89,27 +89,41 @@ describe('generateInviteEmail', () => {
 
   it('should generate valid HTML body with proper structure', () => {
     const result = generateInviteEmail(validData)
-    
+
     expect(result.htmlBody).toContain('<!DOCTYPE html>')
     expect(result.htmlBody).toContain('<html>')
     expect(result.htmlBody).toContain('</html>')
-    expect(result.htmlBody).toContain('<body>')
+    // Body tag uses inline styles for Outlook compatibility
+    expect(result.htmlBody).toContain('<body style=')
     expect(result.htmlBody).toContain('</body>')
+    // Table-based layout for Outlook compatibility
+    expect(result.htmlBody).toContain('<table role="presentation"')
   })
 
   it('should include clickable button in HTML body', () => {
     const result = generateInviteEmail(validData)
-    
-    expect(result.htmlBody).toContain('<a href')
-    expect(result.htmlBody).toContain('class="button"')
+
+    // Bulletproof button pattern: table > tr > td > a with inline styles
+    expect(result.htmlBody).toContain(`<a href="${validData.inviteUrl}"`)
     expect(result.htmlBody).toContain('Accept Invitation')
+    // Button cell has inline background-color style
+    expect(result.htmlBody).toContain('style="background-color: #FFBA00')
+    // Link has inline padding and font styles instead of a class
+    expect(result.htmlBody).toContain('font-weight: bold')
   })
 
-  it('should include styling in HTML body', () => {
+  it('should include inline styles in HTML body', () => {
     const result = generateInviteEmail(validData)
-    
-    expect(result.htmlBody).toContain('<style>')
-    expect(result.htmlBody).toContain('</style>')
+
+    // No <style> block - all styles are inline for Outlook compatibility
+    expect(result.htmlBody).not.toContain('<style>')
+    expect(result.htmlBody).not.toContain('</style>')
+    // Verify inline style attributes are present throughout
+    expect(result.htmlBody).toContain('style="')
+    // Key inline styles: body background, header background, button color
+    expect(result.htmlBody).toContain('background-color: #f4f4f4')
+    expect(result.htmlBody).toContain('background-color: #2D2E30')
+    expect(result.htmlBody).toContain('background-color: #FFBA00')
   })
 
   it('should generate plain text body without HTML tags', () => {

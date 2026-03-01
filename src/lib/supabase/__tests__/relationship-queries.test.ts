@@ -836,7 +836,7 @@ describe('Group-Manager Assignment Queries', () => {
         from: vi.fn(() => ({
           select: vi.fn(() => ({
             eq: vi.fn(() => ({
-              in: vi.fn(() => Promise.resolve({ data: mockManagers, error: null })),
+              eq: vi.fn(() => Promise.resolve({ data: mockManagers, error: null })),
             })),
           })),
         })),
@@ -853,7 +853,7 @@ describe('Group-Manager Assignment Queries', () => {
         from: vi.fn(() => ({
           select: vi.fn(() => ({
             eq: vi.fn(() => ({
-              in: vi.fn(() => Promise.resolve({ data: [], error: null })),
+              eq: vi.fn(() => Promise.resolve({ data: [], error: null })),
             })),
           })),
         })),
@@ -869,7 +869,7 @@ describe('Group-Manager Assignment Queries', () => {
         from: vi.fn(() => ({
           select: vi.fn(() => ({
             eq: vi.fn(() => ({
-              in: vi.fn(() =>
+              eq: vi.fn(() =>
                 Promise.resolve({ data: null, error: { message: 'Database error' } })
               ),
             })),
@@ -908,7 +908,7 @@ describe('Group-Manager Assignment Queries', () => {
         from: vi.fn(() => ({
           select: vi.fn(() => ({
             eq: vi.fn(() => ({
-              in: vi.fn(() => Promise.resolve({ data: mockManagedGroups, error: null })),
+              eq: vi.fn(() => Promise.resolve({ data: mockManagedGroups, error: null })),
             })),
           })),
         })),
@@ -925,7 +925,7 @@ describe('Group-Manager Assignment Queries', () => {
         from: vi.fn(() => ({
           select: vi.fn(() => ({
             eq: vi.fn(() => ({
-              in: vi.fn(() => Promise.resolve({ data: [], error: null })),
+              eq: vi.fn(() => Promise.resolve({ data: [], error: null })),
             })),
           })),
         })),
@@ -941,7 +941,7 @@ describe('Group-Manager Assignment Queries', () => {
         from: vi.fn(() => ({
           select: vi.fn(() => ({
             eq: vi.fn(() => ({
-              in: vi.fn(() =>
+              eq: vi.fn(() =>
                 Promise.resolve({ data: null, error: { message: 'Database error' } })
               ),
             })),
@@ -961,7 +961,8 @@ describe('Group-Manager Assignment Queries', () => {
         id: 'member1',
         group_id: 'group1',
         profile_id: 'user1',
-        role: 'leader',
+        position: null,
+        leader: true,
         created_at: '2024-01-01T00:00:00Z',
       }
 
@@ -992,7 +993,7 @@ describe('Group-Manager Assignment Queries', () => {
       const result = await assignManagerToGroup(mockSupabase, 'group1', 'user1')
 
       expect(result).toEqual(mockGroupMember)
-      expect(result.role).toBe('leader')
+      expect(result.leader).toBe(true)
     })
 
     it('should update existing membership to manager role', async () => {
@@ -1007,7 +1008,7 @@ describe('Group-Manager Assignment Queries', () => {
 
       const updatedMember: GroupMember = {
         ...existingMember,
-        role: 'leader',
+        leader: true,
       }
 
       mockSupabase = {
@@ -1045,50 +1046,6 @@ describe('Group-Manager Assignment Queries', () => {
       const result = await assignManagerToGroup(mockSupabase, 'group1', 'user1')
 
       expect(result).toEqual(updatedMember)
-      expect(result.role).toBe('leader')
-    })
-
-    it('should assign with custom manager role', async () => {
-      const mockGroupMember: GroupMember = {
-        id: 'member1',
-        group_id: 'group1',
-        profile_id: 'user1',
-        role: 'manager',
-        created_at: '2024-01-01T00:00:00Z',
-      }
-
-      mockSupabase = {
-        from: vi.fn((table) => {
-          if (table === 'group_members') {
-            const selectFn = vi.fn(() => ({
-              eq: vi.fn(() => ({
-                eq: vi.fn(() => ({
-                  single: vi.fn(() => Promise.resolve({ data: null, error: null })),
-                })),
-              })),
-            }))
-            const insertFn = vi.fn(() => ({
-              select: vi.fn(() => ({
-                single: vi.fn(() => Promise.resolve({ data: mockGroupMember, error: null })),
-              })),
-            }))
-            return {
-              select: selectFn,
-              insert: insertFn,
-            }
-          }
-          return {}
-        }),
-      } as unknown as SupabaseClient<Database>
-
-      const result = await assignManagerToGroup(
-        mockSupabase,
-        'group1',
-        'user1',
-        'manager'
-      )
-
-      expect(result).toEqual(mockGroupMember)
       expect(result.leader).toBe(true)
     })
 
@@ -1173,33 +1130,48 @@ describe('Group-Manager Assignment Queries', () => {
   })
 
   describe('removeManagerFromGroup', () => {
-    it('should remove a manager from a group', async () => {
+    it('should remove a manager from a group by setting leader to false', async () => {
+      const updatedMember: GroupMember = {
+        id: 'member1',
+        group_id: 'group1',
+        profile_id: 'user1',
+        position: null,
+        leader: false,
+        created_at: '2024-01-01T00:00:00Z',
+      }
+
       mockSupabase = {
         from: vi.fn(() => ({
-          delete: vi.fn(() => ({
+          update: vi.fn(() => ({
             eq: vi.fn(() => ({
               eq: vi.fn(() => ({
-                in: vi.fn(() => Promise.resolve({ error: null })),
+                select: vi.fn(() => ({
+                  single: vi.fn(() => Promise.resolve({ data: updatedMember, error: null })),
+                })),
               })),
             })),
           })),
         })),
       } as unknown as SupabaseClient<Database>
 
-      await expect(
-        removeManagerFromGroup(mockSupabase, 'group1', 'user1')
-      ).resolves.not.toThrow()
+      const result = await removeManagerFromGroup(mockSupabase, 'group1', 'user1')
 
+      expect(result).toEqual(updatedMember)
+      expect(result.leader).toBe(false)
       expect(mockSupabase.from).toHaveBeenCalledWith('group_members')
     })
 
     it('should throw error when removal fails', async () => {
       mockSupabase = {
         from: vi.fn(() => ({
-          delete: vi.fn(() => ({
+          update: vi.fn(() => ({
             eq: vi.fn(() => ({
               eq: vi.fn(() => ({
-                in: vi.fn(() => Promise.resolve({ error: { message: 'Removal failed' } })),
+                select: vi.fn(() => ({
+                  single: vi.fn(() =>
+                    Promise.resolve({ data: null, error: { message: 'Removal failed' } })
+                  ),
+                })),
               })),
             })),
           })),
@@ -1209,31 +1181,6 @@ describe('Group-Manager Assignment Queries', () => {
       await expect(
         removeManagerFromGroup(mockSupabase, 'group1', 'user1')
       ).rejects.toThrow('Failed to remove manager from group: Removal failed')
-    })
-
-    it('should only remove managers not regular members', async () => {
-      // This test verifies that the function uses the 'in' clause with manager roles
-      const deleteFn = vi.fn(() => ({
-        eq: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            in: vi.fn((field, values) => {
-              expect(field).toBe('role')
-              expect(values).toEqual(['leader', 'manager'])
-              return Promise.resolve({ error: null })
-            }),
-          })),
-        })),
-      }))
-
-      mockSupabase = {
-        from: vi.fn(() => ({
-          delete: deleteFn,
-        })),
-      } as unknown as SupabaseClient<Database>
-
-      await removeManagerFromGroup(mockSupabase, 'group1', 'user1')
-
-      expect(deleteFn).toHaveBeenCalled()
     })
   })
 })

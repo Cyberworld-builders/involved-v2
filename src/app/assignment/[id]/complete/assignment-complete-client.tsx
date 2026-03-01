@@ -6,6 +6,12 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
+interface NextAssignment {
+  id: string
+  url: string | null
+  title: string
+}
+
 interface AssignmentCompleteClientProps {
   assignment: {
     id: string
@@ -24,9 +30,10 @@ interface AssignmentCompleteClientProps {
     } | null
   }
   username: string | undefined
+  nextAssignments?: NextAssignment[]
 }
 
-export default function AssignmentCompleteClient({ assignment }: AssignmentCompleteClientProps) {
+export default function AssignmentCompleteClient({ assignment, nextAssignments = [] }: AssignmentCompleteClientProps) {
   const [logoError, setLogoError] = useState(false)
   const [backgroundError, setBackgroundError] = useState(false)
 
@@ -138,11 +145,38 @@ export default function AssignmentCompleteClient({ assignment }: AssignmentCompl
               </div>
             )}
 
+            {nextAssignments.length > 0 && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm font-medium text-blue-800 mb-3">
+                  You have {nextAssignments.length} more assessment{nextAssignments.length !== 1 ? 's' : ''} to complete:
+                </p>
+                <div className="space-y-2">
+                  {nextAssignments.map((next) => (
+                    <a
+                      key={next.id}
+                      href={next.url || `/assignment/${next.id}`}
+                      className="flex items-center justify-between p-3 bg-white rounded-md border border-blue-100 hover:border-blue-300 transition-colors"
+                    >
+                      <span className="text-sm font-medium text-gray-900">{next.title}</span>
+                      <span className="text-sm text-blue-600 font-medium">Start &rarr;</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="pt-4 border-t border-gray-200">
               <p className="text-sm text-gray-600 mb-4">
                 Your responses have been saved and submitted. You can close this page at any time.
               </p>
-              <div className="flex justify-center">
+              <div className="flex justify-center gap-3">
+                {nextAssignments.length > 0 && nextAssignments[0].url && (
+                  <a href={nextAssignments[0].url}>
+                    <Button>
+                      Next Assessment
+                    </Button>
+                  </a>
+                )}
                 <Link href="/dashboard">
                   <Button variant="outline">
                     Return to Dashboard

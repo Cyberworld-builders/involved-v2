@@ -93,6 +93,27 @@ export default async function AssignmentCompletePage({ params, searchParams }: A
     redirect(`/assignment/${assignmentId}/take?${new URLSearchParams(query as Record<string, string>).toString()}`)
   }
 
-  return <AssignmentCompleteClient assignment={assignment} username={username} />
+  // Fetch other pending assignments for this user
+  const { data: pendingAssignments } = await adminClient
+    .from('assignments')
+    .select(`
+      id,
+      url,
+      assessment:assessments!assignments_assessment_id_fkey(title)
+    `)
+    .eq('user_id', assignment.user_id)
+    .eq('completed', false)
+    .gt('expires', new Date().toISOString())
+    .neq('id', assignmentId)
+    .order('created_at', { ascending: true })
+    .limit(10)
+
+  const nextAssignments = (pendingAssignments || []).map(a => ({
+    id: a.id,
+    url: a.url as string | null,
+    title: ((a.assessment as unknown) as { title: string } | null)?.title || 'Assessment',
+  }))
+
+  return <AssignmentCompleteClient assignment={assignment} username={username} nextAssignments={nextAssignments} />
 }
 

@@ -88,9 +88,9 @@ export async function generateLeaderBlockerReport(
   // Get ALL dimensions for this assessment (both parent and child)
   const { data: allDimensions } = await adminClient
     .from('dimensions')
-    .select('id, name, code, parent_id')
+    .select('id, name, code, parent_id, sort_order')
     .eq('assessment_id', assignment.assessment_id)
-    .order('name', { ascending: true })
+    .order('sort_order', { ascending: true })
 
   if (!allDimensions || allDimensions.length === 0) {
     throw new Error('This assessment has no dimensions configured. Please add dimensions to the assessment before generating a report.')

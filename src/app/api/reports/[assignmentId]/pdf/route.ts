@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getAppUrl } from '@/lib/config'
 
 /**
  * GET /api/reports/[assignmentId]/pdf
@@ -118,7 +119,7 @@ export async function POST(
     // Verify assignment exists and is completed
     const { data: assignment, error: assignmentError } = await adminClient
       .from('assignments')
-      .select('id, completed')
+      .select('id, completed, assessment:assessments!assignments_assessment_id_fkey(is_360)')
       .eq('id', assignmentId)
       .single()
 
@@ -129,7 +130,9 @@ export async function POST(
       )
     }
 
-    if (!assignment.completed) {
+    // For 360 assessments, allow PDF generation even when not fully completed (partial reports)
+    const assessment = (assignment.assessment as unknown) as { is_360: boolean } | null
+    if (!assignment.completed && !assessment?.is_360) {
       return NextResponse.json(
         { error: 'Assignment must be completed before generating PDF' },
         { status: 400 }
@@ -168,20 +171,7 @@ export async function POST(
     }
 
     // Get base URL for view URL
-    let baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
-                   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-                   request.headers.get('origin') || 
-                   'http://localhost:3000'
-
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'pdf/route.ts:171',message:'Before URL replacement',data:{baseUrl,hasVercel:!!process.env.VERCEL,hasAppUrl:!!process.env.NEXT_PUBLIC_APP_URL,origin:request.headers.get('origin')},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
-
-    // Ensure baseUrl has a protocol (https:// or http://)
-    // If it's just a domain, add https://
-    if (baseUrl && !baseUrl.match(/^https?:\/\//)) {
-      baseUrl = `https://${baseUrl}`
-    }
+    let baseUrl = getAppUrl()
 
     // For local development: Edge Function runs in Docker, needs host.docker.internal to reach host
     // Replace localhost with host.docker.internal when calling from Edge Function
@@ -190,10 +180,6 @@ export async function POST(
     if (isLocalDev && baseUrl.includes('localhost')) {
       baseUrl = baseUrl.replace('localhost', 'host.docker.internal')
     }
-
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'pdf/route.ts:180',message:'After URL replacement',data:{originalBaseUrl,baseUrl,isLocalDev,replaced:originalBaseUrl!==baseUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
 
     const viewUrl = `${baseUrl}/reports/${assignmentId}/view`
     const nextjsApiUrl = baseUrl

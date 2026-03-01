@@ -1,4 +1,5 @@
 import crypto from 'crypto'
+import { getAppUrl } from '@/lib/config'
 
 const SECRET_KEY = process.env.ASSIGNMENT_SECRET_KEY || 'SM9UyHvpf30KHyJLmgvOPLIDJtY1fPoh'
 
@@ -10,7 +11,7 @@ export function generateAssignmentURL(
   assignmentId: string,
   username: string,
   expires: Date,
-  baseUrl: string = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  baseUrl: string = getAppUrl()
 ): string {
   const url = `assignment/${assignmentId}`
   const expiresStr = expires.toISOString()

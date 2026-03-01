@@ -41,11 +41,10 @@ describe('UserForm', () => {
     fireEvent.change(screen.getByLabelText('Client Organization'), { target: { value: 'client-2' } })
     fireEvent.change(screen.getByLabelText('Industry'), { target: { value: 'industry-1' } })
 
-    // Username should have been auto-generated
-    expect(screen.getByLabelText('Username')).toHaveValue('janesmith')
-
+    // Username is auto-generated internally (no visible field)
     fireEvent.click(screen.getByRole('button', { name: 'Create User' }))
 
+    // Username should be auto-generated from the name and included in the submitted data
     expect(onSubmit).toHaveBeenCalledWith({
       username: 'janesmith',
       name: 'Jane Smith',

@@ -350,7 +350,7 @@ describe('API User Status Management', () => {
       })
 
       const response = await createUser(request)
-      await response.json()
+      const data = await response.json()
 
       expect(response.status).toBe(400)
       expect(data.error).toBe('Invalid status. Must be one of: active, inactive, suspended')
