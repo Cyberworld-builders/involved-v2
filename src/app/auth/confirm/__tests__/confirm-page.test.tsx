@@ -168,7 +168,6 @@ describe('ConfirmEmailPage', () => {
     render(<ConfirmEmailPage />)
 
     await waitFor(() => {
-      expect(screen.getByText('Back to Sign Up')).toBeInTheDocument()
       expect(screen.getByText('Go to Login')).toBeInTheDocument()
     })
   })

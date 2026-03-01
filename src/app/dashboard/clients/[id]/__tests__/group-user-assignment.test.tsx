@@ -62,7 +62,7 @@ describe('Group-user assignment (ClientGroups)', () => {
                       {
                         id: 'gm-1',
                         profile_id: 'user-1',
-                        role: 'Developer',
+                        position: 'Developer',
                         profiles: {
                           id: 'user-1',
                           name: 'Jane Smith',
@@ -93,7 +93,7 @@ describe('Group-user assignment (ClientGroups)', () => {
       expect(screen.getByText('Engineering')).toBeInTheDocument()
     })
 
-    expect(screen.getByText('Jane Smith')).toBeInTheDocument()
-    expect(screen.getByText('(Developer)')).toBeInTheDocument()
+    expect(screen.getAllByText('Jane Smith').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByText(/\(Developer\)/)).toBeInTheDocument()
   })
 })

@@ -4,7 +4,7 @@
  * and strips trailing slashes.
  */
 export function getAppUrl(): string {
-  const raw = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').trim()
+  const raw = (process.env.NEXT_PUBLIC_APP_URL || '').trim() || 'http://localhost:3000'
   let url = raw.replace(/\/+$/, '')
 
   if (!url.startsWith('http://') && !url.startsWith('https://')) {
