@@ -32,17 +32,6 @@ export default async function ProfilePage() {
     clientName = client?.name || null
   }
 
-  // Get industry name if industry_id exists
-  let industryName = null
-  if (profile?.industry_id) {
-    const { data: industry } = await supabase
-      .from('industries')
-      .select('name')
-      .eq('id', profile.industry_id)
-      .single()
-    industryName = industry?.name || null
-  }
-
   // Derive access level (for display)
   const accessLevel =
     profile?.access_level ||
@@ -60,8 +49,6 @@ export default async function ProfilePage() {
     access_level: accessLevel,
     client_id: profile?.client_id || null,
     client_name: clientName,
-    industry_id: profile?.industry_id || null,
-    industry_name: industryName,
   }
 
   return (

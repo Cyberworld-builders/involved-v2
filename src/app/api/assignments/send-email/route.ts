@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
     )
     
     // Add fallback plain text links at the bottom of HTML body (in case HTML links are blocked)
-    const fallbackInstruction = "If links don't work in your email client, copy and paste the link(s) below into your browser."
+    const fallbackInstruction = "Direct Link to Copy and Paste:"
     if (fallbackLinks) {
       processedBody += `\n\n---\n\n${fallbackInstruction}\n\n${fallbackLinks}`
     }

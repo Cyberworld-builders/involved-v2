@@ -77,7 +77,6 @@ export default function CreateAssignmentClient() {
   // Add to existing survey
   const [existingSurveyId, setExistingSurveyId] = useState<string | null>(null)
   const [surveysList, setSurveysList] = useState<SurveyOption[]>([])
-  const [selectedSurveyMeta, setSelectedSurveyMeta] = useState<{ assessment_ids: string[]; expires: string; user_ids: string[] } | null>(null)
 
   useEffect(() => {
     const loadData = async () => {
@@ -178,11 +177,6 @@ export default function CreateAssignmentClient() {
           if (matchingSurvey) {
             setExistingSurveyId(matchingSurvey.survey_id)
             setSelectedAssessmentIds(matchingSurvey.assessment_ids)
-            setSelectedSurveyMeta({
-              assessment_ids: matchingSurvey.assessment_ids,
-              expires: matchingSurvey.expires,
-              user_ids: matchingSurvey.user_ids,
-            })
             setExpirationDate(matchingSurvey.expires.slice(0, 10))
           }
         }
@@ -196,7 +190,7 @@ export default function CreateAssignmentClient() {
 
         // Set default email body (HTML so RichTextEditor preserves paragraphs)
         setEmailBody(
-          '<p>Hello {name},</p><p>You have been assigned the following assessment(s):</p><p>{assessments}</p><p>Please click the link above to take you to the dashboard to log in. Please complete your assignments by {expiration-date}.</p><p>You can access your assignments at any time from your dashboard ({dashboard-link}).</p><p>SAVE this email and BOOKMARK your login page. If you have been assigned multiple assessments, this will help you navigate to the login page.</p><p>If you have any questions, please contact us at: support@involvedtalent.com</p><p>Thank you!</p><p>-Involved Talent Team</p><p>© {year} Involved Talent</p>'
+          '<p>Hello {name},</p><p>You have been assigned the following assessment(s):</p><p>{assessments}</p><p>Please click the link above to open the dashboard and log in. Please complete your assignments by {expiration-date}.</p><p>If the link doesn\'t work, copy and paste the link at the bottom of this email into your web browser.</p><p>You can access your assignments at any time from your dashboard ({dashboard-link}).</p><p>SAVE this email and BOOKMARK your login page. If you have been assigned multiple assessments, this will help you navigate to the login page.</p><p>If you have any questions, please contact us at: support@involvedtalent.com</p><p>Thank you!</p><p>-Involved Talent Team</p><p>© {year} Involved Talent</p>'
         )
       } catch (error) {
         console.error('Error loading data:', error)
@@ -298,17 +292,10 @@ export default function CreateAssignmentClient() {
         throw new Error('Please add at least one user or group to assign to')
       }
 
-      // When adding to existing survey, block if any selected user is already in that survey
-      if (existingSurveyId && selectedSurveyMeta) {
-        const existingUserIds = new Set(selectedSurveyMeta.user_ids)
-        const duplicates = assignmentUsers.filter((au) => existingUserIds.has(au.user_id))
-        if (duplicates.length > 0) {
-          const names = duplicates.map((au) => au.user.name || au.user.email).join(', ')
-          setMessage(`The following people already have assignments in this survey: ${names}. Please remove them from the list or choose "No — create a new survey" to assign them to a new survey.`)
-          setIsLoading(false)
-          return
-        }
-      }
+      // When adding to existing survey, the server-side dedup (which accounts for
+      // target_id) will catch true duplicates. For 360 assessments the same user
+      // can be added to the same survey with a different target, so we skip the
+      // overly-aggressive client-side user-only check here.
 
       // Check if any selected assessments require targets
       const selectedAssessments = assessments.filter(a => selectedAssessmentIds.includes(a.id))
@@ -541,13 +528,11 @@ export default function CreateAssignmentClient() {
                   const v = e.target.value
                   if (!v) {
                     setExistingSurveyId(null)
-                    setSelectedSurveyMeta(null)
                     return
                   }
                   const survey = surveysList.find((s) => s.survey_id === v)
                   if (survey) {
                     setExistingSurveyId(survey.survey_id)
-                    setSelectedSurveyMeta({ assessment_ids: survey.assessment_ids, expires: survey.expires, user_ids: survey.user_ids })
                     setSelectedAssessmentIds(survey.assessment_ids)
                     setExpirationDate(survey.expires.slice(0, 10))
                   }

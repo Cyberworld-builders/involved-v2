@@ -12,8 +12,6 @@ interface ProfileData {
   access_level?: string
   client_id?: string | null
   client_name?: string | null
-  industry_id?: string | null
-  industry_name?: string | null
 }
 
 export default function ProfileInformationUpdateClient({ initialProfile }: { initialProfile: ProfileData }) {
@@ -173,7 +171,7 @@ export default function ProfileInformationUpdateClient({ initialProfile }: { ini
           )}
 
           {/* Read-only account information */}
-          {(initialProfile.access_level || initialProfile.client_name || initialProfile.industry_name) && (
+          {(initialProfile.access_level || initialProfile.client_name) && (
             <div className="pt-4 border-t border-gray-200 space-y-4">
               <p className="text-sm font-medium text-gray-700">Account Information (read-only)</p>
               
@@ -207,16 +205,6 @@ export default function ProfileInformationUpdateClient({ initialProfile }: { ini
                 </div>
               )}
 
-              {initialProfile.industry_name && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-500">
-                    Industry
-                  </label>
-                  <div className="mt-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-900">
-                    {initialProfile.industry_name}
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
