@@ -87,6 +87,7 @@ export default function SurveyDetailClient({
   const [expandedAssignmentIds, setExpandedAssignmentIds] = useState<Set<string>>(new Set())
   const [selectedReportAssignmentIds, setSelectedReportAssignmentIds] = useState<Set<string>>(new Set())
   const [isBulkPdfLoading, setIsBulkPdfLoading] = useState(false)
+  const [isBulkZipLoading, setIsBulkZipLoading] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
@@ -203,6 +204,41 @@ export default function SurveyDetailClient({
     }
   }
 
+  const handleBulkDownloadZip = async () => {
+    if (selectedReportAssignmentIds.size === 0) return
+    setIsBulkZipLoading(true)
+    setMessage('')
+    try {
+      const res = await fetch('/api/reports/bulk-export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          assignment_ids: Array.from(selectedReportAssignmentIds),
+          format: 'pdf',
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setMessage(data?.error || `Download failed (${res.status})`)
+        return
+      }
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'reports_export.zip'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+      setMessage(`Successfully downloaded ${selectedReportAssignmentIds.size} report(s) as ZIP.`)
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Failed to download ZIP')
+    } finally {
+      setIsBulkZipLoading(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="text-center py-12">
@@ -316,14 +352,24 @@ export default function SurveyDetailClient({
                   : 'People being rated in this assessment. Each person may have multiple data points from different raters.'}
               </CardDescription>
             </div>
-            <Button
-              onClick={handleBulkGeneratePdfs}
-              disabled={selectedReportAssignmentIds.size === 0 || isBulkPdfLoading}
-              variant="outline"
-              size="sm"
-            >
-              {isBulkPdfLoading ? 'Queuing…' : 'Generate PDFs for selected'}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleBulkGeneratePdfs}
+                disabled={selectedReportAssignmentIds.size === 0 || isBulkPdfLoading}
+                variant="outline"
+                size="sm"
+              >
+                {isBulkPdfLoading ? 'Queuing…' : 'Generate PDFs for selected'}
+              </Button>
+              <Button
+                onClick={handleBulkDownloadZip}
+                disabled={selectedReportAssignmentIds.size === 0 || isBulkZipLoading}
+                variant="outline"
+                size="sm"
+              >
+                {isBulkZipLoading ? 'Downloading…' : 'Download ZIP'}
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>

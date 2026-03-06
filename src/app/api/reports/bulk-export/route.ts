@@ -6,6 +6,8 @@ import { generateLeaderBlockerReport } from '@/lib/reports/generate-leader-block
 import { generate360ReportPDF, generateLeaderBlockerReportPDF } from '@/lib/reports/export-pdf'
 import { generate360ReportExcel, generateLeaderBlockerReportExcel } from '@/lib/reports/export-excel'
 import { generate360ReportCSV, generateLeaderBlockerReportCSV } from '@/lib/reports/export-csv'
+import archiver from 'archiver'
+import { PassThrough } from 'stream'
 
 /**
  * Shared logic for bulk export
@@ -169,15 +171,56 @@ async function handleBulkExport(assignment_ids: string[], format: string = 'all'
       }
     }
 
-    // Multiple reports - for now return error suggesting to use individual exports
-    // In production, implement ZIP with archiver or jszip
-    return NextResponse.json(
-      {
-        error: 'Bulk export for multiple reports requires ZIP library. Please export reports individually or install archiver/jszip.',
-        note: 'For now, please export reports individually. ZIP functionality will be added in a future update.',
+    // Multiple reports — stream a ZIP archive
+    const archive = archiver('zip', { zlib: { level: 5 } })
+    const passThrough = new PassThrough()
+    archive.pipe(passThrough)
+
+    for (const report of reports) {
+      const safeTitle = report.assessmentTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()
+      const shortId = report.assignmentId.substring(0, 8)
+
+      try {
+        if (format === 'pdf' || format === 'all') {
+          const pdfBuffer = report.is360
+            ? await generate360ReportPDF(report.data as Parameters<typeof generate360ReportPDF>[0])
+            : await generateLeaderBlockerReportPDF(report.data as Parameters<typeof generateLeaderBlockerReportPDF>[0])
+          archive.append(Buffer.from(pdfBuffer), { name: `${safeTitle}_${shortId}.pdf` })
+        }
+
+        if (format === 'excel' || format === 'all') {
+          const excelBuffer = report.is360
+            ? await generate360ReportExcel(report.data as Parameters<typeof generate360ReportExcel>[0])
+            : await generateLeaderBlockerReportExcel(report.data as Parameters<typeof generateLeaderBlockerReportExcel>[0])
+          archive.append(Buffer.from(excelBuffer), { name: `${safeTitle}_${shortId}.xlsx` })
+        }
+
+        if (format === 'csv' || format === 'all') {
+          const csvContent = report.is360
+            ? generate360ReportCSV(report.data as Parameters<typeof generate360ReportCSV>[0])
+            : generateLeaderBlockerReportCSV(report.data as Parameters<typeof generateLeaderBlockerReportCSV>[0])
+          archive.append(csvContent, { name: `${safeTitle}_${shortId}.csv` })
+        }
+      } catch (fileError) {
+        console.error(`Error exporting report ${report.assignmentId}:`, fileError)
+      }
+    }
+
+    await archive.finalize()
+
+    // Collect the stream into a buffer
+    const chunks: Uint8Array[] = []
+    for await (const chunk of passThrough) {
+      chunks.push(chunk as Uint8Array)
+    }
+    const zipBuffer = Buffer.concat(chunks)
+
+    return new NextResponse(new Uint8Array(zipBuffer), {
+      headers: {
+        'Content-Type': 'application/zip',
+        'Content-Disposition': `attachment; filename="reports_export.zip"`,
       },
-      { status: 501 }
-    )
+    })
   } catch (error) {
     console.error('Error in bulk export:', error)
     return NextResponse.json(
