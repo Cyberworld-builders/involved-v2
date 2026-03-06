@@ -9,6 +9,26 @@ import { generate360ReportCSV, generateLeaderBlockerReportCSV } from '@/lib/repo
 import archiver from 'archiver'
 import { PassThrough } from 'stream'
 
+// Extend Vercel function timeout (Pro plan supports up to 300s)
+export const maxDuration = 120
+
+// Synchronous ZIP is limited to avoid timeouts
+const MAX_SYNC_REPORTS = 10
+const PER_REPORT_TIMEOUT_MS = 30_000
+
+/**
+ * Wrap a promise with a timeout. Rejects if the promise doesn't settle in time.
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`Timed out generating ${label}`)), ms)
+    promise.then(
+      (val) => { clearTimeout(timer); resolve(val) },
+      (err) => { clearTimeout(timer); reject(err) },
+    )
+  })
+}
+
 /**
  * Shared logic for bulk export
  */
@@ -33,10 +53,11 @@ async function handleBulkExport(assignment_ids: string[], format: string = 'all'
     )
   }
 
-  // Limit to 100 reports at a time
-  if (assignment_ids.length > 100) {
+  if (assignment_ids.length > MAX_SYNC_REPORTS) {
     return NextResponse.json(
-      { error: 'Maximum 100 reports per bulk export' },
+      {
+        error: `Bulk download supports up to ${MAX_SYNC_REPORTS} reports at a time. Please select fewer reports or download them individually.`,
+      },
       { status: 400 }
     )
   }
@@ -72,25 +93,28 @@ async function handleBulkExport(assignment_ids: string[], format: string = 'all'
       )
     }
 
-    // Generate all reports
+    // Generate all reports (with per-report timeout)
     const reports: Array<{
       assignmentId: string
       assessmentTitle: string
       is360: boolean
       data: unknown
     }> = []
+    const skipped: string[] = []
 
     for (const assignment of assignments) {
-      try {
-        // Type assertion for nested object (Supabase returns arrays for relations)
-        const assessment = (assignment.assessment as unknown) as { id: string; title: string; is_360: boolean } | null
+      const assessment = (assignment.assessment as unknown) as { id: string; title: string; is_360: boolean } | null
+      const label = assessment?.title || assignment.id.substring(0, 8)
 
-        let reportData: unknown
-        if (assessment?.is_360) {
-          reportData = await generate360Report(assignment.id)
-        } else {
-          reportData = await generateLeaderBlockerReport(assignment.id)
-        }
+      try {
+        const reportPromise: Promise<unknown> = assessment?.is_360
+          ? generate360Report(assignment.id)
+          : generateLeaderBlockerReport(assignment.id)
+        const reportData = await withTimeout(
+          reportPromise,
+          PER_REPORT_TIMEOUT_MS,
+          label,
+        )
 
         reports.push({
           assignmentId: assignment.id,
@@ -99,36 +123,28 @@ async function handleBulkExport(assignment_ids: string[], format: string = 'all'
           data: reportData,
         })
       } catch (error) {
-        console.error(`Error generating report for assignment ${assignment.id}:`, error)
-        // Continue with other reports
+        console.error(`Skipping report for assignment ${assignment.id}:`, error)
+        skipped.push(label)
       }
     }
 
     if (reports.length === 0) {
       return NextResponse.json(
-        { error: 'Failed to generate any reports' },
+        { error: 'Failed to generate any reports. They may be too large to export in bulk — try downloading individually.' },
         { status: 500 }
       )
     }
 
-    // For now, return a simple response indicating bulk export needs a ZIP library
-    // In production, you would use a library like 'archiver' or 'jszip'
-    // For simplicity, we'll return the first report as a single file for now
-    // TODO: Implement proper ZIP creation with archiver or jszip
-    
+    // Single report — return it directly (no ZIP needed)
     if (reports.length === 1) {
-      // Single report - return it directly
       const report = reports[0]
       const safeTitle = report.assessmentTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()
       const shortId = report.assignmentId.substring(0, 8)
 
       if (format === 'pdf' || format === 'all') {
-        let pdfBuffer: Buffer
-        if (report.is360) {
-          pdfBuffer = await generate360ReportPDF(report.data as Parameters<typeof generate360ReportPDF>[0])
-        } else {
-          pdfBuffer = await generateLeaderBlockerReportPDF(report.data as Parameters<typeof generateLeaderBlockerReportPDF>[0])
-        }
+        const pdfBuffer = report.is360
+          ? await generate360ReportPDF(report.data as Parameters<typeof generate360ReportPDF>[0])
+          : await generateLeaderBlockerReportPDF(report.data as Parameters<typeof generateLeaderBlockerReportPDF>[0])
         const filename = `${safeTitle}_${shortId}.pdf`
         return new NextResponse(new Uint8Array(pdfBuffer), {
           headers: {
@@ -139,12 +155,9 @@ async function handleBulkExport(assignment_ids: string[], format: string = 'all'
       }
 
       if (format === 'excel' || format === 'all') {
-        let excelBuffer: Buffer
-        if (report.is360) {
-          excelBuffer = await generate360ReportExcel(report.data as Parameters<typeof generate360ReportExcel>[0])
-        } else {
-          excelBuffer = await generateLeaderBlockerReportExcel(report.data as Parameters<typeof generateLeaderBlockerReportExcel>[0])
-        }
+        const excelBuffer = report.is360
+          ? await generate360ReportExcel(report.data as Parameters<typeof generate360ReportExcel>[0])
+          : await generateLeaderBlockerReportExcel(report.data as Parameters<typeof generateLeaderBlockerReportExcel>[0])
         const filename = `${safeTitle}_${shortId}.xlsx`
         return new NextResponse(new Uint8Array(excelBuffer), {
           headers: {
@@ -155,12 +168,9 @@ async function handleBulkExport(assignment_ids: string[], format: string = 'all'
       }
 
       if (format === 'csv' || format === 'all') {
-        let csvContent: string
-        if (report.is360) {
-          csvContent = generate360ReportCSV(report.data as Parameters<typeof generate360ReportCSV>[0])
-        } else {
-          csvContent = generateLeaderBlockerReportCSV(report.data as Parameters<typeof generateLeaderBlockerReportCSV>[0])
-        }
+        const csvContent = report.is360
+          ? generate360ReportCSV(report.data as Parameters<typeof generate360ReportCSV>[0])
+          : generateLeaderBlockerReportCSV(report.data as Parameters<typeof generateLeaderBlockerReportCSV>[0])
         const filename = `${safeTitle}_${shortId}.csv`
         return new NextResponse(csvContent, {
           headers: {
@@ -203,6 +213,7 @@ async function handleBulkExport(assignment_ids: string[], format: string = 'all'
         }
       } catch (fileError) {
         console.error(`Error exporting report ${report.assignmentId}:`, fileError)
+        skipped.push(report.assessmentTitle)
       }
     }
 
@@ -215,27 +226,38 @@ async function handleBulkExport(assignment_ids: string[], format: string = 'all'
     }
     const zipBuffer = Buffer.concat(chunks)
 
-    return new NextResponse(new Uint8Array(zipBuffer), {
-      headers: {
-        'Content-Type': 'application/zip',
-        'Content-Disposition': `attachment; filename="reports_export.zip"`,
-      },
-    })
+    // Include skipped reports info in a custom header so the UI can inform the user
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/zip',
+      'Content-Disposition': 'attachment; filename="reports_export.zip"',
+    }
+    if (skipped.length > 0) {
+      headers['X-Skipped-Reports'] = String(skipped.length)
+    }
+
+    return new NextResponse(new Uint8Array(zipBuffer), { headers })
   } catch (error) {
     console.error('Error in bulk export:', error)
+
+    // Distinguish timeout-like errors for a friendlier message
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    const isTimeout = message.includes('Timed out') || message.includes('FUNCTION_INVOCATION_TIMEOUT')
+
     return NextResponse.json(
       {
-        error: 'Failed to create bulk export',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        error: isTimeout
+          ? 'The export took too long. Try selecting fewer reports or downloading them individually.'
+          : 'Failed to create bulk export',
+        details: message,
       },
-      { status: 500 }
+      { status: isTimeout ? 504 : 500 }
     )
   }
 }
 
 /**
  * POST /api/reports/bulk-export
- * Create bulk export job for multiple reports
+ * Create bulk export for multiple reports as a ZIP
  */
 export async function POST(request: NextRequest) {
   try {

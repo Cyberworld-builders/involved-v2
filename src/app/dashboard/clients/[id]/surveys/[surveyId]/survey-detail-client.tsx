@@ -209,6 +209,9 @@ export default function SurveyDetailClient({
     setIsBulkZipLoading(true)
     setMessage('')
     try {
+      const controller = new AbortController()
+      const fetchTimeout = setTimeout(() => controller.abort(), 120_000)
+
       const res = await fetch('/api/reports/bulk-export', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -216,12 +219,16 @@ export default function SurveyDetailClient({
           assignment_ids: Array.from(selectedReportAssignmentIds),
           format: 'pdf',
         }),
+        signal: controller.signal,
       })
+      clearTimeout(fetchTimeout)
+
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
         setMessage(data?.error || `Download failed (${res.status})`)
         return
       }
+
       const blob = await res.blob()
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -231,9 +238,19 @@ export default function SurveyDetailClient({
       a.click()
       document.body.removeChild(a)
       window.URL.revokeObjectURL(url)
-      setMessage(`Successfully downloaded ${selectedReportAssignmentIds.size} report(s) as ZIP.`)
+
+      const skippedCount = Number(res.headers.get('X-Skipped-Reports') || 0)
+      const successMsg = `Successfully downloaded ${selectedReportAssignmentIds.size - skippedCount} report(s) as ZIP.`
+      setMessage(skippedCount > 0
+        ? `${successMsg} ${skippedCount} report(s) were skipped due to errors — try downloading those individually.`
+        : successMsg
+      )
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Failed to download ZIP')
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        setMessage('The download took too long. Try selecting fewer reports or downloading them individually.')
+      } else {
+        setMessage(err instanceof Error ? err.message : 'Failed to download ZIP')
+      }
     } finally {
       setIsBulkZipLoading(false)
     }
