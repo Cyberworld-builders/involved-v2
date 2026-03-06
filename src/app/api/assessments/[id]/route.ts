@@ -37,8 +37,18 @@ export async function DELETE(
       )
     }
 
-    // Verify user owns the assessment (or is super admin - you can add that check if needed)
-    if (assessment.created_by !== user.id) {
+    // Check if user is owner, super_admin, or client_admin
+    const { data: actorProfile } = await adminClient
+      .from('profiles')
+      .select('access_level')
+      .eq('auth_user_id', user.id)
+      .single()
+
+    const isSuperAdmin = actorProfile?.access_level === 'super_admin'
+    const isClientAdmin = actorProfile?.access_level === 'client_admin'
+    const isOwner = assessment.created_by === user.id
+
+    if (!isOwner && !isSuperAdmin && !isClientAdmin) {
       return NextResponse.json(
         { error: 'You do not have permission to delete this assessment' },
         { status: 403 }

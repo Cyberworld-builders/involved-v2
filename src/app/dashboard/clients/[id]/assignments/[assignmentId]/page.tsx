@@ -374,6 +374,11 @@ export default async function ClientAssignmentDetailPage({ params }: AssignmentD
 
         {/* Actions */}
         <div className="flex justify-end space-x-4">
+          {(profile.access_level === 'super_admin' || profile.access_level === 'client_admin') && (
+            <Link href={`/dashboard/assignments/${assignmentId}/edit`}>
+              <Button variant="outline">Edit Assignment</Button>
+            </Link>
+          )}
           {!assignment.completed && assignment.url && (
             <a
               href={assignment.url}
