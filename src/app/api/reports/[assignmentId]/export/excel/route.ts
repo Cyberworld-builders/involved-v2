@@ -42,15 +42,16 @@ export async function GET(
       )
     }
 
-    if (!assignment.completed) {
+    // Type assertion for nested object (Supabase returns arrays for relations, but .single() should return objects)
+    const assessment = (assignment.assessment as unknown) as { is_360: boolean } | null
+
+    // For 360 assessments, allow export even when not fully completed (partial reports)
+    if (!assignment.completed && !assessment?.is_360) {
       return NextResponse.json(
         { error: 'Assignment must be completed before exporting report' },
         { status: 400 }
       )
     }
-
-    // Type assertion for nested object (Supabase returns arrays for relations, but .single() should return objects)
-    const assessment = (assignment.assessment as unknown) as { is_360: boolean } | null
 
     // Generate report data
     let reportData: unknown

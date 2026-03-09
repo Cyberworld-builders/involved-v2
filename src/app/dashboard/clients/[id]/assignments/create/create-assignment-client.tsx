@@ -101,7 +101,6 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
   const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>([])
   const [existingSurveyId, setExistingSurveyId] = useState<string | null>(null)
   const [surveysList, setSurveysList] = useState<SurveyOption[]>([])
-  const [selectedSurveyMeta, setSelectedSurveyMeta] = useState<{ assessment_ids: string[]; expires: string; user_ids: string[] } | null>(null)
 
   useEffect(() => {
     const loadData = async () => {
@@ -343,18 +342,10 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
         throw new Error(errorMsg)
       }
 
-      // When adding to existing survey, block if any selected user is already in that survey
-      if (existingSurveyId && selectedSurveyMeta) {
-        const existingUserIds = new Set(selectedSurveyMeta.user_ids)
-        const duplicates = assignmentUsers.filter((au) => existingUserIds.has(au.user_id))
-        if (duplicates.length > 0) {
-          const names = duplicates.map((au) => au.user.name || au.user.email).join(', ')
-          setMessage(`The following people already have assignments in this survey: ${names}. Please remove them from the list or choose "No — create a new survey" to assign them to a new survey.`)
-          setIsLoading(false)
-          setIsSubmitting(false)
-          return
-        }
-      }
+      // When adding to existing survey, the server-side dedup (which accounts for
+      // target_id) will catch true duplicates. For 360 assessments the same user
+      // can be added to the same survey with a different target, so we skip the
+      // overly-aggressive client-side user-only check here.
 
       // Validate assessments are active
       const selectedAssessments = assessments.filter(a => selectedAssessmentIds.includes(a.id))
@@ -701,13 +692,11 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
                     const v = e.target.value
                     if (!v) {
                       setExistingSurveyId(null)
-                      setSelectedSurveyMeta(null)
                       return
                     }
                     const survey = surveysList.find((s) => s.survey_id === v)
                     if (survey) {
                       setExistingSurveyId(survey.survey_id)
-                      setSelectedSurveyMeta({ assessment_ids: survey.assessment_ids, expires: survey.expires, user_ids: survey.user_ids })
                       setSelectedAssessmentIds(survey.assessment_ids)
                       setExpirationDate(survey.expires.slice(0, 10))
                     }

@@ -183,10 +183,10 @@ describe('GroupPage', () => {
 
     expect(screen.getByText('John Doe')).toBeInTheDocument()
     expect(screen.getByText('john@example.com')).toBeInTheDocument()
-    expect(screen.getByText('Role: Developer')).toBeInTheDocument()
+    expect(screen.getByText('Position: Peer')).toBeInTheDocument()
     expect(screen.getByText('Jane Smith')).toBeInTheDocument()
     expect(screen.getByText('jane@example.com')).toBeInTheDocument()
-    expect(screen.getByText('Role: Manager')).toBeInTheDocument()
+    expect(screen.getByText('Position: Supervisor')).toBeInTheDocument()
   })
 
   it('should display member count correctly', async () => {
@@ -433,6 +433,6 @@ describe('GroupPage', () => {
     render(result as React.ReactElement)
 
     expect(screen.getByText('Name not available')).toBeInTheDocument()
-    expect(screen.queryByText(/Role:/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Position:/)).not.toBeInTheDocument()
   })
 })

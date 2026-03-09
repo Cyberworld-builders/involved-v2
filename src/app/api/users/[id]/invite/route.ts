@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { Database } from '@/types/database'
 import { generateInviteTokenWithExpiration } from '@/lib/utils/invite-token-generation'
 import { sendInviteEmail } from '@/lib/services/email-service'
+import { getAppUrl } from '@/lib/config'
 
 type UserInviteInsert = Database['public']['Tables']['user_invites']['Insert']
 
@@ -122,7 +123,7 @@ export async function POST(
     const { token, expiresAt } = generateInviteTokenWithExpiration()
 
     // Create invite URL
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const appUrl = getAppUrl()
     const inviteUrl = `${appUrl}/auth/claim?token=${token}`
 
     // Store invite token in database

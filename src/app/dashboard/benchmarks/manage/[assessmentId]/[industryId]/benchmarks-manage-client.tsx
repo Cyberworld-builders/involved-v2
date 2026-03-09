@@ -64,7 +64,7 @@ export default function BenchmarksManageClient({ assessmentId, industryId }: Ben
           .from('dimensions')
           .select('*')
           .eq('assessment_id', assessmentId)
-          .order('name', { ascending: true })
+          .order('sort_order', { ascending: true })
         setDimensions(dimensionsData || [])
 
         // Load existing benchmarks

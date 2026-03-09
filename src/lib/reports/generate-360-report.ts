@@ -172,10 +172,10 @@ export async function generate360Report(
   // Get all dimensions for this assessment (needed for both full and partial report)
   const { data: dimensions } = await adminClient
     .from('dimensions')
-    .select('id, name, code, parent_id')
+    .select('id, name, code, parent_id, sort_order')
     .eq('assessment_id', assignment.assessment_id)
     .is('parent_id', null) // Get top-level dimensions only
-    .order('name', { ascending: true })
+    .order('sort_order', { ascending: true })
 
   if (!dimensions || dimensions.length === 0) {
     // Check if there are any dimensions at all (including child dimensions)
@@ -369,6 +369,34 @@ export async function generate360Report(
     )
 
     if (scoresForDimension.length === 0) {
+      // Include dimension with no data rather than skipping it
+      const industryBenchmark = benchmarkMap.get(dimension.id) || null
+      const geonorm = geonorms.get(dimension.id)
+      const textFeedbackData = textFeedbackByDimension.get(dimension.id) || { Self: [], 'Direct Report': [], Others: [] }
+      const allTextFeedback = [...textFeedbackData.Self, ...textFeedbackData['Direct Report'], ...textFeedbackData.Others]
+      const description = descriptionByDimension.get(dimension.id)
+
+      dimensionReports.push({
+        dimension_id: dimension.id,
+        dimension_name: dimension.name,
+        dimension_code: dimension.code,
+        overall_score: 0,
+        rater_breakdown: {
+          peer: null,
+          direct_report: null,
+          supervisor: null,
+          self: null,
+          other: null,
+          all_raters: null,
+        },
+        industry_benchmark: industryBenchmark,
+        geonorm: geonorm?.avg_score || null,
+        geonorm_participant_count: geonorm?.participant_count || 0,
+        improvement_needed: false,
+        text_feedback: allTextFeedback,
+        description: description,
+        feedback: textFeedbackData,
+      })
       continue
     }
 

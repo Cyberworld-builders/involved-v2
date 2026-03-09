@@ -2,15 +2,23 @@ import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { Header } from '../index'
 import Sidebar from '../sidebar'
+import { UserProfile } from '../types'
 
 /**
  * Navigation Consistency Tests
- * 
+ *
  * Tests to ensure consistency across navigation components:
  * - Shared styling patterns
  * - Consistent branding
  * - Accessibility standards
  */
+
+// Provide a super_admin userProfile so the sidebar renders navigation items and correct logo href
+const superAdminProfile: UserProfile = {
+  access_level: 'super_admin',
+  name: 'Admin User',
+  email: 'admin@example.com',
+}
 
 describe('Navigation Consistency', () => {
   describe('Branding Consistency', () => {
@@ -20,7 +28,7 @@ describe('Navigation Consistency', () => {
       expect(headerBranding).toBeInTheDocument()
       unmountHeader()
 
-      const { unmount: unmountSidebar } = render(<Sidebar />)
+      const { unmount: unmountSidebar } = render(<Sidebar userProfile={superAdminProfile} />)
       const sidebarBranding = screen.getByText('Involved Talent')
       expect(sidebarBranding).toBeInTheDocument()
       unmountSidebar()
@@ -32,7 +40,7 @@ describe('Navigation Consistency', () => {
       expect(headerLogo.closest('a')).toHaveClass('text-indigo-600')
       unmountHeader()
 
-      const { container: sidebarContainer, unmount: unmountSidebar } = render(<Sidebar />)
+      const { container: sidebarContainer, unmount: unmountSidebar } = render(<Sidebar userProfile={superAdminProfile} />)
       const sidebarLogo = sidebarContainer.querySelector('.bg-indigo-600')
       expect(sidebarLogo).toBeInTheDocument()
       unmountSidebar()
@@ -47,7 +55,7 @@ describe('Navigation Consistency', () => {
     })
 
     it('Sidebar should have navigation role', () => {
-      render(<Sidebar />)
+      render(<Sidebar userProfile={superAdminProfile} />)
       const nav = screen.getByRole('navigation')
       expect(nav).toBeInTheDocument()
     })
@@ -79,7 +87,7 @@ describe('Navigation Consistency', () => {
     })
 
     it('Sidebar should support custom className for responsive behavior', () => {
-      const { container } = render(<Sidebar className="md:w-72" />)
+      const { container } = render(<Sidebar userProfile={superAdminProfile} className="md:w-72" />)
       const sidebar = container.firstChild as HTMLElement
       expect(sidebar).toHaveClass('md:w-72')
     })
@@ -93,7 +101,7 @@ describe('Navigation Consistency', () => {
     })
 
     it('Sidebar logo should link to dashboard', () => {
-      render(<Sidebar />)
+      render(<Sidebar userProfile={superAdminProfile} />)
       const logoLink = screen.getByText('Involved Talent').closest('a')
       expect(logoLink).toHaveAttribute('href', '/dashboard')
     })
@@ -107,7 +115,7 @@ describe('Navigation Consistency', () => {
     })
 
     it('Sidebar logo should be prominent', () => {
-      render(<Sidebar />)
+      render(<Sidebar userProfile={superAdminProfile} />)
       const logo = screen.getByText('Involved Talent')
       expect(logo).toHaveClass('font-semibold')
     })
@@ -121,7 +129,7 @@ describe('Navigation Consistency', () => {
     })
 
     it('Sidebar should accept custom className', () => {
-      const { container } = render(<Sidebar className="custom-test" />)
+      const { container } = render(<Sidebar userProfile={superAdminProfile} className="custom-test" />)
       const sidebar = container.firstChild as HTMLElement
       expect(sidebar).toHaveClass('custom-test')
     })
@@ -133,7 +141,7 @@ describe('Navigation Consistency', () => {
     })
 
     it('Sidebar should merge custom classes with defaults', () => {
-      const { container } = render(<Sidebar className="custom" />)
+      const { container } = render(<Sidebar userProfile={superAdminProfile} className="custom" />)
       const sidebar = container.firstChild as HTMLElement
       expect(sidebar).toHaveClass('w-64', 'custom')
     })

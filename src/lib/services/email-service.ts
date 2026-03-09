@@ -94,40 +94,62 @@ export function generateInviteEmail(data: InviteEmailData): EmailTemplate {
   // Generate subject
   const subject = `You're invited to join ${orgName}`
   
-  // Generate HTML body
+  // Generate HTML body (table-based layout for Outlook compatibility, all inline styles)
   const htmlBody = `
 <!DOCTYPE html>
 <html>
 <head>
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background-color: #2D2E30; color: white; padding: 20px; text-align: center; }
-    .content { padding: 20px; background-color: #f9f9f9; }
-    .button { display: inline-block; padding: 12px 24px; background-color: #FFBA00; color: #2D2E30; text-decoration: none; border-radius: 4px; font-weight: bold; }
-    .footer { margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666; }
-  </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>Welcome to ${orgName}!</h1>
-    </div>
-    <div class="content">
-      <p>Hi ${data.recipientName},</p>
-      <p>You've been invited to join ${orgName}. Click the button below to accept your invitation and set up your account.</p>
-      <p style="text-align: center; margin: 30px 0;">
-        <a href="${data.inviteUrl}" class="button">Accept Invitation</a>
-      </p>
-      <p>Or copy and paste this link into your browser:</p>
-      <p style="word-break: break-all; color: #666;">${data.inviteUrl}</p>
-      <p><strong>This invitation will expire on ${expirationStr}.</strong></p>
-      <p>If you didn't expect this invitation, you can safely ignore this email.</p>
-    </div>
-    <div class="footer">
-      <p>This is an automated message. Please do not reply to this email.</p>
-    </div>
-  </div>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; line-height: 1.6; color: #333333; background-color: #f4f4f4;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f4f4;">
+    <tr>
+      <td align="center" style="padding: 20px 0;">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%; background-color: #ffffff;">
+          <!-- Header -->
+          <tr>
+            <td style="background-color: #2D2E30; color: #ffffff; padding: 20px; text-align: center;">
+              <h1 style="margin: 0; font-size: 24px; color: #ffffff;">Welcome to ${orgName}!</h1>
+            </td>
+          </tr>
+          <!-- Content -->
+          <tr>
+            <td style="padding: 30px 20px; background-color: #f9f9f9;">
+              <p style="margin: 0 0 16px 0;">Hi ${data.recipientName},</p>
+              <p style="margin: 0 0 16px 0;">You've been invited to join ${orgName}. Click the button below to accept your invitation and set up your account.</p>
+              <!-- Bulletproof Button -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 24px auto;">
+                <tr>
+                  <td align="center" style="background-color: #FFBA00; border-radius: 4px;">
+                    <a href="${data.inviteUrl}" target="_blank" style="display: inline-block; padding: 12px 24px; color: #2D2E30; text-decoration: none; font-weight: bold; font-size: 16px;">Accept Invitation</a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin: 0 0 16px 0;"><strong>This invitation will expire on ${expirationStr}.</strong></p>
+              <p style="margin: 0 0 16px 0;">If you didn't expect this invitation, you can safely ignore this email.</p>
+              <!-- Fallback URL -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 24px; border-top: 1px solid #dddddd;">
+                <tr>
+                  <td style="padding-top: 16px;">
+                    <p style="margin: 0 0 8px 0; font-size: 12px; color: #666666;">If the button above doesn't work, copy and paste this link into your browser:</p>
+                    <p style="margin: 0; font-size: 12px; color: #666666; word-break: break-all;">${data.inviteUrl}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 16px 20px; border-top: 1px solid #dddddd;">
+              <p style="margin: 0; font-size: 12px; color: #666666;">This is an automated message. Please do not reply to this email.</p>
+              <p style="margin: 8px 0 0 0; font-size: 12px; color: #666666;">&copy; ${new Date().getFullYear()} Involved Talent</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
 `.trim()

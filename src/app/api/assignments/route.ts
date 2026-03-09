@@ -356,21 +356,24 @@ export async function POST(request: NextRequest) {
     // Otherwise, generate a new one
     const surveyId = survey_id || randomUUID()
 
-    // When adding to an existing survey, reject if any requested user already has an assignment in this survey
+    // When adding to an existing survey, reject if any requested user already has an
+    // identical assignment (same user + assessment + target) in this survey.
+    // For 360 assessments, the same user can rate different targets on the same assessment.
     if (survey_id) {
       const { data: existingInSurvey } = await adminClient
         .from('assignments')
-        .select('user_id, assessment_id')
+        .select('user_id, assessment_id, target_id')
         .eq('survey_id', survey_id)
         .in('assessment_id', assessment_ids)
 
       const existingSet = new Set(
-        (existingInSurvey || []).map((a) => `${a.user_id}:${a.assessment_id}`)
+        (existingInSurvey || []).map((a) => `${a.user_id}:${a.assessment_id}:${a.target_id || ''}`)
       )
       const duplicateUserIds = new Set<string>()
+      const requestTargetId = target_id || ''
       for (const userId of user_ids) {
         for (const assessmentId of assessment_ids) {
-          if (existingSet.has(`${userId}:${assessmentId}`)) {
+          if (existingSet.has(`${userId}:${assessmentId}:${requestTargetId}`)) {
             duplicateUserIds.add(userId)
             break
           }
@@ -383,7 +386,7 @@ export async function POST(request: NextRequest) {
         const namesList = names.join(', ')
         return NextResponse.json(
           {
-            error: `The following users already have assignments in this survey: ${namesList}. Please remove them from the list or create a new survey.`,
+            error: `The following users already have assignments for the same assessment and target in this survey: ${namesList}. Please remove them from the list or create a new survey.`,
           },
           { status: 409 }
         )

@@ -1,7 +1,32 @@
+/**
+ * Get a validated app URL with protocol guaranteed.
+ * Handles missing protocol (e.g. "example.com" → "https://example.com")
+ * and strips trailing slashes.
+ */
+export function getAppUrl(): string {
+  const raw = (process.env.NEXT_PUBLIC_APP_URL || '').trim() || 'http://localhost:3000'
+  let url = raw.replace(/\/+$/, '')
+
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    url = `https://${url}`
+  }
+
+  if (
+    process.env.NODE_ENV === 'production' &&
+    (url.includes('localhost') || url.includes('127.0.0.1'))
+  ) {
+    console.warn(
+      `⚠️ NEXT_PUBLIC_APP_URL is set to "${url}" in production. Email links will be broken.`
+    )
+  }
+
+  return url
+}
+
 export const config = {
   app: {
     name: process.env.NEXT_PUBLIC_APP_NAME || 'Involved Talent',
-    url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+    url: getAppUrl(),
   },
   supabase: {
     url: process.env.NEXT_PUBLIC_SUPABASE_URL!,

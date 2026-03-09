@@ -39,39 +39,65 @@ function generateReminderEmailBody(
   dashboardUrl: string
 ): string {
   const formattedFrequency = formatFrequency(frequency)
-  
-  return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <h2>Reminder: Complete Your Assessment</h2>
-        <p>Hello ${userName},</p>
-        <p>This is a friendly reminder that you have an incomplete assessment assignment:</p>
-        <p><strong>${assessmentTitle}</strong></p>
-        <p>Please complete this assessment at your earliest convenience.</p>
-        <a href="${assignmentUrl}" style="display: inline-block; padding: 12px 24px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0;">Complete Assessment</a>
-        <p style="font-size: 12px; color: #666;">If the button doesn't work, copy and paste this link into your browser:</p>
-        <p style="word-break: break-all; font-size: 12px;">${assignmentUrl}</p>
-        <p>You will receive reminders every ${formattedFrequency} until this assessment is completed.</p>
-        <p style="margin-top: 20px;">You can also open your dashboard to see all your assignments: <a href="${dashboardUrl}" style="color: #4F46E5; text-decoration: underline;">${dashboardUrl}</a></p>
-        <p style="font-size: 12px;">Or copy this link: ${dashboardUrl}</p>
-        <div class="footer">
-          <p>If you have any questions, please contact your administrator.</p>
-          <p>This is an automated reminder email.</p>
-        </div>
-      </div>
-    </body>
-    </html>
-  `
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; line-height: 1.6; color: #333333; background-color: #f4f4f4;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f4f4;">
+    <tr>
+      <td align="center" style="padding: 20px 0;">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%; background-color: #ffffff;">
+          <!-- Header -->
+          <tr>
+            <td style="background-color: #2D2E30; color: #ffffff; padding: 20px; text-align: center;">
+              <h2 style="margin: 0; font-size: 20px; color: #ffffff;">Reminder: Complete Your Assessment</h2>
+            </td>
+          </tr>
+          <!-- Content -->
+          <tr>
+            <td style="padding: 30px 20px;">
+              <p style="margin: 0 0 16px 0;">Hello ${userName},</p>
+              <p style="margin: 0 0 16px 0;">This is a friendly reminder that you have an incomplete assessment assignment:</p>
+              <p style="margin: 0 0 16px 0;"><strong>${assessmentTitle}</strong></p>
+              <p style="margin: 0 0 16px 0;">Please complete this assessment at your earliest convenience.</p>
+              <!-- Bulletproof Button -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 24px 0;">
+                <tr>
+                  <td align="center" style="background-color: #4F46E5; border-radius: 4px;">
+                    <a href="${assignmentUrl}" target="_blank" style="display: inline-block; padding: 12px 24px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 16px;">Complete Assessment</a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin: 0 0 16px 0;">You will receive reminders every ${formattedFrequency} until this assessment is completed.</p>
+              <p style="margin: 0 0 16px 0;">You can also access your dashboard: <a href="${dashboardUrl}" style="color: #4F46E5; text-decoration: underline;">${dashboardUrl}</a></p>
+              <!-- Fallback URL -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 24px; border-top: 1px solid #dddddd;">
+                <tr>
+                  <td style="padding-top: 16px;">
+                    <p style="margin: 0 0 8px 0; font-size: 12px; color: #666666;">If the button above doesn't work, copy and paste this link into your browser:</p>
+                    <p style="margin: 0; font-size: 12px; color: #666666; word-break: break-all;">${assignmentUrl}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 16px 20px; border-top: 1px solid #dddddd;">
+              <p style="margin: 0 0 8px 0; font-size: 12px; color: #666666;">If you have any questions, please contact your administrator.</p>
+              <p style="margin: 0; font-size: 12px; color: #666666;">&copy; ${new Date().getFullYear()} Involved Talent</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
 }
 
 /**
@@ -127,7 +153,10 @@ serve(async (req) => {
       reminder_frequency,
     } = body
 
-    const baseUrl = (Deno.env.get('NEXT_PUBLIC_APP_URL') || Deno.env.get('APP_URL') || 'http://localhost:3000').replace(/\/$/, '')
+    let baseUrl = (Deno.env.get('NEXT_PUBLIC_APP_URL') || Deno.env.get('APP_URL') || 'http://localhost:3000').trim().replace(/\/+$/, '')
+    if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+      baseUrl = `https://${baseUrl}`
+    }
     const dashboardUrl = `${baseUrl}/dashboard`
 
     // Get email configuration from environment

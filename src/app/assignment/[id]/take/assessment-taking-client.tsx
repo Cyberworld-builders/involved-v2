@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { Monitor } from 'lucide-react'
 import { QUESTION_TYPES } from '@/components/forms/assessment-form'
 
-const MOBILE_MAX_WIDTH = 768
+const MOBILE_MAX_WIDTH = 640
 
 interface Anchor {
   id: string
@@ -150,7 +150,7 @@ export default function AssessmentTakingClient({
     )
   }
 
-  // Assessments are not yet supported on mobile — direct users to open on desktop
+  // Assessments are not yet supported on small screens — direct users to desktop or tablet
   if (isMobile === true) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
@@ -160,10 +160,18 @@ export default function AssessmentTakingClient({
               <Monitor className="h-12 w-12 text-gray-600" aria-hidden />
             </div>
           </div>
-          <h1 className="text-xl font-bold text-gray-900 mb-3">Open on a desktop</h1>
-          <p className="text-gray-600">
-            This assessment is best completed on a computer or tablet. Please open this link on a desktop or laptop to continue.
+          <h1 className="text-xl font-bold text-gray-900 mb-3">Please use a larger screen</h1>
+          <p className="text-gray-600 mb-4">
+            Assessments require a desktop computer, laptop, or tablet to complete. The screen you are using is too small to display the assessment properly.
           </p>
+          <div className="bg-gray-50 rounded-lg p-4 text-left">
+            <p className="text-sm font-medium text-gray-700 mb-2">How to continue:</p>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>1. Open this link on a computer or tablet</li>
+              <li>2. Forward your assignment email to yourself and open it there</li>
+              <li>3. Or bookmark this page and return on a larger screen</li>
+            </ul>
+          </div>
         </div>
       </div>
     )

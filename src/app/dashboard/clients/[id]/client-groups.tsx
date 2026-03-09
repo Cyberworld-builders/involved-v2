@@ -344,17 +344,11 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
     setGroupMembers(updated)
   }
 
-  const handleUpdateMemberLeader = (index: number, leader: boolean) => {
-    const updated = [...groupMembers]
-    updated[index].leader = leader
-    setGroupMembers(updated)
-  }
-
   const downloadTemplate = () => {
     const csvContent = [
-      'Group Name,Target Name,Target Email,Name,Email,Position,Leader',
-      '"Engineering Team","John Doe","john.doe@example.com","Jane Smith","jane.smith@example.com","Peer","false"',
-      '"Engineering Team","John Doe","john.doe@example.com","Bob Johnson","bob.johnson@example.com","Supervisor","true"'
+      'Group Name,Target Name,Target Email,Name,Email,Position',
+      '"Engineering Team","John Doe","john.doe@example.com","Jane Smith","jane.smith@example.com","Peer"',
+      '"Engineering Team","John Doe","john.doe@example.com","Bob Johnson","bob.johnson@example.com","Supervisor"'
     ].join('\n')
 
     const blob = new Blob([csvContent], { type: 'text/csv' })
@@ -548,7 +542,7 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
         <CardHeader>
           <CardTitle>Bulk Upload Groups</CardTitle>
           <CardDescription>
-            Upload a CSV file to create multiple groups at once. Required fields are: <strong>Group Name</strong>, <strong>Target Name</strong>, <strong>Target Email</strong>, <strong>Name</strong>, and <strong>Email</strong>. <strong>Position</strong> (relationship: Peer/Supervisor/Subordinate) and <strong>Leader</strong> are optional. Leader accepts true/false, yes/no, or 1/0.
+            Upload a CSV file to create multiple groups at once. Required fields are: <strong>Group Name</strong>, <strong>Target Name</strong>, <strong>Target Email</strong>, <strong>Name</strong>, and <strong>Email</strong>. <strong>Position</strong> (relationship: Peer/Supervisor/Subordinate) is optional.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -593,7 +587,6 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
                       <th className="px-3 py-2 text-left font-medium text-gray-700">Name</th>
                       <th className="px-3 py-2 text-left font-medium text-gray-700">Email</th>
                       <th className="px-3 py-2 text-left font-medium text-gray-700">Position</th>
-                      <th className="px-3 py-2 text-left font-medium text-gray-700">Leader</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -604,7 +597,6 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
                       <td className="px-3 py-2 text-gray-900">Jane Smith</td>
                       <td className="px-3 py-2 text-gray-900">jane.smith@example.com</td>
                       <td className="px-3 py-2 text-gray-500">Peer</td>
-                      <td className="px-3 py-2 text-gray-500">false</td>
                     </tr>
                     <tr>
                       <td className="px-3 py-2 text-gray-900">Engineering Team</td>
@@ -613,7 +605,6 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
                       <td className="px-3 py-2 text-gray-900">Bob Johnson</td>
                       <td className="px-3 py-2 text-gray-900">bob.johnson@example.com</td>
                       <td className="px-3 py-2 text-gray-500">Supervisor</td>
-                      <td className="px-3 py-2 text-gray-500">true</td>
                     </tr>
                   </tbody>
                 </table>
@@ -622,7 +613,7 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
                 <p className="text-xs text-gray-500">
                   <span className="font-medium">Required:</span> Group Name, Target Name, Target Email, Name, Email
                   {' • '}
-                  <span className="font-medium">Optional:</span> Position (relationship: Peer/Supervisor/Subordinate), Leader (true/false/yes/no/1/0)
+                  <span className="font-medium">Optional:</span> Position (relationship: Peer/Supervisor/Subordinate)
                 </p>
               </div>
             </div>
@@ -753,20 +744,6 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
                               Used for 360 reports to determine rater type. Common values: Peer, Supervisor, Subordinate, Self. Custom values allowed.
                             </p>
                           </div>
-                          <div>
-                            <label className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                checked={member.leader || false}
-                                onChange={(e) => handleUpdateMemberLeader(index, e.target.checked)}
-                                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                              />
-                              <span className="text-xs font-medium text-gray-700">Leader</span>
-                            </label>
-                            <p className="text-xs text-gray-500 mt-1">
-                              Mark this member as a leader in the group
-                            </p>
-                          </div>
                         </div>
                       </div>
                     </div>
@@ -856,7 +833,7 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
                   <CardTitle>Import Groups</CardTitle>
                   <CardDescription>
                     Upload a CSV file of groups for faster entry. The first row in the CSV file will be counted as the header.
-                    Required fields are: <strong>Group Name</strong>, <strong>Target Name</strong>, <strong>Target Email</strong>, <strong>Name</strong>, and <strong>Email</strong>. <strong>Role</strong> (organizational), <strong>Position</strong> (relationship: Peer/Supervisor/Subordinate), and <strong>Leader</strong> are optional. Leader accepts true/false, yes/no, or 1/0.
+                    Required fields are: <strong>Group Name</strong>, <strong>Target Name</strong>, <strong>Target Email</strong>, <strong>Name</strong>, and <strong>Email</strong>. <strong>Position</strong> (relationship: Peer/Supervisor/Subordinate) is optional.
                     <br />
                     Accepted file types: <strong>.csv</strong>
                   </CardDescription>
@@ -908,7 +885,6 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
                           <th className="px-3 py-2 text-left font-medium text-gray-700">Name</th>
                           <th className="px-3 py-2 text-left font-medium text-gray-700">Email</th>
                           <th className="px-3 py-2 text-left font-medium text-gray-700">Position</th>
-                          <th className="px-3 py-2 text-left font-medium text-gray-700">Leader</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
@@ -919,7 +895,6 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
                           <td className="px-3 py-2 text-gray-900">Jane Smith</td>
                           <td className="px-3 py-2 text-gray-900">jane.smith@example.com</td>
                           <td className="px-3 py-2 text-gray-500">Peer</td>
-                          <td className="px-3 py-2 text-gray-500">false</td>
                         </tr>
                         <tr>
                           <td className="px-3 py-2 text-gray-900">Engineering Team</td>
@@ -928,7 +903,6 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
                           <td className="px-3 py-2 text-gray-900">Bob Johnson</td>
                           <td className="px-3 py-2 text-gray-900">bob.johnson@example.com</td>
                           <td className="px-3 py-2 text-gray-500">Supervisor</td>
-                          <td className="px-3 py-2 text-gray-500">true</td>
                         </tr>
                       </tbody>
                     </table>
@@ -937,7 +911,7 @@ export default function ClientGroups({ clientId }: ClientGroupsProps) {
                     <p className="text-xs text-gray-500">
                       <span className="font-medium">Required:</span> Group Name, Target Name, Target Email, Name, Email
                       {' • '}
-                      <span className="font-medium">Optional:</span> Position (relationship: Peer/Supervisor/Subordinate), Leader (true/false/yes/no/1/0)
+                      <span className="font-medium">Optional:</span> Position (relationship: Peer/Supervisor/Subordinate)
                     </p>
                   </div>
                 </div>

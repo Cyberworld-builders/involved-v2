@@ -46,4 +46,4 @@ echo ""
 echo "✅ Database reset and seeding complete!"
 echo ""
 echo "📊 Migration status:"
-supabase migration list
+supabase migration list --local
