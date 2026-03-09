@@ -124,9 +124,18 @@ export function PdfActionButtons({
     }
   }
 
-  // Handle retry
-  const handleRetry = async () => {
-    await handleGenerate()
+  // Handle regenerate: regenerate report data first, then queue PDF
+  const handleRegenerate = async () => {
+    setIsLoading(true)
+    try {
+      // First regenerate the report data so the PDF reflects current answers
+      await fetch(`/api/reports/generate/${assignmentId}`, { method: 'POST' })
+      // Then queue the PDF generation
+      await handleGenerate()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error')
+      setIsLoading(false)
+    }
   }
 
   if (isLoading && !state) {
@@ -185,8 +194,8 @@ export function PdfActionButtons({
           <Button variant={variant} size={size} onClick={handleDownload}>
             Download
           </Button>
-          <Button variant={variant} size={size} onClick={handleRetry} title="Generate a new PDF (replaces current)">
-            Regenerate PDF
+          <Button variant={variant} size={size} onClick={handleRegenerate} disabled={isLoading} title="Regenerate report data and PDF (replaces current)">
+            {isLoading ? 'Regenerating...' : 'Regenerate PDF'}
           </Button>
         </div>
       )
@@ -194,7 +203,7 @@ export function PdfActionButtons({
     case 'failed':
       return (
         <div className="flex flex-col gap-1">
-          <Button variant="destructive" size={size} onClick={handleRetry}>
+          <Button variant="destructive" size={size} onClick={handleRegenerate} disabled={isLoading}>
             Retry PDF
           </Button>
           {state?.lastError && (

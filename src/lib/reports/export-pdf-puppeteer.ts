@@ -159,6 +159,11 @@ export async function generatePDFFromViewPuppeteer(
       }
     }
 
+    // Inject CSS to hide partial report banner in PDF
+    await page.addStyleTag({
+      content: `.partial-report-banner { display: none !important; }`
+    })
+
     // Generate PDF with print media emulation
     const pdf = await page.pdf({
       format: 'A4',

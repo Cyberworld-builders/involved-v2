@@ -8,28 +8,38 @@ import { Document, Page, Text, View, StyleSheet, pdf } from '@react-pdf/renderer
 import React from 'react'
 
 /**
- * Helper to convert ReadableStream to Buffer
- * Newer versions of @react-pdf/renderer return ReadableStream from toBuffer()
+ * Helper to convert various output types from @react-pdf/renderer to Buffer.
+ * Different versions may return Buffer, Uint8Array, ReadableStream, or NodeJS.ReadableStream.
  */
-async function streamToBuffer(stream: ReadableStream<Uint8Array>): Promise<Buffer> {
-  const reader = stream.getReader()
-  const chunks: Uint8Array[] = []
-  
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
-    if (value) chunks.push(value)
+async function toBuffer(input: unknown): Promise<Buffer> {
+  // Already a Buffer
+  if (Buffer.isBuffer(input)) return input
+
+  // Uint8Array (but not Buffer)
+  if (input instanceof Uint8Array) return Buffer.from(input)
+
+  // Web ReadableStream
+  if (typeof ReadableStream !== 'undefined' && input instanceof ReadableStream) {
+    const reader = (input as ReadableStream<Uint8Array>).getReader()
+    const chunks: Uint8Array[] = []
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      if (value) chunks.push(value)
+    }
+    return Buffer.concat(chunks)
   }
-  
-  const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0)
-  const result = new Uint8Array(totalLength)
-  let offset = 0
-  for (const chunk of chunks) {
-    result.set(chunk, offset)
-    offset += chunk.length
+
+  // Node.js Readable stream (duck-type check)
+  if (input && typeof input === 'object' && typeof (input as NodeJS.ReadableStream).read === 'function') {
+    const chunks: Uint8Array[] = []
+    for await (const chunk of input as AsyncIterable<Uint8Array>) {
+      chunks.push(chunk instanceof Uint8Array ? chunk : Buffer.from(chunk as string))
+    }
+    return Buffer.concat(chunks)
   }
-  
-  return Buffer.from(result)
+
+  throw new Error(`Unexpected PDF output type: ${typeof input}`)
 }
 
 // Define styles for PDF matching legacy design
@@ -232,8 +242,8 @@ export async function generate360ReportPDF(reportData: Report360Data): Promise<B
   )
 
   const pdfDoc = pdf(doc)
-  const stream = await pdfDoc.toBuffer()
-  return await streamToBuffer(stream as unknown as ReadableStream<Uint8Array>)
+  const result = await pdfDoc.toBuffer()
+  return await toBuffer(result)
 }
 
 /**
@@ -316,6 +326,6 @@ export async function generateLeaderBlockerReportPDF(reportData: ReportLeaderBlo
   )
 
   const pdfDoc = pdf(doc)
-  const stream = await pdfDoc.toBuffer()
-  return await streamToBuffer(stream as unknown as ReadableStream<Uint8Array>)
+  const result = await pdfDoc.toBuffer()
+  return await toBuffer(result)
 }

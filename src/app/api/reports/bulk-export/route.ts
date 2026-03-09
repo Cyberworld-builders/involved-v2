@@ -186,6 +186,8 @@ async function handleBulkExport(assignment_ids: string[], format: string = 'all'
     const passThrough = new PassThrough()
     archive.pipe(passThrough)
 
+    let filesAdded = 0
+
     for (const report of reports) {
       const safeTitle = report.assessmentTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()
       const shortId = report.assignmentId.substring(0, 8)
@@ -196,6 +198,7 @@ async function handleBulkExport(assignment_ids: string[], format: string = 'all'
             ? await generate360ReportPDF(report.data as Parameters<typeof generate360ReportPDF>[0])
             : await generateLeaderBlockerReportPDF(report.data as Parameters<typeof generateLeaderBlockerReportPDF>[0])
           archive.append(Buffer.from(pdfBuffer), { name: `${safeTitle}_${shortId}.pdf` })
+          filesAdded++
         }
 
         if (format === 'excel' || format === 'all') {
@@ -203,6 +206,7 @@ async function handleBulkExport(assignment_ids: string[], format: string = 'all'
             ? await generate360ReportExcel(report.data as Parameters<typeof generate360ReportExcel>[0])
             : await generateLeaderBlockerReportExcel(report.data as Parameters<typeof generateLeaderBlockerReportExcel>[0])
           archive.append(Buffer.from(excelBuffer), { name: `${safeTitle}_${shortId}.xlsx` })
+          filesAdded++
         }
 
         if (format === 'csv' || format === 'all') {
@@ -210,11 +214,20 @@ async function handleBulkExport(assignment_ids: string[], format: string = 'all'
             ? generate360ReportCSV(report.data as Parameters<typeof generate360ReportCSV>[0])
             : generateLeaderBlockerReportCSV(report.data as Parameters<typeof generateLeaderBlockerReportCSV>[0])
           archive.append(csvContent, { name: `${safeTitle}_${shortId}.csv` })
+          filesAdded++
         }
       } catch (fileError) {
-        console.error(`Error exporting report ${report.assignmentId}:`, fileError)
+        console.error(`Error exporting report ${report.assignmentId}:`, fileError instanceof Error ? fileError.message : fileError)
         skipped.push(report.assessmentTitle)
       }
+    }
+
+    if (filesAdded === 0) {
+      archive.abort()
+      return NextResponse.json(
+        { error: 'Failed to export any reports to the requested format. Try downloading them individually.' },
+        { status: 500 }
+      )
     }
 
     await archive.finalize()

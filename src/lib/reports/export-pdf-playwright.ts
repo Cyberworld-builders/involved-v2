@@ -264,6 +264,10 @@ export async function generatePDFFromView(
           left: 50% !important;
           transform: translateX(-50%) !important;
         }
+        /* Hide partial report banner in PDF */
+        .partial-report-banner {
+          display: none !important;
+        }
         @media print {
           .report-view-container {
             position: static !important;
@@ -311,6 +315,10 @@ export async function generatePDFFromView(
           .page-footer {
             left: 50% !important;
             transform: translateX(-50%) !important;
+          }
+          /* Hide partial report banner in print */
+          .partial-report-banner {
+            display: none !important;
           }
         }
       `

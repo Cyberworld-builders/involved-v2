@@ -92,10 +92,19 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
   const showPartialBanner = reportData.partial === true && reportData.participant_response_summary
   const noResponsesYet = reportData.dimensions.length === 0 || (reportData.participant_response_summary?.completed === 0)
 
+  // Pre-calculate total pages: cover + overview + (per dimension: scores page + feedback page if has feedback)
+  const feedbackPageCount = reportData.dimensions.filter(dim => {
+    const fb = dim.feedback ?? { Self: [], 'Direct Report': [], Others: dim.text_feedback || [] }
+    return fb.Self.length > 0 || fb['Direct Report'].length > 0 || fb.Others.length > 0
+  }).length
+  const totalReportPages = 2 + (reportData.dimensions.length > 0
+    ? reportData.dimensions.length + feedbackPageCount
+    : 1)
+
   return (
     <div
       style={{ backgroundColor: REPORT_COLORS.white }}
-      data-report-pages={String(pageNumber + (reportData.dimensions.length > 0 ? reportData.dimensions.length * 2 : 1))}
+      data-report-pages={String(totalReportPages)}
       suppressHydrationWarning
     >
       {/* Cover Page */}
@@ -111,9 +120,10 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
         <PageWrapper>
           <PageHeader pageNumber={pageNumber} logo="involve-360-logo-small.png" />
 
-          {/* Partial report banner */}
+          {/* Partial report banner - hidden in PDF via export CSS */}
           {showPartialBanner && reportData.participant_response_summary && (
             <div
+              className="partial-report-banner"
               style={{
                 marginBottom: '20px',
                 padding: '12px 16px',
@@ -337,9 +347,8 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                         position: 'relative',
                         width: `${REPORT_SPACING.contentWidth}px`,
                         height: '55px',
-                        margin: '90px auto 0',
+                        margin: '20px auto 0',
                         color: REPORT_COLORS.textPrimary,
-                        top: '70px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -449,11 +458,12 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
 
             {/* Feedback Page */}
             {(() => {
-              const feedbackPage = pageNumber++
               const feedback = organizeFeedback(dimension)
               const hasFeedback = feedback.Self.length > 0 || feedback['Direct Report'].length > 0 || feedback.Others.length > 0
 
               if (!hasFeedback) return null
+
+              const feedbackPage = pageNumber++
 
               return (
                 <PageContainer pageNumber={feedbackPage} id={`${feedbackPage}`}>

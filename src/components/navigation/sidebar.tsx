@@ -56,14 +56,17 @@ export default function Sidebar({ className, isOpen = true, onClose, userProfile
     loadUserProfile()
   }, [userProfile])
 
-  // Base navigation items (available to all users)
-  const profileNavigation: NavigationItem[] = [
-    {
-      name: 'Profile',
-      href: '/dashboard/profile',
-      icon: '👤',
-    },
-  ]
+  // Profile navigation (hidden for standard members)
+  const profileNavigation: NavigationItem[] =
+    accessLevel === 'member'
+      ? []
+      : [
+          {
+            name: 'Profile',
+            href: '/dashboard/profile',
+            icon: '👤',
+          },
+        ]
 
   // My Assignments (only for members and client_admins, not super_admins)
   const assignmentsNavigation: NavigationItem[] =

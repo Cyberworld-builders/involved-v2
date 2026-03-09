@@ -697,8 +697,8 @@ export default function AssessmentTakingClient({
         {/* Questions with Page Breaks */}
         {!isInstructionsPage && (
           <div className="space-y-8">
-            <div ref={questionsSectionRef} className="sr-only">
-              {/* Hidden ref point for scrolling */}
+            <div ref={questionsSectionRef} className="sr-only" aria-hidden="true">
+              {/* Scroll anchor for page navigation */}
             </div>
             
             {/* Current Page Fields */}
@@ -751,12 +751,10 @@ export default function AssessmentTakingClient({
               <button
                 onClick={() => {
                   setCurrentPage(Math.max(0, currentPage - 1))
-                  // Scroll to questions section after page change (if not on instructions page)
-                  if (currentPage > 1 || !hasInstructions) {
-                    setTimeout(() => {
-                      questionsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                    }, 100)
-                  }
+                  // Scroll to top of page after page change
+                  setTimeout(() => {
+                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                  }, 100)
                 }}
                 disabled={isFirstPage}
                 className={`px-6 py-2 rounded-md font-medium ${
@@ -776,12 +774,10 @@ export default function AssessmentTakingClient({
                 <button
                   onClick={() => {
                     setCurrentPage(Math.min(totalPages - 1, currentPage + 1))
-                    // Scroll to questions section after page change (if moving to a question page)
-                    if (currentPage >= instructionsPageIndex || !hasInstructions) {
-                      setTimeout(() => {
-                        questionsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                      }, 100)
-                    }
+                    // Scroll to top of page after page change
+                    setTimeout(() => {
+                      window.scrollTo({ top: 0, behavior: 'smooth' })
+                    }, 100)
                   }}
                   className="px-6 py-2 rounded-md font-medium bg-indigo-600 text-white hover:bg-indigo-700"
                 >
