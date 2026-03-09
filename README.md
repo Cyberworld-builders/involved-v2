@@ -1,6 +1,6 @@
 # Involved Talent v2
 
-A modern, fullstack talent assessment platform built with Next.js 14, TypeScript, Tailwind CSS, and Supabase.
+A modern, fullstack talent assessment platform built with Next.js 14, TypeScript, Tailwind CSS, and Supabase. <!-- GusClaw pipeline test -->
 
 ## 🚀 Features
 
