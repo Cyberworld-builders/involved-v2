@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import Link from 'next/link'
-import { ChevronDown, ChevronRight, ExternalLink, Trash2 } from 'lucide-react'
+import { Calendar, ChevronDown, ChevronRight, ExternalLink, Pencil, Trash2 } from 'lucide-react'
 import { PdfActionButtons } from '@/components/reports/pdf-action-buttons'
 import { Subject } from '@/lib/reports/get-survey-subjects'
 import { ScoreData } from '@/lib/reports/get-survey-scores'
@@ -21,6 +21,7 @@ export type SurveyAssignment = {
   completed_at: string | null
   created_at: string
   started_at?: string | null
+  expires?: string | null
   user_name?: string | null
   user_email?: string | null
   target_name?: string | null
@@ -92,6 +93,21 @@ export default function SurveyDetailClient({
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
+  // Batch edit state
+  const [assignments, setAssignments] = useState(initialAssignments)
+  const [showBatchEdit, setShowBatchEdit] = useState(false)
+  const [batchExpirationDate, setBatchExpirationDate] = useState(() => {
+    // Default to the most common expiration date in the survey
+    const firstExpires = initialAssignments.find(a => a.expires)?.expires
+    return firstExpires
+      ? new Date(firstExpires).toISOString().split('T')[0]
+      : new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0]
+  })
+  const [isBatchUpdating, setIsBatchUpdating] = useState(false)
+  const [selectedAssignmentIds, setSelectedAssignmentIds] = useState<Set<string>>(new Set())
+  const [deleteSelectedDialogOpen, setDeleteSelectedDialogOpen] = useState(false)
+  const [isDeletingSelected, setIsDeletingSelected] = useState(false)
+
   const handleDeleteSurvey = async () => {
     setIsDeleting(true)
     setDeleteError(null)
@@ -117,6 +133,83 @@ export default function SurveyDetailClient({
     }
   }
 
+  const handleBatchExtendDeadline = async () => {
+    setIsBatchUpdating(true)
+    setMessage('')
+    try {
+      const res = await fetch(`/api/clients/${clientId}/surveys/${surveyId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          expires: new Date(batchExpirationDate + 'T23:59:59').toISOString(),
+        }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setMessage(data?.error || `Failed to update deadline (${res.status})`)
+        return
+      }
+      setMessage(`Successfully updated deadline for ${data.updated_assignments ?? 'all'} assignment(s).`)
+      // Update local state
+      setAssignments(prev =>
+        prev.map(a => ({ ...a, expires: new Date(batchExpirationDate + 'T23:59:59').toISOString() }))
+      )
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Failed to update deadline')
+    } finally {
+      setIsBatchUpdating(false)
+    }
+  }
+
+  const handleDeleteSelectedAssignments = async () => {
+    if (selectedAssignmentIds.size === 0) return
+    setIsDeletingSelected(true)
+    setMessage('')
+    try {
+      const res = await fetch(`/api/clients/${clientId}/surveys/${surveyId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          delete_assignment_ids: Array.from(selectedAssignmentIds),
+        }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setMessage(data?.error || `Failed to delete assignments (${res.status})`)
+        return
+      }
+      setMessage(`Successfully deleted ${data.deleted_assignments ?? selectedAssignmentIds.size} assignment(s).`)
+      // Update local state
+      setAssignments(prev => prev.filter(a => !selectedAssignmentIds.has(a.id)))
+      setSelectedAssignmentIds(new Set())
+      setDeleteSelectedDialogOpen(false)
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Failed to delete assignments')
+    } finally {
+      setIsDeletingSelected(false)
+    }
+  }
+
+  const toggleAssignmentSelection = (id: string) => {
+    setSelectedAssignmentIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const handleSelectAllAssignments = (checked: boolean) => {
+    if (checked) {
+      setSelectedAssignmentIds(new Set(assignments.map(a => a.id)))
+    } else {
+      setSelectedAssignmentIds(new Set())
+    }
+  }
+
+  const allAssignmentsSelected = assignments.length > 0 && selectedAssignmentIds.size === assignments.length
+  const someAssignmentsSelected = selectedAssignmentIds.size > 0 && selectedAssignmentIds.size < assignments.length
+
   const toggleExpanded = (id: string) => {
     setExpandedAssignmentIds((prev) => {
       const next = new Set(prev)
@@ -126,19 +219,22 @@ export default function SurveyDetailClient({
     })
   }
 
-  const completedCount = initialAssignments.filter(a => a.completed).length
-  const totalCount = initialAssignments.length
+  const completedCount = assignments.filter(a => a.completed).length
+  const totalCount = assignments.length
   const completionPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
-  const surveyDate = initialAssignments.length > 0 
-    ? new Date(initialAssignments[0].created_at)
+  const surveyDate = assignments.length > 0
+    ? new Date(assignments[0].created_at)
     : new Date()
+  const currentDeadline = assignments.find(a => a.expires)?.expires
+    ? new Date(assignments.find(a => a.expires)!.expires!).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+    : null
 
   // For all assessments: Find an assignment that rated this target/subject to view report
   // The report generation will aggregate all assignments for this target
   const getAssignmentIdForSubject = (subject: Subject): string | null => {
     // Find a completed assignment that rated this target (prefer completed)
-    const completedAssignment = initialAssignments.find(a => 
-      a.target_id === subject.id && 
+    const completedAssignment = assignments.find(a =>
+      a.target_id === subject.id &&
       subject.assignment_ids.includes(a.id) &&
       a.completed
     )
@@ -146,7 +242,7 @@ export default function SurveyDetailClient({
       return completedAssignment.id
     }
     // Fallback to any assignment for this target
-    const anyAssignment = initialAssignments.find(a => 
+    const anyAssignment = assignments.find(a =>
       a.target_id === subject.id && subject.assignment_ids.includes(a.id)
     )
     return anyAssignment?.id || null
@@ -285,16 +381,26 @@ export default function SurveyDetailClient({
             })}
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-          onClick={() => setDeleteDialogOpen(true)}
-          aria-label="Delete survey"
-        >
-          <Trash2 className="h-4 w-4 mr-2" />
-          Delete survey
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowBatchEdit(!showBatchEdit)}
+          >
+            <Pencil className="h-4 w-4 mr-2" />
+            {showBatchEdit ? 'Close Edit' : 'Edit Survey'}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            onClick={() => setDeleteDialogOpen(true)}
+            aria-label="Delete survey"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete survey
+          </Button>
+        </div>
       </div>
 
       {/* Fixed message (toaster) */}
@@ -316,6 +422,75 @@ export default function SurveyDetailClient({
             ×
           </button>
         </div>
+      )}
+
+      {/* Batch Edit Panel */}
+      {showBatchEdit && (
+        <Card className="border-indigo-200 bg-indigo-50/30">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Pencil className="h-5 w-5 text-indigo-600" />
+              Batch Edit Survey
+            </CardTitle>
+            <CardDescription>
+              Update all {totalCount} assignment(s) in this survey at once.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Extend Deadline */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                <Calendar className="h-4 w-4 inline mr-1" />
+                Extend Deadline
+              </label>
+              {currentDeadline && (
+                <p className="text-sm text-gray-500 mb-2">
+                  Current deadline: <strong>{currentDeadline}</strong>
+                </p>
+              )}
+              <div className="flex items-center gap-3">
+                <input
+                  type="date"
+                  value={batchExpirationDate}
+                  onChange={(e) => setBatchExpirationDate(e.target.value)}
+                  className="flex-1 max-w-xs px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                />
+                <Button
+                  onClick={handleBatchExtendDeadline}
+                  disabled={isBatchUpdating}
+                  size="sm"
+                >
+                  {isBatchUpdating ? 'Updating…' : `Update all ${totalCount} assignments`}
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                This will set the expiration date for all assignments in this survey.
+              </p>
+            </div>
+
+            {/* Delete Selected Assignments */}
+            <div className="border-t border-indigo-200 pt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                <Trash2 className="h-4 w-4 inline mr-1" />
+                Delete Selected Assignments
+              </label>
+              <p className="text-sm text-gray-500 mb-3">
+                Use the checkboxes in the &quot;Data Collection Status&quot; section below to select assignments, then delete them here.
+              </p>
+              <Button
+                variant="destructive"
+                size="sm"
+                disabled={selectedAssignmentIds.size === 0 || isDeletingSelected}
+                onClick={() => setDeleteSelectedDialogOpen(true)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                {selectedAssignmentIds.size === 0
+                  ? 'Select assignments below'
+                  : `Delete ${selectedAssignmentIds.size} selected assignment(s)`}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Survey Summary */}
@@ -518,15 +693,32 @@ export default function SurveyDetailClient({
       {/* Data Collection Status */}
       <Card>
         <CardHeader>
-          <CardTitle>Data Collection Status</CardTitle>
-          <CardDescription>
-            Status of all assignments in this survey. Expand a row to see details and open the assignment.
-          </CardDescription>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <CardTitle>Data Collection Status</CardTitle>
+              <CardDescription>
+                Status of all assignments in this survey. Expand a row to see details and open the assignment.
+              </CardDescription>
+            </div>
+            {showBatchEdit && assignments.length > 0 && (
+              <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-600 whitespace-nowrap">
+                <input
+                  type="checkbox"
+                  checked={allAssignmentsSelected}
+                  ref={(el) => { if (el) el.indeterminate = someAssignmentsSelected }}
+                  onChange={(e) => handleSelectAllAssignments(e.target.checked)}
+                  className="rounded border-gray-300"
+                />
+                Select all
+              </label>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {initialAssignments.map((assignment) => {
+            {assignments.map((assignment) => {
               const isExpanded = expandedAssignmentIds.has(assignment.id)
+              const isSelected = selectedAssignmentIds.has(assignment.id)
               const raterLabel = assignment.user_name || assignment.user_email || assignment.user_id?.slice(0, 8) || '—'
               const targetLabel = assessment.is_360
                 ? (assignment.target_name || assignment.target_email || (assignment.target_id ? assignment.target_id.slice(0, 8) : null) || '—')
@@ -534,13 +726,27 @@ export default function SurveyDetailClient({
               return (
                 <div
                   key={assignment.id}
-                  className="rounded-md border border-gray-200 bg-gray-50 overflow-hidden"
+                  className={`rounded-md border overflow-hidden ${
+                    isSelected ? 'border-indigo-300 bg-indigo-50/50' : 'border-gray-200 bg-gray-50'
+                  }`}
                 >
-                  <button
-                    type="button"
-                    onClick={() => toggleExpanded(assignment.id)}
-                    className="w-full flex items-center justify-between p-3 text-left hover:bg-gray-100 transition-colors"
-                  >
+                  <div className="flex items-center">
+                    {showBatchEdit && (
+                      <div className="flex-shrink-0 pl-3">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleAssignmentSelection(assignment.id)}
+                          className="rounded border-gray-300"
+                          aria-label={`Select assignment ${assignment.id.slice(0, 8)}`}
+                        />
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => toggleExpanded(assignment.id)}
+                      className="flex-1 flex items-center justify-between p-3 text-left hover:bg-gray-100 transition-colors"
+                    >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="flex-shrink-0">
                         {isExpanded ? (
@@ -569,6 +775,9 @@ export default function SurveyDetailClient({
                         </div>
                         <div className="text-xs text-gray-500">
                           Created {new Date(assignment.created_at).toLocaleString()}
+                          {assignment.expires && (
+                            <> • Due {new Date(assignment.expires).toLocaleDateString()}</>
+                          )}
                           {assignment.completed_at && (
                             <> • Completed {new Date(assignment.completed_at).toLocaleString()}</>
                           )}
@@ -587,6 +796,7 @@ export default function SurveyDetailClient({
                       )}
                     </div>
                   </button>
+                  </div>
                   {isExpanded && (
                     <div className="border-t border-gray-200 bg-white px-4 py-3 text-sm">
                       <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
@@ -627,6 +837,14 @@ export default function SurveyDetailClient({
                           </dd>
                         </div>
                         <div>
+                          <dt className="text-gray-500 font-medium">Deadline</dt>
+                          <dd className="text-gray-900">
+                            {assignment.expires
+                              ? new Date(assignment.expires).toLocaleString()
+                              : '—'}
+                          </dd>
+                        </div>
+                        <div>
                           <dt className="text-gray-500 font-medium">Completed</dt>
                           <dd className="text-gray-900">
                             {assignment.completed_at
@@ -651,6 +869,35 @@ export default function SurveyDetailClient({
           </div>
         </CardContent>
       </Card>
+
+      {/* Delete selected assignments confirmation */}
+      <Dialog open={deleteSelectedDialogOpen} onOpenChange={(open) => !open && !isDeletingSelected && setDeleteSelectedDialogOpen(false)}>
+        <DialogContent
+          title="Delete selected assignments?"
+          description="This action cannot be undone."
+          onClose={() => !isDeletingSelected && setDeleteSelectedDialogOpen(false)}
+        >
+          <p className="text-sm text-gray-700 mb-4">
+            This will permanently delete <strong>{selectedAssignmentIds.size}</strong> assignment(s) and all their associated data:
+          </p>
+          <ul className="list-disc list-inside text-sm text-gray-700 space-y-1 mb-4">
+            <li>All answers and responses</li>
+            <li>Any generated report data and PDFs</li>
+          </ul>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setDeleteSelectedDialogOpen(false)} disabled={isDeletingSelected}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteSelectedAssignments}
+              disabled={isDeletingSelected}
+            >
+              {isDeletingSelected ? 'Deleting…' : `Delete ${selectedAssignmentIds.size} assignment(s)`}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete survey confirmation */}
       <Dialog open={deleteDialogOpen} onOpenChange={(open) => !open && closeDeleteDialog()}>
