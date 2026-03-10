@@ -79,41 +79,16 @@ export async function POST(request: NextRequest) {
     const baseUrl = getAppUrl()
     const dashboardUrl = `${baseUrl}/dashboard`
 
-    // Format assessments list as clear buttons (table-based for Outlook)
-    const assessmentsList = assignments
-      .map((a) => {
-        if (a.url) {
-          return `<tr><td style="padding: 8px 0;">
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-              <tr>
-                <td style="background-color: #4F46E5; border-radius: 4px;">
-                  <a href="${a.url}" target="_blank" style="display: inline-block; padding: 10px 20px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px;">${a.assessmentTitle}</a>
-                </td>
-              </tr>
-            </table>
-          </td></tr>`
-        }
-        return `<tr><td style="padding: 8px 0;">${a.assessmentTitle}</td></tr>`
-      })
-      .join('\n')
-
-    // Wrap in a table
-    const assessmentsHtml = `<table role="presentation" cellpadding="0" cellspacing="0" border="0">${assessmentsList}</table>`
+    // Format assessments as a simple list of names with a single dashboard button
+    const assessmentNames = assignments.map((a) => a.assessmentTitle)
+    const assessmentNamesList = assessmentNames
+      .map((name) => `<li style="padding: 2px 0;">${name}</li>`)
+      .join('')
+    const assessmentsHtml = `<ul style="margin: 8px 0; padding-left: 20px;">${assessmentNamesList}</ul><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 16px 0;"><tr><td style="background-color: #4F46E5; border-radius: 4px;"><a href="${dashboardUrl}" target="_blank" style="display: inline-block; padding: 10px 20px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px;">Go to Dashboard</a></td></tr></table>`
 
     // Also create a plain text version for text/plain email body
-    const assessmentsListText = assignments
-      .map((a) => {
-        if (a.url) {
-          return `- ${a.assessmentTitle}: ${a.url}`
-        }
-        return `- ${a.assessmentTitle}`
-      })
-      .join('\n')
-
-    // Create fallback plain text links at the bottom (in case HTML links are blocked)
-    const fallbackLinks = assignments
-      .filter((a) => a.url)
-      .map((a) => `${a.assessmentTitle}: ${a.url}`)
+    const assessmentsListText = assessmentNames
+      .map((name) => `- ${name}`)
       .join('\n')
 
     // Format expiration date
@@ -136,14 +111,8 @@ export async function POST(request: NextRequest) {
       year
     )
     
-    // Add fallback plain text links at the bottom of HTML body (in case HTML links are blocked)
-    const fallbackInstruction = "Direct Link to Copy and Paste:"
-    if (fallbackLinks) {
-      processedBody += `\n\n---\n\n${fallbackInstruction}\n\n${fallbackLinks}`
-    }
-
-    // Add dashboard link (secondary) so users can find all assignments
-    processedBody += `\n\n---\n\nYou can also open your dashboard to see all your assignments: ${dashboardUrl}`
+    // Add dashboard link at the bottom
+    processedBody += `\n\nYou can also open your dashboard to see all your assignments: ${dashboardUrl}`
     
     // Create plain text version for text/plain email body
     let processedBodyText = replaceShortcodes(
@@ -158,11 +127,8 @@ export async function POST(request: NextRequest) {
       year
     )
     
-    // Add fallback plain text links at the bottom of plain text body
-    if (fallbackLinks) {
-      processedBodyText += `\n\n---\n\n${fallbackInstruction}\n\n${fallbackLinks}`
-    }
-    processedBodyText += `\n\n---\n\nYou can also open your dashboard to see all your assignments: ${dashboardUrl}`
+    // Add dashboard link at the bottom of plain text body
+    processedBodyText += `\n\nYou can also open your dashboard to see all your assignments: ${dashboardUrl}`
 
     // Check if email service is configured
     // Priority: AWS SES with OIDC (AWS_ROLE_ARN) > AWS SES with access keys > Resend > SendGrid > SMTP
@@ -251,22 +217,7 @@ export async function POST(request: NextRequest) {
 
         const fromEmail = (process.env.EMAIL_FROM || process.env.AWS_SES_FROM_EMAIL || process.env.SMTP_FROM || 'noreply@example.com').trim()
         // Convert newlines to <br> but preserve existing HTML structure
-        // If the body already contains HTML tags (like <ul>), preserve them
-        // Handle the fallback links section separately to preserve line breaks
-        let htmlBody = processedBody
-        // Convert newlines to <br> for the main body, but preserve the fallback links section formatting
-        if (htmlBody.includes('---')) {
-          const parts = htmlBody.split('---')
-          const mainPart = parts[0].includes('<ul>') || parts[0].includes('<li>') || parts[0].includes('<a')
-            ? parts[0].replace(/\n/g, '<br>')
-            : `<p>${parts[0].replace(/\n/g, '<br>')}</p>`
-          const fallbackPart = parts.slice(1).join('---').replace(/\n/g, '<br>')
-          htmlBody = mainPart + '<br>---<br><br>' + fallbackPart
-        } else {
-          htmlBody = processedBody.includes('<ul>') || processedBody.includes('<li>') || processedBody.includes('<a')
-            ? processedBody.replace(/\n/g, '<br>')
-            : `<p>${processedBody.replace(/\n/g, '<br>')}</p>`
-        }
+        const htmlBody = processedBody.replace(/\n/g, '<br>')
 
         const sendCommand = new SendEmailCommand({
           Source: fromEmail,
@@ -319,18 +270,8 @@ export async function POST(request: NextRequest) {
       try {
         const { Resend } = await import('resend')
         const resend = new Resend(process.env.RESEND_API_KEY)
-        // Format HTML body similar to AWS SES
-        let resendHtmlBody = processedBody
-        if (resendHtmlBody.includes('---')) {
-          const parts = resendHtmlBody.split('---')
-          const mainPart = parts[0].includes('<ul>') || parts[0].includes('<li>') || parts[0].includes('<a')
-            ? parts[0].replace(/\n/g, '<br>')
-            : `<p>${parts[0].replace(/\n/g, '<br>')}</p>`
-          const fallbackPart = parts.slice(1).join('---').replace(/\n/g, '<br>')
-          resendHtmlBody = mainPart + '<br>---<br><br>' + fallbackPart
-        } else {
-          resendHtmlBody = processedBody.replace(/\n/g, '<br>')
-        }
+        // Convert newlines to <br> for HTML
+        const resendHtmlBody = processedBody.replace(/\n/g, '<br>')
         const { data, error } = await resend.emails.send({
           from: process.env.EMAIL_FROM || 'noreply@example.com',
           to: to,

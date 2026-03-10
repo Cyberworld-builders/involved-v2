@@ -129,11 +129,24 @@ export function PdfActionButtons({
     setIsLoading(true)
     try {
       // First regenerate the report data so the PDF reflects current answers
-      await fetch(`/api/reports/generate/${assignmentId}`, { method: 'POST' })
-      // Then queue the PDF generation
-      await handleGenerate()
+      const reportResponse = await fetch(`/api/reports/generate/${assignmentId}`, { method: 'POST' })
+      if (!reportResponse.ok) {
+        const errorData = await reportResponse.json().catch(() => ({}))
+        throw new Error((errorData as { error?: string }).error || 'Failed to regenerate report data')
+      }
+      // Then force re-queue the PDF generation (bypass idempotent 'ready' check)
+      const pdfResponse = await fetch(`/api/reports/${assignmentId}/pdf?force=1`, {
+        method: 'POST',
+      })
+      if (!pdfResponse.ok) {
+        throw new Error('Failed to request PDF generation')
+      }
+      const data = await pdfResponse.json()
+      setState(data)
+      // Will start polling automatically due to status change to 'queued'
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
+    } finally {
       setIsLoading(false)
     }
   }

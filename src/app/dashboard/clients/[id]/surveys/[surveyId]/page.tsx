@@ -48,6 +48,7 @@ export default async function SurveyDetailPage({ params }: SurveyDetailPageProps
       completed_at,
       created_at,
       started_at,
+      expires,
       user:profiles!assignments_user_id_fkey(id, name, email),
       target:profiles!assignments_target_id_fkey(id, name, email)
     `)
@@ -80,6 +81,7 @@ export default async function SurveyDetailPage({ params }: SurveyDetailPageProps
     user?: { id: string; name: string; email: string } | Array<{ id: string; name: string; email: string }>
     target?: { id: string; name: string; email: string } | Array<{ id: string; name: string; email: string }> | null
     started_at?: string | null
+    expires?: string | null
   }
   const validAssignments = validAssignmentsRaw.map((a) => {
     const row = a as unknown as AssignmentRow
@@ -94,6 +96,7 @@ export default async function SurveyDetailPage({ params }: SurveyDetailPageProps
       completed_at: row.completed_at,
       created_at: row.created_at,
       started_at: row.started_at ?? null,
+      expires: row.expires ?? null,
       user_name: user?.name ?? null,
       user_email: user?.email ?? null,
       target_name: target?.name ?? null,

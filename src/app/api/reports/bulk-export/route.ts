@@ -186,6 +186,9 @@ async function handleBulkExport(assignment_ids: string[], format: string = 'all'
     const passThrough = new PassThrough()
     archive.pipe(passThrough)
 
+    // Propagate archive errors to the passthrough so the buffer promise rejects
+    archive.on('error', (err) => passThrough.destroy(err))
+
     let filesAdded = 0
 
     for (const report of reports) {
@@ -230,14 +233,18 @@ async function handleBulkExport(assignment_ids: string[], format: string = 'all'
       )
     }
 
+    // Start collecting chunks BEFORE finalize to avoid race condition
+    // where the stream ends before iteration begins
+    const bufferPromise = new Promise<Buffer>((resolve, reject) => {
+      const chunks: Uint8Array[] = []
+      passThrough.on('data', (chunk: Uint8Array) => chunks.push(chunk))
+      passThrough.on('end', () => resolve(Buffer.concat(chunks)))
+      passThrough.on('error', reject)
+    })
+
     await archive.finalize()
 
-    // Collect the stream into a buffer
-    const chunks: Uint8Array[] = []
-    for await (const chunk of passThrough) {
-      chunks.push(chunk as Uint8Array)
-    }
-    const zipBuffer = Buffer.concat(chunks)
+    const zipBuffer = await bufferPromise
 
     // Include skipped reports info in a custom header so the UI can inform the user
     const headers: Record<string, string> = {

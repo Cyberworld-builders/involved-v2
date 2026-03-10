@@ -102,10 +102,25 @@ export async function POST(
       .eq('assignment_id', assignmentId)
       .single()
 
-    // If already queued, generating, or ready, return current status (idempotent)
-    if (currentReportData?.pdf_status === 'queued' || 
-        currentReportData?.pdf_status === 'generating' || 
-        currentReportData?.pdf_status === 'ready') {
+    // Check if force regeneration was requested (e.g. from Regenerate PDF button)
+    const { searchParams } = new URL(request.url)
+    const force = searchParams.get('force') === '1'
+
+    // If already queued or generating, return current status to prevent duplicate work
+    if (currentReportData?.pdf_status === 'queued' ||
+        currentReportData?.pdf_status === 'generating') {
+      return NextResponse.json({
+        status: currentReportData.pdf_status,
+        version: currentReportData.pdf_version || null,
+        generatedAt: currentReportData.pdf_generated_at || null,
+        storagePath: currentReportData.pdf_storage_path || null,
+        lastError: currentReportData.pdf_last_error || null,
+        jobId: currentReportData.pdf_job_id || null,
+      })
+    }
+
+    // If ready and not force, return current status (idempotent)
+    if (currentReportData?.pdf_status === 'ready' && !force) {
       return NextResponse.json({
         status: currentReportData.pdf_status,
         version: currentReportData.pdf_version || null,

@@ -190,7 +190,7 @@ export default function CreateAssignmentClient() {
 
         // Set default email body (HTML so RichTextEditor preserves paragraphs)
         setEmailBody(
-          '<p>Hello {name},</p><p>You have been assigned the following assessment(s):</p><p>{assessments}</p><p>Please click the link above to open the dashboard and log in. Please complete your assignments by {expiration-date}.</p><p>If the link doesn\'t work, copy and paste the link at the bottom of this email into your web browser.</p><p>You can access your assignments at any time from your dashboard ({dashboard-link}).</p><p>SAVE this email and BOOKMARK your login page. If you have been assigned multiple assessments, this will help you navigate to the login page.</p><p>If you have any questions, please contact us at: support@involvedtalent.com</p><p>Thank you!</p><p>-Involved Talent Team</p><p>© {year} Involved Talent</p>'
+          '<p>Hello {name},</p><p>You have been assigned the following assessment(s):</p><p>{assessments}</p><p>Please click the button above to open your dashboard and log in. Please complete your assignments by {expiration-date}.</p><p>You can access your assignments at any time from your dashboard ({dashboard-link}).</p><p>SAVE this email and BOOKMARK your login page.</p><p>If you have any questions, please contact us at: support@involvedtalent.com</p><p>Thank you!</p><p>-Involved Talent Team</p><p>© {year} Involved Talent</p>'
         )
       } catch (error) {
         console.error('Error loading data:', error)
