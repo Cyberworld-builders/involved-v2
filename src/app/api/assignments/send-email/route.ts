@@ -111,8 +111,8 @@ export async function POST(request: NextRequest) {
       year
     )
     
-    // Add dashboard link at the bottom
-    processedBody += `\n\nYou can also open your dashboard to see all your assignments: ${dashboardUrl}`
+    // Add dashboard link at the bottom (use <p> tag since body is HTML from RichTextEditor)
+    processedBody += `<p>You can also open your dashboard to see all your assignments: ${dashboardUrl}</p>`
     
     // Create plain text version for text/plain email body
     let processedBodyText = replaceShortcodes(
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
     )
     
     // Add dashboard link at the bottom of plain text body
-    processedBodyText += `\n\nYou can also open your dashboard to see all your assignments: ${dashboardUrl}`
+    processedBodyText += `\n\nYou can also open your dashboard to see all your assignments: ${dashboardUrl}\n`
 
     // Check if email service is configured
     // Priority: AWS SES with OIDC (AWS_ROLE_ARN) > AWS SES with access keys > Resend > SendGrid > SMTP
@@ -216,8 +216,9 @@ export async function POST(request: NextRequest) {
         })
 
         const fromEmail = (process.env.EMAIL_FROM || process.env.AWS_SES_FROM_EMAIL || process.env.SMTP_FROM || 'noreply@example.com').trim()
-        // Convert newlines to <br> but preserve existing HTML structure
-        const htmlBody = processedBody.replace(/\n/g, '<br>')
+        // The body is already HTML from RichTextEditor (<p> tags handle spacing).
+        // Strip stray newlines instead of converting to <br> to avoid extra whitespace.
+        const htmlBody = processedBody.replace(/\n+/g, '')
 
         const sendCommand = new SendEmailCommand({
           Source: fromEmail,
@@ -270,8 +271,8 @@ export async function POST(request: NextRequest) {
       try {
         const { Resend } = await import('resend')
         const resend = new Resend(process.env.RESEND_API_KEY)
-        // Convert newlines to <br> for HTML
-        const resendHtmlBody = processedBody.replace(/\n/g, '<br>')
+        // The body is already HTML; strip stray newlines to avoid extra whitespace
+        const resendHtmlBody = processedBody.replace(/\n+/g, '')
         const { data, error } = await resend.emails.send({
           from: process.env.EMAIL_FROM || 'noreply@example.com',
           to: to,
