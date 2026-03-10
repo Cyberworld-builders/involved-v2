@@ -326,10 +326,21 @@ export default function SurveyDetailClient({
       }
 
       const blob = await res.blob()
+      const contentType = res.headers.get('Content-Type') || ''
+      const disposition = res.headers.get('Content-Disposition') || ''
+      const filenameMatch = disposition.match(/filename="?([^"]+)"?/)
+
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = 'reports_export.zip'
+      // Use the filename from the server header when available (e.g. single PDF)
+      if (filenameMatch) {
+        a.download = filenameMatch[1]
+      } else if (contentType.includes('application/pdf')) {
+        a.download = 'report.pdf'
+      } else {
+        a.download = 'reports_export.zip'
+      }
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
