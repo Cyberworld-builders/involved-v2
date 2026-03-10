@@ -189,6 +189,23 @@ export async function generateLeaderBlockerReport(
     })
   }
 
+  // Get description fields (rich_text) for each dimension - used as definitions in the report
+  const { data: descriptionFields } = await adminClient
+    .from('fields')
+    .select('dimension_id, content')
+    .eq('assessment_id', assignment.assessment_id)
+    .eq('type', 'rich_text')
+    .in('dimension_id', allDimensionIds)
+
+  const definitionByDimension = new Map<string, string>()
+  descriptionFields?.forEach((field) => {
+    if (field.dimension_id && field.content) {
+      if (!definitionByDimension.has(field.dimension_id)) {
+        definitionByDimension.set(field.dimension_id, field.content)
+      }
+    }
+  })
+
   // Get assigned feedback from report_data
   const { data: reportData } = await adminClient
     .from('report_data')
@@ -251,6 +268,7 @@ export async function generateLeaderBlockerReport(
       geonorm: geonorm?.avg_score || null,
       improvement_needed: improvementNeeded,
       group_score: groupScore,
+      definition: definitionByDimension.get(dimension.id) || null,
       specific_feedback: specificFeedback?.feedback_content || null,
       specific_feedback_id: specificFeedback?.feedback_id || null,
       ...(isSubdimension ? { overall_feedback: overallFeedback?.feedback_content || null } : {}),
