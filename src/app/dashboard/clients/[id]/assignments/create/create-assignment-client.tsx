@@ -81,7 +81,7 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
   const [sendEmail, setSendEmail] = useState(false)
   const [emailSubject, setEmailSubject] = useState('New assessments have been assigned to you')
   const [emailBody, setEmailBody] = useState(
-    '<p>Hello {name},</p><p>You have been assigned the following assessment(s):</p><p>{assessments}</p><p>Please click the link above to take you to the dashboard to log in. Please complete your assignments by {expiration-date}.</p><p>You can access your assignments at any time from your dashboard ({dashboard-link}).</p><p>SAVE this email and BOOKMARK your login page. If you have been assigned multiple assessments, this will help you navigate to the login page.</p><p>If you have any questions, please contact us at: support@involvedtalent.com</p><p>Thank you!</p><p>-Involved Talent Team</p><p>© {year} Involved Talent</p>'
+    '<p>Hello {name},</p><p>You have been assigned the following assessment(s):</p><p>{assessments}</p><p>Please click the button above to open your dashboard and log in. Please complete your assignments by {expiration-date}.</p><p>You can access your assignments at any time from your dashboard ({dashboard-link}).</p><p>SAVE this email and BOOKMARK your login page.</p><p>If you have any questions, please contact us at: support@involvedtalent.com</p><p>Thank you!</p><p>-Involved Talent Team</p><p>© {year} Involved Talent</p>'
   )
   const [enableReminder, setEnableReminder] = useState(false)
   const [firstReminderDate, setFirstReminderDate] = useState('')
