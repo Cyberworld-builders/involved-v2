@@ -23,8 +23,6 @@ import type {
 } from '@/lib/reports/types'
 import { getReportDebug } from '@/lib/reports/report-debug'
 
-const SUBDIMENSION_PLACEHOLDER_DEFINITION =
-  'This is a placeholder definition for a dimension that has not been defined.'
 
 interface ReportLeaderBlockerViewFullscreenProps {
   reportData: ReportLeaderBlockerData
@@ -493,7 +491,7 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                           lineHeight: '20px',
                         }}
                       >
-                        {subdim.definition ?? SUBDIMENSION_PLACEHOLDER_DEFINITION}
+                        {subdim.definition || ''}
                       </div>
                     </div>
                   ))}
@@ -934,9 +932,11 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                       margin: '20px 0 40px',
                     }}
                   >
-                    <p style={{ fontSize: '16px' }}>
-                      Defined: {dimension.definition ?? SUBDIMENSION_PLACEHOLDER_DEFINITION}
-                    </p>
+                    {dimension.definition && (
+                      <p style={{ fontSize: '16px' }}>
+                        Defined: {dimension.definition}
+                      </p>
+                    )}
                     <p style={{ fontSize: '16px', lineHeight: '28px' }}>
                       This is your overall score for {dimension.dimension_name} across{' '}
                       {dimension.subdimensions?.length || 0} subdimensions:{' '}
@@ -1119,9 +1119,11 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                             margin: '20px 0 40px',
                           }}
                         >
-                          <p style={{ fontSize: '16px' }}>
-                            Defined: {subdim.definition ?? SUBDIMENSION_PLACEHOLDER_DEFINITION}
-                          </p>
+                          {subdim.definition && (
+                            <p style={{ fontSize: '16px' }}>
+                              Defined: {subdim.definition}
+                            </p>
+                          )}
 
                           <div className="leader-subdimension-chart" style={{ marginTop: '32px' }}>
                             <HorizontalBarChart
@@ -1261,9 +1263,11 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                       margin: '20px 0 40px',
                     }}
                   >
-                    <p style={{ fontSize: '16px' }}>
-                      Defined: {dimension.definition ?? SUBDIMENSION_PLACEHOLDER_DEFINITION}
-                    </p>
+                    {dimension.definition && (
+                      <p style={{ fontSize: '16px' }}>
+                        Defined: {dimension.definition}
+                      </p>
+                    )}
 
                     <div className="leader-subdimension-chart" style={{ marginTop: '32px' }}>
                       <HorizontalBarChart
