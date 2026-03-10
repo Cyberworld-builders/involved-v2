@@ -132,7 +132,7 @@ test.describe('Password Reset Flow', () => {
       // Verify the page has loaded
       // Our UI uses CardTitle (often renders as h3), so prefer role-based heading
       await expect(
-        page.getByRole('heading', { name: /forgot password|reset password/i }).first()
+        page.getByRole('heading', { name: /forgot password|reset password|request a login link/i }).first()
       ).toBeVisible({ timeout: DEFAULT_TIMEOUT })
     })
 
