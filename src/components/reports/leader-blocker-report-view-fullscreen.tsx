@@ -129,23 +129,29 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
   // Build table of contents
   const buildTOC = () => {
     if (!isBlocker) {
-      // Leaders TOC
-      const sections: Array<{ title: string; page: number; subSections?: Array<{ title: string; page: number }> }> = [
+      // Leaders TOC — nest subdimensions under parent dimensions
+      const dimensionPages = pageNumbers.dimensionPages as Array<{
+        dimension: DimensionReportLeaderBlocker
+        overallPage: number
+        subdimensionPages: Array<{ subdim: SubdimensionReportLeaderBlocker; page: number }>
+      }>
+
+      const sections: Array<{ title: string; page: number; subSections?: Array<{ title: string; page: number; subSections?: Array<{ title: string; page: number }> }> }> = [
         { title: 'Read Me First', page: pageNumbers.readMeFirst },
         { title: 'Summary of Scores', page: (pageNumbers as { scoresSummary: number }).scoresSummary },
         {
           title: 'Dimension Scores With Feedback:',
           page: 0,
-          subSections: (pageNumbers.dimensionPages as Array<{ dimension: DimensionReportLeaderBlocker; overallPage: number; subdimensionPages: Array<{ subdim: SubdimensionReportLeaderBlocker; page: number }> }>).flatMap((dp) => {
-            const subsections: Array<{ title: string; page: number }> = []
-            subsections.push({ title: dp.dimension.dimension_name, page: dp.overallPage })
-            if (dp.subdimensionPages && dp.subdimensionPages.length > 0) {
-              dp.subdimensionPages.forEach((sp) => {
-                subsections.push({ title: sp.subdim.dimension_name, page: sp.page })
-              })
-            }
-            return subsections
-          }),
+          subSections: dimensionPages.map((dp) => ({
+            title: dp.dimension.dimension_name,
+            page: dp.overallPage,
+            subSections: dp.subdimensionPages && dp.subdimensionPages.length > 0
+              ? dp.subdimensionPages.map((sp) => ({
+                  title: sp.subdim.dimension_name,
+                  page: sp.page,
+                }))
+              : undefined,
+          })),
         },
       ]
       return sections

@@ -59,15 +59,17 @@ export default function TableOfContents({ sections, className = '' }: TableOfCon
             >
               {section.title}
             </span>
-            <span
-              className="page"
-              style={{
-                position: 'absolute',
-                right: 0,
-              }}
-            >
-              {section.page}
-            </span>
+            {section.page > 0 && (
+              <span
+                className="page"
+                style={{
+                  position: 'absolute',
+                  right: 0,
+                }}
+              >
+                {section.page}
+              </span>
+            )}
           </div>
 
           {/* Sub-sections */}
