@@ -462,6 +462,8 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                     style={{
                       display: 'flex',
                       marginBottom: '10px',
+                      paddingBottom: '8px',
+                      borderBottom: `2px solid ${REPORT_COLORS.textPrimary}`,
                       fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
                       fontSize: '14px',
                       fontWeight: 600,
@@ -475,7 +477,9 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                     <div
                       key={subdim.dimension_id}
                       style={{
-                        marginBottom: '15px',
+                        paddingBottom: '10px',
+                        marginBottom: '10px',
+                        borderBottom: `1px solid ${REPORT_COLORS.lightGray}`,
                         display: 'flex',
                       }}
                     >
@@ -495,9 +499,11 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                           fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
                           fontSize: '14px',
                           lineHeight: '20px',
+                          fontStyle: subdim.definition ? 'normal' : 'italic',
+                          color: subdim.definition ? REPORT_COLORS.textPrimary : REPORT_COLORS.lightGray,
                         }}
                       >
-                        {subdim.definition || ''}
+                        {subdim.definition || 'Definition not yet provided'}
                       </div>
                     </div>
                   ))}
