@@ -1037,8 +1037,8 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                             showGridLines={true}
                             barHeight={50}
                             showScoreInBar={true}
-                            chartWidth={704}
-                            graphWidth={569}
+                            chartWidth={543}
+                            graphWidth={408}
                             scale="half"
                             rowGap={17}
                           />
@@ -1208,8 +1208,8 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                               showGridLines={true}
                               barHeight={50}
                               showScoreInBar={true}
-                              chartWidth={704}
-                              graphWidth={569}
+                              chartWidth={543}
+                              graphWidth={408}
                               scale="half"
                               rowGap={17}
                             />
@@ -1344,8 +1344,8 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                         showGridLines={true}
                         barHeight={50}
                         showScoreInBar={true}
-                        chartWidth={704}
-                        graphWidth={569}
+                        chartWidth={543}
+                        graphWidth={408}
                         scale="half"
                         rowGap={17}
                       />
