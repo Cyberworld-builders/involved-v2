@@ -440,7 +440,7 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                 <strong>Sub-dimensions are defined as:</strong>
               </p>
 
-              {reportData.dimensions.map((dimension) => (
+              {reportData.dimensions.filter((d) => d.subdimensions && d.subdimensions.length > 0).map((dimension) => (
                 <div
                   key={dimension.dimension_id}
                   style={{
