@@ -778,16 +778,17 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                   const barColor = dimension.dimension_name === 'Involving-Stakeholders'
                     ? REPORT_COLORS.darkBlueAlt
                     : REPORT_COLORS.primaryBlue
+                  const hasSubdimensions = subdimensions.length > 0
 
                   return (
                     <div
                       key={dimension.dimension_id}
                       className="chart leader-summary-chart"
                       style={{
-                        width: '48%',
-                        minWidth: '400px',
-                        flex: '1 1 400px',
-                        maxWidth: '563px',
+                        width: hasSubdimensions ? '48%' : '23%',
+                        minWidth: hasSubdimensions ? '400px' : '150px',
+                        flex: hasSubdimensions ? '1 1 400px' : '0 0 auto',
+                        maxWidth: hasSubdimensions ? '563px' : '200px',
                         marginTop: '20px',
                         marginBottom: idx < reportData.dimensions.length - 1 ? '40px' : '0',
                       }}
@@ -800,49 +801,51 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                           fontWeight: 600,
                           textDecoration: 'none',
                           textAlign: 'center',
-                          marginBottom: '45px',
+                          marginBottom: hasSubdimensions ? '45px' : '15px',
                         }}
                       >
                         {dimension.dimension_name}
                       </div>
 
-                      <div style={{ marginTop: '32px', display: 'flex', alignItems: 'center', width: '100%' }}>
+                      <div style={{ marginTop: hasSubdimensions ? '32px' : '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
                         <div
                           className="score-container"
                           style={{
-                            width: '141px',
-                            height: '230px',
+                            width: hasSubdimensions ? '141px' : 'auto',
+                            height: hasSubdimensions ? '230px' : 'auto',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             flexShrink: 0,
-                            marginRight: '20px',
+                            marginRight: hasSubdimensions ? '20px' : '0',
                           }}
                         >
                           <ScoreDisplay
                             score={dimension.target_score}
                             maxValue={5}
-                            label="Overall Score Out of 5"
-                            size="large"
+                            label="Score"
+                            size={hasSubdimensions ? 'large' : 'medium'}
                           />
                         </div>
-                        <div style={{ flex: 1 }}>
-                          <HorizontalBarChart
-                            scores={subdimensions.map((s) => ({
-                              label: s.dimension_name,
-                              score: s.target_score,
-                              flagged: isFlagged(s.target_score, s.industry_benchmark, s.geonorm),
-                              color: barColor,
-                            }))}
-                            maxValue={5}
-                            showGridLines={true}
-                            barHeight={40}
-                            showScoreInBar={true}
-                            chartWidth={563}
-                            scale="integer"
-                            rowGap={12}
-                          />
-                        </div>
+                        {hasSubdimensions && (
+                          <div style={{ flex: 1 }}>
+                            <HorizontalBarChart
+                              scores={subdimensions.map((s) => ({
+                                label: s.dimension_name,
+                                score: s.target_score,
+                                flagged: isFlagged(s.target_score, s.industry_benchmark, s.geonorm),
+                                color: barColor,
+                              }))}
+                              maxValue={5}
+                              showGridLines={true}
+                              barHeight={40}
+                              showScoreInBar={true}
+                              chartWidth={563}
+                              scale="integer"
+                              rowGap={12}
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
                   )
