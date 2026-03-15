@@ -734,142 +734,120 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
         </PageContainer>
       )}
 
-      {/* Scores Summary (Leaders only) — may span multiple pages */}
+      {/* Scores Summary Page (Leaders only) */}
       {!isBlocker && (() => {
         const withSubs = reportData.dimensions.filter(d => d.subdimensions && d.subdimensions.length > 0)
-        const withoutSubs = reportData.dimensions.filter(d => !d.subdimensions || d.subdimensions.length === 0)
         const summaryPage = (pageNumbers as { scoresSummary: number }).scoresSummary
 
-        // Pair charted dimensions side by side (2 per row)
-        const chartPairs: Array<typeof withSubs> = []
-        for (let i = 0; i < withSubs.length; i += 2) {
-          chartPairs.push(withSubs.slice(i, i + 2))
-        }
-
         return (
-          <>
-            {/* Page 1: Title + Score Table for all dimensions */}
-            <PageContainer pageNumber={summaryPage} id={`${summaryPage}`}>
-              <PageWrapper>
-                <PageHeader
-                  pageNumber={summaryPage}
-                  logo={`involve-${reportType}-logo-small.png`}
-                  logoWidth={166}
-                />
+          <PageContainer pageNumber={summaryPage} id={`${summaryPage}`}>
+            <PageWrapper>
+              <PageHeader
+                pageNumber={summaryPage}
+                logo={`involve-${reportType}-logo-small.png`}
+                logoWidth={166}
+              />
 
-                <div
-                  className="page-title alt2"
-                  style={{
-                    fontSize: REPORT_TYPOGRAPHY.pageTitle.small,
-                    fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-                    letterSpacing: 0,
-                    marginTop: '80px',
-                  }}
-                >
-                  Scores<br />
-                  <span style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif", fontWeight: 600, fontSize: '70px' }}>Summary</span>
-                </div>
-
-                <div style={{
-                  marginTop: '30px',
+              <div
+                className="page-title alt2"
+                style={{
+                  fontSize: REPORT_TYPOGRAPHY.pageTitle.small,
                   fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                  letterSpacing: 0,
+                  marginTop: '60px',
+                }}
+              >
+                Scores<br />
+                <span style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif", fontWeight: 600, fontSize: '60px' }}>Summary</span>
+              </div>
+
+              <div style={{
+                marginTop: '20px',
+                fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+              }}>
+                {/* Score table for all dimensions */}
+                <div style={{
+                  display: 'flex',
+                  paddingBottom: '6px',
+                  marginBottom: '6px',
+                  borderBottom: `2px solid ${REPORT_COLORS.textPrimary}`,
+                  fontSize: '13px',
+                  fontWeight: 600,
                 }}>
-                  {/* All dimensions score table */}
-                  <div style={{
-                    display: 'flex',
-                    paddingBottom: '8px',
-                    marginBottom: '8px',
-                    borderBottom: `2px solid ${REPORT_COLORS.textPrimary}`,
-                    fontSize: '14px',
-                    fontWeight: 600,
-                  }}>
-                    <div style={{ flex: 1 }}>Dimension</div>
-                    <div style={{ width: '80px', textAlign: 'center' }}>Score</div>
-                    <div style={{ width: '80px', textAlign: 'center' }}>Benchmark</div>
-                    <div style={{ width: '80px', textAlign: 'center' }}>Group</div>
-                  </div>
-                  {reportData.dimensions.map((dimension) => {
-                    const flagged = isFlagged(dimension.target_score, dimension.industry_benchmark, dimension.geonorm, dimension.group_score)
-                    const hasSubs = dimension.subdimensions && dimension.subdimensions.length > 0
-                    return (
-                      <div key={dimension.dimension_id}>
-                        <div style={{
+                  <div style={{ flex: 1 }}>Dimension</div>
+                  <div style={{ width: '70px', textAlign: 'center' }}>Score</div>
+                  <div style={{ width: '70px', textAlign: 'center' }}>Benchmark</div>
+                  <div style={{ width: '70px', textAlign: 'center' }}>Group</div>
+                </div>
+                {reportData.dimensions.map((dimension) => {
+                  const flagged = isFlagged(dimension.target_score, dimension.industry_benchmark, dimension.geonorm, dimension.group_score)
+                  const hasSubs = dimension.subdimensions && dimension.subdimensions.length > 0
+                  return (
+                    <div key={dimension.dimension_id}>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        paddingBottom: '4px',
+                        marginBottom: hasSubs ? '1px' : '4px',
+                        borderBottom: hasSubs ? 'none' : `1px solid ${REPORT_COLORS.lightGray}`,
+                        fontSize: '13px',
+                      }}>
+                        <div style={{ flex: 1, fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                          {flagged && (
+                            <Image src="/images/reports/triangle-orange.png" alt="" width={8} height={8} />
+                          )}
+                          {dimension.dimension_name}
+                        </div>
+                        <div style={{ width: '70px', textAlign: 'center', fontWeight: 600 }}>
+                          {dimension.target_score.toFixed(1)}
+                        </div>
+                        <div style={{ width: '70px', textAlign: 'center', color: '#888' }}>
+                          {dimension.industry_benchmark?.toFixed(1) ?? '—'}
+                        </div>
+                        <div style={{ width: '70px', textAlign: 'center', color: '#888' }}>
+                          {dimension.group_score?.toFixed(1) ?? '—'}
+                        </div>
+                      </div>
+                      {hasSubs && dimension.subdimensions?.map((sub) => (
+                        <div key={sub.dimension_id} style={{
                           display: 'flex',
                           alignItems: 'center',
-                          paddingBottom: '6px',
-                          marginBottom: hasSubs ? '2px' : '6px',
-                          borderBottom: hasSubs ? 'none' : `1px solid ${REPORT_COLORS.lightGray}`,
-                          fontSize: '14px',
+                          paddingBottom: '3px',
+                          marginBottom: '3px',
+                          marginLeft: '18px',
+                          borderBottom: `1px solid ${REPORT_COLORS.lightGray}`,
+                          fontSize: '12px',
+                          color: '#555',
                         }}>
-                          <div style={{ flex: 1, fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            {flagged && (
-                              <Image src="/images/reports/triangle-orange.png" alt="" width={8} height={8} />
-                            )}
-                            {dimension.dimension_name}
-                          </div>
-                          <div style={{ width: '80px', textAlign: 'center', fontWeight: 600 }}>
-                            {dimension.target_score.toFixed(1)}
-                          </div>
-                          <div style={{ width: '80px', textAlign: 'center', color: '#888' }}>
-                            {dimension.industry_benchmark?.toFixed(1) ?? '—'}
-                          </div>
-                          <div style={{ width: '80px', textAlign: 'center', color: '#888' }}>
-                            {dimension.group_score?.toFixed(1) ?? '—'}
-                          </div>
+                          <div style={{ flex: 1 }}>{sub.dimension_name}</div>
+                          <div style={{ width: '70px', textAlign: 'center' }}>{sub.target_score.toFixed(1)}</div>
+                          <div style={{ width: '70px', textAlign: 'center' }}>{sub.industry_benchmark?.toFixed(1) ?? '—'}</div>
+                          <div style={{ width: '70px', textAlign: 'center' }}>{sub.group_score?.toFixed(1) ?? '—'}</div>
                         </div>
-                        {/* Subdimension rows indented */}
-                        {hasSubs && dimension.subdimensions?.map((sub) => (
-                          <div key={sub.dimension_id} style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            paddingBottom: '4px',
-                            marginBottom: '4px',
-                            marginLeft: '20px',
-                            borderBottom: `1px solid ${REPORT_COLORS.lightGray}`,
-                            fontSize: '13px',
-                            color: '#555',
-                          }}>
-                            <div style={{ flex: 1 }}>{sub.dimension_name}</div>
-                            <div style={{ width: '80px', textAlign: 'center' }}>{sub.target_score.toFixed(1)}</div>
-                            <div style={{ width: '80px', textAlign: 'center' }}>{sub.industry_benchmark?.toFixed(1) ?? '—'}</div>
-                            <div style={{ width: '80px', textAlign: 'center' }}>{sub.group_score?.toFixed(1) ?? '—'}</div>
-                          </div>
-                        ))}
-                      </div>
-                    )
-                  })}
-                </div>
+                      ))}
+                    </div>
+                  )
+                })}
 
-                <PageFooter pageNumber={summaryPage} />
-              </PageWrapper>
-            </PageContainer>
-
-            {/* Page 2+: Charted dimensions with bar charts (2 per page, side by side) */}
-            {chartPairs.map((pair, pairIdx) => (
-              <PageContainer key={`chart-${pairIdx}`} pageNumber={summaryPage + 1 + pairIdx} id={`${summaryPage + 1 + pairIdx}`}>
-                <PageWrapper>
-                  <PageHeader
-                    pageNumber={summaryPage + 1 + pairIdx}
-                    logo={`involve-${reportType}-logo-small.png`}
-                    logoWidth={166}
-                  />
-
+                {/* Charted dimensions with bar charts — side by side below table */}
+                {withSubs.length > 0 && (
                   <div style={{
-                    marginTop: '40px',
+                    marginTop: '25px',
                     display: 'flex',
-                    gap: '30px',
+                    flexWrap: 'wrap',
+                    gap: '20px',
                     justifyContent: 'center',
                   }}>
-                    {pair.map((dimension) => {
+                    {withSubs.map((dimension) => {
                       const subdimensions = dimension.subdimensions ?? []
                       return (
-                        <div key={dimension.dimension_id} style={{ flex: '1 1 0', maxWidth: '340px' }}>
+                        <div key={dimension.dimension_id} style={{ flex: '1 1 0', maxWidth: '340px', minWidth: '280px' }}>
                           <div style={{
-                            fontSize: '14px',
+                            fontSize: '13px',
                             fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
                             fontWeight: 600,
                             textAlign: 'center',
-                            marginBottom: '10px',
+                            marginBottom: '8px',
                           }}>
                             {dimension.dimension_name}
                           </div>
@@ -877,10 +855,10 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                             <ScoreDisplay
                               score={dimension.target_score}
                               maxValue={5}
-                              label="Overall Score Out of 5"
-                              size="medium"
+                              label="Out of 5"
+                              size="small"
                             />
-                            <div style={{ marginTop: '15px', width: '100%' }}>
+                            <div style={{ marginTop: '10px', width: '100%' }}>
                               <HorizontalBarChart
                                 scores={subdimensions.map((s) => ({
                                   label: s.dimension_name,
@@ -889,13 +867,13 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                                 }))}
                                 maxValue={5}
                                 showGridLines={true}
-                                barHeight={28}
+                                barHeight={22}
                                 showScoreInBar={true}
-                                chartWidth={310}
-                                graphWidth={200}
+                                chartWidth={300}
+                                graphWidth={190}
                                 rateeWidth={105}
                                 scale="integer"
-                                rowGap={6}
+                                rowGap={4}
                               />
                             </div>
                           </div>
@@ -903,12 +881,12 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                       )
                     })}
                   </div>
+                )}
+              </div>
 
-                  <PageFooter pageNumber={summaryPage + 1 + pairIdx} />
-                </PageWrapper>
-              </PageContainer>
-            ))}
-          </>
+              <PageFooter pageNumber={summaryPage} />
+            </PageWrapper>
+          </PageContainer>
         )
       })()}
 
