@@ -774,45 +774,39 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                 const withoutSubs = reportData.dimensions.filter(d => !d.subdimensions || d.subdimensions.length === 0)
 
                 return (
-                  <div className="leader-summary-charts" style={{ marginTop: '30px' }}>
-                    {/* Dimensions with subdimensions — full chart panels */}
+                  <div className="leader-summary-charts" style={{ marginTop: '20px' }}>
+                    {/* Dimensions with subdimensions — compact chart panels */}
                     {withSubs.map((dimension) => {
                       const subdimensions = dimension.subdimensions ?? []
                       return (
                         <div
                           key={dimension.dimension_id}
                           className="chart leader-summary-chart"
-                          style={{ marginBottom: '35px' }}
+                          style={{ marginBottom: '25px' }}
                         >
-                          <div
-                            className="title"
-                            style={{
-                              fontSize: '16px',
-                              fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-                              fontWeight: 600,
-                              textAlign: 'center',
-                              marginBottom: '15px',
-                            }}
-                          >
+                          <div style={{
+                            fontSize: '14px',
+                            fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                            fontWeight: 600,
+                            textAlign: 'center',
+                            marginBottom: '8px',
+                          }}>
                             {dimension.dimension_name}
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                            <div
-                              className="score-container"
-                              style={{
-                                width: '120px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                flexShrink: 0,
-                                marginRight: '20px',
-                              }}
-                            >
+                            <div style={{
+                              width: '90px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
+                              marginRight: '15px',
+                            }}>
                               <ScoreDisplay
                                 score={dimension.target_score}
                                 maxValue={5}
-                                label="Overall Score Out of 5"
-                                size="large"
+                                label="Out of 5"
+                                size="medium"
                               />
                             </div>
                             <div style={{ flex: 1 }}>
@@ -820,16 +814,15 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                                 scores={subdimensions.map((s) => ({
                                   label: s.dimension_name,
                                   score: s.target_score,
-                                  flagged: isFlagged(s.target_score, s.industry_benchmark, s.geonorm),
                                   color: REPORT_COLORS.primaryBlue,
                                 }))}
                                 maxValue={5}
                                 showGridLines={true}
-                                barHeight={35}
+                                barHeight={28}
                                 showScoreInBar={true}
                                 chartWidth={563}
                                 scale="integer"
-                                rowGap={8}
+                                rowGap={5}
                               />
                             </div>
                           </div>
@@ -837,69 +830,61 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                       )
                     })}
 
-                    {/* Dimensions without subdimensions — compact score grid */}
+                    {/* Dimensions without subdimensions — simple score table */}
                     {withoutSubs.length > 0 && (
-                      <div style={{ marginTop: withSubs.length > 0 ? '20px' : '0' }}>
-                        {withSubs.length > 0 && (
-                          <div style={{
-                            fontSize: '14px',
-                            fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-                            fontWeight: 600,
-                            marginBottom: '15px',
-                            color: REPORT_COLORS.textPrimary,
-                          }}>
-                            Individual Dimension Scores
-                          </div>
-                        )}
+                      <div style={{ marginTop: '10px' }}>
                         <div style={{
-                          display: 'grid',
-                          gridTemplateColumns: 'repeat(4, 1fr)',
-                          gap: '12px',
+                          display: 'flex',
+                          paddingBottom: '6px',
+                          marginBottom: '6px',
+                          borderBottom: `2px solid ${REPORT_COLORS.textPrimary}`,
+                          fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                          fontSize: '13px',
+                          fontWeight: 600,
                         }}>
-                          {withoutSubs.map((dimension) => {
-                            const flagged = isFlagged(dimension.target_score, dimension.industry_benchmark, dimension.geonorm, dimension.group_score)
-                            return (
-                              <div
-                                key={dimension.dimension_id}
-                                style={{
-                                  textAlign: 'center',
-                                  padding: '12px 8px',
-                                  border: flagged ? `2px solid ${REPORT_COLORS.orangeRed}` : `1px solid ${REPORT_COLORS.lightGray}`,
-                                  borderRadius: '6px',
-                                }}
-                              >
-                                <div style={{
-                                  fontSize: '12px',
-                                  fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-                                  fontWeight: 600,
-                                  marginBottom: '8px',
-                                  lineHeight: '1.2',
-                                  minHeight: '28px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                }}>
-                                  {dimension.dimension_name}
-                                </div>
-                                <ScoreDisplay
-                                  score={dimension.target_score}
-                                  maxValue={5}
-                                  label=""
-                                  size="small"
-                                />
+                          <div style={{ flex: 1 }}>Dimension</div>
+                          <div style={{ width: '80px', textAlign: 'center' }}>Score</div>
+                          <div style={{ width: '80px', textAlign: 'center' }}>Benchmark</div>
+                          <div style={{ width: '80px', textAlign: 'center' }}>Group</div>
+                        </div>
+                        {withoutSubs.map((dimension) => {
+                          const flagged = isFlagged(dimension.target_score, dimension.industry_benchmark, dimension.geonorm, dimension.group_score)
+                          return (
+                            <div
+                              key={dimension.dimension_id}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                paddingBottom: '5px',
+                                marginBottom: '5px',
+                                borderBottom: `1px solid ${REPORT_COLORS.lightGray}`,
+                                fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                                fontSize: '13px',
+                              }}
+                            >
+                              <div style={{ flex: 1, fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 {flagged && (
                                   <Image
                                     src="/images/reports/triangle-orange.png"
-                                    alt="Needs improvement"
-                                    width={10}
-                                    height={10}
-                                    style={{ marginTop: '4px' }}
+                                    alt=""
+                                    width={8}
+                                    height={8}
                                   />
                                 )}
+                                {dimension.dimension_name}
                               </div>
-                            )
-                          })}
-                        </div>
+                              <div style={{ width: '80px', textAlign: 'center', fontWeight: 600 }}>
+                                {dimension.target_score.toFixed(1)}
+                              </div>
+                              <div style={{ width: '80px', textAlign: 'center', color: '#888' }}>
+                                {dimension.industry_benchmark?.toFixed(1) ?? '—'}
+                              </div>
+                              <div style={{ width: '80px', textAlign: 'center', color: '#888' }}>
+                                {dimension.group_score?.toFixed(1) ?? '—'}
+                              </div>
+                            </div>
+                          )
+                        })}
                       </div>
                     )}
                   </div>
