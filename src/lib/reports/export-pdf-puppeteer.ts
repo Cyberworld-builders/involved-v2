@@ -33,34 +33,14 @@ export async function generatePDFFromViewPuppeteer(
   
   if (isProduction) {
     try {
-      // Try @sparticuz/chromium-min first (includes necessary libraries, works better in Vercel)
-      const chromiumMin = await import('@sparticuz/chromium-min')
-      const chromium = chromiumMin.default
-      
-      // Configure chromium-min for serverless (disable graphics mode) - it's a setter, not a method
-      try {
-        (chromium as { setGraphicsMode: boolean }).setGraphicsMode = false
-      } catch {
-        /* ignore */
-      }
-      
-      // @sparticuz/chromium-min exports a default object with executablePath() and args
+      const chromiumPkg = await import('@sparticuz/chromium')
+      const chromium = chromiumPkg.default
+      chromium.setGraphicsMode = false
       executablePath = await chromium.executablePath()
       args = chromium.args
-      console.log('[Puppeteer] Using @sparticuz/chromium-min for serverless')
-    } catch (chromiumMinError) {
-      console.warn('[Puppeteer] Failed to import @sparticuz/chromium-min, trying regular chromium:', chromiumMinError instanceof Error ? chromiumMinError.message : String(chromiumMinError))
-      try {
-        // Fallback to regular @sparticuz/chromium
-        const chromiumPkg = await import('@sparticuz/chromium')
-        const chromium = chromiumPkg.default
-        executablePath = await chromium.executablePath()
-        args = chromium.args
-        console.log('[Puppeteer] Using @sparticuz/chromium for serverless (fallback)')
-      } catch (fallbackError) {
-        console.error('[Puppeteer] Failed to get @sparticuz/chromium executable:', fallbackError instanceof Error ? fallbackError.message : String(fallbackError))
-        // Will fail, but at least we tried
-      }
+      console.log('[Puppeteer] Using @sparticuz/chromium for serverless')
+    } catch (err) {
+      console.error('[Puppeteer] Failed to load @sparticuz/chromium:', err instanceof Error ? err.message : String(err))
     }
   }
   

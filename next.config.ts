@@ -60,7 +60,8 @@ const nextConfig: NextConfig = {
   },
   serverExternalPackages: [
     '@react-pdf/renderer',
-    'chrome-aws-lambda',
+    '@sparticuz/chromium',
+    'puppeteer-core',
     'playwright-core',
   ],
 };

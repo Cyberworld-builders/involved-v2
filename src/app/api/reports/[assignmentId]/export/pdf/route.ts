@@ -3,6 +3,10 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getAppUrl } from '@/lib/config'
 
+// Vercel serverless function config — Chromium needs more memory and time
+export const maxDuration = 60 // seconds (Vercel Pro max)
+export const dynamic = 'force-dynamic'
+
 /**
  * GET /api/reports/:assignmentId/export/pdf
  * Export report as PDF
