@@ -15,21 +15,38 @@ interface TableOfContentsProps {
 
 /**
  * Table of Contents Component
- * 
- * Matches legacy table-of-contents styling:
- * - Main lines with page numbers
- * - Sub-lines with triangle icons
- * - Underline styling
+ *
+ * Dynamically scales spacing based on total entry count to fit on one page.
  */
 export default function TableOfContents({ sections, className = '' }: TableOfContentsProps) {
+  // Count total entries to determine spacing
+  let totalEntries = 0
+  for (const section of sections) {
+    totalEntries++
+    if (section.subSections) {
+      for (const sub of section.subSections) {
+        totalEntries++
+        if (sub.subSections) {
+          totalEntries += sub.subSections.length
+        }
+      }
+    }
+  }
+
+  // Scale spacing to fit — max usable height ~700px (960 - title - margins)
+  const maxHeight = 700
+  const lineHeight = Math.min(26, Math.floor(maxHeight / totalEntries) - 2)
+  const lineMargin = Math.min(10, Math.max(4, lineHeight - 20))
+  const fontSize = totalEntries > 20 ? '15px' : '18px'
+
   return (
     <div
       className={`table-of-contents ${className}`}
       style={{
         letterSpacing: '0.5px',
         fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-        fontSize: '18px',
-        lineHeight: '22px',
+        fontSize,
+        lineHeight: `${lineHeight}px`,
         marginTop: '40px',
         width: `${REPORT_SPACING.contentWidth}px`,
         position: 'relative',
@@ -42,10 +59,10 @@ export default function TableOfContents({ sections, className = '' }: TableOfCon
             className="line"
             style={{
               borderBottom: `1px solid ${REPORT_COLORS.lightGray}`,
-              marginBottom: '14px',
+              marginBottom: `${lineMargin}px`,
               position: 'relative',
               width: `${REPORT_SPACING.contentWidth}px`,
-              height: '29px',
+              height: `${lineHeight}px`,
             }}
           >
             <span
@@ -82,9 +99,9 @@ export default function TableOfContents({ sections, className = '' }: TableOfCon
                   marginLeft: '25px',
                   width: '679px',
                   borderBottom: `1px solid ${REPORT_COLORS.lightGray}`,
-                  marginBottom: '14px',
+                  marginBottom: `${lineMargin}px`,
                   position: 'relative',
-                  height: '29px',
+                  height: `${lineHeight}px`,
                 }}
               >
                 <div
@@ -96,7 +113,7 @@ export default function TableOfContents({ sections, className = '' }: TableOfCon
                     height: '18px',
                     position: 'absolute',
                     left: '-22px',
-                    top: '6px',
+                    top: `${Math.max(2, (lineHeight - 18) / 2)}px`,
                     backgroundSize: '5px 8px',
                   }}
                 />
@@ -131,9 +148,9 @@ export default function TableOfContents({ sections, className = '' }: TableOfCon
                     marginLeft: '50px',
                     width: '654px',
                     borderBottom: `1px solid ${REPORT_COLORS.lightGray}`,
-                    marginBottom: '14px',
+                    marginBottom: `${lineMargin}px`,
                     position: 'relative',
-                    height: '29px',
+                    height: `${lineHeight}px`,
                   }}
                 >
                   <span
