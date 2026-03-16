@@ -24,7 +24,7 @@ const baseAssignment = {
   user_id: 'user-1',
   assessment_id: 'assess-1',
   survey_id: null as string | null,
-  expires: '2026-03-15T23:59:59.999Z',
+  expires: '2099-12-31T23:59:59.999Z',
   completed: false,
   completed_at: null as string | null,
   created_at: '2026-01-01T00:00:00.000Z',
@@ -79,7 +79,7 @@ describe('EditAssignmentClient', () => {
     render(<EditAssignmentClient assignment={baseAssignment} />)
 
     expect(screen.getByText('Expiration Date')).toBeInTheDocument()
-    const dateInput = screen.getByDisplayValue('2026-03-15')
+    const dateInput = screen.getByDisplayValue('2099-12-31')
     expect(dateInput).toBeInTheDocument()
     expect(dateInput).toHaveAttribute('type', 'date')
   })
