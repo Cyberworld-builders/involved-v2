@@ -120,23 +120,7 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
         <PageWrapper>
           <PageHeader pageNumber={pageNumber} logo="involve-360-logo-small.png" />
 
-          {/* Partial report banner - hidden in PDF via export CSS */}
-          {showPartialBanner && reportData.participant_response_summary && (
-            <div
-              className="partial-report-banner"
-              style={{
-                marginBottom: '20px',
-                padding: '12px 16px',
-                backgroundColor: '#FEF3C7',
-                border: '1px solid #F59E0B',
-                borderRadius: '4px',
-                fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-                fontSize: REPORT_TYPOGRAPHY.body.fontSize,
-              }}
-            >
-              <strong>Partial report:</strong> {reportData.participant_response_summary.completed} of {reportData.participant_response_summary.total} responses received. The report will update as more responses are completed.
-            </div>
-          )}
+          {/* Partial report banner removed per client request */}
 
           {/* Title */}
           <div
