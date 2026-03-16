@@ -753,8 +753,8 @@ export default function AssessmentTakingClient({
                   setCurrentPage(Math.max(0, currentPage - 1))
                   // Scroll to top of page after page change
                   setTimeout(() => {
-                    window.scrollTo({ top: 0, behavior: 'smooth' })
-                  }, 100)
+                    window.scrollTo({ top: 0, behavior: 'instant' })
+                  }, 50)
                 }}
                 disabled={isFirstPage}
                 className={`px-6 py-2 rounded-md font-medium ${
