@@ -110,7 +110,13 @@ describe('generateLeaderBlockerReport', () => {
       error: null,
     })
 
-    // 7. report_data (feedback_assigned)
+    // 7. fields (description/definition rich_text)
+    responseQueue.push({
+      data: [],
+      error: null,
+    })
+
+    // 8. report_data (feedback_assigned)
     responseQueue.push({
       data: { feedback_assigned: [] },
       error: null,

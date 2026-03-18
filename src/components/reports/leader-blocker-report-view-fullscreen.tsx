@@ -129,23 +129,29 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
   // Build table of contents
   const buildTOC = () => {
     if (!isBlocker) {
-      // Leaders TOC
-      const sections: Array<{ title: string; page: number; subSections?: Array<{ title: string; page: number }> }> = [
+      // Leaders TOC — nest subdimensions under parent dimensions
+      const dimensionPages = pageNumbers.dimensionPages as Array<{
+        dimension: DimensionReportLeaderBlocker
+        overallPage: number
+        subdimensionPages: Array<{ subdim: SubdimensionReportLeaderBlocker; page: number }>
+      }>
+
+      const sections: Array<{ title: string; page: number; subSections?: Array<{ title: string; page: number; subSections?: Array<{ title: string; page: number }> }> }> = [
         { title: 'Read Me First', page: pageNumbers.readMeFirst },
         { title: 'Summary of Scores', page: (pageNumbers as { scoresSummary: number }).scoresSummary },
         {
           title: 'Dimension Scores With Feedback:',
           page: 0,
-          subSections: (pageNumbers.dimensionPages as Array<{ dimension: DimensionReportLeaderBlocker; overallPage: number; subdimensionPages: Array<{ subdim: SubdimensionReportLeaderBlocker; page: number }> }>).flatMap((dp) => {
-            const subsections: Array<{ title: string; page: number }> = []
-            subsections.push({ title: dp.dimension.dimension_name, page: dp.overallPage })
-            if (dp.subdimensionPages && dp.subdimensionPages.length > 0) {
-              dp.subdimensionPages.forEach((sp) => {
-                subsections.push({ title: sp.subdim.dimension_name, page: sp.page })
-              })
-            }
-            return subsections
-          }),
+          subSections: dimensionPages.map((dp) => ({
+            title: dp.dimension.dimension_name,
+            page: dp.overallPage,
+            subSections: dp.subdimensionPages && dp.subdimensionPages.length > 0
+              ? dp.subdimensionPages.map((sp) => ({
+                  title: sp.subdim.dimension_name,
+                  page: sp.page,
+                }))
+              : undefined,
+          })),
         },
       ]
       return sections
@@ -434,7 +440,7 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                 <strong>Sub-dimensions are defined as:</strong>
               </p>
 
-              {reportData.dimensions.map((dimension) => (
+              {reportData.dimensions.filter((d) => d.subdimensions && d.subdimensions.length > 0).map((dimension) => (
                 <div
                   key={dimension.dimension_id}
                   style={{
@@ -456,6 +462,8 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                     style={{
                       display: 'flex',
                       marginBottom: '10px',
+                      paddingBottom: '8px',
+                      borderBottom: `2px solid ${REPORT_COLORS.textPrimary}`,
                       fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
                       fontSize: '14px',
                       fontWeight: 600,
@@ -469,7 +477,9 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                     <div
                       key={subdim.dimension_id}
                       style={{
-                        marginBottom: '15px',
+                        paddingBottom: '10px',
+                        marginBottom: '10px',
+                        borderBottom: `1px solid ${REPORT_COLORS.lightGray}`,
                         display: 'flex',
                       }}
                     >
@@ -489,9 +499,11 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                           fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
                           fontSize: '14px',
                           lineHeight: '20px',
+                          fontStyle: subdim.definition ? 'normal' : 'italic',
+                          color: subdim.definition ? REPORT_COLORS.textPrimary : REPORT_COLORS.lightGray,
                         }}
                       >
-                        {subdim.definition || ''}
+                        {subdim.definition || 'Definition not yet provided'}
                       </div>
                     </div>
                   ))}
@@ -723,132 +735,160 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
       )}
 
       {/* Scores Summary Page (Leaders only) */}
-      {!isBlocker && (
-        <PageContainer pageNumber={(pageNumbers as { scoresSummary: number }).scoresSummary} id={`${(pageNumbers as { scoresSummary: number }).scoresSummary}`}>
-          <PageWrapper>
-            <PageHeader
-              pageNumber={(pageNumbers as { scoresSummary: number }).scoresSummary}
-              logo={`involve-${reportType}-logo-small.png`}
-              logoWidth={166}
-            />
+      {!isBlocker && (() => {
+        const withSubs = reportData.dimensions.filter(d => d.subdimensions && d.subdimensions.length > 0)
+        const summaryPage = (pageNumbers as { scoresSummary: number }).scoresSummary
 
-            {/* Title */}
-            <div
-              className="page-title alt2"
-              style={{
-                fontSize: REPORT_TYPOGRAPHY.pageTitle.small,
-                fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-                letterSpacing: 0,
-                marginTop: '80px',
-              }}
-            >
-              Scores<br />
-              <span style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif", fontWeight: 600, fontSize: '70px' }}>Summary</span>
-            </div>
+        return (
+          <PageContainer pageNumber={summaryPage} id={`${summaryPage}`}>
+            <PageWrapper>
+              <PageHeader
+                pageNumber={summaryPage}
+                logo={`involve-${reportType}-logo-small.png`}
+                logoWidth={166}
+              />
 
-            {/* Content */}
-            <div
-              className="page-content"
-              style={{
-                letterSpacing: '0.5px',
-                fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-                fontSize: REPORT_TYPOGRAPHY.body.fontSize,
-                lineHeight: REPORT_TYPOGRAPHY.body.lineHeight,
-                margin: '20px 0 40px',
-              }}
-            >
               <div
-                className="leader-summary-charts"
+                className="page-title alt2"
                 style={{
-                  marginTop: '40px',
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  justifyContent: 'space-between',
-                  gap: '20px',
+                  fontSize: REPORT_TYPOGRAPHY.pageTitle.small,
+                  fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                  letterSpacing: 0,
+                  marginTop: '60px',
                 }}
               >
-                {reportData.dimensions.map((dimension, idx) => {
-                  const subdimensions = dimension.subdimensions ?? []
-                  const barColor = dimension.dimension_name === 'Involving-Stakeholders'
-                    ? REPORT_COLORS.darkBlueAlt
-                    : REPORT_COLORS.primaryBlue
+                Scores<br />
+                <span style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif", fontWeight: 600, fontSize: '60px' }}>Summary</span>
+              </div>
 
+              <div style={{
+                marginTop: '20px',
+                fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+              }}>
+                {/* Score table for all dimensions */}
+                <div style={{
+                  display: 'flex',
+                  paddingBottom: '6px',
+                  marginBottom: '6px',
+                  borderBottom: `2px solid ${REPORT_COLORS.textPrimary}`,
+                  fontSize: '13px',
+                  fontWeight: 600,
+                }}>
+                  <div style={{ flex: 1 }}>Dimension</div>
+                  <div style={{ width: '70px', textAlign: 'center' }}>Score</div>
+                  <div style={{ width: '70px', textAlign: 'center' }}>Benchmark</div>
+                  <div style={{ width: '70px', textAlign: 'center' }}>Group</div>
+                </div>
+                {reportData.dimensions.map((dimension) => {
+                  const flagged = isFlagged(dimension.target_score, dimension.industry_benchmark, dimension.geonorm, dimension.group_score)
+                  const hasSubs = dimension.subdimensions && dimension.subdimensions.length > 0
                   return (
-                    <div
-                      key={dimension.dimension_id}
-                      className="chart leader-summary-chart"
-                      style={{
-                        width: '48%',
-                        minWidth: '400px',
-                        flex: '1 1 400px',
-                        maxWidth: '563px',
-                        marginTop: '20px',
-                        marginBottom: idx < reportData.dimensions.length - 1 ? '40px' : '0',
-                      }}
-                    >
-                      <div
-                        className="title"
-                        style={{
-                          fontSize: '16px',
-                          fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-                          fontWeight: 600,
-                          textDecoration: 'none',
-                          textAlign: 'center',
-                          marginBottom: '45px',
-                        }}
-                      >
-                        {dimension.dimension_name}
-                      </div>
-
-                      <div style={{ marginTop: '32px', display: 'flex', alignItems: 'center', width: '100%' }}>
-                        <div
-                          className="score-container"
-                          style={{
-                            width: '141px',
-                            height: '230px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            flexShrink: 0,
-                            marginRight: '20px',
-                          }}
-                        >
-                          <ScoreDisplay
-                            score={dimension.target_score}
-                            maxValue={5}
-                            label="Overall Score Out of 5"
-                            size="large"
-                          />
+                    <div key={dimension.dimension_id}>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        paddingBottom: '4px',
+                        marginBottom: hasSubs ? '1px' : '4px',
+                        borderBottom: hasSubs ? 'none' : `1px solid ${REPORT_COLORS.lightGray}`,
+                        fontSize: '13px',
+                      }}>
+                        <div style={{ flex: 1, fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                          {flagged && (
+                            <Image src="/images/reports/triangle-orange.png" alt="" width={8} height={8} />
+                          )}
+                          {dimension.dimension_name}
                         </div>
-                        <div style={{ flex: 1 }}>
-                          <HorizontalBarChart
-                            scores={subdimensions.map((s) => ({
-                              label: s.dimension_name,
-                              score: s.target_score,
-                              flagged: isFlagged(s.target_score, s.industry_benchmark, s.geonorm),
-                              color: barColor,
-                            }))}
-                            maxValue={5}
-                            showGridLines={true}
-                            barHeight={40}
-                            showScoreInBar={true}
-                            chartWidth={563}
-                            scale="integer"
-                            rowGap={12}
-                          />
+                        <div style={{ width: '70px', textAlign: 'center', fontWeight: 600 }}>
+                          {dimension.target_score.toFixed(1)}
+                        </div>
+                        <div style={{ width: '70px', textAlign: 'center', color: '#888' }}>
+                          {dimension.industry_benchmark?.toFixed(1) ?? '—'}
+                        </div>
+                        <div style={{ width: '70px', textAlign: 'center', color: '#888' }}>
+                          {dimension.group_score?.toFixed(1) ?? '—'}
                         </div>
                       </div>
+                      {hasSubs && dimension.subdimensions?.map((sub) => (
+                        <div key={sub.dimension_id} style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          paddingBottom: '3px',
+                          marginBottom: '3px',
+                          marginLeft: '18px',
+                          borderBottom: `1px solid ${REPORT_COLORS.lightGray}`,
+                          fontSize: '12px',
+                          color: '#555',
+                        }}>
+                          <div style={{ flex: 1 }}>{sub.dimension_name}</div>
+                          <div style={{ width: '70px', textAlign: 'center' }}>{sub.target_score.toFixed(1)}</div>
+                          <div style={{ width: '70px', textAlign: 'center' }}>{sub.industry_benchmark?.toFixed(1) ?? '—'}</div>
+                          <div style={{ width: '70px', textAlign: 'center' }}>{sub.group_score?.toFixed(1) ?? '—'}</div>
+                        </div>
+                      ))}
                     </div>
                   )
                 })}
-              </div>
-              <div style={{ clear: 'both' }}></div>
-            </div>
 
-            <PageFooter pageNumber={(pageNumbers as { scoresSummary: number }).scoresSummary} />
-          </PageWrapper>
-        </PageContainer>
-      )}
+                {/* Charted dimensions with bar charts — side by side below table */}
+                {withSubs.length > 0 && (
+                  <div style={{
+                    marginTop: '25px',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '20px',
+                    justifyContent: 'center',
+                  }}>
+                    {withSubs.map((dimension) => {
+                      const subdimensions = dimension.subdimensions ?? []
+                      return (
+                        <div key={dimension.dimension_id} style={{ flex: '1 1 0', maxWidth: '340px', minWidth: '280px' }}>
+                          <div style={{
+                            fontSize: '13px',
+                            fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                            fontWeight: 600,
+                            textAlign: 'center',
+                            marginBottom: '8px',
+                          }}>
+                            {dimension.dimension_name}
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <ScoreDisplay
+                              score={dimension.target_score}
+                              maxValue={5}
+                              label="Out of 5"
+                              size="small"
+                            />
+                            <div style={{ marginTop: '10px', width: '100%' }}>
+                              <HorizontalBarChart
+                                scores={subdimensions.map((s) => ({
+                                  label: s.dimension_name,
+                                  score: s.target_score,
+                                  color: REPORT_COLORS.primaryBlue,
+                                }))}
+                                maxValue={5}
+                                showGridLines={true}
+                                barHeight={22}
+                                showScoreInBar={true}
+                                chartWidth={300}
+                                graphWidth={190}
+                                rateeWidth={105}
+                                scale="integer"
+                                rowGap={4}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <PageFooter pageNumber={summaryPage} />
+            </PageWrapper>
+          </PageContainer>
+        )
+      })()}
 
       {/* For Each Dimension */}
       {reportData.dimensions.map((dimension, dimIdx) => {
@@ -997,8 +1037,8 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                             showGridLines={true}
                             barHeight={50}
                             showScoreInBar={true}
-                            chartWidth={704}
-                            graphWidth={569}
+                            chartWidth={543}
+                            graphWidth={408}
                             scale="half"
                             rowGap={17}
                           />
@@ -1034,6 +1074,29 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                         )}
                       </div>
                     </div>
+
+                    {/* Feedback for dimensions without subdimensions */}
+                    {(!dimension.subdimensions || dimension.subdimensions.length === 0) && (
+                      <div className="feedbacks" style={{ marginTop: '32px', clear: 'both' }}>
+                        <FeedbackSection
+                          number="01"
+                          title="Overall Feedback"
+                          content={dimension.overall_feedback ?? undefined}
+                          type="overall"
+                        />
+                        <FeedbackSection
+                          number="02"
+                          title="Actionable Feedback"
+                          content={dimension.specific_feedback ?? undefined}
+                          type="actionable"
+                        />
+                        <FeedbackSection
+                          number="03"
+                          title="Your Thoughts For Action Planning"
+                          type="thoughts"
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <PageFooter pageNumber={dp.overallPage} />
@@ -1145,8 +1208,8 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                               showGridLines={true}
                               barHeight={50}
                               showScoreInBar={true}
-                              chartWidth={704}
-                              graphWidth={569}
+                              chartWidth={543}
+                              graphWidth={408}
                               scale="half"
                               rowGap={17}
                             />
@@ -1154,7 +1217,7 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                         </div>
 
                         {/* Overall, Actionable, and Thoughts directly below chart */}
-                        <div className="feedbacks" style={{ marginTop: '128px', clear: 'both' }}>
+                        <div className="feedbacks" style={{ marginTop: '32px', clear: 'both' }}>
                           <FeedbackSection
                             number="01"
                             title="Overall Feedback"
@@ -1281,8 +1344,8 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                         showGridLines={true}
                         barHeight={50}
                         showScoreInBar={true}
-                        chartWidth={704}
-                        graphWidth={569}
+                        chartWidth={543}
+                        graphWidth={408}
                         scale="half"
                         rowGap={17}
                       />

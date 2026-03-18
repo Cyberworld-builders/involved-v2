@@ -141,6 +141,7 @@ export default function HorizontalBarChart({
                 height: `${barHeight}px`,
                 marginBottom: index < scores.length - 1 ? rowGap : 0,
                 display: 'block',
+                zIndex: 2,
               }}
             >
               <div
@@ -153,8 +154,12 @@ export default function HorizontalBarChart({
                   textAlign: 'right',
                   color: REPORT_COLORS.textPrimary,
                   fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-                  fontSize: chartWidth === 704 ? '14px' : '14px',
-                  paddingRight: '10px',
+                  fontSize: chartWidth === 704 ? '14px' : '12px',
+                  paddingRight: '12px',
+                  lineHeight: '1.2',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
                 }}
               >
                 {barData.label}

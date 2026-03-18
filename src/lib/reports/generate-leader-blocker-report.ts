@@ -198,7 +198,8 @@ export async function generateLeaderBlockerReport(
     .in('dimension_id', allDimensionIds)
 
   const definitionByDimension = new Map<string, string>()
-  descriptionFields?.forEach((field) => {
+  const descFieldsArray = Array.isArray(descriptionFields) ? descriptionFields : []
+  descFieldsArray.forEach((field) => {
     if (field.dimension_id && field.content) {
       if (!definitionByDimension.has(field.dimension_id)) {
         definitionByDimension.set(field.dimension_id, field.content)

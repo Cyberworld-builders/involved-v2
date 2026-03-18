@@ -1,19 +1,61 @@
 /**
- * PDF Export using Puppeteer (for Vercel serverless)
- * 
- * This is a fallback for production environments where Playwright doesn't work
- * Uses @sparticuz/chromium which is optimized for serverless environments
+ * PDF Export using Puppeteer (for Vercel serverless and local fallback)
+ *
+ * Uses @sparticuz/chromium for serverless environments.
+ * Ports the multi-page rendering logic from the ECS pdf-service.
  */
 
-// Puppeteer types
+const PRINT_CSS = `
+  .report-view-container {
+    position: static !important;
+    overflow: visible !important;
+    height: auto !important;
+    display: block !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    margin: 0 !important;
+  }
+  .report-view-container > div {
+    display: block !important;
+    max-width: none !important;
+    width: 100% !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    margin: 0 !important;
+  }
+  .page-container {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+  .page-container:nth-child(2) {
+    page-break-before: always !important;
+  }
+  .page-footer {
+    bottom: 0 !important;
+    position: absolute !important;
+  }
+  .page-wrapper {
+    padding-bottom: 59px !important;
+  }
+  @media print {
+    .page-container {
+      page-break-after: always !important;
+      page-break-inside: avoid !important;
+    }
+    .page-container:last-child {
+      page-break-after: auto !important;
+    }
+  }
+`
 
-/**
- * Generate PDF from fullscreen report view URL using Puppeteer
- * 
- * @param viewUrl - Full URL to the fullscreen report view
- * @param cookies - Array of cookie objects for authentication
- * @param options - Additional options for PDF generation
- */
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 export async function generatePDFFromViewPuppeteer(
   viewUrl: string,
   cookies?: Array<{ name: string; value: string; domain?: string; path?: string }>,
@@ -22,96 +64,57 @@ export async function generatePDFFromViewPuppeteer(
     waitForTimeout?: number
   }
 ): Promise<Buffer> {
-  // Dynamic import to avoid bundling issues
   const puppeteer = await import('puppeteer-core')
-  
-  // Use @sparticuz/chromium for Vercel/serverless
+
   const isProduction = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME
-  
+
   let executablePath: string | undefined
   let args: string[] | undefined
-  
+
   if (isProduction) {
     try {
-      // Try @sparticuz/chromium-min first (includes necessary libraries, works better in Vercel)
-      const chromiumMin = await import('@sparticuz/chromium-min')
-      const chromium = chromiumMin.default
-      
-      // Configure chromium-min for serverless (disable graphics mode) - it's a setter, not a method
-      try {
-        (chromium as { setGraphicsMode: boolean }).setGraphicsMode = false
-      } catch {
-        /* ignore */
-      }
-      
-      // @sparticuz/chromium-min exports a default object with executablePath() and args
+      const chromiumPkg = await import('@sparticuz/chromium')
+      const chromium = chromiumPkg.default
+      chromium.setGraphicsMode = false
       executablePath = await chromium.executablePath()
       args = chromium.args
-      console.log('[Puppeteer] Using @sparticuz/chromium-min for serverless')
-    } catch (chromiumMinError) {
-      console.warn('[Puppeteer] Failed to import @sparticuz/chromium-min, trying regular chromium:', chromiumMinError instanceof Error ? chromiumMinError.message : String(chromiumMinError))
-      try {
-        // Fallback to regular @sparticuz/chromium
-        const chromiumPkg = await import('@sparticuz/chromium')
-        const chromium = chromiumPkg.default
-        executablePath = await chromium.executablePath()
-        args = chromium.args
-        console.log('[Puppeteer] Using @sparticuz/chromium for serverless (fallback)')
-      } catch (fallbackError) {
-        console.error('[Puppeteer] Failed to get @sparticuz/chromium executable:', fallbackError instanceof Error ? fallbackError.message : String(fallbackError))
-        // Will fail, but at least we tried
-      }
+      console.log('[Puppeteer] Using @sparticuz/chromium for serverless')
+    } catch (err) {
+      console.error('[Puppeteer] Failed to load @sparticuz/chromium:', err instanceof Error ? err.message : String(err))
     }
   }
-  
-  // Launch browser
-  console.log('[Puppeteer] Launching browser...', { 
-    isProduction, 
+
+  console.log('[Puppeteer] Launching browser...', {
+    isProduction,
     hasExecutablePath: !!executablePath,
-    argsCount: args?.length || 0 
   })
-  
-  interface LaunchOptions {
-    headless: boolean
-    executablePath?: string
-    args?: string[]
-  }
-  
-  const launchOptions: LaunchOptions = {
+
+  const launchArgs = [
+    ...(args || []),
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--disable-dev-shm-usage',
+    '--disable-gpu',
+    '--single-process',
+    '--no-zygote',
+    '--disable-software-rasterizer',
+    '--disable-extensions',
+  ]
+
+  const browser = await puppeteer.default.launch({
     headless: true,
-  }
-  
-  if (executablePath) {
-    launchOptions.executablePath = executablePath
-  }
-  
-  if (args && args.length > 0) {
-    launchOptions.args = args
-  }
-  
-  // Additional args for Vercel/serverless environments
-  if (isProduction) {
-    launchOptions.args = [
-      ...(launchOptions.args || []),
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu',
-      '--single-process', // Important for serverless
-    ]
-  }
-  
-  const browser = await puppeteer.default.launch(launchOptions)
-  console.log('[Puppeteer] Browser launched successfully')
+    ...(executablePath && { executablePath }),
+    args: launchArgs,
+  })
+  console.log('[Puppeteer] Browser launched')
 
   try {
     const url = new URL(viewUrl)
     const page = await browser.newPage()
-    
-    // Set viewport
+
     await page.setViewport({ width: 1920, height: 1080 })
 
-    // Set authentication cookies if provided
+    // Set authentication cookies
     if (cookies && cookies.length > 0) {
       await page.setCookie(
         ...cookies.map(cookie => ({
@@ -126,54 +129,122 @@ export async function generatePDFFromViewPuppeteer(
       )
     }
 
-    // Navigate to the fullscreen view
+    // Navigate and wait for full load
     await page.goto(viewUrl, {
       waitUntil: 'networkidle0',
-      timeout: 60000,
+      timeout: 45000,
     })
 
-    // Wait for React to hydrate and content to load
-    if (options?.waitForSelector) {
-      try {
-        await page.waitForSelector(options.waitForSelector, { timeout: options.waitForTimeout || 30000 })
-      } catch (e) {
-        console.warn('Wait for selector failed, continuing...', e)
-      }
-    } else {
-      // Default: wait for report loaded indicator
-      try {
-        await page.waitForSelector('[data-report-loaded]', { timeout: 30000 })
-      } catch (e) {
-        console.warn('Report loaded indicator not found, continuing...', e)
-      }
+    // Wait for report loaded indicator
+    const selector = options?.waitForSelector ?? '[data-report-loaded]'
+    try {
+      await page.waitForSelector(selector, { timeout: options?.waitForTimeout ?? 20000 })
+    } catch {
+      console.warn('[Puppeteer] Report loaded indicator not found, continuing')
     }
 
     // Wait for at least one page container
     try {
-      await page.waitForSelector('.page-container', { timeout: 30000 })
+      await page.waitForSelector('.page-container', { timeout: 20000 })
     } catch {
-      const pageContainerCount = await page.$$eval('.page-container', els => els.length).catch(() => 0)
-      if (pageContainerCount === 0) {
+      const count = await page.$$eval('.page-container', els => els.length).catch(() => 0)
+      if (count === 0) {
         const bodyText = await page.evaluate(() => document.body?.innerText?.substring(0, 200) || 'no body').catch(() => 'error')
-        throw new Error(`No page containers found - report may not have loaded. Found ${pageContainerCount} containers. Body preview: ${bodyText}`)
+        throw new Error(`No .page-container found. Body: ${bodyText}`)
       }
     }
 
-    // Inject CSS to hide partial report banner in PDF
-    await page.addStyleTag({
-      content: `.partial-report-banner { display: none !important; }`
+    // Get expected page count from data attribute
+    const expectedPageCount = await page.evaluate(() => {
+      const container = document.querySelector('[data-report-pages]')
+      if (container) {
+        const count = container.getAttribute('data-report-pages')
+        return count ? parseInt(count, 10) : null
+      }
+      return null
+    })
+    console.log('[Puppeteer] Expected pages:', expectedPageCount)
+
+    // Wait for images to load
+    await page.evaluate(() =>
+      Promise.all(
+        Array.from(document.images).map((img) => {
+          if (img.complete) return Promise.resolve()
+          return new Promise<void>((resolve) => {
+            img.onload = () => resolve()
+            img.onerror = () => resolve()
+            setTimeout(() => resolve(), 5000)
+          })
+        })
+      )
+    )
+
+    // Wait for all page containers to stabilize
+    let previousCount = 0
+    let stableCount = 0
+    const maxWait = expectedPageCount ? 20 : 10
+    for (let i = 0; i < maxWait; i++) {
+      await delay(500)
+      const currentCount = await page.evaluate(() => document.querySelectorAll('.page-container').length)
+      if (expectedPageCount && currentCount >= expectedPageCount) {
+        console.log('[Puppeteer] All expected pages loaded:', currentCount)
+        break
+      }
+      if (currentCount === previousCount && currentCount > 0) {
+        stableCount++
+        if (stableCount >= 3) {
+          console.log('[Puppeteer] Page count stable at', currentCount)
+          break
+        }
+      } else {
+        stableCount = 0
+      }
+      previousCount = currentCount
+    }
+
+    // Scroll to trigger lazy rendering
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+    await delay(1500)
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await delay(1500)
+
+    const pageCount = await page.evaluate(() => document.querySelectorAll('.page-container').length)
+    console.log('[Puppeteer] Final page count:', pageCount)
+
+    // Inject print CSS
+    await page.addStyleTag({ content: PRINT_CSS })
+    await page.addStyleTag({ content: `.partial-report-banner { display: none !important; }` })
+    await delay(200)
+
+    // Measure total content height
+    const totalHeight = await page.evaluate(() => {
+      const containers = document.querySelectorAll('.page-container')
+      if (containers.length === 0) return 1080
+      let total = 0
+      containers.forEach((container) => {
+        const rect = container.getBoundingClientRect()
+        const styles = window.getComputedStyle(container)
+        const marginTop = parseInt(styles.marginTop, 10) || 0
+        const marginBottom = parseInt(styles.marginBottom, 10) || 0
+        total += rect.height + marginTop + marginBottom
+      })
+      return Math.max(1080, total + 100)
     })
 
-    // Generate PDF with print media emulation
+    // Emulate print media
+    await page.emulateMediaType('print')
+    await delay(500)
+
+    // Set tall viewport so all content is visible
+    const viewportHeight = Math.min(totalHeight, 50000)
+    await page.setViewport({ width: 1920, height: viewportHeight })
+    await delay(500)
+
+    // Generate PDF
     const pdf = await page.pdf({
       format: 'A4',
       printBackground: true,
-      margin: {
-        top: '0.5cm',
-        right: '0.5cm',
-        bottom: '0.5cm',
-        left: '0.5cm',
-      },
+      margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' },
       preferCSSPageSize: false,
     })
 

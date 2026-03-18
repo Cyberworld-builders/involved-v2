@@ -56,4 +56,7 @@ supabase/.env
 # cursor
 .cursor
 .cursor/*
-debug.log
+debug.log.vercel/project.json.staging
+.vercel/project.json.prod
+deploy-staging.sh
+deploy-prod.sh

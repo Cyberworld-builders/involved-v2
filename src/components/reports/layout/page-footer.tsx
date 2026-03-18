@@ -21,7 +21,7 @@ export default function PageFooter({ pageNumber }: PageFooterProps) {
       className="page-footer"
       style={{
         position: 'absolute',
-        bottom: 0,
+        bottom: '-110px',
         left: '50%',
         transform: 'translateX(-50%)',
         width: `${REPORT_LAYOUT.footerWidth}px`,
@@ -31,6 +31,7 @@ export default function PageFooter({ pageNumber }: PageFooterProps) {
         textAlign: 'center',
         letterSpacing: REPORT_TYPOGRAPHY.footer.letterSpacing,
         color: REPORT_COLORS.textPrimary,
+        zIndex: 10,
       }}
     >
       Page {pageNumber}
