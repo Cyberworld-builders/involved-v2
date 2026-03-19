@@ -253,7 +253,7 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                     <p>{dimension.description || dimension.definition}</p>
                   )}
 
-                  <div className="chart" style={{ width: `${REPORT_SPACING.contentWidth}px`, height: `${REPORT_SPACING.chartHeight}px`, marginTop: '20px' }}>
+                  <div className="chart" style={{ width: `${REPORT_SPACING.contentWidth}px`, height: 'auto', marginTop: '20px' }}>
                     <div
                       className="title"
                       style={{
