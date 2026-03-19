@@ -1,75 +1,75 @@
 'use client'
 
-import { REPORT_COLORS } from '@/lib/reports/report-design-constants'
+import { REPORT_COLORS, REPORT_SPACING } from '@/lib/reports/report-design-constants'
 import Image from 'next/image'
 
 interface PageHeaderProps {
   pageNumber: number
   logo: string
   logoWidth?: number
-  isEvenPage?: boolean
 }
 
 /**
  * Page Header Component
- * 
- * Matches legacy page-header styling:
- * - Logo alternates position (left on odd pages, right on even pages)
- * - 4px blue line separator
- * - Logo from /public/images/reports/
+ *
+ * Banner line runs from ~8.6% to ~70.5% of page width.
+ * Logo sits to the right of the line, from ~72% to ~91% of width.
+ * Both positioned at ~5.2–5.4% from top of page.
+ *
+ * Coordinates (850×1100 page):
+ *   Line: x=73 to x=599, y=59, height=2px
+ *   Logo: x=611, y=57, width=163, height=23
  */
-export default function PageHeader({ 
-  pageNumber, 
-  logo, 
+export default function PageHeader({
+  pageNumber,
+  logo,
   logoWidth,
-  isEvenPage 
 }: PageHeaderProps) {
-  const isEven = isEvenPage ?? (pageNumber % 2 === 0)
-  const defaultLogoWidth = isEven ? 134 : 125
-  
+  const resolvedLogoWidth = logoWidth ?? 163
+
   return (
-    <div className="page-header" style={{ margin: 0, border: 'none', padding: 0 }}>
-      {isEven ? (
-        <Image
-          className="logo right"
-          src={`/images/reports/${logo}`}
-          alt="Logo"
-          width={logoWidth ?? defaultLogoWidth}
-          height={50}
-          style={{
-            float: 'right',
-            paddingLeft: '8px',
-            paddingRight: 0,
-            position: 'relative',
-            top: '-2px',
-          }}
-        />
-      ) : (
-        <Image
-          className="logo"
-          src={`/images/reports/${logo}`}
-          alt="Logo"
-          width={logoWidth ?? defaultLogoWidth}
-          height={50}
-          style={{
-            width: `${logoWidth ?? defaultLogoWidth}px`,
-            float: 'left',
-            paddingRight: '8px',
-            background: REPORT_COLORS.white,
-            position: 'relative',
-            top: '-8px',
-          }}
-        />
-      )}
-      <div 
-        className="line" 
+    <div
+      className="page-header"
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '80px',
+        margin: 0,
+        border: 'none',
+        padding: 0,
+      }}
+    >
+      {/* Horizontal line — 8.6% to 70.5% of page width, at ~5.4% from top */}
+      <div
+        className="line"
         style={{
-          height: '4px',
+          position: 'absolute',
+          left: `${REPORT_SPACING.pagePaddingLeft}px`,
+          right: `${850 - 599}px`,
+          top: '59px',
+          height: '2px',
           background: REPORT_COLORS.primaryBlue,
-          overflow: 'hidden',
         }}
       />
-      <div style={{ clear: 'both' }} />
+      {/* Logo — right of line, from ~72% to ~91% of page width */}
+      <Image
+        className="logo"
+        src={`/images/reports/${logo}`}
+        alt="Logo"
+        width={resolvedLogoWidth}
+        height={23}
+        style={{
+          position: 'absolute',
+          top: '57px',
+          right: `${REPORT_SPACING.pagePaddingRight}px`,
+          width: `${resolvedLogoWidth}px`,
+          height: '23px',
+          objectFit: 'contain',
+          objectPosition: 'right center',
+        }}
+      />
     </div>
   )
 }
