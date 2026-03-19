@@ -67,7 +67,15 @@ export async function GET(
       .eq('assignment_id', assignmentId)
       .single()
 
-    // Check if report data is stale (compare calculated_at with completed_at)
+    // Check if the assessment itself was updated since the report was cached
+    // (e.g., dimension definitions changed)
+    const { data: assessmentMeta } = await adminClient
+      .from('assessments')
+      .select('updated_at')
+      .eq('id', assignment.assessment_id)
+      .single()
+
+    // Check if report data is stale (compare calculated_at with completed_at AND assessment updated_at)
     const cachedReport = reportData?.dimension_scores as Record<string, unknown> | null | undefined
     const cachedIsEmpty =
       cachedReport == null ||
@@ -79,7 +87,10 @@ export async function GET(
       cachedIsEmpty ||
       (assignment.completed_at &&
         reportData.calculated_at &&
-        new Date(reportData.calculated_at) < new Date(assignment.completed_at))
+        new Date(reportData.calculated_at) < new Date(assignment.completed_at)) ||
+      (assessmentMeta?.updated_at &&
+        reportData?.calculated_at &&
+        new Date(reportData.calculated_at) < new Date(assessmentMeta.updated_at))
 
     if (needsRegeneration) {
       // Generate report
