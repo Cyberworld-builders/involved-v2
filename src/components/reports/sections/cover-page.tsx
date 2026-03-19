@@ -115,24 +115,25 @@ export default function CoverPage({
           </span>
         </div>
 
-        {/* Disclaimer/Footer Logo */}
-        <div
-          className="cover-disclaimer"
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            right: 0,
-            paddingRight: `${REPORT_SPACING.pagePaddingRight}px`,
-          }}
-        >
-          <Image
-            src={`/images/reports/${footerLogo}`}
-            alt="Logo tagline"
-            width={200}
-            height={50}
-          />
-        </div>
       </PageWrapper>
+
+      {/* Footer Logo — positioned absolutely within the 850×1100 page */}
+      <div
+        className="cover-disclaimer"
+        style={{
+          position: 'absolute',
+          right: `${REPORT_SPACING.pagePaddingRight}px`,
+          bottom: '97px',
+        }}
+      >
+        <Image
+          src={`/images/reports/${footerLogo}`}
+          alt="Logo tagline"
+          width={255}
+          height={91}
+          style={{ width: '255px', height: '91px', objectFit: 'contain' }}
+        />
+      </div>
     </PageContainer>
   )
 }
