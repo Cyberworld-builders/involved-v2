@@ -167,13 +167,13 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                   Stakeholders (e.g., supervisor, peers, subordinates, customers) familiar with your work completed the 360-evaluation to provide you an analytically robust picture of your strengths and improvement opportunities. Additionally, each of your raters was asked to provide qualitative feedback, which can greatly augment your quantitative scores. Taken together, this report provides you a wealth of information to not only significantly develop your own leadership, but also drive critical business outcomes.
                 </p>
                 <p>
-                  Each individual competency score is presented with corresponding rater feedback and suggestions. Your scores are compared to (1) norms for similar jobs/positions and (2) the average of your colleagues that have also recently completed the 360-feedback survey{reportData.client_name ? ` at ${reportData.client_name}` : ''}. Anchoring your scores with industry norms and your company averages provides a much more accurate representation of where your scores stand and provides enhanced motivation to accelerate your leadership involvement.
+                  Each individual competency score is presented with corresponding rater feedback and suggestions. Your scores are compared to (1) geonorms for similar jobs/positions and (2) the average of your colleagues that have also recently completed the 360-feedback survey{reportData.client_name ? ` at ${reportData.client_name}` : ''}. Anchoring your scores with industry geonorms and your company averages provides a much more accurate representation of where your scores stand and provides enhanced motivation to accelerate your leadership involvement.
                 </p>
               </>
             )}
           </div>
 
-          <PageFooter pageNumber={pageNumber} />
+          <PageFooter pageNumber={pageNumber++} />
         </PageWrapper>
       </PageContainer>
 

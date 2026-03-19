@@ -45,80 +45,76 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
   const reportType = isBlocker ? 'blockers' : 'leader'
 
   // Calculate page numbers dynamically based on report structure
+  // Uses ++currentPage (pre-increment) so every capture gets the next page number
   const calculatePageNumbers = () => {
-    let currentPage = 1 // Cover
-    currentPage++ // TOC
-    currentPage++ // Read Me First
-    
+    let currentPage = 0
+    const cover = ++currentPage             // 1
+    const toc = ++currentPage               // 2
+    const readMeFirst = ++currentPage       // 3
+
     if (!isBlocker) {
-      // Leaders: Subdimensions Overview
-      currentPage++
-      // Overview Info
-      currentPage++
-      // Overview Info Continued
-      currentPage++
-      // Scores Summary
-      const scoresSummaryPage = currentPage++
-      
+      const subdimensionsOverview = ++currentPage   // 4
+      const overviewInfo = ++currentPage            // 5
+      const overviewInfoContinued = ++currentPage   // 6
+      const scoresSummary = ++currentPage           // 7
+
       // Calculate pages for dimensions
-      const dimensionPages: Array<{ 
+      const dimensionPages: Array<{
         dimension: DimensionReportLeaderBlocker
         overallPage: number
-        subdimensionPages: Array<{ 
+        subdimensionPages: Array<{
           subdim: SubdimensionReportLeaderBlocker
           page: number
         }>
       }> = []
-      
+
       for (const dimension of reportData.dimensions) {
-        const overallPage = currentPage++
+        const overallPage = ++currentPage
         const subdimensionPages: Array<{ subdim: SubdimensionReportLeaderBlocker; page: number }> = []
-        
+
         if (dimension.subdimensions && dimension.subdimensions.length > 0) {
           for (const subdim of dimension.subdimensions) {
-            const subdimPage = currentPage++
+            const subdimPage = ++currentPage
             subdimensionPages.push({ subdim, page: subdimPage })
           }
         }
-        
+
         dimensionPages.push({ dimension, overallPage, subdimensionPages })
       }
-      
+
       return {
-        cover: 1,
-        toc: 2,
-        readMeFirst: 3,
-        subdimensionsOverview: 4,
-        overviewInfo: 5,
-        overviewInfoContinued: 6,
-        scoresSummary: scoresSummaryPage,
+        cover,
+        toc,
+        readMeFirst,
+        subdimensionsOverview,
+        overviewInfo,
+        overviewInfoContinued,
+        scoresSummary,
         dimensionPages,
       }
     } else {
-      // Blockers: Overview Info
-      currentPage++
-      // Overall Blocker Score
-      const overallBlockerPage = currentPage++
-      
+      const overviewInfo = ++currentPage          // 4
+      const overallBlockerScore = ++currentPage   // 5
+
       // Calculate pages for dimensions
-      const dimensionPages: Array<{ 
+      const dimensionPages: Array<{
         dimension: DimensionReportLeaderBlocker
         page: number
         feedbackPage?: number
       }> = []
-      
+
       for (const dimension of reportData.dimensions) {
-        const page = currentPage++
-        const feedbackPage = dimension.specific_feedback ? currentPage++ : undefined
+        const page = ++currentPage
+        const feedbackPage = dimension.specific_feedback ? ++currentPage : undefined
         dimensionPages.push({ dimension, page, feedbackPage })
       }
-      
+
       return {
-        cover: 1,
-        toc: 2,
-        readMeFirst: 3,
-        overviewInfo: 4,
-        overallBlockerScore: overallBlockerPage,
+        cover,
+        toc,
+        readMeFirst,
+        overviewInfo,
+        overallBlockerScore,
         dimensionPages,
       }
     }
