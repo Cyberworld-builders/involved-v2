@@ -168,15 +168,26 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
           show_question_numbers: assessment.show_question_numbers !== undefined ? assessment.show_question_numbers : true,
           use_custom_fields: assessment.use_custom_fields ?? false,
           custom_fields: customFields,
-          dimensions: (dimensions || []).map(dim => ({
-            id: dim.id,
-            name: dim.name,
-            code: dim.code,
-            parent_id: dim.parent_id,
-          })),
+          dimensions: (() => {
+            // Build definition map from rich_text fields
+            const definitionMap = new Map<string, string>()
+            ;(fields || []).forEach(f => {
+              if (f.type === 'rich_text' && f.dimension_id) {
+                definitionMap.set(f.dimension_id, f.content || '')
+              }
+            })
+            return (dimensions || []).map(dim => ({
+              id: dim.id,
+              name: dim.name,
+              code: dim.code,
+              parent_id: dim.parent_id,
+              definition: definitionMap.get(dim.id) || '',
+            }))
+          })(),
           // Map fields preserving the order from the database query
           // The fields are already sorted by 'order' column, so we preserve that order
-          fields: (fields || []).map((field, index) => {
+          // Filter out rich_text fields (dimension definitions) — they are loaded into dimensions above
+          fields: (fields || []).filter(f => f.type !== 'rich_text').map((field, index) => {
             type FieldRow = Database['public']['Tables']['fields']['Row']
             const fieldWithExtras = field as FieldRow & { number?: number; practice?: boolean; required?: boolean }
             return {
@@ -558,6 +569,33 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
 
           if (fieldsError) {
             throw new Error(`Failed to update fields: ${fieldsError.message}`)
+          }
+        }
+      }
+
+      // Save dimension definitions as rich_text fields
+      {
+        const definitionFields = data.dimensions
+          .filter(dim => dim.definition && dim.definition.trim())
+          .map(dim => ({
+            assessment_id: id,
+            dimension_id: tempIdToDbIdMap.get(dim.id) || dim.id,
+            type: 'rich_text' as const,
+            content: dim.definition!.trim(),
+            order: 0,
+            number: 0,
+            required: false,
+            practice: false,
+            anchors: [],
+          }))
+
+        if (definitionFields.length > 0) {
+          const { error: defError } = await supabase
+            .from('fields')
+            .insert(definitionFields)
+
+          if (defError) {
+            throw new Error(`Failed to save dimension definitions: ${defError.message}`)
           }
         }
       }

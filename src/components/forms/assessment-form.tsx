@@ -13,6 +13,7 @@ export interface Dimension {
   name: string
   code: string
   parent_id: string | null
+  definition?: string
 }
 
 export interface Anchor {
@@ -1677,6 +1678,19 @@ export default function AssessmentForm({
                                 ))}
                               </select>
                             </div>
+                          </div>
+                          {/* Definition */}
+                          <div className="mt-4">
+                            <label className="block text-sm font-medium text-gray-900 mb-2">
+                              Definition
+                            </label>
+                            <textarea
+                              value={dimension.definition || ''}
+                              onChange={(e) => handleUpdateDimension(dimension.id, 'definition', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 text-sm"
+                              placeholder="Enter a definition for this dimension (shown in reports)"
+                              rows={2}
+                            />
                           </div>
                           {/* Question Count Input (only for non-360 assessments) */}
                           {!formData.is_360 && (
