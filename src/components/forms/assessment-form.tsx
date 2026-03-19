@@ -543,10 +543,11 @@ export default function AssessmentForm({
 
   const handleDownloadDimensionsTemplate = () => {
     // Create CSV template
-    const headers = ['Dimension Name', 'Dimension Code']
-    const rows = formData.dimensions.length > 0 
-      ? formData.dimensions.map(dim => [dim.name, dim.code])
-      : [['Leadership', 'LEAD'], ['Communication', 'COMM'], ['Teamwork', 'TEAM']]
+    const headers = ['Dimension Name', 'Dimension Code', 'Definition']
+    const escapeCSV = (val: string) => val.includes(',') || val.includes('"') || val.includes('\n') ? `"${val.replace(/"/g, '""')}"` : val
+    const rows = formData.dimensions.length > 0
+      ? formData.dimensions.map(dim => [dim.name, dim.code, dim.definition || ''].map(escapeCSV))
+      : [['Leadership', 'LEAD', 'Ability to guide and inspire teams'], ['Communication', 'COMM', 'Effective exchange of information'], ['Teamwork', 'TEAM', 'Collaborative work towards shared goals']]
     const csv = [headers, ...rows].map(row => row.join(',')).join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = window.URL.createObjectURL(blob)
@@ -615,17 +616,23 @@ export default function AssessmentForm({
           return
         }
 
+        // Optional Definition column
+        const defIndex = headers.findIndex(h =>
+          h.toLowerCase().includes('definition')
+        )
+
         // Parse CSV and add dimensions
         const newDimensions: Dimension[] = []
         for (let i = 1; i < lines.length; i++) {
           const values = parseCSVLine(lines[i]).map(v => v.replace(/^"|"$/g, '').trim())
-          
+
           if (values.length < Math.max(nameIndex, codeIndex) + 1) {
             continue
           }
 
           const dimensionName = values[nameIndex]?.trim()
           const dimensionCode = values[codeIndex]?.trim()
+          const dimensionDef = defIndex !== -1 ? values[defIndex]?.trim() : ''
 
           if (!dimensionName || !dimensionCode) {
             continue
@@ -643,6 +650,7 @@ export default function AssessmentForm({
               name: dimensionName,
               code: dimensionCode,
               parent_id: null,
+              definition: dimensionDef || undefined,
             })
           }
         }
@@ -1535,7 +1543,7 @@ export default function AssessmentForm({
               {/* Template Download and Sample Table */}
               <div className="space-y-4">
                 <p className="text-sm text-gray-600">
-                  Use the template below to format your CSV file. Required fields are: <strong>Dimension Name</strong> and <strong>Dimension Code</strong>.
+                  Use the template below to format your CSV file. Required fields are: <strong>Dimension Name</strong> and <strong>Dimension Code</strong>. <strong>Definition</strong> is optional.
                 </p>
                 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1573,31 +1581,36 @@ export default function AssessmentForm({
                           <tr>
                             <th className="px-3 py-2 text-left font-medium text-gray-700">Dimension Name</th>
                             <th className="px-3 py-2 text-left font-medium text-gray-700">Dimension Code</th>
+                            <th className="px-3 py-2 text-left font-medium text-gray-700">Definition</th>
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                           <tr>
                             <td className="px-3 py-2 text-gray-900">Leadership</td>
                             <td className="px-3 py-2 text-gray-900">LEAD</td>
+                            <td className="px-3 py-2 text-gray-900">Ability to guide teams</td>
                           </tr>
                           <tr>
                             <td className="px-3 py-2 text-gray-900">Communication</td>
                             <td className="px-3 py-2 text-gray-900">COMM</td>
+                            <td className="px-3 py-2 text-gray-900">Effective information exchange</td>
                           </tr>
                           <tr>
                             <td className="px-3 py-2 text-gray-900">Problem Solving</td>
                             <td className="px-3 py-2 text-gray-900">PROB</td>
+                            <td className="px-3 py-2 text-gray-900"></td>
                           </tr>
                           <tr>
                             <td className="px-3 py-2 text-gray-900">Teamwork</td>
                             <td className="px-3 py-2 text-gray-900">TEAM</td>
+                            <td className="px-3 py-2 text-gray-900">Collaborative work</td>
                           </tr>
                         </tbody>
                       </table>
                     </div>
                     <div className="bg-gray-50 px-3 py-2 border-t border-gray-200">
                       <p className="text-xs text-gray-500">
-                        <span className="font-medium">Required:</span> Dimension Name, Dimension Code
+                        <span className="font-medium">Required:</span> Dimension Name, Dimension Code &nbsp;|&nbsp; <span className="font-medium">Optional:</span> Definition
                       </p>
                     </div>
                   </div>
