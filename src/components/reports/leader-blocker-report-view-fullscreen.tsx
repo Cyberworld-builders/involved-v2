@@ -954,7 +954,7 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                       />
                       Overall Score:
                     </span>
-                    <span style={{ display: 'block', marginLeft: '35px' }}>
+                    <span style={{ display: 'block', marginLeft: '35px', width: 'fit-content' }}>
                       {dimension.dimension_name}
                     </span>
                   </div>
@@ -1165,7 +1165,7 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                             />
                             Sub-dimension:
                           </span>
-                          <span style={{ display: 'block', marginLeft: '35px' }}>
+                          <span style={{ display: 'block', marginLeft: '35px', width: 'fit-content' }}>
                             {subdim.dimension_name}
                           </span>
                         </div>
@@ -1310,7 +1310,7 @@ export default function ReportLeaderBlockerViewFullscreen({ reportData }: Report
                       />
                       Dimension:
                     </span>
-                    <span style={{ display: 'block', marginLeft: '35px' }}>
+                    <span style={{ display: 'block', marginLeft: '35px', width: 'fit-content' }}>
                       {dimension.dimension_name}
                     </span>
                   </div>

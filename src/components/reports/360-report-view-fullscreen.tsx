@@ -233,7 +233,7 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                     />
                     Competency:
                   </span>
-                  <span style={{ display: 'block', marginLeft: '35px' }}>
+                  <span style={{ display: 'block', marginLeft: '35px', width: 'fit-content' }}>
                     {dimension.dimension_name}
                   </span>
                 </div>
