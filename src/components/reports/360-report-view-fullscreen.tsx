@@ -299,7 +299,6 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                         className="score-container"
                         style={{
                           width: '141px',
-                          height: '230px',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -333,7 +332,7 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                         position: 'relative',
                         width: `${REPORT_SPACING.contentWidth}px`,
                         height: '55px',
-                        margin: '20px auto 0',
+                        margin: '8px auto 0',
                         color: REPORT_COLORS.textPrimary,
                         display: 'flex',
                         alignItems: 'center',
