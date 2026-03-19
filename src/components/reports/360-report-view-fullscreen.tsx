@@ -134,6 +134,7 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
               lineHeight: '50px', /* Increased to create space for descenders */
               letterSpacing: '-2px',
               display: 'inline-block',
+              width: 'fit-content',
               borderBottom: `4px solid ${REPORT_COLORS.textPrimary}`,
               marginLeft: `-${REPORT_SPACING.pagePaddingLeft}px`,
               paddingLeft: `${REPORT_SPACING.pagePaddingLeft}px`,
@@ -200,6 +201,7 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                     lineHeight: '50px', /* Increased to create space for descenders */
                     letterSpacing: '-2px',
                     display: 'inline-block',
+                    width: 'fit-content',
                     borderBottom: `4px solid ${REPORT_COLORS.textPrimary}`,
                     marginLeft: `-${REPORT_SPACING.pagePaddingLeft}px`,
                     paddingLeft: `${REPORT_SPACING.pagePaddingLeft}px`,
