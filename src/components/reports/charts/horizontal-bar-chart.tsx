@@ -56,17 +56,17 @@ export default function HorizontalBarChart({
       : [0, 1, 2, 3, 4, 5]
 
   const rowHeight = barHeight + rowGap
-  const barsRegionHeight = scores.length * rowHeight
+  const barsRegionHeight = scores.length * rowHeight - (scores.length > 0 ? rowGap : 0) // last row has no marginBottom
   const scaleGap = 34
   const graphHeight = barsRegionHeight + scaleGap
-  const linePaddingTop = barsRegionHeight + 10
+  // X-axis numbers must sit BELOW the bars — use barsRegionHeight + scaleGap so they never overlap the lowest bar
+  const linePaddingTop = barsRegionHeight + scaleGap
 
   const is360Style = chartWidth === 563
   const fixedGraphHeight = REPORT_SPACING.chartHeight
-  const fixedLinePadding = 220
-
-  const effectiveGraphHeight = is360Style ? fixedGraphHeight : graphHeight
-  const effectiveLinePadding = is360Style ? fixedLinePadding : linePaddingTop
+  // CRITICAL: Do not use fixed padding — it causes x-axis numbers to overlap the bottom bar when there are 5 rows
+  const effectiveGraphHeight = is360Style ? Math.max(fixedGraphHeight, graphHeight) : graphHeight
+  const effectiveLinePadding = linePaddingTop
   const containerHeight = is360Style
     ? Math.max(REPORT_SPACING.chartBarsHeight, graphHeight)
     : graphHeight

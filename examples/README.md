@@ -1,8 +1,14 @@
-# Example CSV Files
+# Examples
 
-This folder contains example CSV files for testing bulk upload functionality.
+This folder contains example files and reference assets for Involved v2.
 
-## Files
+## Report Layout Reference
+
+See [`report-layout/README.md`](./report-layout/README.md) for PDF layout specifications, positioning coordinates, and reference images (cover page, logo placement, title divider behavior).
+
+---
+
+## CSV Files
 
 ### `csv/dimensions.csv`
 Example dimensions CSV for testing dimension bulk upload on assessment forms.
