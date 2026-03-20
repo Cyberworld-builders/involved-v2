@@ -246,7 +246,7 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                     fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
                     fontSize: REPORT_TYPOGRAPHY.body.fontSize,
                     lineHeight: REPORT_TYPOGRAPHY.body.lineHeight,
-                    margin: '20px 0 40px',
+                    margin: '20px 0 16px',
                   }}
                 >
                   {(dimension.description || dimension.definition)?.trim() && (
@@ -263,7 +263,7 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                     />
                   )}
 
-                  <div className="chart" style={{ width: `${REPORT_SPACING.contentWidth}px`, height: 'auto', marginTop: '20px' }}>
+                  <div className="chart" style={{ width: `${REPORT_SPACING.contentWidth}px`, height: 'auto', marginTop: '8px' }}>
                     <div
                       className="title"
                       style={{
@@ -272,7 +272,7 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                         fontWeight: 600,
                         textDecoration: 'none',
                         textAlign: 'center',
-                        marginBottom: '45px',
+                        marginBottom: '12px',
                       }}
                     >
                       Your Current Scores By Ratee Source<br />
@@ -303,8 +303,8 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                     </div>
 
                     {/* Score and Chart Container */}
-                    <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                      {/* Score Display Container - centered vertically and horizontally */}
+                    <div style={{ display: 'flex', alignItems: 'flex-start', width: '100%' }}>
+                      {/* Score Display Container */}
                       <div
                         className="score-container"
                         style={{
@@ -339,7 +339,9 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                     <div
                       className="norms"
                       style={{
-                        position: 'relative',
+                        /* Override legacy pdf.css `.norms { top: 70px }` — inline styles did not set `top`, so ~70px gap appeared under the chart */
+                        position: 'static',
+                        top: 'auto',
                         width: `${REPORT_SPACING.contentWidth}px`,
                         height: '55px',
                         margin: '2px 0 0',

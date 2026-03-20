@@ -10,12 +10,49 @@ Reference images and specifications for Involved report PDF layout. Use these wh
 | [`divider-correct-empower.png`](./divider-correct-empower.png) | **Preferred**: Title divider stops where title ends (SUB-DIMENSION: EMPOWER) |
 | [`divider-incorrect-creative-problem-solving.png`](./divider-incorrect-creative-problem-solving.png) | **Avoid**: Title divider extends full-width to right margin (COMPETENCY: CREATIVE PROBLEM SOLVING) |
 | [`client-feedback-creative-problem-solving.png`](./client-feedback-creative-problem-solving.png) | Client pen annotations on competency page — multiple issues |
+| [`client-feedback-vertical-spacing-single-rater-markup.png`](./client-feedback-vertical-spacing-single-rater-markup.png) | **Problem (avoid)**: Creative Problem Solving, single rater — **markup** flags **too much** vertical space (legend→chart **and** axis→GEONORM). Not a “good” reference. |
+| [`reference-preferred-tight-chart-to-norms-five-raters.png`](./reference-preferred-tight-chart-to-norms-five-raters.png) | **Preferred spacing**: five rater rows — tight gap from x-axis to industry norm + group average row |
+
+---
+
+## Problem: Excessive vertical spacing (single rater, markup)
+
+Reference: [`client-feedback-vertical-spacing-single-rater-markup.png`](./client-feedback-vertical-spacing-single-rater-markup.png)
+
+This screenshot is an example of **what’s wrong**, not a target layout. Hand-drawn arrows call out **two** separate spacing problems on the same competency page (Creative Problem Solving, one “All Raters” bar):
+
+| Markup | Location | Issue |
+|--------|----------|--------|
+| **1** | Between the **growth legend** (“Indicates Significant Growth Opportunity”) and the **top** of the bar chart / large score | Too much vertical gap — tighten margins on the chart section title block (`marginBottom` on the “Your Current Scores…” title), and/or `marginTop` on the score+chart row, in `360-report-view-fullscreen.tsx`. |
+| **2** | Between the **x-axis labels** (0–5) and the **GEONORM** summary row | Too much vertical gap — same class of fixes as other chart-to-norms notes: chart wrapper height (`horizontal-bar-chart.tsx`, `REPORT_SPACING` floors), and small `margin-top` on the norms row. |
+
+**Do not** use this file as the “good” single-rater example; use [`reference-preferred-tight-chart-to-norms-five-raters.png`](./reference-preferred-tight-chart-to-norms-five-raters.png) for **tight chart-to-norms** spacing, and apply the same principles when there is only one rater row.
+
+---
+
+## Preferred: Chart-to-norms vertical spacing (reference)
+
+The **five-rater** screenshot below is the **target** for how much vertical space should appear **between** the bottom of the horizontal bar chart (including the 0–5 axis labels) and the **summary row** below (industry norm, “average for this group,” etc.). The layout should feel **compact**: roughly **one line of text** (~14–20px) of separation, not a large white band.
+
+### Visual reference (good example)
+
+| File | Scenario | What “good” looks like |
+|------|----------|-------------------------|
+| [`reference-preferred-tight-chart-to-norms-five-raters.png`](./reference-preferred-tight-chart-to-norms-five-raters.png) | **Competency: Leadership Adaptability** — five rater rows, growth flags | Gap from x-axis numbers to **industry norm** and **average for this group** is minimal (~height of one label line); the two norms read as **one footer strip** directly under the chart. |
+
+### Technical notes (for implementation)
+
+1. **Height model** — The chart component (`horizontal-bar-chart.tsx`) sizes the `.bars` / `.graph` wrapper using bar count, axis gap, and legacy `Math.max` floors (`chartBarsHeight`, `chartHeight`). Any **extra height** on that wrapper below the painted axis becomes **visible whitespace** above the norms row. Prefer a height that ends **just below** the tick labels, or split **bars** and **axis** into separate rows so the wrapper does not over-reserve space.
+2. **Bar-count sensitivity** — With **one** rater row, `barsRegionHeight` is small; a fixed minimum height (e.g. 230px) can create a **large** empty region under the axis (see markup **2** on [`client-feedback-vertical-spacing-single-rater-markup.png`](./client-feedback-vertical-spacing-single-rater-markup.png)). **Do not** leave a tall blank area when few bars are present.
+3. **Legend-to-chart gap** — Large `marginBottom` on the centered chart title (“Your Current Scores By Ratee Source”) contributes to markup **1**; reduce only if hierarchy still reads clearly.
+4. **Norms row** — Keep **`margin-top`** on the norms block small (e.g. **0–4px**) after overlap fixes; align the norms row with the **chart column** (`padding-left: chartScoreColumnWidth`, `justify-content: flex-start`) so the summary sits under the bars, not floating in the center of the full content width.
+5. **Contrast** — [`client-feedback-creative-problem-solving.png`](./client-feedback-creative-problem-solving.png) and [`client-feedback-vertical-spacing-single-rater-markup.png`](./client-feedback-vertical-spacing-single-rater-markup.png) show **undesired** spacing. Use [`reference-preferred-tight-chart-to-norms-five-raters.png`](./reference-preferred-tight-chart-to-norms-five-raters.png) as the spacing **target** for chart-to-norms tightness.
 
 ---
 
 ## Client Feedback (Pen Annotations)
 
-Reference: [`client-feedback-creative-problem-solving.png`](./client-feedback-creative-problem-solving.png)
+References: [`client-feedback-creative-problem-solving.png`](./client-feedback-creative-problem-solving.png) (pen), [`client-feedback-vertical-spacing-single-rater-markup.png`](./client-feedback-vertical-spacing-single-rater-markup.png) (spacing markup, single rater)
 
 | Annotation | Request | Status |
 |------------|---------|--------|
@@ -25,6 +62,7 @@ Reference: [`client-feedback-creative-problem-solving.png`](./client-feedback-cr
 | Page 7 crossed out → 3 | "(fix page numbers)" | Addressed (commit d263022) |
 | Bottom right note | "Same for all pages like this" | Applies to chart overlap across all competency/dimension pages |
 | Top banner arrow | (Unclear — possibly header adjustment) | Addressed (commit 22a920a) |
+| Vertical spacing markup (single rater) | Arrow **1**: less space between growth legend and chart; arrow **2**: less space between x-axis and GEONORM | **Pending** — see [Problem: Excessive vertical spacing](#problem-excessive-vertical-spacing-single-rater-markup) |
 
 ---
 

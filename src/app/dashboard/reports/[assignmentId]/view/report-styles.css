@@ -370,14 +370,15 @@
   background: url('/images/reports/triangle-orange.png') no-repeat scroll 0 0 transparent;
 }
 
-/* Norms Display */
+/* Norms Display — inline styles on div.norms control layout in React;
+   keep CSS neutral so it does not fight the component. */
 .norms {
-  position: relative;
-  width: 488px;
+  position: static;
+  width: 100%;
+  max-width: 704px;
   height: 55px;
-  margin: 90px 94px 0;
+  margin: 0;
   color: var(--report-color-text-primary);
-  top: 70px;
 }
 
 .norm-group {
