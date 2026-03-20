@@ -19,6 +19,9 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
   const [initialData, setInitialData] = useState<Partial<AssessmentFormData> | null>(null)
   const [existingLogoUrl, setExistingLogoUrl] = useState<string | null>(null)
   const [existingBackgroundUrl, setExistingBackgroundUrl] = useState<string | null>(null)
+  const [hasActiveAssignments, setHasActiveAssignments] = useState(false)
+  const [activeAssignmentCount, setActiveAssignmentCount] = useState(0)
+  const [editWarningDismissed, setEditWarningDismissed] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
@@ -226,6 +229,15 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
             }
           }),
         })
+        // Check for active assignments using this assessment
+        const { count: assignmentCount } = await supabase
+          .from('assignments')
+          .select('*', { count: 'exact', head: true })
+          .eq('assessment_id', id)
+        if (assignmentCount && assignmentCount > 0) {
+          setHasActiveAssignments(true)
+          setActiveAssignmentCount(assignmentCount)
+        }
       } catch (error) {
         setMessage(error instanceof Error ? error.message : 'Failed to load assessment')
       } finally {
@@ -771,18 +783,48 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
           </div>
         </div>
 
+        {/* Active assignments warning */}
+        {hasActiveAssignments && !editWarningDismissed && (
+          <div className="bg-amber-50 border border-amber-300 rounded-md p-4">
+            <div className="flex items-start gap-3">
+              <span className="text-amber-600 text-xl leading-none mt-0.5">&#9888;</span>
+              <div className="flex-1">
+                <h3 className="font-semibold text-amber-800">Active Surveys Detected</h3>
+                <p className="text-sm text-amber-700 mt-1">
+                  This assessment is currently used in {activeAssignmentCount} assignment{activeAssignmentCount !== 1 ? 's' : ''}.
+                  Editing it may cause data inaccuracies in existing reports. Structural changes
+                  (adding/removing questions or dimensions) can affect survey results.
+                </p>
+                <div className="flex gap-2 mt-3">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setEditWarningDismissed(true)}
+                  >
+                    I understand, continue editing
+                  </Button>
+                  <Link href="/dashboard/assessments">
+                    <Button size="sm" variant="ghost">Go back</Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Message */}
         {message && (
           <div className={`p-4 rounded-md ${
-            message.includes('successfully') 
-              ? 'bg-green-50 text-green-800 border border-green-200' 
+            message.includes('successfully')
+              ? 'bg-green-50 text-green-800 border border-green-200'
               : 'bg-red-50 text-red-800 border border-red-200'
           }`}>
             {message}
           </div>
         )}
 
-        {/* Assessment Form */}
+        {/* Assessment Form — hidden behind warning until dismissed */}
+        <div className={hasActiveAssignments && !editWarningDismissed ? 'opacity-50 pointer-events-none' : ''}>
         <AssessmentForm
           initialData={initialData}
           onSubmit={handleSubmit}
@@ -791,6 +833,7 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
           existingLogoUrl={existingLogoUrl}
           existingBackgroundUrl={existingBackgroundUrl}
         />
+        </div>
       </div>
   )
 }
