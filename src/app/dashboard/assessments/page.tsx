@@ -19,7 +19,7 @@ export default async function AssessmentsPage() {
   // Fetch assessments from database
   const { data: assessments, error } = await supabase
     .from('assessments')
-    .select('*')
+    .select('*, assignments(id)')
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -109,7 +109,10 @@ export default async function AssessmentsPage() {
                 </Link>
               </div>
             ) : (
-              <AssessmentsTable initialAssessments={assessments} />
+              <AssessmentsTable initialAssessments={assessments.map(a => ({
+              ...a,
+              assignment_count: Array.isArray((a as Record<string, unknown>).assignments) ? ((a as Record<string, unknown>).assignments as unknown[]).length : 0,
+            }))} />
             )}
           </CardContent>
         </Card>

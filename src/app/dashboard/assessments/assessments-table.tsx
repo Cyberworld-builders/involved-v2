@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { Lock } from 'lucide-react'
 import { stripHtmlTags } from '@/lib/utils'
 
 interface Assessment {
@@ -13,6 +14,7 @@ interface Assessment {
   type: string
   created_at: string
   updated_at: string
+  assignment_count?: number
 }
 
 interface AssessmentsTableProps {
@@ -118,7 +120,14 @@ export default function AssessmentsTable({ initialAssessments }: AssessmentsTabl
           {assessments.map((assessment) => (
             <tr key={assessment.id}>
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-medium text-gray-900">{assessment.title}</div>
+                <div className="text-sm font-medium text-gray-900 flex items-center gap-1.5">
+                  {assessment.title}
+                  {(assessment.assignment_count ?? 0) > 0 && (
+                    <span title={`Used in ${assessment.assignment_count} assignment${assessment.assignment_count !== 1 ? 's' : ''} — editing may affect survey data`}>
+                      <Lock className="w-3.5 h-3.5 text-amber-500" />
+                    </span>
+                  )}
+                </div>
                 {assessment.description && (
                   <div className="text-sm text-gray-500 truncate max-w-xs">{stripHtmlTags(assessment.description)}</div>
                 )}
