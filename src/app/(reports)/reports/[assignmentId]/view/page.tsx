@@ -91,13 +91,38 @@ export default async function ReportViewFullscreenPage({
       redirect('/dashboard')
     }
 
-    if (!assignment.completed) {
-      redirect(`/dashboard/reports/${assignmentId}`)
+    // For non-360 assessments, require completed assignment
+    // For 360 assessments, allow viewing partial reports (matches dashboard behavior)
+    if (!assignment.completed && !assessment?.is_360) {
+      return (
+        <div style={{ maxWidth: 600, margin: '80px auto', padding: 24, fontFamily: 'system-ui, sans-serif', textAlign: 'center' }}>
+          <h1 style={{ fontSize: 24, fontWeight: 600, marginBottom: 12 }}>Report Not Available Yet</h1>
+          <p style={{ color: '#666', lineHeight: 1.6 }}>
+            This assignment has not been completed yet. The participant needs to finish the assessment before a report can be generated.
+          </p>
+          <p style={{ color: '#666', lineHeight: 1.6, marginTop: 12 }}>
+            Once the assessment is complete, return to the report dashboard and generate the report.
+          </p>
+          <a href={`/dashboard/reports/${assignmentId}`} style={{ display: 'inline-block', marginTop: 20, color: '#55a1d8' }}>
+            Back to report dashboard
+          </a>
+        </div>
+      )
     }
   } else {
-    // Service role: verify assignment exists and is completed
-    if (!assignment.completed) {
-      redirect(`/dashboard/reports/${assignmentId}`)
+    // Service role: verify assignment exists and is completed (or is 360)
+    if (!assignment.completed && !assessment?.is_360) {
+      return (
+        <div style={{ maxWidth: 600, margin: '80px auto', padding: 24, fontFamily: 'system-ui, sans-serif', textAlign: 'center' }}>
+          <h1 style={{ fontSize: 24, fontWeight: 600, marginBottom: 12 }}>Report Not Available Yet</h1>
+          <p style={{ color: '#666', lineHeight: 1.6 }}>
+            This assignment has not been completed yet. The participant needs to finish the assessment before a report can be generated.
+          </p>
+          <p style={{ color: '#666', lineHeight: 1.6, marginTop: 12 }}>
+            Once the assessment is complete, return to the report dashboard and generate the report.
+          </p>
+        </div>
+      )
     }
   }
 

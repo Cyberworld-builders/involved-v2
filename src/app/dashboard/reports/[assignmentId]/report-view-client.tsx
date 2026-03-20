@@ -18,9 +18,10 @@ type ReportLeaderBlockerData = Parameters<typeof ReportLeaderBlockerView>[0]['re
 interface ReportViewClientProps {
   assignmentId: string
   is360: boolean
+  onLoadReport?: (reload: () => Promise<void>) => void
 }
 
-export default function ReportViewClient({ assignmentId, is360 }: ReportViewClientProps) {
+export default function ReportViewClient({ assignmentId, is360, onLoadReport }: ReportViewClientProps) {
   const reportDebug = useReportDebug()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -117,6 +118,10 @@ export default function ReportViewClient({ assignmentId, is360 }: ReportViewClie
     loadReport()
   }, [loadReport])
 
+  useEffect(() => {
+    onLoadReport?.(loadReport)
+  }, [onLoadReport, loadReport])
+
   if (loading) {
     return (
       <Card>
@@ -170,17 +175,7 @@ export default function ReportViewClient({ assignmentId, is360 }: ReportViewClie
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-end">
-        <Button
-          onClick={regenerateReport}
-          disabled={regenerating}
-          variant="outline"
-          size="sm"
-        >
-          {regenerating ? 'Regenerating...' : '🔄 Regenerate Report'}
-        </Button>
-      </div>
+    <div>
       {is360 ? (
         <Report360View reportData={reportData as Report360Data} />
       ) : (

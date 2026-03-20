@@ -354,21 +354,24 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                         boxSizing: 'border-box',
                       }}
                     >
-                      {/* GEONORM Group - Always shown */}
+                      {/* GEONORM Group - Always shown (width: max-content so divider can sit between real text bounds) */}
                       <div
                         className="norm-group industry"
                         style={{
                           position: 'relative',
-                          width: '280px',
+                          width: 'max-content',
+                          maxWidth: 'min(100%, 380px)',
                           height: '55px',
                           display: 'flex',
                           alignItems: 'center',
+                          flexShrink: 0,
+                          gap: '15px',
                         }}
                       >
                         <div
                           className="norm"
                           style={{
-                            width: '80px',
+                            minWidth: '72px',
                             position: 'relative',
                             fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
                             fontSize: '34px',
@@ -384,8 +387,6 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                         <div
                           className="norm-label"
                           style={{
-                            width: '180px',
-                            marginLeft: '15px',
                             position: 'relative',
                             fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
                             fontSize: '12px',
@@ -403,49 +404,61 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
 
                       {/* Group Norm - Always shown if geonorm exists */}
                       {dimension.geonorm !== null && (
-                        <div
-                          className="norm-group group"
-                          style={{
-                            width: '250px',
-                            borderLeft: `2px solid ${REPORT_COLORS.lightGray}`,
-                            position: 'relative',
-                            height: '55px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            paddingLeft: '20px',
-                          }}
-                        >
+                        <>
                           <div
-                            className="norm"
+                            aria-hidden
                             style={{
-                              width: '80px',
-                              position: 'relative',
-                              fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-                              fontSize: '34px',
-                              letterSpacing: '-1px',
-                              marginTop: '3px',
+                              width: '2px',
+                              height: '40px',
                               flexShrink: 0,
+                              alignSelf: 'center',
+                              backgroundColor: REPORT_COLORS.lightGray,
+                              margin: '0 16px',
+                            }}
+                          />
+                          <div
+                            className="norm-group group"
+                            style={{
+                              width: 'max-content',
+                              maxWidth: 'min(100%, 320px)',
+                              position: 'relative',
+                              height: '55px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              flexShrink: 0,
+                              gap: '15px',
                             }}
                           >
-                            {(dimension.geonorm ?? 0).toFixed(2)}
+                            <div
+                              className="norm"
+                              style={{
+                                minWidth: '72px',
+                                position: 'relative',
+                                fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                                fontSize: '34px',
+                                letterSpacing: '-1px',
+                                marginTop: '3px',
+                                flexShrink: 0,
+                              }}
+                            >
+                              {(dimension.geonorm ?? 0).toFixed(2)}
+                            </div>
+                            <div
+                              className="norm-label"
+                              style={{
+                                position: 'relative',
+                                fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                                fontSize: '12px',
+                                textTransform: 'uppercase',
+                                lineHeight: '14px',
+                                flexShrink: 0,
+                              }}
+                            >
+                              Avg Score<br />
+                              <span style={{ fontWeight: 600 }}>For This Group</span>
+                            </div>
                           </div>
-                          <div
-                            className="norm-label"
-                            style={{
-                              width: '130px',
-                              marginLeft: '15px',
-                              position: 'relative',
-                              fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-                              fontSize: '12px',
-                              textTransform: 'uppercase',
-                              lineHeight: '14px',
-                              flexShrink: 0,
-                            }}
-                          >
-                            Avg Score<br />
-                            <span style={{ fontWeight: 600 }}>For This Group</span>
-                          </div>
-                        </div>
+                        </>
                       )}
                     </div>
                   </div>
