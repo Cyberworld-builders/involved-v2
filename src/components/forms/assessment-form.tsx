@@ -1697,12 +1697,10 @@ export default function AssessmentForm({
                             <label className="block text-sm font-medium text-gray-900 mb-2">
                               Definition
                             </label>
-                            <textarea
-                              value={dimension.definition || ''}
-                              onChange={(e) => handleUpdateDimension(dimension.id, 'definition', e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 text-sm"
+                            <RichTextEditor
+                              content={dimension.definition || ''}
+                              onChange={(content) => handleUpdateDimension(dimension.id, 'definition', content)}
                               placeholder="Enter a definition for this dimension (shown in reports)"
-                              rows={2}
                             />
                           </div>
                           {/* Question Count Input (only for non-360 assessments) */}
