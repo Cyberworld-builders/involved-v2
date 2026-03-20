@@ -62,6 +62,9 @@ export default async function ReportViewFullscreenPage({
     notFound()
   }
 
+  // Type assertion for nested object — needed before completion checks below
+  const assessment = (assignment.assessment as unknown) as { id: string; title: string; is_360: boolean } | null
+
   // If service role, skip user authentication check
   if (!isServiceRole) {
     const {
@@ -125,9 +128,6 @@ export default async function ReportViewFullscreenPage({
       )
     }
   }
-
-  // Type assertion for nested object (Supabase returns arrays for relations, but .single() should return objects)
-  const assessment = (assignment.assessment as unknown) as { id: string; title: string; is_360: boolean } | null
 
   // Fetch report data (for service role access, we need to provide it server-side)
   // For regular users, the client component will fetch it via API
