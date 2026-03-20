@@ -1,6 +1,11 @@
 'use client'
 
-import { REPORT_COLORS, REPORT_SPACING } from '@/lib/reports/report-design-constants'
+import {
+  computeAxisLinePaddingTop,
+  computeBarsRegionHeight,
+  X_AXIS_LABEL_GAP_PX,
+} from '@/lib/reports/chart-axis-layout'
+import { REPORT_COLORS } from '@/lib/reports/report-design-constants'
 
 interface BarData {
   label: string
@@ -55,21 +60,13 @@ export default function HorizontalBarChart({
       ? [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]
       : [0, 1, 2, 3, 4, 5]
 
-  const rowHeight = barHeight + rowGap
-  const barsRegionHeight = scores.length * rowHeight - (scores.length > 0 ? rowGap : 0) // last row has no marginBottom
-  const scaleGap = 34
-  const graphHeight = barsRegionHeight + scaleGap
-  // X-axis numbers must sit BELOW the bars — use barsRegionHeight + scaleGap so they never overlap the lowest bar
-  const linePaddingTop = barsRegionHeight + scaleGap
+  const barsRegionHeight = computeBarsRegionHeight(scores.length, barHeight, rowGap)
+  const graphHeight = barsRegionHeight + X_AXIS_LABEL_GAP_PX
+  const linePaddingTop = computeAxisLinePaddingTop(barsRegionHeight, X_AXIS_LABEL_GAP_PX)
 
-  const is360Style = chartWidth === 563
-  const fixedGraphHeight = REPORT_SPACING.chartHeight
-  // CRITICAL: Do not use fixed padding — it causes x-axis numbers to overlap the bottom bar when there are 5 rows
-  const effectiveGraphHeight = is360Style ? Math.max(fixedGraphHeight, graphHeight) : graphHeight
+  const effectiveGraphHeight = graphHeight
   const effectiveLinePadding = linePaddingTop
-  const containerHeight = is360Style
-    ? Math.max(REPORT_SPACING.chartBarsHeight, graphHeight)
-    : graphHeight
+  const containerHeight = graphHeight
 
   return (
     <div

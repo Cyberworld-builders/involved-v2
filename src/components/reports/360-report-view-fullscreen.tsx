@@ -249,8 +249,18 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                     margin: '20px 0 40px',
                   }}
                 >
-                  {(dimension.description || dimension.definition) && (
-                    <p>{dimension.description || dimension.definition}</p>
+                  {(dimension.description || dimension.definition)?.trim() && (
+                    <div
+                      className="competency-definition"
+                      style={{
+                        marginBottom: '12px',
+                        fontSize: REPORT_TYPOGRAPHY.body.fontSize,
+                        lineHeight: REPORT_TYPOGRAPHY.body.lineHeight,
+                      }}
+                      dangerouslySetInnerHTML={{
+                        __html: dimension.description || dimension.definition || '',
+                      }}
+                    />
                   )}
 
                   <div className="chart" style={{ width: `${REPORT_SPACING.contentWidth}px`, height: 'auto', marginTop: '20px' }}>
@@ -332,12 +342,14 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                         position: 'relative',
                         width: `${REPORT_SPACING.contentWidth}px`,
                         height: '55px',
-                        margin: '8px auto 0',
+                        margin: '2px 0 0',
                         color: REPORT_COLORS.textPrimary,
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center',
+                        justifyContent: 'flex-start',
                         gap: '0',
+                        paddingLeft: `${REPORT_SPACING.chartScoreColumnWidth}px`,
+                        boxSizing: 'border-box',
                       }}
                     >
                       {/* GEONORM Group - Always shown */}

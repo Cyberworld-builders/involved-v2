@@ -19,9 +19,9 @@ Reference: [`client-feedback-creative-problem-solving.png`](./client-feedback-cr
 
 | Annotation | Request | Status |
 |------------|---------|--------|
-| Arrow at end of "SOLVING" | "need to insert definition of competency here (for all comps)" | Pending |
-| Oval around Self bar + x-axis | "Still messed up" — x-axis numbers (0,1,2,3,4,5) overlap the lowest bar | **In progress** |
-| Arrow at left gap | "remove white space" between score and industry norm | Pending |
+| Arrow at end of "SOLVING" | "need to insert definition of competency here (for all comps)" | **Addressed** — dimension description/definition renders as HTML below title (TipTap content from `fields`) |
+| Oval around Self bar + x-axis | "Still messed up" — x-axis numbers (0,1,2,3,4,5) overlap the lowest bar | **Addressed** — dynamic axis padding in `chart-axis-layout.ts` + `horizontal-bar-chart.tsx` |
+| Arrow at left gap | "remove white space" between score and industry norm | **Addressed** — norms row `padding-left` aligns with bar chart (`chartScoreColumnWidth`), `justify-content: flex-start` |
 | Page 7 crossed out → 3 | "(fix page numbers)" | Addressed (commit d263022) |
 | Bottom right note | "Same for all pages like this" | Applies to chart overlap across all competency/dimension pages |
 | Top banner arrow | (Unclear — possibly header adjustment) | Addressed (commit 22a920a) |
@@ -109,14 +109,17 @@ The x-axis numbers must be positioned **below** the bars with clear visual separ
 
 ### Code Location
 
-- **Component**: `src/components/reports/charts/horizontal-bar-chart.tsx` — `effectiveLinePadding` must be dynamic (`barsRegionHeight + scaleGap`), not fixed
-- **CSS**: `src/app/dashboard/reports/[assignmentId]/view/report-styles.css` — `.chart .graph-lines .line` has `padding-top: 220px` (overridden by inline style when component provides correct value)
+- **Layout math**: `src/lib/reports/chart-axis-layout.ts` — `computeBarsRegionHeight`, `computeAxisLinePaddingTop`, `X_AXIS_LABEL_GAP_PX` (≥15–20px gap per spec)
+- **Component**: `src/components/reports/charts/horizontal-bar-chart.tsx` — inline `paddingTop` on grid lines from axis layout helpers (no fixed 220px)
+- **CSS**: `src/app/dashboard/reports/[assignmentId]/view/report-styles.css` — `.chart .graph-lines .line` has no fixed `padding-top` (inline wins)
 
 ---
 
 ## Code Locations
 
 - **Horizontal bar chart:** `src/components/reports/charts/horizontal-bar-chart.tsx`
+- **Chart axis layout (tests):** `src/lib/reports/chart-axis-layout.ts`, `src/__tests__/lib/reports/chart-axis-layout.test.ts`
+- **360 norms alignment + competency HTML:** `src/components/reports/360-report-view-fullscreen.tsx`
 - **Page header:** `src/components/reports/layout/page-header.tsx`
 - **Cover page:** `src/components/reports/sections/cover-page.tsx`
 - **360 report:** `src/components/reports/360-report-view-fullscreen.tsx`
