@@ -9,6 +9,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog'
 import Link from 'next/link'
 import { Calendar, ChevronDown, ChevronRight, ExternalLink, Pencil, Trash2 } from 'lucide-react'
 import { PdfActionButtons } from '@/components/reports/pdf-action-buttons'
+import SurveySnapshots from '@/components/surveys/survey-snapshots'
 import { Subject } from '@/lib/reports/get-survey-subjects'
 import { ScoreData } from '@/lib/reports/get-survey-scores'
 
@@ -540,6 +541,9 @@ export default function SurveyDetailClient({
           </div>
         </CardContent>
       </Card>
+
+      {/* Survey Snapshots */}
+      <SurveySnapshots clientId={clientId} surveyId={surveyId} assessmentId={assessment.id} />
 
       {/* Subjects/Targets Table */}
       <Card>
