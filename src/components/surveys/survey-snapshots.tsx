@@ -252,6 +252,7 @@ export default function SurveySnapshots({ clientId, surveyId, assessmentId }: Su
           <Info className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
           <p className="text-xs text-blue-700">
             Snapshots preserve the full state of this survey including answers, scores, and reports.
+            Use the download and PDF icons to view or save snapshot data at any time.
             To restore from a snapshot, contact your administrator — restoration requires careful data
             mapping and may involve creating temporary assessment structures.
           </p>
