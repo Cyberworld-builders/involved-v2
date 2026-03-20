@@ -123,3 +123,21 @@ it's still too high. so, these charts may vary in how tall they are so the score
 2. **`geonorm`** two-column row: each **`flex: 1`** half **`justifyContent: 'center'`** (replacing **`flex-end`** / **`flex-start`**) so each **norm-group** is **centered** in its half — balanced slack **toward the divider** and **toward the outer** margin.
 
 review the changes we just made in involved.md and in the staged and unstaged changes and commit, push and deploy staging.
+
+we're looking good. so, i was wrong about the dimension definitions. they do in fact need to be rich text. change the fields on the assessment edit interface to support rich text and make sure they are parsing the tags in the report.
+
+ok this is interesting. i just updated one of the dimension descriptions and suddenly all of the answer data for the survey got nuked. please investigate.
+
+so once assignments are created, their assessment needs to be locked. the user needs to be warned that by editing assessments after assignment, they risk causing data inaccuracy. in the reports. it needs to be a warning like "this assessment is currently being used in active surveys. editing it may cause data inaccuracies. are you sure you want to continue?"
+
+we may actually want to include in the message that they may want to save a survey snapshot before editing. 
+
+i like the lock on the assessment edit page. we should add a lock icon next to the assessment in the assessment index page with a more brief tooltip message.
+
+### 2026-03-20 — PDF page numbers too high vs HTML
+
+**Cause:** Both **`export-pdf-puppeteer.ts`** and **`export-pdf-playwright.ts`** inject print CSS with **`.page-footer { bottom: 0 !important; }`**. **`PageFooter`** uses inline **`bottom: '-110px'`** (positions the label in the band below **`.page-wrapper`**). **`!important` beats inline**, so **PDF** pinned the footer to **`bottom: 0`** while **HTML** kept **`-110px`** — page numbers looked **too high** in the PDF.
+
+**Fix:** Dropped **`bottom: 0 !important`** from **`.page-footer`** in both exporters (kept **`position: absolute !important`** only). **Puppeteer** also aligned **`.page-wrapper { padding-bottom }`** **59px → 64px** to match **`PageWrapper`** / Playwright (**`footerAreaHeight`**). **`page-footer.tsx`:** **`fontFamily`** was incorrectly set to **`fontSize`**; set to the report Helvetica stack.
+
+**Refs:** `src/lib/reports/export-pdf-puppeteer.ts`, `src/lib/reports/export-pdf-playwright.ts`, `src/components/reports/layout/page-footer.tsx`.

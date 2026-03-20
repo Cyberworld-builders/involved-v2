@@ -34,12 +34,13 @@ const PRINT_CSS = `
   .page-container:nth-child(2) {
     page-break-before: always !important;
   }
+  /* Do not set bottom — PageFooter uses inline bottom:-110px to sit in the margin below .page-wrapper;
+     bottom:0 !important was overriding that and made PDF page numbers sit too high vs HTML. */
   .page-footer {
-    bottom: 0 !important;
     position: absolute !important;
   }
   .page-wrapper {
-    padding-bottom: 59px !important;
+    padding-bottom: 64px !important;
   }
   @media print {
     .page-container {
