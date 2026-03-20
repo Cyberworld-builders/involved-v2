@@ -794,6 +794,7 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
                   This assessment is currently used in {activeAssignmentCount} assignment{activeAssignmentCount !== 1 ? 's' : ''}.
                   Editing it may cause data inaccuracies in existing reports. Structural changes
                   (adding/removing questions or dimensions) can affect survey results.
+                  Consider exporting a survey data snapshot before making changes.
                 </p>
                 <div className="flex gap-2 mt-3">
                   <Button
