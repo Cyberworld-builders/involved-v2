@@ -2,6 +2,8 @@
 
 Reference images and specifications for Involved report PDF layout. Use these when implementing or adjusting report styling.
 
+**Canonical chart block (score + bars + 0–5 axis + GEONORM row):** [`reference-preferred-tight-chart-to-norms-five-raters.png`](./reference-preferred-tight-chart-to-norms-five-raters.png) — Leadership Adaptability, five raters. This is the **target look**: tight vertical rhythm from the large score through the bars, minimal gap from axis labels to the norms strip, norms aligned under the chart column. Prefer this over ad-hoc spacing when in doubt.
+
 ## Images
 
 | File | Description |
@@ -11,7 +13,7 @@ Reference images and specifications for Involved report PDF layout. Use these wh
 | [`divider-incorrect-creative-problem-solving.png`](./divider-incorrect-creative-problem-solving.png) | **Avoid**: Title divider extends full-width to right margin (COMPETENCY: CREATIVE PROBLEM SOLVING) |
 | [`client-feedback-creative-problem-solving.png`](./client-feedback-creative-problem-solving.png) | Client pen annotations on competency page — multiple issues |
 | [`client-feedback-vertical-spacing-single-rater-markup.png`](./client-feedback-vertical-spacing-single-rater-markup.png) | **Problem (avoid)**: Creative Problem Solving, single rater — **markup** flags **too much** vertical space (legend→chart **and** axis→GEONORM). Not a “good” reference. |
-| [`reference-preferred-tight-chart-to-norms-five-raters.png`](./reference-preferred-tight-chart-to-norms-five-raters.png) | **Preferred spacing**: five rater rows — tight gap from x-axis to industry norm + group average row |
+| [`reference-preferred-tight-chart-to-norms-five-raters.png`](./reference-preferred-tight-chart-to-norms-five-raters.png) | **Canonical / preferred**: full competency chart strip — score, five rater rows, tight axis→norms spacing, norms under bars (see intro above) |
 
 ---
 
@@ -42,7 +44,7 @@ The **five-rater** screenshot below is the **target** for how much vertical spac
 
 ### Technical notes (for implementation)
 
-1. **Height model** — The chart component (`horizontal-bar-chart.tsx`) sizes the `.bars` / `.graph` wrapper using bar count, axis gap, and legacy `Math.max` floors (`chartBarsHeight`, `chartHeight`). Any **extra height** on that wrapper below the painted axis becomes **visible whitespace** above the norms row. Prefer a height that ends **just below** the tick labels, or split **bars** and **axis** into separate rows so the wrapper does not over-reserve space.
+1. **Height model** — The chart component (`horizontal-bar-chart.tsx`) sizes the `.bars` / `.graph` wrapper with `computeGraphContainerHeight()` = bar rows + `X_AXIS_LABEL_GAP_PX` + `X_AXIS_TICK_TEXT_RESERVE_PX` so the **0–5 labels** stay **inside** the box and clear the norms row. Tick `<span>`s use **`marginTop: 0`** (overriding legacy `.line > span { margin-top: 14px }`) so numbers sit **tight under the bars**; constants live in `chart-axis-layout.ts`. **PDF route:** `(reports)/reports/.../report-styles.css` must **not** use `border-left` on `.norm-group.group` or it **doubles** the React divider (dashboard file was already clean).
 2. **Bar-count sensitivity** — With **one** rater row, `barsRegionHeight` is small; a fixed minimum height (e.g. 230px) can create a **large** empty region under the axis (see markup **2** on [`client-feedback-vertical-spacing-single-rater-markup.png`](./client-feedback-vertical-spacing-single-rater-markup.png)). **Do not** leave a tall blank area when few bars are present.
 3. **Legend-to-chart gap** — Large `marginBottom` on the centered chart title (“Your Current Scores By Ratee Source”) contributes to markup **1**; reduce only if hierarchy still reads clearly.
 4. **Norms row** — Keep **`margin-top`** on the norms block small (e.g. **0–4px**) after overlap fixes; align the norms row with the **chart column** (`padding-left: chartScoreColumnWidth`, `justify-content: flex-start`) so the summary sits under the bars, not floating in the center of the full content width.

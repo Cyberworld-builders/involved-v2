@@ -302,13 +302,13 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                       </span>
                     </div>
 
-                    {/* Score and Chart Container */}
-                    <div style={{ display: 'flex', alignItems: 'flex-start', width: '100%' }}>
+                    {/* Score + bar chart row — vertically center big score with chart height */}
+                    <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                       {/* Score Display Container */}
                       <div
                         className="score-container"
                         style={{
-                          width: '141px',
+                          width: `${REPORT_SPACING.chartScoreColumnWidth}px`,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -323,8 +323,13 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                       />
                       </div>
 
-                      {/* Bar Chart */}
-                      <div style={{ flex: 1, marginLeft: '0' }}>
+                      <div
+                        style={{
+                          width: `${REPORT_SPACING.chartAreaWidth360}px`,
+                          flexShrink: 0,
+                          overflow: 'visible',
+                        }}
+                      >
                         <HorizontalBarChart
                           scores={transformDimensionForChart(dimension)}
                           maxValue={5}
@@ -335,76 +340,101 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                       </div>
                     </div>
 
-                    {/* Norms Display */}
+                    <div
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        marginTop: '20px',
+                      }}
+                    >
+                    {/* Norms Display — centered on full content width (704), not only under chart column */}
                     <div
                       className="norms"
                       style={{
-                        /* Override legacy pdf.css `.norms { top: 70px }` — inline styles did not set `top`, so ~70px gap appeared under the chart */
                         position: 'static',
                         top: 'auto',
-                        width: `${REPORT_SPACING.contentWidth}px`,
-                        height: '55px',
-                        margin: '2px 0 0',
+                        width: '100%',
+                        maxWidth: `${REPORT_SPACING.contentWidth}px`,
+                        height: 'auto',
+                        minHeight: '55px',
+                        margin: 0,
                         color: REPORT_COLORS.textPrimary,
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'flex-start',
+                        justifyContent: 'center',
                         gap: '0',
-                        paddingLeft: `${REPORT_SPACING.chartScoreColumnWidth}px`,
+                        paddingLeft: 0,
                         boxSizing: 'border-box',
+                        flexWrap: 'wrap',
                       }}
                     >
-                      {/* GEONORM Group - Always shown (width: max-content so divider can sit between real text bounds) */}
-                      <div
-                        className="norm-group industry"
-                        style={{
-                          position: 'relative',
-                          width: 'max-content',
-                          maxWidth: 'min(100%, 380px)',
-                          height: '55px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          flexShrink: 0,
-                          gap: '15px',
-                        }}
-                      >
+                      {dimension.geonorm !== null ? (
                         <div
-                          className="norm"
                           style={{
-                            minWidth: '72px',
-                            position: 'relative',
-                            fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-                            fontSize: '34px',
-                            letterSpacing: '-1px',
-                            marginTop: '3px',
-                            flexShrink: 0,
+                            display: 'flex',
+                            width: '100%',
+                            alignItems: 'center',
+                            minHeight: '55px',
                           }}
                         >
-                          {dimension.industry_benchmark != null 
-                            ? (dimension.industry_benchmark ?? 0).toFixed(2)
-                            : '0.00'}
-                        </div>
-                        <div
-                          className="norm-label"
-                          style={{
-                            position: 'relative',
-                            fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-                            fontSize: '12px',
-                            textTransform: 'uppercase',
-                            lineHeight: '14px',
-                            flexShrink: 0,
-                          }}
-                        >
-                          GEONORM for<br />
-                          <span style={{ fontWeight: 600 }}>
-                            {dimension.industry_benchmark !== null ? 'Industry' : 'NO INDUSTRY SET'}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Group Norm - Always shown if geonorm exists */}
-                      {dimension.geonorm !== null && (
-                        <>
+                          {/* Equal halves; cards centered in each half so spacing to the divider looks balanced */}
+                          <div
+                            style={{
+                              flex: 1,
+                              display: 'flex',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              minWidth: 0,
+                            }}
+                          >
+                            <div
+                              className="norm-group industry"
+                              style={{
+                                position: 'relative',
+                                width: 'max-content',
+                                maxWidth: 'min(100%, 380px)',
+                                height: '55px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                flexShrink: 0,
+                                gap: '15px',
+                              }}
+                            >
+                              <div
+                                className="norm"
+                                style={{
+                                  minWidth: '72px',
+                                  position: 'relative',
+                                  fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                                  fontSize: '34px',
+                                  letterSpacing: '-1px',
+                                  marginTop: '3px',
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {dimension.industry_benchmark != null
+                                  ? (dimension.industry_benchmark ?? 0).toFixed(2)
+                                  : '0.00'}
+                              </div>
+                              <div
+                                className="norm-label"
+                                style={{
+                                  position: 'relative',
+                                  fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                                  fontSize: '12px',
+                                  textTransform: 'uppercase',
+                                  lineHeight: '14px',
+                                  flexShrink: 0,
+                                }}
+                              >
+                                GEONORM for<br />
+                                <span style={{ fontWeight: 600 }}>
+                                  {dimension.industry_benchmark !== null ? 'Industry' : 'NO INDUSTRY SET'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
                           <div
                             aria-hidden
                             style={{
@@ -417,11 +447,75 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                             }}
                           />
                           <div
-                            className="norm-group group"
                             style={{
-                              width: 'max-content',
-                              maxWidth: 'min(100%, 320px)',
+                              flex: 1,
+                              display: 'flex',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              minWidth: 0,
+                            }}
+                          >
+                            <div
+                              className="norm-group group"
+                              style={{
+                                width: 'max-content',
+                                maxWidth: 'min(100%, 320px)',
+                                position: 'relative',
+                                height: '55px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                flexShrink: 0,
+                                gap: '15px',
+                                borderLeft: 'none',
+                                paddingLeft: 0,
+                              }}
+                            >
+                              <div
+                                className="norm"
+                                style={{
+                                  minWidth: '72px',
+                                  position: 'relative',
+                                  fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                                  fontSize: '34px',
+                                  letterSpacing: '-1px',
+                                  marginTop: '3px',
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {(dimension.geonorm ?? 0).toFixed(2)}
+                              </div>
+                              <div
+                                className="norm-label"
+                                style={{
+                                  position: 'relative',
+                                  fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                                  fontSize: '12px',
+                                  textTransform: 'uppercase',
+                                  lineHeight: '14px',
+                                  flexShrink: 0,
+                                }}
+                              >
+                                Avg Score<br />
+                                <span style={{ fontWeight: 600 }}>For This Group</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div
+                          style={{
+                            display: 'flex',
+                            width: '100%',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <div
+                            className="norm-group industry"
+                            style={{
                               position: 'relative',
+                              width: 'max-content',
+                              maxWidth: 'min(100%, 380px)',
                               height: '55px',
                               display: 'flex',
                               alignItems: 'center',
@@ -441,7 +535,9 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                                 flexShrink: 0,
                               }}
                             >
-                              {(dimension.geonorm ?? 0).toFixed(2)}
+                              {dimension.industry_benchmark != null
+                                ? (dimension.industry_benchmark ?? 0).toFixed(2)
+                                : '0.00'}
                             </div>
                             <div
                               className="norm-label"
@@ -454,12 +550,15 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                                 flexShrink: 0,
                               }}
                             >
-                              Avg Score<br />
-                              <span style={{ fontWeight: 600 }}>For This Group</span>
+                              GEONORM for<br />
+                              <span style={{ fontWeight: 600 }}>
+                                {dimension.industry_benchmark !== null ? 'Industry' : 'NO INDUSTRY SET'}
+                              </span>
                             </div>
                           </div>
-                        </>
+                        </div>
                       )}
+                    </div>
                     </div>
                   </div>
                 </div>

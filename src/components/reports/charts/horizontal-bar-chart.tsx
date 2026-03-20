@@ -3,6 +3,7 @@
 import {
   computeAxisLinePaddingTop,
   computeBarsRegionHeight,
+  computeGraphContainerHeight,
   X_AXIS_LABEL_GAP_PX,
 } from '@/lib/reports/chart-axis-layout'
 import { REPORT_COLORS } from '@/lib/reports/report-design-constants'
@@ -61,8 +62,8 @@ export default function HorizontalBarChart({
       : [0, 1, 2, 3, 4, 5]
 
   const barsRegionHeight = computeBarsRegionHeight(scores.length, barHeight, rowGap)
-  const graphHeight = barsRegionHeight + X_AXIS_LABEL_GAP_PX
   const linePaddingTop = computeAxisLinePaddingTop(barsRegionHeight, X_AXIS_LABEL_GAP_PX)
+  const graphHeight = computeGraphContainerHeight(barsRegionHeight, X_AXIS_LABEL_GAP_PX)
 
   const effectiveGraphHeight = graphHeight
   const effectiveLinePadding = linePaddingTop
@@ -115,7 +116,15 @@ export default function HorizontalBarChart({
                   paddingTop: `${effectiveLinePadding}px`,
                 }}
               >
-                <span style={{ position: 'relative', top: '4px', fontSize: scale === 'half' ? '14px' : undefined }}>
+                <span
+                  style={{
+                    position: 'relative',
+                    top: '2px',
+                    marginTop: 0,
+                    display: 'block',
+                    fontSize: scale === 'half' ? '14px' : undefined,
+                  }}
+                >
                   {value}
                 </span>
               </div>

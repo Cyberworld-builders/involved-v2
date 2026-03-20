@@ -425,8 +425,7 @@
 
 .norm-group.group {
   width: 250px;
-  border-left: 2px solid var(--report-color-light-gray);
-  padding-left: 20px;
+  /* Divider is rendered in React (360-report-view-fullscreen) — do not add border-left or it doubles up */
 }
 
 .norm {

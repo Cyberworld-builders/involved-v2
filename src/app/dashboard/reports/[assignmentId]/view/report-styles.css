@@ -269,6 +269,7 @@
   margin-bottom: 45px;
 }
 
+/* Legacy float layout for HTML reports. React ScoreDisplay uses .report-score-display instead. */
 .chart .score {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   width: 141px;
@@ -390,7 +391,7 @@
 
 .norm-group.group {
   width: 220px;
-  border-left: 2px solid var(--report-color-light-gray);
+  /* Divider is rendered in React (360-report-view-fullscreen) — do not add border-left or it doubles up */
 }
 
 .norm {

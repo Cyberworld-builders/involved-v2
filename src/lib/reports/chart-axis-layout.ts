@@ -3,8 +3,14 @@
  * Keeps x-axis tick labels below the bar region with a minimum gap.
  */
 
-/** Minimum px between the bottom of the lowest bar and the axis number text (client spec: 15–20px; use ~22 for PDF). */
-export const X_AXIS_LABEL_GAP_PX = 22
+/** Minimum px between the bottom of the lowest bar and where tick labels sit (client spec: 15–20px). */
+export const X_AXIS_LABEL_GAP_PX = 16
+
+/**
+ * Space below the gap for the 0–5 tick labels (line-height + small buffer). Span uses inline marginTop: 0
+ * so labels sit tight under the bars; this reserve keeps `.bars` tall enough to clear the GEONORM row.
+ */
+export const X_AXIS_TICK_TEXT_RESERVE_PX = 22
 
 export function computeBarsRegionHeight(
   barCount: number,
@@ -21,4 +27,13 @@ export function computeAxisLinePaddingTop(
   labelGapPx: number = X_AXIS_LABEL_GAP_PX
 ): number {
   return barsRegionHeight + labelGapPx
+}
+
+/** Total `.graph` / `.bars` height: bar rows + gap above ticks + room for tick number text below the gap. */
+export function computeGraphContainerHeight(
+  barsRegionHeight: number,
+  labelGapPx: number = X_AXIS_LABEL_GAP_PX,
+  tickTextReservePx: number = X_AXIS_TICK_TEXT_RESERVE_PX
+): number {
+  return barsRegionHeight + labelGapPx + tickTextReservePx
 }
