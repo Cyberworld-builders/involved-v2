@@ -102,6 +102,10 @@ export const REPORT_SPACING = {
   chartHeight: 190,
   chartBarsHeight: 230,
   scoreDisplayHeight: 230,
+  /** Left column width on 360 competency chart row (score + chart = content width) */
+  chartScoreColumnWidth: 141,
+  /** Bar chart width in 360 competency view — `contentWidth - chartScoreColumnWidth`, matches `HorizontalBarChart` default */
+  chartAreaWidth360: 563,
 } as const
 
 export const REPORT_LAYOUT = {

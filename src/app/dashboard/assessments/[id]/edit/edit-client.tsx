@@ -19,6 +19,9 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
   const [initialData, setInitialData] = useState<Partial<AssessmentFormData> | null>(null)
   const [existingLogoUrl, setExistingLogoUrl] = useState<string | null>(null)
   const [existingBackgroundUrl, setExistingBackgroundUrl] = useState<string | null>(null)
+  const [hasActiveAssignments, setHasActiveAssignments] = useState(false)
+  const [activeAssignmentCount, setActiveAssignmentCount] = useState(0)
+  const [editWarningDismissed, setEditWarningDismissed] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
@@ -168,15 +171,26 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
           show_question_numbers: assessment.show_question_numbers !== undefined ? assessment.show_question_numbers : true,
           use_custom_fields: assessment.use_custom_fields ?? false,
           custom_fields: customFields,
-          dimensions: (dimensions || []).map(dim => ({
-            id: dim.id,
-            name: dim.name,
-            code: dim.code,
-            parent_id: dim.parent_id,
-          })),
+          dimensions: (() => {
+            // Build definition map from rich_text fields
+            const definitionMap = new Map<string, string>()
+            ;(fields || []).forEach(f => {
+              if (f.type === 'rich_text' && f.dimension_id) {
+                definitionMap.set(f.dimension_id, f.content || '')
+              }
+            })
+            return (dimensions || []).map(dim => ({
+              id: dim.id,
+              name: dim.name,
+              code: dim.code,
+              parent_id: dim.parent_id,
+              definition: definitionMap.get(dim.id) || '',
+            }))
+          })(),
           // Map fields preserving the order from the database query
           // The fields are already sorted by 'order' column, so we preserve that order
-          fields: (fields || []).map((field, index) => {
+          // Filter out rich_text fields (dimension definitions) — they are loaded into dimensions above
+          fields: (fields || []).filter(f => f.type !== 'rich_text').map((field, index) => {
             type FieldRow = Database['public']['Tables']['fields']['Row']
             const fieldWithExtras = field as FieldRow & { number?: number; practice?: boolean; required?: boolean }
             return {
@@ -215,6 +229,15 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
             }
           }),
         })
+        // Check for active assignments using this assessment
+        const { count: assignmentCount } = await supabase
+          .from('assignments')
+          .select('*', { count: 'exact', head: true })
+          .eq('assessment_id', id)
+        if (assignmentCount && assignmentCount > 0) {
+          setHasActiveAssignments(true)
+          setActiveAssignmentCount(assignmentCount)
+        }
       } catch (error) {
         setMessage(error instanceof Error ? error.message : 'Failed to load assessment')
       } finally {
@@ -405,160 +428,234 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
         throw new Error(`Failed to update assessment: ${errorMessage}`)
       }
 
-      // Delete existing dimensions and fields, then recreate
-      // (Simpler than trying to match and update individual items)
-      {
-        const { error: deleteDimensionsError } = await supabase
-          .from('dimensions')
-          .delete()
-          .eq('assessment_id', id)
-        if (deleteDimensionsError) {
-          throw new Error(`Failed to delete dimensions: ${deleteDimensionsError.message}`)
-        }
-      }
+      // ─── Safe upsert for dimensions and fields ───
+      // CRITICAL: Do NOT delete fields — answers have ON DELETE CASCADE on field_id.
+      // Deleting fields destroys all survey answer data.
+      // Instead: update existing rows in place, insert new ones, delete only removed ones.
 
-      {
-        const { error: deleteFieldsError } = await supabase
-          .from('fields')
-          .delete()
-          .eq('assessment_id', id)
-        if (deleteFieldsError) {
-          throw new Error(`Failed to delete fields: ${deleteFieldsError.message}`)
-        }
-      }
-
-      // Create dimensions
-      // We need to handle parent_id references properly since temporary IDs need to be mapped to database UUIDs
-      // Map temporary dimension IDs to database UUIDs (will be populated as we insert dimensions)
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
       const tempIdToDbIdMap = new Map<string, string>()
-      
-      if (data.dimensions.length > 0) {
-        // Build a map of temporary IDs to dimension data
-        const tempIdMap = new Map<string, { name: string; code: string; parent_id: string | null }>()
-        data.dimensions
-          .filter(dim => dim.name && dim.code)
-          .forEach(dim => {
-            tempIdMap.set(dim.id, {
+
+      // Fetch current dimensions and fields from DB
+      const { data: existingDimensions } = await supabase
+        .from('dimensions')
+        .select('id, name, code, parent_id, sort_order')
+        .eq('assessment_id', id)
+      const existingDimIds = new Set((existingDimensions || []).map(d => d.id))
+
+      const { data: existingFields } = await supabase
+        .from('fields')
+        .select('id, type, content, dimension_id, order, number, required, practice, anchors, insights_table')
+        .eq('assessment_id', id)
+      const existingFieldIds = new Set((existingFields || []).map(f => f.id))
+
+      // ─── Dimensions: update existing, insert new, delete removed ───
+      {
+        const validDims = data.dimensions.filter(dim => dim.name && dim.code)
+        const originalOrder = validDims.map(dim => dim.id)
+
+        // Separate existing (real UUID in DB) from new (temp ID)
+        const existingToUpdate: typeof validDims = []
+        const newToInsert: typeof validDims = []
+        for (const dim of validDims) {
+          if (uuidRegex.test(dim.id) && existingDimIds.has(dim.id)) {
+            existingToUpdate.push(dim)
+            tempIdToDbIdMap.set(dim.id, dim.id) // identity mapping for existing
+          } else {
+            newToInsert.push(dim)
+          }
+        }
+
+        // Update existing dimensions in place
+        for (const dim of existingToUpdate) {
+          let parentId: string | null = null
+          if (dim.parent_id) {
+            parentId = tempIdToDbIdMap.get(dim.parent_id) || dim.parent_id
+          }
+          const { error } = await supabase
+            .from('dimensions')
+            .update({
               name: dim.name,
               code: dim.code,
-              parent_id: dim.parent_id,
+              parent_id: parentId,
+              sort_order: originalOrder.indexOf(dim.id) + 1,
             })
-          })
-
-        // Organize dimensions into levels (parents first, then children)
-        const getDimensionLevel = (dimId: string, visited = new Set<string>()): number => {
-          if (visited.has(dimId)) return 0 // Circular reference protection
-          visited.add(dimId)
-          const dim = tempIdMap.get(dimId)
-          if (!dim || !dim.parent_id || !tempIdMap.has(dim.parent_id)) return 0
-          return 1 + getDimensionLevel(dim.parent_id, visited)
+            .eq('id', dim.id)
+          if (error) throw new Error(`Failed to update dimension: ${error.message}`)
         }
 
-        // Sort dimensions by level (parents first)
-        const sortedDimensions = Array.from(tempIdMap.entries())
-          .sort(([idA], [idB]) => getDimensionLevel(idA) - getDimensionLevel(idB))
+        // Insert new dimensions (parents first via level sort)
+        const getDimensionLevel = (dimId: string, visited = new Set<string>()): number => {
+          if (visited.has(dimId)) return 0
+          visited.add(dimId)
+          const dim = validDims.find(d => d.id === dimId)
+          if (!dim?.parent_id) return 0
+          return 1 + getDimensionLevel(dim.parent_id, visited)
+        }
+        const sortedNew = [...newToInsert].sort((a, b) => getDimensionLevel(a.id) - getDimensionLevel(b.id))
 
-        // Insert dimensions level by level, mapping temporary IDs to database UUIDs
-
-        // Track original form order for sort_order
-        const originalOrder = data.dimensions
-          .filter(dim => dim.name && dim.code)
-          .map(dim => dim.id)
-
-        for (const [tempId, dimData] of sortedDimensions) {
-          // Map parent_id from temporary ID to database UUID if it exists
+        for (const dim of sortedNew) {
           let parentId: string | null = null
-          if (dimData.parent_id && tempIdToDbIdMap.has(dimData.parent_id)) {
-            parentId = tempIdToDbIdMap.get(dimData.parent_id)!
-          } else if (dimData.parent_id) {
-            // Parent not yet inserted - this shouldn't happen with proper sorting, but handle gracefully
-            console.warn(`Parent dimension ${dimData.parent_id} not found for ${tempId}, setting to null`)
-            parentId = null
+          if (dim.parent_id) {
+            parentId = tempIdToDbIdMap.get(dim.parent_id) || (uuidRegex.test(dim.parent_id) ? dim.parent_id : null)
           }
-
-          const { data: insertedDimension, error: insertError } = await supabase
+          const { data: inserted, error } = await supabase
             .from('dimensions')
             .insert({
               assessment_id: id,
-              name: dimData.name,
-              code: dimData.code,
+              name: dim.name,
+              code: dim.code,
               parent_id: parentId,
-              sort_order: originalOrder.indexOf(tempId) + 1,
+              sort_order: originalOrder.indexOf(dim.id) + 1,
             })
             .select('id')
             .single()
+          if (error) throw new Error(`Failed to insert dimension: ${error.message}`)
+          if (inserted) tempIdToDbIdMap.set(dim.id, inserted.id)
+        }
 
-          if (insertError) {
-            throw new Error(`Failed to update dimensions: ${insertError.message}`)
-          }
-
-          // Map temporary ID to database UUID
-          if (insertedDimension) {
-            tempIdToDbIdMap.set(tempId, insertedDimension.id)
-          }
+        // Delete dimensions that were removed from the form
+        const formDimDbIds = new Set(validDims.map(d => tempIdToDbIdMap.get(d.id) || d.id))
+        const dimsToDelete = [...existingDimIds].filter(dbId => !formDimDbIds.has(dbId))
+        if (dimsToDelete.length > 0) {
+          // Before deleting dimensions, delete their definition fields (rich_text)
+          // so we don't leave orphan fields. This is safe — rich_text fields have no answers.
+          await supabase.from('fields').delete().eq('assessment_id', id).eq('type', 'rich_text').in('dimension_id', dimsToDelete)
+          const { error } = await supabase.from('dimensions').delete().in('id', dimsToDelete)
+          if (error) throw new Error(`Failed to delete removed dimensions: ${error.message}`)
         }
       }
 
-      // Create fields
-      if (data.fields.length > 0) {
-        // Use the tempIdToDbIdMap we created when inserting dimensions
-        // If it's empty (no dimensions were inserted), rebuild it from database
+      // ─── Fields (questions): update existing, insert new, delete removed ───
+      // IMPORTANT: Only delete fields that were explicitly removed by the user.
+      // Never bulk-delete — ON DELETE CASCADE on answers.field_id would wipe survey data.
+      {
+        // Resolve dimension IDs for all fields
         if (tempIdToDbIdMap.size === 0 && data.dimensions.length > 0) {
-          const { data: dimensions } = await supabase
-            .from('dimensions')
-            .select('id, code')
-            .eq('assessment_id', id)
-
-          dimensions?.forEach(dbDim => {
-            // Find the matching dimension in form data by code (since code is unique)
+          const { data: dims } = await supabase.from('dimensions').select('id, code').eq('assessment_id', id)
+          dims?.forEach(dbDim => {
             const formDim = data.dimensions.find(d => d.code === dbDim.code)
-            if (formDim) {
-              tempIdToDbIdMap.set(formDim.id, dbDim.id)
-            }
+            if (formDim) tempIdToDbIdMap.set(formDim.id, dbDim.id)
           })
         }
 
-        // Preserve the exact order from the form data array
-        // The array order reflects the current visual order after drag-and-drop
-        const fieldsToInsert = data.fields.map((field, index) => {
-            let dimensionId = null
+        const existingToUpdate: typeof data.fields = []
+        const newToInsert: typeof data.fields = []
+        // Filter out rich_text fields — they are handled separately below
+        const formFields = data.fields.filter(f => f.type !== 'rich_text')
+
+        for (const field of formFields) {
+          if (uuidRegex.test(field.id) && existingFieldIds.has(field.id)) {
+            existingToUpdate.push(field)
+          } else {
+            newToInsert.push(field)
+          }
+        }
+
+        // Update existing fields in place (preserves field IDs → preserves answer FK references)
+        for (let i = 0; i < existingToUpdate.length; i++) {
+          const field = existingToUpdate[i]
+          const globalIndex = formFields.indexOf(field)
+          const orderValue = globalIndex + 1
+          let dimensionId: string | null = null
+          if (field.dimension_id) {
+            dimensionId = tempIdToDbIdMap.get(field.dimension_id) || (uuidRegex.test(field.dimension_id) ? field.dimension_id : null)
+          }
+          const { error } = await supabase
+            .from('fields')
+            .update({
+              dimension_id: dimensionId,
+              type: field.type,
+              content: field.content ?? '',
+              order: orderValue,
+              number: orderValue,
+              required: field.required !== undefined ? field.required : true,
+              practice: field.practice || false,
+              anchors: field.anchors || [],
+              insights_table: field.insights_table || undefined,
+            })
+            .eq('id', field.id)
+          if (error) throw new Error(`Failed to update field ${field.id}: ${error.message}`)
+        }
+
+        // Insert new fields
+        if (newToInsert.length > 0) {
+          const fieldsToInsert = newToInsert.map((field) => {
+            const globalIndex = formFields.indexOf(field)
+            const orderValue = globalIndex + 1
+            let dimensionId: string | null = null
             if (field.dimension_id) {
-              // Map temporary dimension ID to database UUID
-              dimensionId = tempIdToDbIdMap.get(field.dimension_id) || null
+              dimensionId = tempIdToDbIdMap.get(field.dimension_id) || (uuidRegex.test(field.dimension_id) ? field.dimension_id : null)
             }
-
-            // Use the array index + 1 as the order to preserve the exact order from the form
-            // This ensures the visual order matches the saved order
-            const orderValue = index + 1
-            // Number should match order for consistency
-            const numberValue = orderValue
-
-            console.log(`Saving field ${field.id}: order=${orderValue}, arrayIndex=${index}, content="${field.content?.substring(0, 30)}..."`)
-
             return {
               assessment_id: id,
               dimension_id: dimensionId,
               type: field.type,
-              // Allow saving "empty" fields so users can scaffold lots of questions.
-              // DB requires NOT NULL, so empty string is valid.
               content: field.content ?? '',
               order: orderValue,
-              number: numberValue,
+              number: orderValue,
               required: field.required !== undefined ? field.required : true,
               practice: field.practice || false,
               anchors: field.anchors || [],
               insights_table: field.insights_table || undefined,
             }
           })
+          const { error } = await supabase.from('fields').insert(fieldsToInsert)
+          if (error) throw new Error(`Failed to insert new fields: ${error.message}`)
+        }
 
-        if (fieldsToInsert.length > 0) {
-          const { error: fieldsError } = await supabase
-            .from('fields')
-            .insert(fieldsToInsert)
+        // Delete only fields that were removed from the form (NOT rich_text — handled below)
+        const formFieldDbIds = new Set(formFields.map(f => f.id).filter(fid => existingFieldIds.has(fid)))
+        const existingNonRichText = (existingFields || []).filter(f => f.type !== 'rich_text')
+        const fieldsToDelete = existingNonRichText.filter(f => !formFieldDbIds.has(f.id)).map(f => f.id)
+        if (fieldsToDelete.length > 0) {
+          // WARNING: This will CASCADE delete answers for these fields.
+          // Only reaches here if the user explicitly removed a question from the form.
+          console.warn(`Deleting ${fieldsToDelete.length} removed field(s) — answers for these fields will be cascade-deleted`)
+          const { error } = await supabase.from('fields').delete().in('id', fieldsToDelete)
+          if (error) throw new Error(`Failed to delete removed fields: ${error.message}`)
+        }
+      }
 
-          if (fieldsError) {
-            throw new Error(`Failed to update fields: ${fieldsError.message}`)
+      // ─── Dimension definitions (rich_text fields): upsert by dimension_id ───
+      {
+        const existingDefFields = (existingFields || []).filter(f => f.type === 'rich_text')
+        const existingDefByDimId = new Map(existingDefFields.map(f => [f.dimension_id, f]))
+
+        for (const dim of data.dimensions) {
+          const dbDimId = tempIdToDbIdMap.get(dim.id) || dim.id
+          const definition = dim.definition?.trim() || ''
+          const existing = existingDefByDimId.get(dbDimId)
+
+          if (definition && existing) {
+            // Update existing definition field
+            if (existing.content !== definition) {
+              await supabase.from('fields').update({ content: definition }).eq('id', existing.id)
+            }
+            existingDefByDimId.delete(dbDimId) // Mark as handled
+          } else if (definition && !existing) {
+            // Insert new definition field
+            await supabase.from('fields').insert({
+              assessment_id: id,
+              dimension_id: dbDimId,
+              type: 'rich_text' as const,
+              content: definition,
+              order: 0,
+              number: 0,
+              required: false,
+              practice: false,
+              anchors: [],
+            })
+          } else if (!definition && existing) {
+            // Definition cleared — delete the rich_text field (safe, no answers reference rich_text)
+            await supabase.from('fields').delete().eq('id', existing.id)
+            existingDefByDimId.delete(dbDimId)
           }
+        }
+
+        // Delete orphan definition fields for dimensions that no longer exist
+        for (const [, orphanDef] of existingDefByDimId) {
+          await supabase.from('fields').delete().eq('id', orphanDef.id)
         }
       }
 
@@ -686,18 +783,49 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
           </div>
         </div>
 
+        {/* Active assignments warning */}
+        {hasActiveAssignments && !editWarningDismissed && (
+          <div className="bg-amber-50 border border-amber-300 rounded-md p-4">
+            <div className="flex items-start gap-3">
+              <span className="text-amber-600 text-xl leading-none mt-0.5">&#9888;</span>
+              <div className="flex-1">
+                <h3 className="font-semibold text-amber-800">Active Surveys Detected</h3>
+                <p className="text-sm text-amber-700 mt-1">
+                  This assessment is currently used in {activeAssignmentCount} assignment{activeAssignmentCount !== 1 ? 's' : ''}.
+                  Editing it may cause data inaccuracies in existing reports. Structural changes
+                  (adding/removing questions or dimensions) can affect survey results.
+                  Consider exporting a survey data snapshot before making changes.
+                </p>
+                <div className="flex gap-2 mt-3">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setEditWarningDismissed(true)}
+                  >
+                    I understand, continue editing
+                  </Button>
+                  <Link href="/dashboard/assessments">
+                    <Button size="sm" variant="ghost">Go back</Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Message */}
         {message && (
           <div className={`p-4 rounded-md ${
-            message.includes('successfully') 
-              ? 'bg-green-50 text-green-800 border border-green-200' 
+            message.includes('successfully')
+              ? 'bg-green-50 text-green-800 border border-green-200'
               : 'bg-red-50 text-red-800 border border-red-200'
           }`}>
             {message}
           </div>
         )}
 
-        {/* Assessment Form */}
+        {/* Assessment Form — hidden behind warning until dismissed */}
+        <div className={hasActiveAssignments && !editWarningDismissed ? 'opacity-50 pointer-events-none' : ''}>
         <AssessmentForm
           initialData={initialData}
           onSubmit={handleSubmit}
@@ -706,6 +834,7 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
           existingLogoUrl={existingLogoUrl}
           existingBackgroundUrl={existingBackgroundUrl}
         />
+        </div>
       </div>
   )
 }

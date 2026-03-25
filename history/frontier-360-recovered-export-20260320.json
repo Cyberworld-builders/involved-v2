@@ -1,0 +1,4722 @@
+{
+  "exported_at": "2026-03-20T20:21:38.120Z",
+  "source": "staging (cbpomvoxtxvsatkozhng)",
+  "snapshot": "Mar 19 07:07 UTC backup (pre-wipe)",
+  "description": "Involved-360 Frontier survey with LIVE answer data — recovered from backup before simulator wipe",
+  "assessment": {
+    "id": "b72cd008-8249-49be-9ef4-00383c586f79",
+    "title": "Involved-360 - Frontier",
+    "description": "<p>A competency-based 360-evaluation that provides an analytically robust picture of strengths and improvement opportunities.</p>",
+    "logo": "https://cbpomvoxtxvsatkozhng.supabase.co/storage/v1/object/public/assessment-assets/assessment-logo-1767554692844.png",
+    "background": null,
+    "primary_color": "#262962",
+    "accent_color": "#F26950",
+    "split_questions": false,
+    "questions_per_page": 10,
+    "timed": false,
+    "time_limit": null,
+    "target": "2",
+    "is_360": true,
+    "type": "360",
+    "status": "active",
+    "created_by": "fe10892f-881a-4156-8479-6df9928140e1",
+    "created_at": "2026-01-06T22:01:48.736016+00:00",
+    "updated_at": "2026-03-17T21:46:42.098541+00:00",
+    "custom_fields": {
+      "tag": [
+        "name",
+        "email",
+        "grouprole"
+      ],
+      "default": [
+        "",
+        "",
+        ""
+      ]
+    },
+    "use_custom_fields": true,
+    "number_of_questions": null,
+    "show_question_numbers": false,
+    "dimension_question_counts": null
+  },
+  "dimensions": [
+    {
+      "id": "62e53d02-20d0-42e8-b397-5fab37ea6bec",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "name": "Creative Problem Solving",
+      "code": "CPS",
+      "parent_id": null,
+      "created_at": "2026-03-17T21:46:40.543491+00:00",
+      "updated_at": "2026-03-17T21:46:40.543491+00:00",
+      "sort_order": 1
+    },
+    {
+      "id": "7df7717b-58c4-4322-9a1e-4309094dcc83",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "name": "Leadership Adaptability",
+      "code": "LA",
+      "parent_id": null,
+      "created_at": "2026-03-17T21:46:40.715832+00:00",
+      "updated_at": "2026-03-17T21:46:40.715832+00:00",
+      "sort_order": 2
+    },
+    {
+      "id": "2ee4780a-673c-4fc7-9092-00807b62aedd",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "name": "Collaboration",
+      "code": "CO",
+      "parent_id": null,
+      "created_at": "2026-03-17T21:46:40.884552+00:00",
+      "updated_at": "2026-03-17T21:46:40.884552+00:00",
+      "sort_order": 3
+    },
+    {
+      "id": "a206fefd-f36d-42fd-882b-9230c9f0c0eb",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "name": "Self-Development",
+      "code": "SD",
+      "parent_id": null,
+      "created_at": "2026-03-17T21:46:41.027028+00:00",
+      "updated_at": "2026-03-17T21:46:41.027028+00:00",
+      "sort_order": 4
+    },
+    {
+      "id": "cc64fff9-8f0e-48d4-9160-7511b15d1363",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "name": "Performance Management",
+      "code": "PM",
+      "parent_id": null,
+      "created_at": "2026-03-17T21:46:41.181746+00:00",
+      "updated_at": "2026-03-17T21:46:41.181746+00:00",
+      "sort_order": 5
+    },
+    {
+      "id": "26b99b7f-b9a0-4a6d-bed9-6a0d61edf079",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "name": "Business Mindset",
+      "code": "BM",
+      "parent_id": null,
+      "created_at": "2026-03-17T21:46:41.340886+00:00",
+      "updated_at": "2026-03-17T21:46:41.340886+00:00",
+      "sort_order": 6
+    },
+    {
+      "id": "1f295813-e42b-444b-858e-6dfafbbf3262",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "name": "Customer Focus",
+      "code": "CF",
+      "parent_id": null,
+      "created_at": "2026-03-17T21:46:41.488315+00:00",
+      "updated_at": "2026-03-17T21:46:41.488315+00:00",
+      "sort_order": 7
+    },
+    {
+      "id": "298e69b7-25bb-4e30-ac33-4dac9556a8a1",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "name": "Communication",
+      "code": "COM",
+      "parent_id": null,
+      "created_at": "2026-03-17T21:46:41.644744+00:00",
+      "updated_at": "2026-03-17T21:46:41.644744+00:00",
+      "sort_order": 8
+    },
+    {
+      "id": "b57fdc8d-7072-4340-ad25-5e90149614fe",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "name": "Ethics & Integrity",
+      "code": "EI",
+      "parent_id": null,
+      "created_at": "2026-03-17T21:46:41.786393+00:00",
+      "updated_at": "2026-03-17T21:46:41.786393+00:00",
+      "sort_order": 9
+    }
+  ],
+  "fields": [
+    {
+      "id": "54286a96-b76c-430c-b537-b6628735bb16",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "62e53d02-20d0-42e8-b397-5fab37ea6bec",
+      "type": "multiple_choice",
+      "content": "<h2>Creative Problem Solving</h2><p><strong>Definition</strong>: Creative Problem Solving is defined as proactive problem-solving focusing on the successful implementation of novel and creative solutions to known or anticipated problems, being mindful of and efficient in using resources (i.e., resourcefulness), and utilizing a visionary mindset.</p><h3><em>Please select your rating for&nbsp;[name] for this dimension.</em></h3><p></p>",
+      "order": 1,
+      "anchors": [
+        {
+          "id": "anchor-1767555172256-0",
+          "name": "Below Expectations",
+          "value": 1,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767555172256-1",
+          "name": "Slightly Below Expectations",
+          "value": 2,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767555172256-2",
+          "name": "Meets Expectations",
+          "value": 3,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767555172256-3",
+          "name": "Slightly Exceeds Expectations",
+          "value": 4,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767555172256-4",
+          "name": "Exceeds Expectations",
+          "value": 5,
+          "practice": false
+        }
+      ],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 1,
+      "insights_table": [],
+      "required": true
+    },
+    {
+      "id": "b0ed538e-fcbe-4ed4-81c6-629bf5d88cbd",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "62e53d02-20d0-42e8-b397-5fab37ea6bec",
+      "type": "text_input",
+      "content": "<p><strong>Developmental Comments for Creative Problem Solving:</strong></p>",
+      "order": 2,
+      "anchors": [],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 2,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "d6d4b1ab-0b68-4df9-a8be-8e4bae23623f",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": null,
+      "type": "page_break",
+      "content": "",
+      "order": 3,
+      "anchors": [],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 3,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "85a64005-de9c-489b-88f0-2f0254b40c8e",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "7df7717b-58c4-4322-9a1e-4309094dcc83",
+      "type": "multiple_choice",
+      "content": "<h2>Leadership Adaptability</h2><p><strong>Definition</strong>: Leadership Adaptability is having the ability to see the need for change early on. Having the willingness to smoothly and comfortably adjust his/her work style to the change as well as assist his/her team in positively adapting to the change. This competency also captures one's psychological ownership over the change.</p><h3><em>Please select your rating for [name] for this dimension.</em></h3><p></p>",
+      "order": 4,
+      "anchors": [
+        {
+          "id": "anchor-1767556055671-0",
+          "name": "Below Expectations",
+          "value": 1,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556055671-1",
+          "name": "Slightly Below Expectations",
+          "value": 2,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556055671-2",
+          "name": "Meets Expectations",
+          "value": 3,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556055671-3",
+          "name": "Slightly Exceeds Expectations",
+          "value": 4,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556055671-4",
+          "name": "Exceeds Expectations",
+          "value": 5,
+          "practice": false
+        }
+      ],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 4,
+      "insights_table": [],
+      "required": true
+    },
+    {
+      "id": "e549780c-67b7-42f3-8b22-86df34fdd2ec",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "7df7717b-58c4-4322-9a1e-4309094dcc83",
+      "type": "text_input",
+      "content": "<p><strong>Developmental Comments for Leadership Adaptability:</strong></p>",
+      "order": 5,
+      "anchors": [],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 5,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "7690a630-8ef1-40f7-8389-981fe26c4c95",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": null,
+      "type": "page_break",
+      "content": "",
+      "order": 6,
+      "anchors": [],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 6,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "6fd97eef-985d-4944-9835-5b8478936d83",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "2ee4780a-673c-4fc7-9092-00807b62aedd",
+      "type": "multiple_choice",
+      "content": "<h2>Collaboration</h2><p><strong>Definition</strong>: Collaboration is being able to effectively work with internal stakeholders/employees up and down the chain of organizational hierarchy (vertical) and horizontally with peers as well as external individuals/organizations/partners (e.g., vendor, community leaders) all the while&nbsp;knowing and showing ones authentic self to others at work while simultaneously knowing how one is portrayed across all work settings.&nbsp;</p><h3><em>Please select your rating for [name] for this dimension.</em></h3><p></p>",
+      "order": 7,
+      "anchors": [
+        {
+          "id": "anchor-1767556141613-0",
+          "name": "Below Expectations",
+          "value": 1,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556141613-1",
+          "name": "Slightly Below Expectations",
+          "value": 2,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556141613-2",
+          "name": "Meets Expectations",
+          "value": 3,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556141613-3",
+          "name": "Slightly Exceeds Expectations",
+          "value": 4,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556141613-4",
+          "name": "Exceeds Expectations",
+          "value": 5,
+          "practice": false
+        }
+      ],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 7,
+      "insights_table": [],
+      "required": true
+    },
+    {
+      "id": "a226d828-5ce9-403e-838e-a09afcc7f812",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "2ee4780a-673c-4fc7-9092-00807b62aedd",
+      "type": "text_input",
+      "content": "<p><strong>Developmental Comments for Collaboration:</strong></p>",
+      "order": 8,
+      "anchors": [],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 8,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "2ba73901-ca62-4869-9164-4f5f3f440433",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": null,
+      "type": "page_break",
+      "content": "",
+      "order": 9,
+      "anchors": [],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 9,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "1a31c9d7-68c3-4488-9c32-d528fcc9bf08",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "a206fefd-f36d-42fd-882b-9230c9f0c0eb",
+      "type": "multiple_choice",
+      "content": "<h2>Self-Development</h2><p><strong>Definition</strong>: Self-Development encompasses identification of weaknesses and positive action to overcome identified weaknesses, continuing to build one's strengths, being self-aware of actions and how they impact others, transferring formal and informal training/development back to one's daily job, and mastering all aspects of management, not just functional expertise.</p><h3><em>Please select your rating for [name] for this dimension.</em></h3><p></p>",
+      "order": 10,
+      "anchors": [
+        {
+          "id": "anchor-1767556260378-0",
+          "name": "Below Expectations",
+          "value": 1,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556260378-1",
+          "name": "Slightly Below Expectations",
+          "value": 2,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556260378-2",
+          "name": "Meets Expectations",
+          "value": 3,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556260378-3",
+          "name": "Slightly Exceeds Expectations",
+          "value": 4,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556260378-4",
+          "name": "Exceeds Expectations",
+          "value": 5,
+          "practice": false
+        }
+      ],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 10,
+      "insights_table": [],
+      "required": true
+    },
+    {
+      "id": "e6d3120b-04f8-4c69-bd52-10ff43285aad",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "a206fefd-f36d-42fd-882b-9230c9f0c0eb",
+      "type": "text_input",
+      "content": "<p><strong>Developmental Comments for Self-Development:</strong></p>",
+      "order": 11,
+      "anchors": [],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 11,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "9589b6d7-a880-4658-b33a-d692b8ac43cf",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": null,
+      "type": "page_break",
+      "content": "",
+      "order": 12,
+      "anchors": [],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 12,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "948ceb1c-43da-40b7-83ed-e8b6fe0a6ca6",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "cc64fff9-8f0e-48d4-9160-7511b15d1363",
+      "type": "multiple_choice",
+      "content": "<h2>Performance Management</h2><p><strong>Definition</strong>: Performance Management is defined as the ability to consistently lead and develop individuals and teams, set goals, create&nbsp;and implement&nbsp;a valued rewards structure, consistently hold&nbsp;individuals and teams accountable in an effective and positive manner, and provide the necessary information in a clear and actionable manner.</p><h3><em>Please select your rating for [name] for this dimension.</em></h3><p></p>",
+      "order": 13,
+      "anchors": [
+        {
+          "id": "anchor-1767556337079-0",
+          "name": "Below Expectations",
+          "value": 1,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556337079-1",
+          "name": "Slightly Below Expectations",
+          "value": 2,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556337079-2",
+          "name": "Meets Expectations",
+          "value": 3,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556337079-3",
+          "name": "Slightly Exceeds Expectations",
+          "value": 4,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556337079-4",
+          "name": "Exceeds Expectations",
+          "value": 5,
+          "practice": false
+        }
+      ],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 13,
+      "insights_table": [],
+      "required": true
+    },
+    {
+      "id": "c536dacd-8b0b-4987-ac45-10d23c71f405",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "cc64fff9-8f0e-48d4-9160-7511b15d1363",
+      "type": "text_input",
+      "content": "<p><strong>Developmental Comments for Performance Management:</strong></p>",
+      "order": 14,
+      "anchors": [],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 14,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "7d7de9e6-9d26-49cc-af2e-007d6e8867f3",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": null,
+      "type": "page_break",
+      "content": "",
+      "order": 15,
+      "anchors": [],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 15,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "c48e66a9-d6a1-400f-aacf-8a7c8c5b6f1e",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "26b99b7f-b9a0-4a6d-bed9-6a0d61edf079",
+      "type": "multiple_choice",
+      "content": "<h2>Business Mindset</h2><p><strong>Definition</strong>: Business Mindset encompasses having a clear and complete focus on the organization as a sustainable/growing business, seeing and implementing the entire vision of the organization, inclusive of internal and external stakeholders, and linking departmental/unit operations to all business indicators (i.e., labor costs, customer satisfaction, quality), and how departmental/unit metrics truly impact the entire business.</p><h3><em>Please select your rating for [name] for this dimension.</em></h3><p></p>",
+      "order": 16,
+      "anchors": [
+        {
+          "id": "anchor-1767556615127-0",
+          "name": "Below Expectations",
+          "value": 1,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556615127-1",
+          "name": "Slightly Below Expectations",
+          "value": 2,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556615127-2",
+          "name": "Meets Expectations",
+          "value": 3,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556615127-3",
+          "name": "Slightly Exceeds Expectations",
+          "value": 4,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556615127-4",
+          "name": "Exceeds Expectations",
+          "value": 5,
+          "practice": false
+        }
+      ],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 16,
+      "insights_table": [],
+      "required": true
+    },
+    {
+      "id": "8264cc14-e9fd-46a2-b0f1-08059bf6ec20",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "26b99b7f-b9a0-4a6d-bed9-6a0d61edf079",
+      "type": "text_input",
+      "content": "<p><strong>Developmental Comments for Business Mindset:</strong></p>",
+      "order": 17,
+      "anchors": [],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 17,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "73c2a38c-85d5-4668-a9af-b9f9890ade53",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": null,
+      "type": "page_break",
+      "content": "",
+      "order": 18,
+      "anchors": [],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 18,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "95633d19-6118-440f-91c0-57fd3c81409e",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "1f295813-e42b-444b-858e-6dfafbbf3262",
+      "type": "multiple_choice",
+      "content": "<h2>Customer Focus</h2><p><strong>Definition</strong>: Customer Focus encompasses anticipating, communicating, and addressing current &amp; emerging customer needs; actively listening to customers’ needs, goals, and expectations; developing, reinforcing and strengthening customer service culture; adjusting priorities to meet multiple and often competing customers’ demands, seeks and incorporates feedback from customers to improve performance, and follows up with customers to insure needs have been met satisfactory. This competency applies to both internal and external customers.​</p><h3><em>Please select your rating for [name] for this dimension.</em></h3><p></p>",
+      "order": 19,
+      "anchors": [
+        {
+          "id": "anchor-1767556699448-0",
+          "name": "Below Expectations",
+          "value": 1,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556699448-1",
+          "name": "Slightly Below Expectations",
+          "value": 2,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556699448-2",
+          "name": "Meets Expectations",
+          "value": 3,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556699448-3",
+          "name": "Slightly Exceeds Expectations",
+          "value": 4,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556699448-4",
+          "name": "Exceeds Expectations",
+          "value": 5,
+          "practice": false
+        }
+      ],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 19,
+      "insights_table": [],
+      "required": true
+    },
+    {
+      "id": "955a26fd-6aa8-4528-bc4d-e94bd42a877f",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "1f295813-e42b-444b-858e-6dfafbbf3262",
+      "type": "text_input",
+      "content": "<p><strong>Developmental Comments for Customer Focus:</strong></p>",
+      "order": 20,
+      "anchors": [],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 20,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "5b68545a-52ba-45a8-856e-e03997664cc1",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": null,
+      "type": "page_break",
+      "content": "",
+      "order": 21,
+      "anchors": [],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 21,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "908e704e-d960-4f1d-837b-c6a575f3844a",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "298e69b7-25bb-4e30-ac33-4dac9556a8a1",
+      "type": "multiple_choice",
+      "content": "<h2>Communication</h2><p><strong>Definition</strong>: Communication is defined as clearly, concisely, and accurately conveying necessary information when it is needed while avoiding sharing unfounded information/rumors. Communication also encompasses providing rationale behind messages/decisions; seeking to understand others views and priorities, adjusting communication styles to audience, and encouraging open and candid dialogue from others.​</p><h3><em>Please select your rating for [name] for this dimension.</em></h3><p></p>",
+      "order": 22,
+      "anchors": [
+        {
+          "id": "anchor-1767556779094-0",
+          "name": "Below Expectations",
+          "value": 1,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556779094-1",
+          "name": "Slightly Below Expectations",
+          "value": 2,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556779094-2",
+          "name": "Meets Expectations",
+          "value": 3,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556779094-3",
+          "name": "Slightly Exceeds Expectations",
+          "value": 4,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556779094-4",
+          "name": "Exceeds Expectations",
+          "value": 5,
+          "practice": false
+        }
+      ],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 22,
+      "insights_table": [],
+      "required": true
+    },
+    {
+      "id": "a05a0bcd-f0c5-40f4-a163-ea6af5fd8796",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "298e69b7-25bb-4e30-ac33-4dac9556a8a1",
+      "type": "text_input",
+      "content": "<p><strong>Developmental Comments for Communication:</strong></p>",
+      "order": 23,
+      "anchors": [],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 23,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "50cbf1dd-55a8-4b68-9f7c-2efa9b355f52",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": null,
+      "type": "page_break",
+      "content": "",
+      "order": 24,
+      "anchors": [],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 24,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "babf71ea-b327-483a-a27e-f397ed2bbe9f",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "b57fdc8d-7072-4340-ad25-5e90149614fe",
+      "type": "multiple_choice",
+      "content": "<h2>Ethics &amp; Integrity</h2><p><strong>Definition</strong>: Ethics &amp; Integrity competency is defined as instilling mutual trust &amp; confidence, building and reinforcing inclusivity for all, accepting/owning responsibility for mistakes and successes, creating a culture that fosters high standards of integrity &amp; ethics, behaves in a fair, just, and ethical manner to all stakeholders, shows consistency in principles, values, and behaviors, and demonstrates a sense of responsibility and commitment to the organization, colleagues, and all customers.​</p><h3><em>Please select your rating for [name] for this dimension.</em></h3><p></p>",
+      "order": 25,
+      "anchors": [
+        {
+          "id": "anchor-1767556874533-0",
+          "name": "Below Expectations",
+          "value": 1,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556874533-1",
+          "name": "Slightly Below Expectations",
+          "value": 2,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556874533-2",
+          "name": "Meets Expectations",
+          "value": 3,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556874533-3",
+          "name": "Slightly Exceeds Expectations",
+          "value": 4,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556874533-4",
+          "name": "Exceeds Expectations",
+          "value": 5,
+          "practice": false
+        }
+      ],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 25,
+      "insights_table": [],
+      "required": true
+    },
+    {
+      "id": "9e00710e-16a3-4b4d-85dd-76e99a0a4572",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "b57fdc8d-7072-4340-ad25-5e90149614fe",
+      "type": "text_input",
+      "content": "<p><strong>Developmental Comments for Ethics &amp; Integrity:&nbsp;</strong></p>",
+      "order": 26,
+      "anchors": [],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 26,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "46f76034-0b93-473f-a061-3de689f93ea4",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": null,
+      "type": "instructions",
+      "content": "{\"text\":\"<h2><strong><em>INSTRUCTIONS - PLEASE READ CAREFULLY</em></strong></h2><p><strong>​</strong>The dimensions below are designed to provide developmental feedback to strengthen leadership. &nbsp;Please use the scales below to indicate your ratings for <strong>[name] </strong>on the following performance dimensions. &nbsp;</p><p>First read the dimension and then review all of the descriptors for a given dimension. These are example descriptions to help you better understand dimension levels.&nbsp;</p><p>Each dimension ranges from ‘below expectations’ to ‘exceeds expectations'. You will notice that under ‘below expectations’, ‘meets expectations’, and ‘exceeds expectations’ there are several statements that define performance at these respective levels. The ratings for ‘slightly below expectations’ and ‘slightly exceeds expectations’ do not have descriptions but would be a mix of the descriptions immediately to the left and right. Please select the rating that is most accurate for <strong>[name]</strong> based upon your experience with<strong> [name]</strong>.&nbsp;</p><p>Third, you are highly encouraged to include examples of observed or documented behaviors to aid in the developmental feedback process. Please provide additional detail to help <strong>[name]</strong> develop as a leader. Only provide information that you have observed - do not report stories or interpretations or things that might be considered 'gossip'.&nbsp;</p>\",\"next\":\"Continue\"}",
+      "order": 27,
+      "anchors": [],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 27,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "84210ade-5b1c-4ef8-b016-aadf98f44a40",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": null,
+      "type": "page_break",
+      "content": "",
+      "order": 28,
+      "anchors": [],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 28,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "b3a4023e-412d-4fdd-9d8e-eb3e5b233f95",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": null,
+      "type": "page_break",
+      "content": "",
+      "order": 29,
+      "anchors": [],
+      "created_at": "2026-03-17T21:46:41.938877+00:00",
+      "updated_at": "2026-03-17T21:46:41.938877+00:00",
+      "practice": false,
+      "number": 29,
+      "insights_table": null,
+      "required": true
+    }
+  ],
+  "benchmarks": [
+    {
+      "id": "b09b4720-1b71-41c4-ac3c-7639ecbbe608",
+      "dimension_id": "62e53d02-20d0-42e8-b397-5fab37ea6bec",
+      "industry_id": "69717fb0-701e-4582-847c-b5b317812d94",
+      "value": 4.12,
+      "created_at": "2026-03-17T22:29:21.187753+00:00",
+      "updated_at": "2026-03-17T22:29:21.187753+00:00"
+    },
+    {
+      "id": "f4111583-bbfd-4ef8-b66b-4c4e113cff1c",
+      "dimension_id": "7df7717b-58c4-4322-9a1e-4309094dcc83",
+      "industry_id": "69717fb0-701e-4582-847c-b5b317812d94",
+      "value": 3.98,
+      "created_at": "2026-03-17T22:29:21.187753+00:00",
+      "updated_at": "2026-03-17T22:29:21.187753+00:00"
+    },
+    {
+      "id": "5aeecb98-1028-4b65-a218-281ae29c99ec",
+      "dimension_id": "2ee4780a-673c-4fc7-9092-00807b62aedd",
+      "industry_id": "69717fb0-701e-4582-847c-b5b317812d94",
+      "value": 4.22,
+      "created_at": "2026-03-17T22:29:21.187753+00:00",
+      "updated_at": "2026-03-17T22:29:21.187753+00:00"
+    },
+    {
+      "id": "6962fe5b-aa63-4570-8df5-dcbfc0571bdc",
+      "dimension_id": "a206fefd-f36d-42fd-882b-9230c9f0c0eb",
+      "industry_id": "69717fb0-701e-4582-847c-b5b317812d94",
+      "value": 4.01,
+      "created_at": "2026-03-17T22:29:21.187753+00:00",
+      "updated_at": "2026-03-17T22:29:21.187753+00:00"
+    },
+    {
+      "id": "7c0f911e-a18b-4226-b24b-9bc0cb364e9b",
+      "dimension_id": "cc64fff9-8f0e-48d4-9160-7511b15d1363",
+      "industry_id": "69717fb0-701e-4582-847c-b5b317812d94",
+      "value": 4.34,
+      "created_at": "2026-03-17T22:29:21.187753+00:00",
+      "updated_at": "2026-03-17T22:29:21.187753+00:00"
+    },
+    {
+      "id": "6474ffd5-8700-4503-a300-b6228f819e4e",
+      "dimension_id": "26b99b7f-b9a0-4a6d-bed9-6a0d61edf079",
+      "industry_id": "69717fb0-701e-4582-847c-b5b317812d94",
+      "value": 4.25,
+      "created_at": "2026-03-17T22:29:21.187753+00:00",
+      "updated_at": "2026-03-17T22:29:21.187753+00:00"
+    },
+    {
+      "id": "ff19a1f7-f3b8-4249-9b31-a0ed64bc2f92",
+      "dimension_id": "1f295813-e42b-444b-858e-6dfafbbf3262",
+      "industry_id": "69717fb0-701e-4582-847c-b5b317812d94",
+      "value": 4.36,
+      "created_at": "2026-03-17T22:29:21.187753+00:00",
+      "updated_at": "2026-03-17T22:29:21.187753+00:00"
+    },
+    {
+      "id": "d5a30cc0-35ab-4dba-a5e2-c5d008852608",
+      "dimension_id": "298e69b7-25bb-4e30-ac33-4dac9556a8a1",
+      "industry_id": "69717fb0-701e-4582-847c-b5b317812d94",
+      "value": 4.03,
+      "created_at": "2026-03-17T22:29:21.187753+00:00",
+      "updated_at": "2026-03-17T22:29:21.187753+00:00"
+    },
+    {
+      "id": "090ed399-e657-481d-8896-8a91f1724485",
+      "dimension_id": "b57fdc8d-7072-4340-ad25-5e90149614fe",
+      "industry_id": "69717fb0-701e-4582-847c-b5b317812d94",
+      "value": 4.58,
+      "created_at": "2026-03-17T22:29:21.187753+00:00",
+      "updated_at": "2026-03-17T22:29:21.187753+00:00"
+    }
+  ],
+  "industries": [
+    {
+      "id": "69717fb0-701e-4582-847c-b5b317812d94",
+      "name": "Finance",
+      "created_at": "2025-12-01T19:15:38.277442+00:00",
+      "updated_at": "2025-12-01T19:15:38.277442+00:00"
+    }
+  ],
+  "clients": [
+    {
+      "id": "ba72cd88-793d-42b6-a78b-7e8d675bb27a",
+      "name": "Tester 6 on 3.17.26",
+      "address": null,
+      "logo": null,
+      "background": null,
+      "primary_color": "#2D2E30",
+      "accent_color": "#FFBA00",
+      "require_profile": false,
+      "require_research": false,
+      "whitelabel": false,
+      "created_at": "2026-03-17T21:29:15.729015+00:00",
+      "updated_at": "2026-03-17T21:29:15.729015+00:00"
+    }
+  ],
+  "groups": [],
+  "group_members": [],
+  "profiles": [
+    {
+      "id": "afaab69e-063a-4e64-862a-56434b784fca",
+      "name": "Jerae Wallace",
+      "email": "ljeraewallace@gmail.com",
+      "client_id": "ba72cd88-793d-42b6-a78b-7e8d675bb27a",
+      "access_level": "member"
+    },
+    {
+      "id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "name": "Don Duck",
+      "email": "j.craig.wallace@me.com",
+      "client_id": "ba72cd88-793d-42b6-a78b-7e8d675bb27a",
+      "access_level": "member"
+    },
+    {
+      "id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "name": "Mickie Mouse",
+      "email": "jeraewallace@yahoo.com",
+      "client_id": "ba72cd88-793d-42b6-a78b-7e8d675bb27a",
+      "access_level": "member"
+    },
+    {
+      "id": "b69a92c5-a38d-4b62-833f-70ed4bbda5f5",
+      "name": "Goofy NLN",
+      "email": "support@involvedtalent.com",
+      "client_id": "ba72cd88-793d-42b6-a78b-7e8d675bb27a",
+      "access_level": "member"
+    },
+    {
+      "id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "name": "Craig Wallace",
+      "email": "jcraigwallace@gmail.com",
+      "client_id": "ba72cd88-793d-42b6-a78b-7e8d675bb27a",
+      "access_level": "member"
+    },
+    {
+      "id": "7e678250-f739-4a56-9f1d-423885422a8a",
+      "name": "Iron Man",
+      "email": "jcraigwallace@yahoo.com",
+      "client_id": "ba72cd88-793d-42b6-a78b-7e8d675bb27a",
+      "access_level": "member"
+    },
+    {
+      "id": "934464a4-5516-469d-883b-be0909d32be0",
+      "name": "David Altounian",
+      "email": "david@involvedtalent.com",
+      "client_id": "ba72cd88-793d-42b6-a78b-7e8d675bb27a",
+      "access_level": "member"
+    },
+    {
+      "id": "ffd6b96e-b268-4e48-b4fe-349239110f7a",
+      "name": "D Altoun",
+      "email": "daltounian@gmail.com",
+      "client_id": "ba72cd88-793d-42b6-a78b-7e8d675bb27a",
+      "access_level": "member"
+    }
+  ],
+  "assignments": [
+    {
+      "id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "user_id": "b69a92c5-a38d-4b62-833f-70ed4bbda5f5",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "target_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "custom_fields": {
+        "type": [
+          "name",
+          "email",
+          "role"
+        ],
+        "value": [
+          "Don Duck",
+          "j.craig.wallace@me.com",
+          "Subordinate"
+        ]
+      },
+      "expires": "2026-04-16T03:59:59.999+00:00",
+      "whitelabel": false,
+      "job_id": null,
+      "url": "https://involved-v2.cyberworldbuilders.dev/assignment/d965ea80-3227-4d1e-b922-b66d55fa3bde?u=Z29vZnlubG4%3D&e=MjAyNi0wNC0xNlQwMzo1OTo1OS45OTla&t=ZmVjYTA2OTlhYTVmYTNmMjdhYWUxNTY5YmUyZjgzNjVhNTQ4NzM2NzJjYjU1NGEwNWUzNGM0ZGZhZjQ5OTVlNQ%3D%3D",
+      "completed": true,
+      "started_at": "2026-03-17T21:57:48.42+00:00",
+      "completed_at": "2026-03-17T21:58:40.601+00:00",
+      "created_at": "2026-03-17T21:49:38.593804+00:00",
+      "updated_at": "2026-03-17T21:58:40.633998+00:00",
+      "reminder": true,
+      "reminder_frequency": "+3 days",
+      "next_reminder": "2026-03-18T09:00:00+00:00",
+      "survey_id": "20c0f8b7-df3a-40c3-b8ef-7d43b23f5f56",
+      "group_id": null
+    },
+    {
+      "id": "c861db19-6362-4dd7-8a6b-0626425d41b7",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "target_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "custom_fields": {
+        "type": [
+          "name",
+          "email",
+          "role"
+        ],
+        "value": [
+          "Mickie Mouse",
+          "jeraewallace@yahoo.com",
+          "Self"
+        ]
+      },
+      "expires": "2026-04-16T03:59:59.999+00:00",
+      "whitelabel": false,
+      "job_id": null,
+      "url": "https://involved-v2.cyberworldbuilders.dev/assignment/c861db19-6362-4dd7-8a6b-0626425d41b7?u=bWlja2llbW91c2U%3D&e=MjAyNi0wNC0xNlQwMzo1OTo1OS45OTla&t=MzM5YTU2MzZiMDA2YjVlN2Q1Yzg3NDJkZDliMjAwMDI5MzA0NDYxZmJkZDk2ZTkzZjc2Y2ZiMmRkMDA1YzRkNA%3D%3D",
+      "completed": true,
+      "started_at": "2026-03-17T22:33:38.57+00:00",
+      "completed_at": "2026-03-18T10:32:23.85+00:00",
+      "created_at": "2026-03-17T21:49:42.502062+00:00",
+      "updated_at": "2026-03-18T10:32:23.872294+00:00",
+      "reminder": true,
+      "reminder_frequency": "+3 days",
+      "next_reminder": "2026-03-18T09:00:00+00:00",
+      "survey_id": "20c0f8b7-df3a-40c3-b8ef-7d43b23f5f56",
+      "group_id": null
+    },
+    {
+      "id": "814e8e09-485b-497b-ba6e-86aac8dea9bc",
+      "user_id": "934464a4-5516-469d-883b-be0909d32be0",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "target_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "custom_fields": {
+        "type": [
+          "name",
+          "email",
+          "role"
+        ],
+        "value": [
+          "Mickie Mouse",
+          "jeraewallace@yahoo.com",
+          "Subordinate"
+        ]
+      },
+      "expires": "2026-04-16T03:59:59.999+00:00",
+      "whitelabel": false,
+      "job_id": null,
+      "url": "https://involved-v2.cyberworldbuilders.dev/assignment/814e8e09-485b-497b-ba6e-86aac8dea9bc?u=ZGF2aWRhbHRvdW5pYW4%3D&e=MjAyNi0wNC0xNlQwMzo1OTo1OS45OTla&t=YjhkM2NiOWQ4Njk0NzM5ODZhYWM4ZGJhYmFmY2JlZWJjYThlZTQ4YmY4YThlNDhjNTA4N2QyZWIxY2JhMzZlMw%3D%3D",
+      "completed": true,
+      "started_at": "2026-03-17T22:28:59.802+00:00",
+      "completed_at": "2026-03-17T22:31:46.277+00:00",
+      "created_at": "2026-03-17T21:49:42.936623+00:00",
+      "updated_at": "2026-03-17T22:31:46.312404+00:00",
+      "reminder": true,
+      "reminder_frequency": "+3 days",
+      "next_reminder": "2026-03-18T09:00:00+00:00",
+      "survey_id": "20c0f8b7-df3a-40c3-b8ef-7d43b23f5f56",
+      "group_id": null
+    },
+    {
+      "id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "user_id": "ffd6b96e-b268-4e48-b4fe-349239110f7a",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "target_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "custom_fields": {
+        "type": [
+          "name",
+          "email",
+          "role"
+        ],
+        "value": [
+          "Don Duck",
+          "j.craig.wallace@me.com",
+          "Peer"
+        ]
+      },
+      "expires": "2026-04-16T03:59:59.999+00:00",
+      "whitelabel": false,
+      "job_id": null,
+      "url": "https://involved-v2.cyberworldbuilders.dev/assignment/be5f4e1e-0677-4350-bbcf-b35f5ebecade?u=ZGFsdG91bg%3D%3D&e=MjAyNi0wNC0xNlQwMzo1OTo1OS45OTla&t=MjhkZjdiMzFhZGMzYzFjNTU1NjUyOWEwZTE4ZDkzZDFiNjM0Zjg1Nzg0NjA0OTdhZjk3OTAwMmNlNzEyZmUyNg%3D%3D",
+      "completed": true,
+      "started_at": "2026-03-17T22:36:20.36+00:00",
+      "completed_at": "2026-03-17T22:40:24.293+00:00",
+      "created_at": "2026-03-17T21:49:39.20246+00:00",
+      "updated_at": "2026-03-17T22:40:24.316581+00:00",
+      "reminder": true,
+      "reminder_frequency": "+3 days",
+      "next_reminder": "2026-03-18T09:00:00+00:00",
+      "survey_id": "20c0f8b7-df3a-40c3-b8ef-7d43b23f5f56",
+      "group_id": null
+    },
+    {
+      "id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "target_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "custom_fields": {
+        "type": [
+          "name",
+          "email",
+          "role"
+        ],
+        "value": [
+          "Don Duck",
+          "j.craig.wallace@me.com",
+          "Manager"
+        ]
+      },
+      "expires": "2026-04-16T03:59:59.999+00:00",
+      "whitelabel": false,
+      "job_id": null,
+      "url": "https://involved-v2.cyberworldbuilders.dev/assignment/3eda9e70-c171-475b-820e-295910470e0b?u=Y3JhaWd3YWxsYWNlMQ%3D%3D&e=MjAyNi0wNC0xNlQwMzo1OTo1OS45OTla&t=MjIxYzVhMmRhM2M5ZDRkZDg1YmRhNGE2Yjk2ODBjY2U0ZThjYjJiNmEzMjYyZjBhZTMzMWNkM2YzMTc5MWQyYw%3D%3D",
+      "completed": true,
+      "started_at": "2026-03-17T21:53:11.643+00:00",
+      "completed_at": "2026-03-17T21:54:17.604+00:00",
+      "created_at": "2026-03-17T21:49:35.994027+00:00",
+      "updated_at": "2026-03-17T21:54:17.633849+00:00",
+      "reminder": true,
+      "reminder_frequency": "+3 days",
+      "next_reminder": "2026-03-18T09:00:00+00:00",
+      "survey_id": "20c0f8b7-df3a-40c3-b8ef-7d43b23f5f56",
+      "group_id": null
+    },
+    {
+      "id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "user_id": "7e678250-f739-4a56-9f1d-423885422a8a",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "target_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "custom_fields": {
+        "type": [
+          "name",
+          "email",
+          "role"
+        ],
+        "value": [
+          "Mickie Mouse",
+          "jeraewallace@yahoo.com",
+          "Subordinate"
+        ]
+      },
+      "expires": "2026-04-16T03:59:59.999+00:00",
+      "whitelabel": false,
+      "job_id": null,
+      "url": "https://involved-v2.cyberworldbuilders.dev/assignment/5718f94d-8ce6-4980-94cd-9a652166c913?u=aXJvbm1hbg%3D%3D&e=MjAyNi0wNC0xNlQwMzo1OTo1OS45OTla&t=M2I3MjdjMTE1YjY0YWNkYjM5MzJlYzYzYjRiOTg5Mzg1MDZlYWU2ZjU3N2JlZDJhZGNkMDg1NjMxM2E0MTUyYQ%3D%3D",
+      "completed": true,
+      "started_at": "2026-03-17T22:05:35.36+00:00",
+      "completed_at": "2026-03-17T22:06:21.369+00:00",
+      "created_at": "2026-03-17T21:49:40.107213+00:00",
+      "updated_at": "2026-03-17T22:06:21.396693+00:00",
+      "reminder": true,
+      "reminder_frequency": "+3 days",
+      "next_reminder": "2026-03-18T09:00:00+00:00",
+      "survey_id": "20c0f8b7-df3a-40c3-b8ef-7d43b23f5f56",
+      "group_id": null
+    },
+    {
+      "id": "73b16b19-9dca-466b-b650-d0fa0e2a2cdc",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "target_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "custom_fields": {
+        "type": [
+          "name",
+          "email",
+          "role"
+        ],
+        "value": [
+          "Mickie Mouse",
+          "jeraewallace@yahoo.com",
+          "Peer"
+        ]
+      },
+      "expires": "2026-04-16T03:59:59.999+00:00",
+      "whitelabel": false,
+      "job_id": null,
+      "url": "https://involved-v2.cyberworldbuilders.dev/assignment/73b16b19-9dca-466b-b650-d0fa0e2a2cdc?u=Y3JhaWd3YWxsYWNlMQ%3D%3D&e=MjAyNi0wNC0xNlQwMzo1OTo1OS45OTla&t=ZDUwMGNmZTZlYzgzOWYxNTU4OWZjMDhiYTVlYzVkNGU2NDdlYWZiYmIzYTJlMDZjM2ZkZmUyYTY0M2Q5MTk1Zg%3D%3D",
+      "completed": true,
+      "started_at": "2026-03-17T21:51:02.722+00:00",
+      "completed_at": "2026-03-17T21:52:18.552+00:00",
+      "created_at": "2026-03-17T21:49:40.659774+00:00",
+      "updated_at": "2026-03-17T21:52:18.590563+00:00",
+      "reminder": true,
+      "reminder_frequency": "+3 days",
+      "next_reminder": "2026-03-18T09:00:00+00:00",
+      "survey_id": "20c0f8b7-df3a-40c3-b8ef-7d43b23f5f56",
+      "group_id": null
+    },
+    {
+      "id": "c435c4f7-6b19-46b0-80a2-2deb0992c440",
+      "user_id": "afaab69e-063a-4e64-862a-56434b784fca",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "target_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "custom_fields": {
+        "type": [
+          "name",
+          "email",
+          "role"
+        ],
+        "value": [
+          "Don Duck",
+          "j.craig.wallace@me.com",
+          "Peer"
+        ]
+      },
+      "expires": "2026-04-16T03:59:59.999+00:00",
+      "whitelabel": false,
+      "job_id": null,
+      "url": "https://involved-v2.cyberworldbuilders.dev/assignment/c435c4f7-6b19-46b0-80a2-2deb0992c440?u=amVyYWV3YWxsYWNl&e=MjAyNi0wNC0xNlQwMzo1OTo1OS45OTla&t=Y2Y5NDgyNGI0MjZjOGM5ZTM5N2JiYjQwODc0OThhZjBmZjk2NjEwNjYyODcxNDljNTEzYjk0Y2M2YzcyMThkMA%3D%3D",
+      "completed": true,
+      "started_at": "2026-03-18T10:40:20.678+00:00",
+      "completed_at": "2026-03-18T10:40:55.052+00:00",
+      "created_at": "2026-03-17T21:49:36.699484+00:00",
+      "updated_at": "2026-03-18T10:40:55.077802+00:00",
+      "reminder": true,
+      "reminder_frequency": "+3 days",
+      "next_reminder": "2026-03-18T09:00:00+00:00",
+      "survey_id": "20c0f8b7-df3a-40c3-b8ef-7d43b23f5f56",
+      "group_id": null
+    },
+    {
+      "id": "19f90795-845f-4092-84b8-484346df32a5",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "target_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "custom_fields": {
+        "type": [
+          "name",
+          "email",
+          "role"
+        ],
+        "value": [
+          "Don Duck",
+          "j.craig.wallace@me.com",
+          "self"
+        ]
+      },
+      "expires": "2026-04-16T03:59:59.999+00:00",
+      "whitelabel": false,
+      "job_id": null,
+      "url": "https://involved-v2.cyberworldbuilders.dev/assignment/19f90795-845f-4092-84b8-484346df32a5?u=ZG9uZHVjaw%3D%3D&e=MjAyNi0wNC0xNlQwMzo1OTo1OS45OTla&t=OWI5OGYzMGE2ZmUxY2Q1N2NiYTM1MTAzYjhmY2ZkMzBjNDEyYjg2ZTk1MTIyNzhlOWE1ZWQ5N2I5M2VhZWI1Yg%3D%3D",
+      "completed": true,
+      "started_at": "2026-03-17T22:09:10.466+00:00",
+      "completed_at": "2026-03-17T22:10:07.446+00:00",
+      "created_at": "2026-03-17T21:49:37.368932+00:00",
+      "updated_at": "2026-03-17T22:10:07.467041+00:00",
+      "reminder": true,
+      "reminder_frequency": "+3 days",
+      "next_reminder": "2026-03-18T09:00:00+00:00",
+      "survey_id": "20c0f8b7-df3a-40c3-b8ef-7d43b23f5f56",
+      "group_id": null
+    },
+    {
+      "id": "f3865332-686f-4e21-aaaa-408177398304",
+      "user_id": "afaab69e-063a-4e64-862a-56434b784fca",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "target_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "custom_fields": {
+        "type": [
+          "name",
+          "email",
+          "role"
+        ],
+        "value": [
+          "Mickie Mouse",
+          "jeraewallace@yahoo.com",
+          "Peer"
+        ]
+      },
+      "expires": "2026-04-16T03:59:59.999+00:00",
+      "whitelabel": false,
+      "job_id": null,
+      "url": "https://involved-v2.cyberworldbuilders.dev/assignment/f3865332-686f-4e21-aaaa-408177398304?u=amVyYWV3YWxsYWNl&e=MjAyNi0wNC0xNlQwMzo1OTo1OS45OTla&t=ZDJlZTQwZjBhNzYwYjhlMjU1ZDY3Mzk0NDI3ZTYzOTgwMTIxYWI5NTBlMDU4YTI5MmIyY2Y1MGNjOGM4MmQyMA%3D%3D",
+      "completed": true,
+      "started_at": "2026-03-18T10:39:35.975+00:00",
+      "completed_at": "2026-03-18T10:40:14.504+00:00",
+      "created_at": "2026-03-17T21:49:41.229535+00:00",
+      "updated_at": "2026-03-18T10:40:14.523799+00:00",
+      "reminder": true,
+      "reminder_frequency": "+3 days",
+      "next_reminder": "2026-03-18T09:00:00+00:00",
+      "survey_id": "20c0f8b7-df3a-40c3-b8ef-7d43b23f5f56",
+      "group_id": null
+    },
+    {
+      "id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "target_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "custom_fields": {
+        "type": [
+          "name",
+          "email",
+          "role"
+        ],
+        "value": [
+          "Mickie Mouse",
+          "jeraewallace@yahoo.com",
+          "Manager"
+        ]
+      },
+      "expires": "2026-04-16T03:59:59.999+00:00",
+      "whitelabel": false,
+      "job_id": null,
+      "url": "https://involved-v2.cyberworldbuilders.dev/assignment/806ab3b4-4624-4371-a9ed-d4b8dea65468?u=ZG9uZHVjaw%3D%3D&e=MjAyNi0wNC0xNlQwMzo1OTo1OS45OTla&t=ZTkzZWNhNzUzZDcwNjNiY2QwM2E2ZWUxMjVmOTNlOTZjOThmZjcxZmY5MTY5MzE3MTQ2YTJjZjVmMjk4MDA2Zg%3D%3D",
+      "completed": true,
+      "started_at": "2026-03-17T22:08:00.582+00:00",
+      "completed_at": "2026-03-17T22:09:05.298+00:00",
+      "created_at": "2026-03-17T21:49:41.706402+00:00",
+      "updated_at": "2026-03-17T22:09:05.348609+00:00",
+      "reminder": true,
+      "reminder_frequency": "+3 days",
+      "next_reminder": "2026-03-18T09:00:00+00:00",
+      "survey_id": "20c0f8b7-df3a-40c3-b8ef-7d43b23f5f56",
+      "group_id": null
+    },
+    {
+      "id": "91c630e6-d1c4-40f0-b69b-fa52c67eb302",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "target_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "custom_fields": {
+        "type": [
+          "name",
+          "email",
+          "role"
+        ],
+        "value": [
+          "Don Duck",
+          "j.craig.wallace@me.com",
+          "Subordinate"
+        ]
+      },
+      "expires": "2026-04-16T03:59:59.999+00:00",
+      "whitelabel": false,
+      "job_id": null,
+      "url": "https://involved-v2.cyberworldbuilders.dev/assignment/91c630e6-d1c4-40f0-b69b-fa52c67eb302?u=bWlja2llbW91c2U%3D&e=MjAyNi0wNC0xNlQwMzo1OTo1OS45OTla&t=MjMyM2E0MzIyMDY2ODMzMTk4NmE0NzIxNzdmNGUyZjFmZGMxMjFkMjQ0ZjI3YzlmNmY5OTM1YTkyMmU1ZjA3Mw%3D%3D",
+      "completed": true,
+      "started_at": "2026-03-18T10:32:31.151+00:00",
+      "completed_at": "2026-03-18T10:33:08.289+00:00",
+      "created_at": "2026-03-17T21:49:37.905772+00:00",
+      "updated_at": "2026-03-18T10:33:08.315787+00:00",
+      "reminder": true,
+      "reminder_frequency": "+3 days",
+      "next_reminder": "2026-03-18T09:00:00+00:00",
+      "survey_id": "20c0f8b7-df3a-40c3-b8ef-7d43b23f5f56",
+      "group_id": null
+    }
+  ],
+  "answers": [
+    {
+      "id": "4dcc5621-79f9-4293-b3d1-ea02f0854af3",
+      "assignment_id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "field_id": "6fd97eef-985d-4944-9835-5b8478936d83",
+      "user_id": "b69a92c5-a38d-4b62-833f-70ed4bbda5f5",
+      "value": "4",
+      "time": null,
+      "created_at": "2026-03-17T21:58:04.282651+00:00",
+      "updated_at": "2026-03-17T21:58:39.982686+00:00"
+    },
+    {
+      "id": "d30d8421-0710-492e-a1b8-353884a084be",
+      "assignment_id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "field_id": "e6d3120b-04f8-4c69-bd52-10ff43285aad",
+      "user_id": "b69a92c5-a38d-4b62-833f-70ed4bbda5f5",
+      "value": "cheese",
+      "time": null,
+      "created_at": "2026-03-17T21:58:12.57636+00:00",
+      "updated_at": "2026-03-17T21:58:39.097656+00:00"
+    },
+    {
+      "id": "0a415cd6-349d-44ee-839d-6001d154e253",
+      "assignment_id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "field_id": "c536dacd-8b0b-4987-ac45-10d23c71f405",
+      "user_id": "b69a92c5-a38d-4b62-833f-70ed4bbda5f5",
+      "value": "cheese",
+      "time": null,
+      "created_at": "2026-03-17T21:58:17.839765+00:00",
+      "updated_at": "2026-03-17T21:58:39.281205+00:00"
+    },
+    {
+      "id": "6d7daf72-851b-466c-8b61-60bc59d6b263",
+      "assignment_id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "field_id": "8264cc14-e9fd-46a2-b0f1-08059bf6ec20",
+      "user_id": "b69a92c5-a38d-4b62-833f-70ed4bbda5f5",
+      "value": "cheese",
+      "time": null,
+      "created_at": "2026-03-17T21:58:22.38296+00:00",
+      "updated_at": "2026-03-17T21:58:39.446028+00:00"
+    },
+    {
+      "id": "63de40a6-7e0c-4cee-9474-955b311d1ebe",
+      "assignment_id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "field_id": "babf71ea-b327-483a-a27e-f397ed2bbe9f",
+      "user_id": "b69a92c5-a38d-4b62-833f-70ed4bbda5f5",
+      "value": "4",
+      "time": null,
+      "created_at": "2026-03-17T21:58:34.177077+00:00",
+      "updated_at": "2026-03-17T21:58:39.107903+00:00"
+    },
+    {
+      "id": "f3db4eb6-bfb4-4ebe-804a-b52c801ea776",
+      "assignment_id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "field_id": "95633d19-6118-440f-91c0-57fd3c81409e",
+      "user_id": "b69a92c5-a38d-4b62-833f-70ed4bbda5f5",
+      "value": "2",
+      "time": null,
+      "created_at": "2026-03-17T21:58:23.780592+00:00",
+      "updated_at": "2026-03-17T21:58:39.200375+00:00"
+    },
+    {
+      "id": "e3fbb333-963e-473c-a478-f8316e7b5227",
+      "assignment_id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "field_id": "9e00710e-16a3-4b4d-85dd-76e99a0a4572",
+      "user_id": "b69a92c5-a38d-4b62-833f-70ed4bbda5f5",
+      "value": "cheese",
+      "time": null,
+      "created_at": "2026-03-17T21:58:37.509303+00:00",
+      "updated_at": "2026-03-17T21:58:40.033592+00:00"
+    },
+    {
+      "id": "504d2b0d-5d1c-4aa7-a7f7-03292b17cac9",
+      "assignment_id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "field_id": "955a26fd-6aa8-4528-bc4d-e94bd42a877f",
+      "user_id": "b69a92c5-a38d-4b62-833f-70ed4bbda5f5",
+      "value": "cheese",
+      "time": null,
+      "created_at": "2026-03-17T21:58:26.727112+00:00",
+      "updated_at": "2026-03-17T21:58:40.064659+00:00"
+    },
+    {
+      "id": "3f6d088d-f2ae-4147-8cfc-de13a68055d7",
+      "assignment_id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "field_id": "908e704e-d960-4f1d-837b-c6a575f3844a",
+      "user_id": "b69a92c5-a38d-4b62-833f-70ed4bbda5f5",
+      "value": "1",
+      "time": null,
+      "created_at": "2026-03-17T21:58:28.657885+00:00",
+      "updated_at": "2026-03-17T21:58:39.248275+00:00"
+    },
+    {
+      "id": "df3a1c2b-dd31-44f0-92ea-9951b2d2687a",
+      "assignment_id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "field_id": "a05a0bcd-f0c5-40f4-a163-ea6af5fd8796",
+      "user_id": "b69a92c5-a38d-4b62-833f-70ed4bbda5f5",
+      "value": "cheese",
+      "time": null,
+      "created_at": "2026-03-17T21:58:31.654353+00:00",
+      "updated_at": "2026-03-17T21:58:39.197751+00:00"
+    },
+    {
+      "id": "2d591601-d792-417e-804d-81b039315354",
+      "assignment_id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "field_id": "54286a96-b76c-430c-b537-b6628735bb16",
+      "user_id": "b69a92c5-a38d-4b62-833f-70ed4bbda5f5",
+      "value": "1",
+      "time": null,
+      "created_at": "2026-03-17T21:57:53.712988+00:00",
+      "updated_at": "2026-03-17T21:58:39.154117+00:00"
+    },
+    {
+      "id": "377d1ca2-982a-4d7e-a4fc-340adf9f4fae",
+      "assignment_id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "field_id": "a226d828-5ce9-403e-838e-a09afcc7f812",
+      "user_id": "b69a92c5-a38d-4b62-833f-70ed4bbda5f5",
+      "value": "cheese",
+      "time": null,
+      "created_at": "2026-03-17T21:58:07.37808+00:00",
+      "updated_at": "2026-03-17T21:58:39.247843+00:00"
+    },
+    {
+      "id": "903283ca-d272-40ca-a639-2fefdd5f029d",
+      "assignment_id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "field_id": "c48e66a9-d6a1-400f-aacf-8a7c8c5b6f1e",
+      "user_id": "b69a92c5-a38d-4b62-833f-70ed4bbda5f5",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-17T21:58:19.462276+00:00",
+      "updated_at": "2026-03-17T21:58:39.207418+00:00"
+    },
+    {
+      "id": "b975c8b2-8724-4ca6-b076-68fdd639be5d",
+      "assignment_id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "field_id": "b0ed538e-fcbe-4ed4-81c6-629bf5d88cbd",
+      "user_id": "b69a92c5-a38d-4b62-833f-70ed4bbda5f5",
+      "value": "Cheese",
+      "time": null,
+      "created_at": "2026-03-17T21:57:56.539765+00:00",
+      "updated_at": "2026-03-17T21:58:39.261428+00:00"
+    },
+    {
+      "id": "c52cea95-51c6-46d6-9c45-52b979fd981b",
+      "assignment_id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "field_id": "1a31c9d7-68c3-4488-9c32-d528fcc9bf08",
+      "user_id": "b69a92c5-a38d-4b62-833f-70ed4bbda5f5",
+      "value": "1",
+      "time": null,
+      "created_at": "2026-03-17T21:58:09.461474+00:00",
+      "updated_at": "2026-03-17T21:58:39.261148+00:00"
+    },
+    {
+      "id": "26e979c4-ee18-49c7-8cda-8004b75106c1",
+      "assignment_id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "field_id": "85a64005-de9c-489b-88f0-2f0254b40c8e",
+      "user_id": "b69a92c5-a38d-4b62-833f-70ed4bbda5f5",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-17T21:57:59.236761+00:00",
+      "updated_at": "2026-03-17T21:58:40.008583+00:00"
+    },
+    {
+      "id": "e9f7f79b-6d8f-4055-9355-910b81faa6f9",
+      "assignment_id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "field_id": "e549780c-67b7-42f3-8b22-86df34fdd2ec",
+      "user_id": "b69a92c5-a38d-4b62-833f-70ed4bbda5f5",
+      "value": "cheese",
+      "time": null,
+      "created_at": "2026-03-17T21:58:02.214661+00:00",
+      "updated_at": "2026-03-17T21:58:39.083408+00:00"
+    },
+    {
+      "id": "6dad0bcf-936b-4f69-a95f-e040e63016bc",
+      "assignment_id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "field_id": "948ceb1c-43da-40b7-83ed-e8b6fe0a6ca6",
+      "user_id": "b69a92c5-a38d-4b62-833f-70ed4bbda5f5",
+      "value": "4",
+      "time": null,
+      "created_at": "2026-03-17T21:58:14.797514+00:00",
+      "updated_at": "2026-03-17T21:58:39.968122+00:00"
+    },
+    {
+      "id": "207d9bf9-05af-4842-981c-539b1f9d3341",
+      "assignment_id": "c861db19-6362-4dd7-8a6b-0626425d41b7",
+      "field_id": "54286a96-b76c-430c-b537-b6628735bb16",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "value": "2",
+      "time": null,
+      "created_at": "2026-03-18T10:31:25.793479+00:00",
+      "updated_at": "2026-03-18T10:32:21.760474+00:00"
+    },
+    {
+      "id": "c91ed977-6d52-4acb-b5ef-18def8e66b7e",
+      "assignment_id": "c861db19-6362-4dd7-8a6b-0626425d41b7",
+      "field_id": "908e704e-d960-4f1d-837b-c6a575f3844a",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "value": "0",
+      "time": null,
+      "created_at": "2026-03-18T10:32:15.277654+00:00",
+      "updated_at": "2026-03-18T10:32:23.28775+00:00"
+    },
+    {
+      "id": "9fe1e30b-7e76-419e-a71c-a95ac15e3dd0",
+      "assignment_id": "c861db19-6362-4dd7-8a6b-0626425d41b7",
+      "field_id": "b0ed538e-fcbe-4ed4-81c6-629bf5d88cbd",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "value": "jlkjjlkj",
+      "time": null,
+      "created_at": "2026-03-18T10:31:29.844569+00:00",
+      "updated_at": "2026-03-18T10:32:22.413543+00:00"
+    },
+    {
+      "id": "caf6b8e0-7167-4ca9-a026-796cdca98588",
+      "assignment_id": "c861db19-6362-4dd7-8a6b-0626425d41b7",
+      "field_id": "babf71ea-b327-483a-a27e-f397ed2bbe9f",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "value": "1",
+      "time": null,
+      "created_at": "2026-03-18T10:32:19.707568+00:00",
+      "updated_at": "2026-03-18T10:32:22.518635+00:00"
+    },
+    {
+      "id": "6912f3a9-5f69-45d1-b465-e4efaf488d69",
+      "assignment_id": "c861db19-6362-4dd7-8a6b-0626425d41b7",
+      "field_id": "85a64005-de9c-489b-88f0-2f0254b40c8e",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-18T10:31:34.6871+00:00",
+      "updated_at": "2026-03-18T10:32:23.448304+00:00"
+    },
+    {
+      "id": "8f070635-5e34-42a5-89d6-ad1fe836db05",
+      "assignment_id": "c861db19-6362-4dd7-8a6b-0626425d41b7",
+      "field_id": "e549780c-67b7-42f3-8b22-86df34fdd2ec",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "value": "jhkjh\n",
+      "time": null,
+      "created_at": "2026-03-18T10:31:38.698314+00:00",
+      "updated_at": "2026-03-18T10:32:23.322615+00:00"
+    },
+    {
+      "id": "afbdd29e-fe58-40f6-9ace-f108f1ae41ac",
+      "assignment_id": "c861db19-6362-4dd7-8a6b-0626425d41b7",
+      "field_id": "6fd97eef-985d-4944-9835-5b8478936d83",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "value": "4",
+      "time": null,
+      "created_at": "2026-03-18T10:31:42.563549+00:00",
+      "updated_at": "2026-03-18T10:32:21.701922+00:00"
+    },
+    {
+      "id": "c6a4ff4e-8b9e-4a77-bbe9-2ca6f85550c6",
+      "assignment_id": "c861db19-6362-4dd7-8a6b-0626425d41b7",
+      "field_id": "c48e66a9-d6a1-400f-aacf-8a7c8c5b6f1e",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "value": "1",
+      "time": null,
+      "created_at": "2026-03-18T10:32:00.505848+00:00",
+      "updated_at": "2026-03-18T10:32:23.425169+00:00"
+    },
+    {
+      "id": "1ebf0d68-8635-44b4-bf5b-1829d36ab421",
+      "assignment_id": "c861db19-6362-4dd7-8a6b-0626425d41b7",
+      "field_id": "1a31c9d7-68c3-4488-9c32-d528fcc9bf08",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "value": "2",
+      "time": null,
+      "created_at": "2026-03-18T10:31:46.91977+00:00",
+      "updated_at": "2026-03-18T10:32:23.454859+00:00"
+    },
+    {
+      "id": "1a3e26f9-9b1f-41fe-bd68-b932fb8ed412",
+      "assignment_id": "c861db19-6362-4dd7-8a6b-0626425d41b7",
+      "field_id": "e6d3120b-04f8-4c69-bd52-10ff43285aad",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "value": "kgfdfghj",
+      "time": null,
+      "created_at": "2026-03-18T10:31:51.234708+00:00",
+      "updated_at": "2026-03-18T10:32:23.416359+00:00"
+    },
+    {
+      "id": "7113c1b1-acc6-4107-a637-d767774a17a5",
+      "assignment_id": "c861db19-6362-4dd7-8a6b-0626425d41b7",
+      "field_id": "948ceb1c-43da-40b7-83ed-e8b6fe0a6ca6",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "value": "0",
+      "time": null,
+      "created_at": "2026-03-18T10:31:53.890023+00:00",
+      "updated_at": "2026-03-18T10:32:22.485675+00:00"
+    },
+    {
+      "id": "5443105b-e06c-404b-83a5-590c5a20b3c8",
+      "assignment_id": "c861db19-6362-4dd7-8a6b-0626425d41b7",
+      "field_id": "c536dacd-8b0b-4987-ac45-10d23c71f405",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "value": "hjkhkj",
+      "time": null,
+      "created_at": "2026-03-18T10:31:57.283382+00:00",
+      "updated_at": "2026-03-18T10:32:22.591266+00:00"
+    },
+    {
+      "id": "f81328a6-2a3a-4027-bbc8-5c1e1892b4c5",
+      "assignment_id": "c861db19-6362-4dd7-8a6b-0626425d41b7",
+      "field_id": "8264cc14-e9fd-46a2-b0f1-08059bf6ec20",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "value": "klkjlkj",
+      "time": null,
+      "created_at": "2026-03-18T10:32:03.921093+00:00",
+      "updated_at": "2026-03-18T10:32:21.815297+00:00"
+    },
+    {
+      "id": "0c6862e2-e338-4457-bae2-70e698411d31",
+      "assignment_id": "c861db19-6362-4dd7-8a6b-0626425d41b7",
+      "field_id": "95633d19-6118-440f-91c0-57fd3c81409e",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "value": "4",
+      "time": null,
+      "created_at": "2026-03-18T10:32:09.871912+00:00",
+      "updated_at": "2026-03-18T10:32:22.469384+00:00"
+    },
+    {
+      "id": "37036eac-45ac-41cf-a443-f6c58402dc67",
+      "assignment_id": "814e8e09-485b-497b-ba6e-86aac8dea9bc",
+      "field_id": "54286a96-b76c-430c-b537-b6628735bb16",
+      "user_id": "934464a4-5516-469d-883b-be0909d32be0",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-17T22:29:07.901798+00:00",
+      "updated_at": "2026-03-17T22:31:44.114895+00:00"
+    },
+    {
+      "id": "d8c48e6c-f9fa-4e4d-94ad-facc6b12adbe",
+      "assignment_id": "814e8e09-485b-497b-ba6e-86aac8dea9bc",
+      "field_id": "c48e66a9-d6a1-400f-aacf-8a7c8c5b6f1e",
+      "user_id": "934464a4-5516-469d-883b-be0909d32be0",
+      "value": "2",
+      "time": null,
+      "created_at": "2026-03-17T22:30:38.291654+00:00",
+      "updated_at": "2026-03-17T22:31:45.094926+00:00"
+    },
+    {
+      "id": "44a29b13-2f09-4990-8e4f-f4bea1c68e1d",
+      "assignment_id": "814e8e09-485b-497b-ba6e-86aac8dea9bc",
+      "field_id": "b0ed538e-fcbe-4ed4-81c6-629bf5d88cbd",
+      "user_id": "934464a4-5516-469d-883b-be0909d32be0",
+      "value": "What happened to the explanations around creative problem solving?",
+      "time": null,
+      "created_at": "2026-03-17T22:29:25.387653+00:00",
+      "updated_at": "2026-03-17T22:31:44.856403+00:00"
+    },
+    {
+      "id": "432f3297-888e-4596-b0ae-e9e8a7c0b9e4",
+      "assignment_id": "814e8e09-485b-497b-ba6e-86aac8dea9bc",
+      "field_id": "babf71ea-b327-483a-a27e-f397ed2bbe9f",
+      "user_id": "934464a4-5516-469d-883b-be0909d32be0",
+      "value": "2",
+      "time": null,
+      "created_at": "2026-03-17T22:31:31.336608+00:00",
+      "updated_at": "2026-03-17T22:31:44.971718+00:00"
+    },
+    {
+      "id": "41ea4749-c5bf-40ee-9e3e-4d04ea4a1451",
+      "assignment_id": "814e8e09-485b-497b-ba6e-86aac8dea9bc",
+      "field_id": "85a64005-de9c-489b-88f0-2f0254b40c8e",
+      "user_id": "934464a4-5516-469d-883b-be0909d32be0",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-17T22:29:37.942679+00:00",
+      "updated_at": "2026-03-17T22:31:44.874934+00:00"
+    },
+    {
+      "id": "c6f2068b-9bd8-478b-a132-502f1a872da1",
+      "assignment_id": "814e8e09-485b-497b-ba6e-86aac8dea9bc",
+      "field_id": "e549780c-67b7-42f3-8b22-86df34fdd2ec",
+      "user_id": "934464a4-5516-469d-883b-be0909d32be0",
+      "value": "Yup",
+      "time": null,
+      "created_at": "2026-03-17T22:29:42.375198+00:00",
+      "updated_at": "2026-03-17T22:31:44.186128+00:00"
+    },
+    {
+      "id": "3ca832f5-63bf-460e-a846-8f2c540da195",
+      "assignment_id": "814e8e09-485b-497b-ba6e-86aac8dea9bc",
+      "field_id": "6fd97eef-985d-4944-9835-5b8478936d83",
+      "user_id": "934464a4-5516-469d-883b-be0909d32be0",
+      "value": "4",
+      "time": null,
+      "created_at": "2026-03-17T22:29:48.774462+00:00",
+      "updated_at": "2026-03-17T22:31:44.18693+00:00"
+    },
+    {
+      "id": "8294e269-1172-442c-b705-7119938df75d",
+      "assignment_id": "814e8e09-485b-497b-ba6e-86aac8dea9bc",
+      "field_id": "95633d19-6118-440f-91c0-57fd3c81409e",
+      "user_id": "934464a4-5516-469d-883b-be0909d32be0",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-17T22:30:56.106065+00:00",
+      "updated_at": "2026-03-17T22:31:45.021396+00:00"
+    },
+    {
+      "id": "40596b29-43b6-41ab-8a82-a8ae9df9c03e",
+      "assignment_id": "814e8e09-485b-497b-ba6e-86aac8dea9bc",
+      "field_id": "a226d828-5ce9-403e-838e-a09afcc7f812",
+      "user_id": "934464a4-5516-469d-883b-be0909d32be0",
+      "value": "Works well with others",
+      "time": null,
+      "created_at": "2026-03-17T22:29:55.475391+00:00",
+      "updated_at": "2026-03-17T22:31:44.983895+00:00"
+    },
+    {
+      "id": "eff954b7-00c3-4686-9bec-0c6bc62a7bee",
+      "assignment_id": "814e8e09-485b-497b-ba6e-86aac8dea9bc",
+      "field_id": "948ceb1c-43da-40b7-83ed-e8b6fe0a6ca6",
+      "user_id": "934464a4-5516-469d-883b-be0909d32be0",
+      "value": "1",
+      "time": null,
+      "created_at": "2026-03-17T22:30:09.595236+00:00",
+      "updated_at": "2026-03-17T22:31:44.432748+00:00"
+    },
+    {
+      "id": "cccd5cc4-7f82-414e-9c5d-29b961f11e16",
+      "assignment_id": "814e8e09-485b-497b-ba6e-86aac8dea9bc",
+      "field_id": "955a26fd-6aa8-4528-bc4d-e94bd42a877f",
+      "user_id": "934464a4-5516-469d-883b-be0909d32be0",
+      "value": "Cares about the customer but keeps the company's needs in mind.",
+      "time": null,
+      "created_at": "2026-03-17T22:31:00.943975+00:00",
+      "updated_at": "2026-03-17T22:31:45.027994+00:00"
+    },
+    {
+      "id": "53b9d151-466b-4afb-8286-4252fcc57629",
+      "assignment_id": "814e8e09-485b-497b-ba6e-86aac8dea9bc",
+      "field_id": "1a31c9d7-68c3-4488-9c32-d528fcc9bf08",
+      "user_id": "934464a4-5516-469d-883b-be0909d32be0",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-17T22:30:05.693615+00:00",
+      "updated_at": "2026-03-17T22:31:44.915822+00:00"
+    },
+    {
+      "id": "c402d94b-2dee-4b13-ba52-c46ee10ff361",
+      "assignment_id": "814e8e09-485b-497b-ba6e-86aac8dea9bc",
+      "field_id": "c536dacd-8b0b-4987-ac45-10d23c71f405",
+      "user_id": "934464a4-5516-469d-883b-be0909d32be0",
+      "value": "Could be better at reporting progress of team members. Does their work instead of correcting them.",
+      "time": null,
+      "created_at": "2026-03-17T22:30:26.532706+00:00",
+      "updated_at": "2026-03-17T22:31:44.428221+00:00"
+    },
+    {
+      "id": "efb8b8f6-9c1b-4afa-88cc-ab1e8c9c2774",
+      "assignment_id": "814e8e09-485b-497b-ba6e-86aac8dea9bc",
+      "field_id": "9e00710e-16a3-4b4d-85dd-76e99a0a4572",
+      "user_id": "934464a4-5516-469d-883b-be0909d32be0",
+      "value": "Ethical as far as money can take him.",
+      "time": null,
+      "created_at": "2026-03-17T22:31:36.288203+00:00",
+      "updated_at": "2026-03-17T22:31:44.886864+00:00"
+    },
+    {
+      "id": "5666489b-9ffa-4823-a84f-21f29d059771",
+      "assignment_id": "814e8e09-485b-497b-ba6e-86aac8dea9bc",
+      "field_id": "8264cc14-e9fd-46a2-b0f1-08059bf6ec20",
+      "user_id": "934464a4-5516-469d-883b-be0909d32be0",
+      "value": "At the level expected for a mouse.",
+      "time": null,
+      "created_at": "2026-03-17T22:30:43.909666+00:00",
+      "updated_at": "2026-03-17T22:31:44.980832+00:00"
+    },
+    {
+      "id": "aeb6b701-d24d-473e-bdf2-8babf987bc39",
+      "assignment_id": "814e8e09-485b-497b-ba6e-86aac8dea9bc",
+      "field_id": "908e704e-d960-4f1d-837b-c6a575f3844a",
+      "user_id": "934464a4-5516-469d-883b-be0909d32be0",
+      "value": "4",
+      "time": null,
+      "created_at": "2026-03-17T22:31:21.545614+00:00",
+      "updated_at": "2026-03-17T22:31:44.970545+00:00"
+    },
+    {
+      "id": "ed54a9d6-95cd-428d-83ca-91f54d220fbd",
+      "assignment_id": "814e8e09-485b-497b-ba6e-86aac8dea9bc",
+      "field_id": "a05a0bcd-f0c5-40f4-a163-ea6af5fd8796",
+      "user_id": "934464a4-5516-469d-883b-be0909d32be0",
+      "value": "Communicates like a champ",
+      "time": null,
+      "created_at": "2026-03-17T22:31:28.460799+00:00",
+      "updated_at": "2026-03-17T22:31:45.798304+00:00"
+    },
+    {
+      "id": "3069b5d7-db38-4983-b83c-fc3cda3ad72f",
+      "assignment_id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "field_id": "babf71ea-b327-483a-a27e-f397ed2bbe9f",
+      "user_id": "ffd6b96e-b268-4e48-b4fe-349239110f7a",
+      "value": "0",
+      "time": null,
+      "created_at": "2026-03-17T22:39:52.267933+00:00",
+      "updated_at": "2026-03-17T22:40:23.767963+00:00"
+    },
+    {
+      "id": "2db5d5e9-3ccf-4c26-95e1-ad327f42d0f5",
+      "assignment_id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "field_id": "54286a96-b76c-430c-b537-b6628735bb16",
+      "user_id": "ffd6b96e-b268-4e48-b4fe-349239110f7a",
+      "value": "0",
+      "time": null,
+      "created_at": "2026-03-17T22:36:30.51302+00:00",
+      "updated_at": "2026-03-17T22:40:22.427263+00:00"
+    },
+    {
+      "id": "d0494c11-101b-4ecb-8e12-b9c62aceec6e",
+      "assignment_id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "field_id": "b0ed538e-fcbe-4ed4-81c6-629bf5d88cbd",
+      "user_id": "ffd6b96e-b268-4e48-b4fe-349239110f7a",
+      "value": "Donnie isn't good at figuring out how to solve problems. He's a duck.",
+      "time": null,
+      "created_at": "2026-03-17T22:36:38.464011+00:00",
+      "updated_at": "2026-03-17T22:40:22.742998+00:00"
+    },
+    {
+      "id": "07f0dfdb-d850-45a3-92c0-b7f0a1c58181",
+      "assignment_id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "field_id": "9e00710e-16a3-4b4d-85dd-76e99a0a4572",
+      "user_id": "ffd6b96e-b268-4e48-b4fe-349239110f7a",
+      "value": "I've seen him push other ducks underwater when they are paddling around. For no reason. Just to be mean. That's just not right.",
+      "time": null,
+      "created_at": "2026-03-17T22:40:22.392666+00:00",
+      "updated_at": "2026-03-17T22:40:23.931771+00:00"
+    },
+    {
+      "id": "0493785e-bbe1-4de4-86dc-77f8e8cc76e8",
+      "assignment_id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "field_id": "85a64005-de9c-489b-88f0-2f0254b40c8e",
+      "user_id": "ffd6b96e-b268-4e48-b4fe-349239110f7a",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-17T22:36:52.367054+00:00",
+      "updated_at": "2026-03-17T22:40:22.418762+00:00"
+    },
+    {
+      "id": "a57b4834-088a-49d6-b3b1-c6926133c894",
+      "assignment_id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "field_id": "e549780c-67b7-42f3-8b22-86df34fdd2ec",
+      "user_id": "ffd6b96e-b268-4e48-b4fe-349239110f7a",
+      "value": "All the other ducks follow Donald. Even if it's in the wrong direction.",
+      "time": null,
+      "created_at": "2026-03-17T22:37:05.3448+00:00",
+      "updated_at": "2026-03-17T22:40:23.010624+00:00"
+    },
+    {
+      "id": "0f1f9644-e4de-4431-8a9a-e5033f279216",
+      "assignment_id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "field_id": "6fd97eef-985d-4944-9835-5b8478936d83",
+      "user_id": "ffd6b96e-b268-4e48-b4fe-349239110f7a",
+      "value": "2",
+      "time": null,
+      "created_at": "2026-03-17T22:37:15.867823+00:00",
+      "updated_at": "2026-03-17T22:40:23.088112+00:00"
+    },
+    {
+      "id": "48a2c92f-242e-4e3c-82ad-449a10289dac",
+      "assignment_id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "field_id": "a226d828-5ce9-403e-838e-a09afcc7f812",
+      "user_id": "ffd6b96e-b268-4e48-b4fe-349239110f7a",
+      "value": "Ducks always fly in a skein so he collaborates because it's in his DNA.",
+      "time": null,
+      "created_at": "2026-03-17T22:37:23.689412+00:00",
+      "updated_at": "2026-03-17T22:40:23.184421+00:00"
+    },
+    {
+      "id": "6f2d5a04-5bb9-49fb-8d02-0b29b4905a22",
+      "assignment_id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "field_id": "1a31c9d7-68c3-4488-9c32-d528fcc9bf08",
+      "user_id": "ffd6b96e-b268-4e48-b4fe-349239110f7a",
+      "value": "4",
+      "time": null,
+      "created_at": "2026-03-17T22:38:11.161252+00:00",
+      "updated_at": "2026-03-17T22:40:23.161631+00:00"
+    },
+    {
+      "id": "aa1701f3-08d2-4994-bfc1-90446f14d67f",
+      "assignment_id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "field_id": "e6d3120b-04f8-4c69-bd52-10ff43285aad",
+      "user_id": "ffd6b96e-b268-4e48-b4fe-349239110f7a",
+      "value": "He's always cleaning his own feathers.",
+      "time": null,
+      "created_at": "2026-03-17T22:38:21.096082+00:00",
+      "updated_at": "2026-03-17T22:40:23.271571+00:00"
+    },
+    {
+      "id": "cd86102f-0bf3-4585-b187-bf0bd057db31",
+      "assignment_id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "field_id": "8264cc14-e9fd-46a2-b0f1-08059bf6ec20",
+      "user_id": "ffd6b96e-b268-4e48-b4fe-349239110f7a",
+      "value": "He does a good job negotiating with Mr. Disney.",
+      "time": null,
+      "created_at": "2026-03-17T22:38:57.748278+00:00",
+      "updated_at": "2026-03-17T22:40:23.503164+00:00"
+    },
+    {
+      "id": "352d0df5-6aae-401c-aa26-cb613daa4fb1",
+      "assignment_id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "field_id": "95633d19-6118-440f-91c0-57fd3c81409e",
+      "user_id": "ffd6b96e-b268-4e48-b4fe-349239110f7a",
+      "value": "2",
+      "time": null,
+      "created_at": "2026-03-17T22:39:15.912521+00:00",
+      "updated_at": "2026-03-17T22:40:23.630057+00:00"
+    },
+    {
+      "id": "f55efc12-941b-4cd7-8799-ffcc3bbf89bc",
+      "assignment_id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "field_id": "948ceb1c-43da-40b7-83ed-e8b6fe0a6ca6",
+      "user_id": "ffd6b96e-b268-4e48-b4fe-349239110f7a",
+      "value": "1",
+      "time": null,
+      "created_at": "2026-03-17T22:38:25.059287+00:00",
+      "updated_at": "2026-03-17T22:40:23.225329+00:00"
+    },
+    {
+      "id": "483cad93-6d19-4782-8340-a508b9a3f137",
+      "assignment_id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "field_id": "955a26fd-6aa8-4528-bc4d-e94bd42a877f",
+      "user_id": "ffd6b96e-b268-4e48-b4fe-349239110f7a",
+      "value": "There are no customers, only hunters.",
+      "time": null,
+      "created_at": "2026-03-17T22:39:24.235638+00:00",
+      "updated_at": "2026-03-17T22:40:23.647195+00:00"
+    },
+    {
+      "id": "4ebca0e6-19a8-468b-9d2e-58563d503bd8",
+      "assignment_id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "field_id": "a05a0bcd-f0c5-40f4-a163-ea6af5fd8796",
+      "user_id": "ffd6b96e-b268-4e48-b4fe-349239110f7a",
+      "value": "Quacks louder than the other ducks.",
+      "time": null,
+      "created_at": "2026-03-17T22:39:40.315153+00:00",
+      "updated_at": "2026-03-17T22:40:23.716255+00:00"
+    },
+    {
+      "id": "1a9c91c0-8de6-492c-91e7-01c5e6025f95",
+      "assignment_id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "field_id": "c536dacd-8b0b-4987-ac45-10d23c71f405",
+      "user_id": "ffd6b96e-b268-4e48-b4fe-349239110f7a",
+      "value": "He's usually at the back of the wedge and he holds others back too.",
+      "time": null,
+      "created_at": "2026-03-17T22:38:32.503006+00:00",
+      "updated_at": "2026-03-17T22:40:23.393286+00:00"
+    },
+    {
+      "id": "465125ba-3f5a-458c-8010-883817e8a3c6",
+      "assignment_id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "field_id": "908e704e-d960-4f1d-837b-c6a575f3844a",
+      "user_id": "ffd6b96e-b268-4e48-b4fe-349239110f7a",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-17T22:39:28.562058+00:00",
+      "updated_at": "2026-03-17T22:40:23.816073+00:00"
+    },
+    {
+      "id": "391e8fd7-d742-4ca4-a61c-f44c155be75e",
+      "assignment_id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "field_id": "c48e66a9-d6a1-400f-aacf-8a7c8c5b6f1e",
+      "user_id": "ffd6b96e-b268-4e48-b4fe-349239110f7a",
+      "value": "2",
+      "time": null,
+      "created_at": "2026-03-17T22:38:54.097187+00:00",
+      "updated_at": "2026-03-17T22:40:23.439654+00:00"
+    },
+    {
+      "id": "8ab44683-c766-41ac-8e73-652debeef2f5",
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "field_id": "54286a96-b76c-430c-b537-b6628735bb16",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "1",
+      "time": null,
+      "created_at": "2026-03-17T21:53:17.546992+00:00",
+      "updated_at": "2026-03-17T21:54:12.155596+00:00"
+    },
+    {
+      "id": "e67fa9b1-a058-4518-9f0a-e6ace83edfa2",
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "field_id": "a226d828-5ce9-403e-838e-a09afcc7f812",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "Ducky",
+      "time": null,
+      "created_at": "2026-03-17T21:53:33.702382+00:00",
+      "updated_at": "2026-03-17T21:54:12.410507+00:00"
+    },
+    {
+      "id": "9725ee99-7794-4089-8d1c-b613c7eadbcf",
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "field_id": "c48e66a9-d6a1-400f-aacf-8a7c8c5b6f1e",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "4",
+      "time": null,
+      "created_at": "2026-03-17T21:53:46.30412+00:00",
+      "updated_at": "2026-03-17T21:54:16.464216+00:00"
+    },
+    {
+      "id": "474d7ee3-4cad-4906-b809-f9413cd9b6b8",
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "field_id": "b0ed538e-fcbe-4ed4-81c6-629bf5d88cbd",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "Ducky",
+      "time": null,
+      "created_at": "2026-03-17T21:53:21.791383+00:00",
+      "updated_at": "2026-03-17T21:54:16.324291+00:00"
+    },
+    {
+      "id": "0e694b60-b0bf-4413-9070-387221a36dd3",
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "field_id": "1a31c9d7-68c3-4488-9c32-d528fcc9bf08",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-17T21:53:36.074945+00:00",
+      "updated_at": "2026-03-17T21:54:12.242979+00:00"
+    },
+    {
+      "id": "b37347d8-5bd4-43f0-b5da-cb8a360a0082",
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "field_id": "8264cc14-e9fd-46a2-b0f1-08059bf6ec20",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "Ducky",
+      "time": null,
+      "created_at": "2026-03-17T21:53:49.995906+00:00",
+      "updated_at": "2026-03-17T21:54:12.442178+00:00"
+    },
+    {
+      "id": "71c39916-a455-4fd2-aefb-49e91bd399c1",
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "field_id": "babf71ea-b327-483a-a27e-f397ed2bbe9f",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "4",
+      "time": null,
+      "created_at": "2026-03-17T21:54:06.655143+00:00",
+      "updated_at": "2026-03-17T21:54:12.37964+00:00"
+    },
+    {
+      "id": "0a58fbe4-e017-466b-8d63-43ad1bdbe4a4",
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "field_id": "85a64005-de9c-489b-88f0-2f0254b40c8e",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "2",
+      "time": null,
+      "created_at": "2026-03-17T21:53:24.452614+00:00",
+      "updated_at": "2026-03-17T21:54:12.257228+00:00"
+    },
+    {
+      "id": "fbf300c1-31ac-45e5-bf0c-401fbceec64b",
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "field_id": "e6d3120b-04f8-4c69-bd52-10ff43285aad",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "Ducky",
+      "time": null,
+      "created_at": "2026-03-17T21:53:39.608937+00:00",
+      "updated_at": "2026-03-17T21:54:12.370716+00:00"
+    },
+    {
+      "id": "d8796ce6-81f2-4f5e-9ed9-9b4157225f3d",
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "field_id": "95633d19-6118-440f-91c0-57fd3c81409e",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-17T21:53:56.345767+00:00",
+      "updated_at": "2026-03-17T21:54:12.237054+00:00"
+    },
+    {
+      "id": "5ec7c586-28b1-4089-ba81-9ff5beba6eaa",
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "field_id": "e549780c-67b7-42f3-8b22-86df34fdd2ec",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "Ducky",
+      "time": null,
+      "created_at": "2026-03-17T21:53:28.733111+00:00",
+      "updated_at": "2026-03-17T21:54:12.328191+00:00"
+    },
+    {
+      "id": "6bfbb0b1-c07b-4e9f-b837-9cd66ea37440",
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "field_id": "948ceb1c-43da-40b7-83ed-e8b6fe0a6ca6",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "1",
+      "time": null,
+      "created_at": "2026-03-17T21:53:41.455274+00:00",
+      "updated_at": "2026-03-17T21:54:12.241032+00:00"
+    },
+    {
+      "id": "85061aed-5cf6-4250-a568-c2ef3b3e7928",
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "field_id": "9e00710e-16a3-4b4d-85dd-76e99a0a4572",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "Ducky",
+      "time": null,
+      "created_at": "2026-03-17T21:54:11.016779+00:00",
+      "updated_at": "2026-03-17T21:54:12.666176+00:00"
+    },
+    {
+      "id": "7fbe521e-c76e-4f5e-b4d6-457a294354f1",
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "field_id": "6fd97eef-985d-4944-9835-5b8478936d83",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "1",
+      "time": null,
+      "created_at": "2026-03-17T21:53:30.746337+00:00",
+      "updated_at": "2026-03-17T21:54:13.000575+00:00"
+    },
+    {
+      "id": "775c06ae-1a3c-4325-884b-bb30aefcd91d",
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "field_id": "c536dacd-8b0b-4987-ac45-10d23c71f405",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "Ducky",
+      "time": null,
+      "created_at": "2026-03-17T21:53:44.458532+00:00",
+      "updated_at": "2026-03-17T21:54:12.231063+00:00"
+    },
+    {
+      "id": "d5b8fc11-cac9-4955-8d9f-cd0a04f7a974",
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "field_id": "908e704e-d960-4f1d-837b-c6a575f3844a",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "1",
+      "time": null,
+      "created_at": "2026-03-17T21:54:01.418474+00:00",
+      "updated_at": "2026-03-17T21:54:12.258509+00:00"
+    },
+    {
+      "id": "206da8b3-770e-4c40-bee4-575da70c9f3a",
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "field_id": "955a26fd-6aa8-4528-bc4d-e94bd42a877f",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "Ducky",
+      "time": null,
+      "created_at": "2026-03-17T21:53:59.5827+00:00",
+      "updated_at": "2026-03-17T21:54:12.390213+00:00"
+    },
+    {
+      "id": "af87a3e3-8538-4586-9e64-78ae11b36a39",
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "field_id": "a05a0bcd-f0c5-40f4-a163-ea6af5fd8796",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "Ducky",
+      "time": null,
+      "created_at": "2026-03-17T21:54:05.00172+00:00",
+      "updated_at": "2026-03-17T21:54:12.32441+00:00"
+    },
+    {
+      "id": "1b0c0c50-c1ef-4c7e-9306-e05425e3a351",
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "field_id": "babf71ea-b327-483a-a27e-f397ed2bbe9f",
+      "user_id": "7e678250-f739-4a56-9f1d-423885422a8a",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-17T22:06:17.37361+00:00",
+      "updated_at": "2026-03-17T22:06:20.976879+00:00"
+    },
+    {
+      "id": "bca9c7f3-2e50-4b5c-9162-d8000252819e",
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "field_id": "54286a96-b76c-430c-b537-b6628735bb16",
+      "user_id": "7e678250-f739-4a56-9f1d-423885422a8a",
+      "value": "1",
+      "time": null,
+      "created_at": "2026-03-17T22:05:41.122946+00:00",
+      "updated_at": "2026-03-17T22:06:20.272606+00:00"
+    },
+    {
+      "id": "ae600268-a3b3-4515-9ee0-e0ccdd58fb3b",
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "field_id": "b0ed538e-fcbe-4ed4-81c6-629bf5d88cbd",
+      "user_id": "7e678250-f739-4a56-9f1d-423885422a8a",
+      "value": "yahoo",
+      "time": null,
+      "created_at": "2026-03-17T22:05:45.022466+00:00",
+      "updated_at": "2026-03-17T22:06:20.936183+00:00"
+    },
+    {
+      "id": "b18e94a2-699f-4b4e-9839-ae74155964f1",
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "field_id": "908e704e-d960-4f1d-837b-c6a575f3844a",
+      "user_id": "7e678250-f739-4a56-9f1d-423885422a8a",
+      "value": "2",
+      "time": null,
+      "created_at": "2026-03-17T22:06:12.438229+00:00",
+      "updated_at": "2026-03-17T22:06:20.467503+00:00"
+    },
+    {
+      "id": "a5a3185c-2052-4a8e-b9a0-c5bfd760db77",
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "field_id": "85a64005-de9c-489b-88f0-2f0254b40c8e",
+      "user_id": "7e678250-f739-4a56-9f1d-423885422a8a",
+      "value": "4",
+      "time": null,
+      "created_at": "2026-03-17T22:05:45.807639+00:00",
+      "updated_at": "2026-03-17T22:06:20.292009+00:00"
+    },
+    {
+      "id": "a29daa33-2dc1-4b35-b886-95cb0d78a96f",
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "field_id": "e549780c-67b7-42f3-8b22-86df34fdd2ec",
+      "user_id": "7e678250-f739-4a56-9f1d-423885422a8a",
+      "value": "yahoo",
+      "time": null,
+      "created_at": "2026-03-17T22:05:48.830476+00:00",
+      "updated_at": "2026-03-17T22:06:20.522229+00:00"
+    },
+    {
+      "id": "05b5e700-9bca-4b3f-99f7-77703580ca2a",
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "field_id": "948ceb1c-43da-40b7-83ed-e8b6fe0a6ca6",
+      "user_id": "7e678250-f739-4a56-9f1d-423885422a8a",
+      "value": "1",
+      "time": null,
+      "created_at": "2026-03-17T22:05:59.250034+00:00",
+      "updated_at": "2026-03-17T22:06:20.399754+00:00"
+    },
+    {
+      "id": "7220d2e3-116b-4d6c-990a-e6c16f5f56a7",
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "field_id": "6fd97eef-985d-4944-9835-5b8478936d83",
+      "user_id": "7e678250-f739-4a56-9f1d-423885422a8a",
+      "value": "1",
+      "time": null,
+      "created_at": "2026-03-17T22:05:50.201208+00:00",
+      "updated_at": "2026-03-17T22:06:20.247484+00:00"
+    },
+    {
+      "id": "0c36268c-76b1-4ad1-ac96-fe9d3972d70f",
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "field_id": "a226d828-5ce9-403e-838e-a09afcc7f812",
+      "user_id": "7e678250-f739-4a56-9f1d-423885422a8a",
+      "value": "yahoo",
+      "time": null,
+      "created_at": "2026-03-17T22:05:53.157113+00:00",
+      "updated_at": "2026-03-17T22:06:20.515478+00:00"
+    },
+    {
+      "id": "210fee4b-c725-49e7-b499-85f2c8fba4d0",
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "field_id": "1a31c9d7-68c3-4488-9c32-d528fcc9bf08",
+      "user_id": "7e678250-f739-4a56-9f1d-423885422a8a",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-17T22:05:54.63325+00:00",
+      "updated_at": "2026-03-17T22:06:20.30857+00:00"
+    },
+    {
+      "id": "457e1ae5-a9f7-4d14-8a8a-b99738e6b029",
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "field_id": "e6d3120b-04f8-4c69-bd52-10ff43285aad",
+      "user_id": "7e678250-f739-4a56-9f1d-423885422a8a",
+      "value": "yahoo",
+      "time": null,
+      "created_at": "2026-03-17T22:05:57.914793+00:00",
+      "updated_at": "2026-03-17T22:06:20.366427+00:00"
+    },
+    {
+      "id": "3a3cc73d-c296-4caf-bcc2-6973593097f0",
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "field_id": "c536dacd-8b0b-4987-ac45-10d23c71f405",
+      "user_id": "7e678250-f739-4a56-9f1d-423885422a8a",
+      "value": "yahoo",
+      "time": null,
+      "created_at": "2026-03-17T22:06:02.10068+00:00",
+      "updated_at": "2026-03-17T22:06:20.26125+00:00"
+    },
+    {
+      "id": "f46cb43d-4b1f-4b10-afe0-0cbc8ed1bf9e",
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "field_id": "c48e66a9-d6a1-400f-aacf-8a7c8c5b6f1e",
+      "user_id": "7e678250-f739-4a56-9f1d-423885422a8a",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-17T22:06:03.450361+00:00",
+      "updated_at": "2026-03-17T22:06:20.214375+00:00"
+    },
+    {
+      "id": "eca764ed-c7b3-4483-af42-f052ec81cc52",
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "field_id": "a05a0bcd-f0c5-40f4-a163-ea6af5fd8796",
+      "user_id": "7e678250-f739-4a56-9f1d-423885422a8a",
+      "value": "yahoo",
+      "time": null,
+      "created_at": "2026-03-17T22:06:15.645778+00:00",
+      "updated_at": "2026-03-17T22:06:20.334079+00:00"
+    },
+    {
+      "id": "f7b3404d-510d-4b2d-b8b2-4c40c0a7791b",
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "field_id": "8264cc14-e9fd-46a2-b0f1-08059bf6ec20",
+      "user_id": "7e678250-f739-4a56-9f1d-423885422a8a",
+      "value": "yahoo",
+      "time": null,
+      "created_at": "2026-03-17T22:06:06.296384+00:00",
+      "updated_at": "2026-03-17T22:06:20.345552+00:00"
+    },
+    {
+      "id": "c71cc041-7364-4fd7-b549-cde0d792cdf0",
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "field_id": "95633d19-6118-440f-91c0-57fd3c81409e",
+      "user_id": "7e678250-f739-4a56-9f1d-423885422a8a",
+      "value": "4",
+      "time": null,
+      "created_at": "2026-03-17T22:06:08.217349+00:00",
+      "updated_at": "2026-03-17T22:06:20.355626+00:00"
+    },
+    {
+      "id": "f7384218-8075-4b1a-97f0-666139b19cf4",
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "field_id": "9e00710e-16a3-4b4d-85dd-76e99a0a4572",
+      "user_id": "7e678250-f739-4a56-9f1d-423885422a8a",
+      "value": "yahoo",
+      "time": null,
+      "created_at": "2026-03-17T22:06:20.022424+00:00",
+      "updated_at": "2026-03-17T22:06:20.360978+00:00"
+    },
+    {
+      "id": "47a3a0fc-3932-4642-b246-44f511b3f46e",
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "field_id": "955a26fd-6aa8-4528-bc4d-e94bd42a877f",
+      "user_id": "7e678250-f739-4a56-9f1d-423885422a8a",
+      "value": "yahoo",
+      "time": null,
+      "created_at": "2026-03-17T22:06:10.972574+00:00",
+      "updated_at": "2026-03-17T22:06:20.351649+00:00"
+    },
+    {
+      "id": "815cb8e7-f5c0-4b11-9c1c-1e4ce2ee0a3a",
+      "assignment_id": "73b16b19-9dca-466b-b650-d0fa0e2a2cdc",
+      "field_id": "54286a96-b76c-430c-b537-b6628735bb16",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "4",
+      "time": null,
+      "created_at": "2026-03-17T21:51:18.53013+00:00",
+      "updated_at": "2026-03-17T21:52:17.174689+00:00"
+    },
+    {
+      "id": "c5627b77-74a7-4c98-b519-7a0c0d9620ef",
+      "assignment_id": "73b16b19-9dca-466b-b650-d0fa0e2a2cdc",
+      "field_id": "e6d3120b-04f8-4c69-bd52-10ff43285aad",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "Craigy\n",
+      "time": null,
+      "created_at": "2026-03-17T21:51:48.948185+00:00",
+      "updated_at": "2026-03-17T21:52:17.086232+00:00"
+    },
+    {
+      "id": "ef71b1a3-17a5-44dd-8b4a-ea404ce001a4",
+      "assignment_id": "73b16b19-9dca-466b-b650-d0fa0e2a2cdc",
+      "field_id": "955a26fd-6aa8-4528-bc4d-e94bd42a877f",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "Craigy",
+      "time": null,
+      "created_at": "2026-03-17T21:52:04.408749+00:00",
+      "updated_at": "2026-03-17T21:52:17.295503+00:00"
+    },
+    {
+      "id": "8b6a1807-6b6c-48e3-9000-9ef5c77c2c76",
+      "assignment_id": "73b16b19-9dca-466b-b650-d0fa0e2a2cdc",
+      "field_id": "b0ed538e-fcbe-4ed4-81c6-629bf5d88cbd",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "Craigy",
+      "time": null,
+      "created_at": "2026-03-17T21:51:27.641452+00:00",
+      "updated_at": "2026-03-17T21:52:17.800605+00:00"
+    },
+    {
+      "id": "ed8b1112-9c63-47b5-80ec-35ccf67a05c0",
+      "assignment_id": "73b16b19-9dca-466b-b650-d0fa0e2a2cdc",
+      "field_id": "85a64005-de9c-489b-88f0-2f0254b40c8e",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "4",
+      "time": null,
+      "created_at": "2026-03-17T21:51:30.262122+00:00",
+      "updated_at": "2026-03-17T21:52:17.309391+00:00"
+    },
+    {
+      "id": "c816c015-504b-40d3-806e-de1ef3c5fd4b",
+      "assignment_id": "73b16b19-9dca-466b-b650-d0fa0e2a2cdc",
+      "field_id": "e549780c-67b7-42f3-8b22-86df34fdd2ec",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "Craigy",
+      "time": null,
+      "created_at": "2026-03-17T21:51:36.094058+00:00",
+      "updated_at": "2026-03-17T21:52:17.827272+00:00"
+    },
+    {
+      "id": "1fcc47e4-c981-4795-8526-1f89946c00c0",
+      "assignment_id": "73b16b19-9dca-466b-b650-d0fa0e2a2cdc",
+      "field_id": "948ceb1c-43da-40b7-83ed-e8b6fe0a6ca6",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "1",
+      "time": null,
+      "created_at": "2026-03-17T21:51:50.925949+00:00",
+      "updated_at": "2026-03-17T21:52:17.035166+00:00"
+    },
+    {
+      "id": "facff167-3364-4cc8-ac1c-f8a3196c738a",
+      "assignment_id": "73b16b19-9dca-466b-b650-d0fa0e2a2cdc",
+      "field_id": "6fd97eef-985d-4944-9835-5b8478936d83",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "4",
+      "time": null,
+      "created_at": "2026-03-17T21:51:38.38413+00:00",
+      "updated_at": "2026-03-17T21:52:17.152912+00:00"
+    },
+    {
+      "id": "e3bf6796-6986-40a6-8351-3a570cfad9c9",
+      "assignment_id": "73b16b19-9dca-466b-b650-d0fa0e2a2cdc",
+      "field_id": "a226d828-5ce9-403e-838e-a09afcc7f812",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "Craigy",
+      "time": null,
+      "created_at": "2026-03-17T21:51:42.220613+00:00",
+      "updated_at": "2026-03-17T21:52:17.207354+00:00"
+    },
+    {
+      "id": "a822f32c-e0f2-41fe-99ec-84f0f176d1ab",
+      "assignment_id": "73b16b19-9dca-466b-b650-d0fa0e2a2cdc",
+      "field_id": "c48e66a9-d6a1-400f-aacf-8a7c8c5b6f1e",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "2",
+      "time": null,
+      "created_at": "2026-03-17T21:51:56.689968+00:00",
+      "updated_at": "2026-03-17T21:52:17.329555+00:00"
+    },
+    {
+      "id": "f20a941a-006c-4e72-a6e3-9ca1dbc20372",
+      "assignment_id": "73b16b19-9dca-466b-b650-d0fa0e2a2cdc",
+      "field_id": "1a31c9d7-68c3-4488-9c32-d528fcc9bf08",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "1",
+      "time": null,
+      "created_at": "2026-03-17T21:51:45.386822+00:00",
+      "updated_at": "2026-03-17T21:52:17.15506+00:00"
+    },
+    {
+      "id": "3c1ad912-9bbb-46a1-8e40-b7f302f02685",
+      "assignment_id": "73b16b19-9dca-466b-b650-d0fa0e2a2cdc",
+      "field_id": "8264cc14-e9fd-46a2-b0f1-08059bf6ec20",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "Craigy",
+      "time": null,
+      "created_at": "2026-03-17T21:51:59.742398+00:00",
+      "updated_at": "2026-03-17T21:52:16.97436+00:00"
+    },
+    {
+      "id": "e5bb3558-d6c3-41ee-a2f4-8dfc8d680bcf",
+      "assignment_id": "73b16b19-9dca-466b-b650-d0fa0e2a2cdc",
+      "field_id": "c536dacd-8b0b-4987-ac45-10d23c71f405",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "Craigy\n",
+      "time": null,
+      "created_at": "2026-03-17T21:51:54.338513+00:00",
+      "updated_at": "2026-03-17T21:52:17.254864+00:00"
+    },
+    {
+      "id": "1726d073-04d2-429e-88c2-6b653c2041ab",
+      "assignment_id": "73b16b19-9dca-466b-b650-d0fa0e2a2cdc",
+      "field_id": "a05a0bcd-f0c5-40f4-a163-ea6af5fd8796",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "Craigy",
+      "time": null,
+      "created_at": "2026-03-17T21:52:09.002623+00:00",
+      "updated_at": "2026-03-17T21:52:17.001833+00:00"
+    },
+    {
+      "id": "c96015a2-dec8-42e6-b966-ad48304b9cf1",
+      "assignment_id": "73b16b19-9dca-466b-b650-d0fa0e2a2cdc",
+      "field_id": "9e00710e-16a3-4b4d-85dd-76e99a0a4572",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "value": "Craigy",
+      "time": null,
+      "created_at": "2026-03-17T21:52:14.452898+00:00",
+      "updated_at": "2026-03-17T21:52:17.121438+00:00"
+    },
+    {
+      "id": "17053078-aade-47eb-836f-3c950e3849a8",
+      "assignment_id": "c435c4f7-6b19-46b0-80a2-2deb0992c440",
+      "field_id": "54286a96-b76c-430c-b537-b6628735bb16",
+      "user_id": "afaab69e-063a-4e64-862a-56434b784fca",
+      "value": "0",
+      "time": null,
+      "created_at": "2026-03-18T10:40:25.548674+00:00",
+      "updated_at": "2026-03-18T10:40:53.717695+00:00"
+    },
+    {
+      "id": "6c222e9f-ef08-4fc9-aa37-660b16e5629d",
+      "assignment_id": "c435c4f7-6b19-46b0-80a2-2deb0992c440",
+      "field_id": "948ceb1c-43da-40b7-83ed-e8b6fe0a6ca6",
+      "user_id": "afaab69e-063a-4e64-862a-56434b784fca",
+      "value": "4",
+      "time": null,
+      "created_at": "2026-03-18T10:40:39.68593+00:00",
+      "updated_at": "2026-03-18T10:40:53.75021+00:00"
+    },
+    {
+      "id": "8e6e7bee-5af5-47d3-9e29-1ee8d0a894db",
+      "assignment_id": "c435c4f7-6b19-46b0-80a2-2deb0992c440",
+      "field_id": "85a64005-de9c-489b-88f0-2f0254b40c8e",
+      "user_id": "afaab69e-063a-4e64-862a-56434b784fca",
+      "value": "1",
+      "time": null,
+      "created_at": "2026-03-18T10:40:31.000204+00:00",
+      "updated_at": "2026-03-18T10:40:54.535563+00:00"
+    },
+    {
+      "id": "6621e77f-4c39-4650-bcc0-89e6015867e4",
+      "assignment_id": "c435c4f7-6b19-46b0-80a2-2deb0992c440",
+      "field_id": "95633d19-6118-440f-91c0-57fd3c81409e",
+      "user_id": "afaab69e-063a-4e64-862a-56434b784fca",
+      "value": "1",
+      "time": null,
+      "created_at": "2026-03-18T10:40:45.06587+00:00",
+      "updated_at": "2026-03-18T10:40:53.833183+00:00"
+    },
+    {
+      "id": "2cdcfa3b-1355-493b-982b-5f983a01f8d5",
+      "assignment_id": "c435c4f7-6b19-46b0-80a2-2deb0992c440",
+      "field_id": "1a31c9d7-68c3-4488-9c32-d528fcc9bf08",
+      "user_id": "afaab69e-063a-4e64-862a-56434b784fca",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-18T10:40:37.274776+00:00",
+      "updated_at": "2026-03-18T10:40:53.799925+00:00"
+    },
+    {
+      "id": "26530d08-1603-483e-b10c-89a2666aca10",
+      "assignment_id": "c435c4f7-6b19-46b0-80a2-2deb0992c440",
+      "field_id": "6fd97eef-985d-4944-9835-5b8478936d83",
+      "user_id": "afaab69e-063a-4e64-862a-56434b784fca",
+      "value": "2",
+      "time": null,
+      "created_at": "2026-03-18T10:40:34.40161+00:00",
+      "updated_at": "2026-03-18T10:40:53.739587+00:00"
+    },
+    {
+      "id": "abcd9c84-e47a-402e-91ce-793cca51135f",
+      "assignment_id": "c435c4f7-6b19-46b0-80a2-2deb0992c440",
+      "field_id": "908e704e-d960-4f1d-837b-c6a575f3844a",
+      "user_id": "afaab69e-063a-4e64-862a-56434b784fca",
+      "value": "2",
+      "time": null,
+      "created_at": "2026-03-18T10:40:48.78471+00:00",
+      "updated_at": "2026-03-18T10:40:53.79467+00:00"
+    },
+    {
+      "id": "eff1eebb-bce5-4f27-ab68-911731474eb4",
+      "assignment_id": "c435c4f7-6b19-46b0-80a2-2deb0992c440",
+      "field_id": "b0ed538e-fcbe-4ed4-81c6-629bf5d88cbd",
+      "user_id": "afaab69e-063a-4e64-862a-56434b784fca",
+      "value": "jlkjlkj",
+      "time": null,
+      "created_at": "2026-03-18T10:40:29.110448+00:00",
+      "updated_at": "2026-03-18T10:40:53.784488+00:00"
+    },
+    {
+      "id": "4d1ddb19-84f4-4ac1-a9af-adbdd0f5f03d",
+      "assignment_id": "c435c4f7-6b19-46b0-80a2-2deb0992c440",
+      "field_id": "c48e66a9-d6a1-400f-aacf-8a7c8c5b6f1e",
+      "user_id": "afaab69e-063a-4e64-862a-56434b784fca",
+      "value": "0",
+      "time": null,
+      "created_at": "2026-03-18T10:40:42.351929+00:00",
+      "updated_at": "2026-03-18T10:40:53.845192+00:00"
+    },
+    {
+      "id": "606fafdc-2889-4a91-9765-32414e4c15f9",
+      "assignment_id": "c435c4f7-6b19-46b0-80a2-2deb0992c440",
+      "field_id": "babf71ea-b327-483a-a27e-f397ed2bbe9f",
+      "user_id": "afaab69e-063a-4e64-862a-56434b784fca",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-18T10:40:52.146026+00:00",
+      "updated_at": "2026-03-18T10:40:53.826877+00:00"
+    },
+    {
+      "id": "3af08e85-76f8-455d-8e26-1e6c65101dbc",
+      "assignment_id": "19f90795-845f-4092-84b8-484346df32a5",
+      "field_id": "e549780c-67b7-42f3-8b22-86df34fdd2ec",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "me.com 2\n",
+      "time": null,
+      "created_at": "2026-03-17T22:09:26.022771+00:00",
+      "updated_at": "2026-03-17T22:10:06.855042+00:00"
+    },
+    {
+      "id": "e9515b36-bd2a-43eb-8b00-4d34e4fa323d",
+      "assignment_id": "19f90795-845f-4092-84b8-484346df32a5",
+      "field_id": "b0ed538e-fcbe-4ed4-81c6-629bf5d88cbd",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "me.com 2",
+      "time": null,
+      "created_at": "2026-03-17T22:09:19.456911+00:00",
+      "updated_at": "2026-03-17T22:10:06.939415+00:00"
+    },
+    {
+      "id": "b44afb80-dbc0-4cff-b26b-80d54a6f9cb1",
+      "assignment_id": "19f90795-845f-4092-84b8-484346df32a5",
+      "field_id": "54286a96-b76c-430c-b537-b6628735bb16",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "1",
+      "time": null,
+      "created_at": "2026-03-17T22:09:16.804988+00:00",
+      "updated_at": "2026-03-17T22:10:06.884176+00:00"
+    },
+    {
+      "id": "a8f58f7d-ba1a-45d4-8932-0d1f34b39427",
+      "assignment_id": "19f90795-845f-4092-84b8-484346df32a5",
+      "field_id": "6fd97eef-985d-4944-9835-5b8478936d83",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "2",
+      "time": null,
+      "created_at": "2026-03-17T22:09:30.446076+00:00",
+      "updated_at": "2026-03-17T22:10:06.877387+00:00"
+    },
+    {
+      "id": "40dad493-3a09-40f0-b942-dbd224e4e7f5",
+      "assignment_id": "19f90795-845f-4092-84b8-484346df32a5",
+      "field_id": "85a64005-de9c-489b-88f0-2f0254b40c8e",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "2",
+      "time": null,
+      "created_at": "2026-03-17T22:09:22.892387+00:00",
+      "updated_at": "2026-03-17T22:10:06.809263+00:00"
+    },
+    {
+      "id": "6a57ad46-e4f1-46d7-a732-14018f340790",
+      "assignment_id": "19f90795-845f-4092-84b8-484346df32a5",
+      "field_id": "a226d828-5ce9-403e-838e-a09afcc7f812",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "me.com 2",
+      "time": null,
+      "created_at": "2026-03-17T22:09:33.102761+00:00",
+      "updated_at": "2026-03-17T22:10:06.738266+00:00"
+    },
+    {
+      "id": "f1270974-0e5c-43fc-b7dc-865813173063",
+      "assignment_id": "19f90795-845f-4092-84b8-484346df32a5",
+      "field_id": "1a31c9d7-68c3-4488-9c32-d528fcc9bf08",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-17T22:09:37.187913+00:00",
+      "updated_at": "2026-03-17T22:10:06.799657+00:00"
+    },
+    {
+      "id": "fa3a0592-f6c0-48af-810b-a6a5e3c91c6d",
+      "assignment_id": "19f90795-845f-4092-84b8-484346df32a5",
+      "field_id": "8264cc14-e9fd-46a2-b0f1-08059bf6ec20",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "me.com 2\n",
+      "time": null,
+      "created_at": "2026-03-17T22:09:50.227897+00:00",
+      "updated_at": "2026-03-17T22:10:06.899252+00:00"
+    },
+    {
+      "id": "3eb16869-f4fa-4fde-9ebd-bf2007d02527",
+      "assignment_id": "19f90795-845f-4092-84b8-484346df32a5",
+      "field_id": "e6d3120b-04f8-4c69-bd52-10ff43285aad",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "me.com 2",
+      "time": null,
+      "created_at": "2026-03-17T22:09:40.450239+00:00",
+      "updated_at": "2026-03-17T22:10:06.845537+00:00"
+    },
+    {
+      "id": "9aab17b7-2c39-4fde-a1cb-96907ed8b082",
+      "assignment_id": "19f90795-845f-4092-84b8-484346df32a5",
+      "field_id": "948ceb1c-43da-40b7-83ed-e8b6fe0a6ca6",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-17T22:09:42.363945+00:00",
+      "updated_at": "2026-03-17T22:10:06.76965+00:00"
+    },
+    {
+      "id": "d239acc4-a025-4b0d-9746-aa3205de966b",
+      "assignment_id": "19f90795-845f-4092-84b8-484346df32a5",
+      "field_id": "955a26fd-6aa8-4528-bc4d-e94bd42a877f",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "me.com 2\n",
+      "time": null,
+      "created_at": "2026-03-17T22:09:55.023563+00:00",
+      "updated_at": "2026-03-17T22:10:06.868482+00:00"
+    },
+    {
+      "id": "7ecb7644-e7ed-4c9b-a1f2-6bb85aac110d",
+      "assignment_id": "19f90795-845f-4092-84b8-484346df32a5",
+      "field_id": "c536dacd-8b0b-4987-ac45-10d23c71f405",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "me.com 2",
+      "time": null,
+      "created_at": "2026-03-17T22:09:45.337187+00:00",
+      "updated_at": "2026-03-17T22:10:06.831936+00:00"
+    },
+    {
+      "id": "90dddb31-a076-4a7a-bc68-b1a24dc14df0",
+      "assignment_id": "19f90795-845f-4092-84b8-484346df32a5",
+      "field_id": "c48e66a9-d6a1-400f-aacf-8a7c8c5b6f1e",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "2",
+      "time": null,
+      "created_at": "2026-03-17T22:09:47.038765+00:00",
+      "updated_at": "2026-03-17T22:10:06.743913+00:00"
+    },
+    {
+      "id": "c583110f-4f70-4cfb-a6d4-82a3603e5952",
+      "assignment_id": "19f90795-845f-4092-84b8-484346df32a5",
+      "field_id": "a05a0bcd-f0c5-40f4-a163-ea6af5fd8796",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "me.com 2",
+      "time": null,
+      "created_at": "2026-03-17T22:10:00.486927+00:00",
+      "updated_at": "2026-03-17T22:10:06.809114+00:00"
+    },
+    {
+      "id": "1ffa1d5c-6c32-4b2d-b8cf-2571df700658",
+      "assignment_id": "19f90795-845f-4092-84b8-484346df32a5",
+      "field_id": "95633d19-6118-440f-91c0-57fd3c81409e",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-17T22:09:51.806619+00:00",
+      "updated_at": "2026-03-17T22:10:06.859009+00:00"
+    },
+    {
+      "id": "0ec84a1b-bfc5-40fd-a96c-e44eddf33f22",
+      "assignment_id": "19f90795-845f-4092-84b8-484346df32a5",
+      "field_id": "9e00710e-16a3-4b4d-85dd-76e99a0a4572",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "me.com 2",
+      "time": null,
+      "created_at": "2026-03-17T22:10:06.080419+00:00",
+      "updated_at": "2026-03-17T22:10:06.994361+00:00"
+    },
+    {
+      "id": "2e00a7b6-2ed6-4bc4-b885-ae8c6e9e3921",
+      "assignment_id": "19f90795-845f-4092-84b8-484346df32a5",
+      "field_id": "908e704e-d960-4f1d-837b-c6a575f3844a",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "2",
+      "time": null,
+      "created_at": "2026-03-17T22:09:56.733403+00:00",
+      "updated_at": "2026-03-17T22:10:06.807038+00:00"
+    },
+    {
+      "id": "082519b6-41ea-4809-b764-7aaff74a29c7",
+      "assignment_id": "19f90795-845f-4092-84b8-484346df32a5",
+      "field_id": "babf71ea-b327-483a-a27e-f397ed2bbe9f",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-17T22:10:02.843442+00:00",
+      "updated_at": "2026-03-17T22:10:06.757102+00:00"
+    },
+    {
+      "id": "57a359a5-126c-4770-8d8d-e1113edb08a4",
+      "assignment_id": "f3865332-686f-4e21-aaaa-408177398304",
+      "field_id": "54286a96-b76c-430c-b537-b6628735bb16",
+      "user_id": "afaab69e-063a-4e64-862a-56434b784fca",
+      "value": "1",
+      "time": null,
+      "created_at": "2026-03-18T10:39:41.993673+00:00",
+      "updated_at": "2026-03-18T10:40:13.131337+00:00"
+    },
+    {
+      "id": "17550577-5083-40b8-afd7-4c03b8881c8c",
+      "assignment_id": "f3865332-686f-4e21-aaaa-408177398304",
+      "field_id": "948ceb1c-43da-40b7-83ed-e8b6fe0a6ca6",
+      "user_id": "afaab69e-063a-4e64-862a-56434b784fca",
+      "value": "1",
+      "time": null,
+      "created_at": "2026-03-18T10:39:55.006849+00:00",
+      "updated_at": "2026-03-18T10:40:13.197136+00:00"
+    },
+    {
+      "id": "c0985781-3cbc-4318-bc70-242fe5624ad7",
+      "assignment_id": "f3865332-686f-4e21-aaaa-408177398304",
+      "field_id": "9e00710e-16a3-4b4d-85dd-76e99a0a4572",
+      "user_id": "afaab69e-063a-4e64-862a-56434b784fca",
+      "value": "jlkjlkj",
+      "time": null,
+      "created_at": "2026-03-18T10:40:12.027071+00:00",
+      "updated_at": "2026-03-18T10:40:13.230753+00:00"
+    },
+    {
+      "id": "9489960f-9f00-47cb-9339-e9d6e7b3b392",
+      "assignment_id": "f3865332-686f-4e21-aaaa-408177398304",
+      "field_id": "85a64005-de9c-489b-88f0-2f0254b40c8e",
+      "user_id": "afaab69e-063a-4e64-862a-56434b784fca",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-18T10:39:45.222817+00:00",
+      "updated_at": "2026-03-18T10:40:13.896994+00:00"
+    },
+    {
+      "id": "135e3270-491f-4a0f-81dc-29fb248457c1",
+      "assignment_id": "f3865332-686f-4e21-aaaa-408177398304",
+      "field_id": "c48e66a9-d6a1-400f-aacf-8a7c8c5b6f1e",
+      "user_id": "afaab69e-063a-4e64-862a-56434b784fca",
+      "value": "2",
+      "time": null,
+      "created_at": "2026-03-18T10:39:57.790351+00:00",
+      "updated_at": "2026-03-18T10:40:13.23334+00:00"
+    },
+    {
+      "id": "196324e8-14a4-4d8b-b150-11ac824d690b",
+      "assignment_id": "f3865332-686f-4e21-aaaa-408177398304",
+      "field_id": "e549780c-67b7-42f3-8b22-86df34fdd2ec",
+      "user_id": "afaab69e-063a-4e64-862a-56434b784fca",
+      "value": "fghjkl",
+      "time": null,
+      "created_at": "2026-03-18T10:39:48.203358+00:00",
+      "updated_at": "2026-03-18T10:40:13.218507+00:00"
+    },
+    {
+      "id": "dda0b33b-58a8-439a-b679-ed11e2014348",
+      "assignment_id": "f3865332-686f-4e21-aaaa-408177398304",
+      "field_id": "95633d19-6118-440f-91c0-57fd3c81409e",
+      "user_id": "afaab69e-063a-4e64-862a-56434b784fca",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-18T10:40:02.40203+00:00",
+      "updated_at": "2026-03-18T10:40:13.178039+00:00"
+    },
+    {
+      "id": "792ae9b5-3abc-44f4-9424-a31ca533ee0e",
+      "assignment_id": "f3865332-686f-4e21-aaaa-408177398304",
+      "field_id": "6fd97eef-985d-4944-9835-5b8478936d83",
+      "user_id": "afaab69e-063a-4e64-862a-56434b784fca",
+      "value": "4",
+      "time": null,
+      "created_at": "2026-03-18T10:39:49.509599+00:00",
+      "updated_at": "2026-03-18T10:40:13.939716+00:00"
+    },
+    {
+      "id": "87378d0f-db38-429a-8d0f-dcc3c614f408",
+      "assignment_id": "f3865332-686f-4e21-aaaa-408177398304",
+      "field_id": "908e704e-d960-4f1d-837b-c6a575f3844a",
+      "user_id": "afaab69e-063a-4e64-862a-56434b784fca",
+      "value": "4",
+      "time": null,
+      "created_at": "2026-03-18T10:40:05.081761+00:00",
+      "updated_at": "2026-03-18T10:40:13.970232+00:00"
+    },
+    {
+      "id": "31df6ba8-10d1-4441-bd89-5a397b10a965",
+      "assignment_id": "f3865332-686f-4e21-aaaa-408177398304",
+      "field_id": "1a31c9d7-68c3-4488-9c32-d528fcc9bf08",
+      "user_id": "afaab69e-063a-4e64-862a-56434b784fca",
+      "value": "0",
+      "time": null,
+      "created_at": "2026-03-18T10:39:51.902746+00:00",
+      "updated_at": "2026-03-18T10:40:13.274874+00:00"
+    },
+    {
+      "id": "1a64e8c2-ee0e-4d3d-9cf3-58145d281270",
+      "assignment_id": "f3865332-686f-4e21-aaaa-408177398304",
+      "field_id": "babf71ea-b327-483a-a27e-f397ed2bbe9f",
+      "user_id": "afaab69e-063a-4e64-862a-56434b784fca",
+      "value": "0",
+      "time": null,
+      "created_at": "2026-03-18T10:40:08.171332+00:00",
+      "updated_at": "2026-03-18T10:40:13.944538+00:00"
+    },
+    {
+      "id": "16fa955d-7936-4883-87a6-69f400ec346e",
+      "assignment_id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "field_id": "54286a96-b76c-430c-b537-b6628735bb16",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-17T22:08:23.108103+00:00",
+      "updated_at": "2026-03-17T22:09:03.708529+00:00"
+    },
+    {
+      "id": "31ba065f-cf57-40dd-9c46-37a4fac1eca1",
+      "assignment_id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "field_id": "6fd97eef-985d-4944-9835-5b8478936d83",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "1",
+      "time": null,
+      "created_at": "2026-03-17T22:08:35.917963+00:00",
+      "updated_at": "2026-03-17T22:09:03.843751+00:00"
+    },
+    {
+      "id": "779fbc41-1422-47cc-8bac-576a98c03fa5",
+      "assignment_id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "field_id": "b0ed538e-fcbe-4ed4-81c6-629bf5d88cbd",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "me.com",
+      "time": null,
+      "created_at": "2026-03-17T22:08:26.989245+00:00",
+      "updated_at": "2026-03-17T22:09:03.734907+00:00"
+    },
+    {
+      "id": "fc8c5f74-8722-4258-aca0-6fc19bc7793d",
+      "assignment_id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "field_id": "e549780c-67b7-42f3-8b22-86df34fdd2ec",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "me.com",
+      "time": null,
+      "created_at": "2026-03-17T22:08:31.241396+00:00",
+      "updated_at": "2026-03-17T22:09:04.575153+00:00"
+    },
+    {
+      "id": "67024a70-7b08-41cf-8707-c6df42568ca8",
+      "assignment_id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "field_id": "a05a0bcd-f0c5-40f4-a163-ea6af5fd8796",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "me.com",
+      "time": null,
+      "created_at": "2026-03-17T22:08:58.640748+00:00",
+      "updated_at": "2026-03-17T22:09:03.869867+00:00"
+    },
+    {
+      "id": "0453e036-8223-4ff0-892d-aa318f0d4fdf",
+      "assignment_id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "field_id": "85a64005-de9c-489b-88f0-2f0254b40c8e",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-17T22:08:31.736621+00:00",
+      "updated_at": "2026-03-17T22:09:03.813804+00:00"
+    },
+    {
+      "id": "6a54f803-3b34-4d31-8473-9edc735a9e68",
+      "assignment_id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "field_id": "a226d828-5ce9-403e-838e-a09afcc7f812",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "me.com",
+      "time": null,
+      "created_at": "2026-03-17T22:08:35.742405+00:00",
+      "updated_at": "2026-03-17T22:09:03.843643+00:00"
+    },
+    {
+      "id": "db84460e-f397-4ef1-befe-b30c041c4f98",
+      "assignment_id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "field_id": "95633d19-6118-440f-91c0-57fd3c81409e",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "4",
+      "time": null,
+      "created_at": "2026-03-17T22:08:51.339954+00:00",
+      "updated_at": "2026-03-17T22:09:03.861229+00:00"
+    },
+    {
+      "id": "a792c275-dae2-4748-8fd4-028f3131ad28",
+      "assignment_id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "field_id": "1a31c9d7-68c3-4488-9c32-d528fcc9bf08",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "1",
+      "time": null,
+      "created_at": "2026-03-17T22:08:38.598477+00:00",
+      "updated_at": "2026-03-17T22:09:04.030587+00:00"
+    },
+    {
+      "id": "962bc120-d75d-4088-9fa7-a6fffc5f4a95",
+      "assignment_id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "field_id": "8264cc14-e9fd-46a2-b0f1-08059bf6ec20",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "me.com",
+      "time": null,
+      "created_at": "2026-03-17T22:08:49.778315+00:00",
+      "updated_at": "2026-03-17T22:09:04.675326+00:00"
+    },
+    {
+      "id": "fcd2438a-8c08-47ae-89d0-0c8959a228c8",
+      "assignment_id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "field_id": "e6d3120b-04f8-4c69-bd52-10ff43285aad",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "me.com",
+      "time": null,
+      "created_at": "2026-03-17T22:08:41.065319+00:00",
+      "updated_at": "2026-03-17T22:09:03.781995+00:00"
+    },
+    {
+      "id": "01c04f5f-117c-485b-843d-bce936ab8550",
+      "assignment_id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "field_id": "c536dacd-8b0b-4987-ac45-10d23c71f405",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "me.com",
+      "time": null,
+      "created_at": "2026-03-17T22:08:45.575612+00:00",
+      "updated_at": "2026-03-17T22:09:03.744894+00:00"
+    },
+    {
+      "id": "a31f980e-eccb-4567-80bf-e5850b7d6c70",
+      "assignment_id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "field_id": "948ceb1c-43da-40b7-83ed-e8b6fe0a6ca6",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-17T22:08:42.830765+00:00",
+      "updated_at": "2026-03-17T22:09:04.676956+00:00"
+    },
+    {
+      "id": "03f17abc-1671-4863-af3a-adf9e3468c2d",
+      "assignment_id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "field_id": "c48e66a9-d6a1-400f-aacf-8a7c8c5b6f1e",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "1",
+      "time": null,
+      "created_at": "2026-03-17T22:08:47.165424+00:00",
+      "updated_at": "2026-03-17T22:09:03.810404+00:00"
+    },
+    {
+      "id": "03e5ca86-a88d-4292-af57-0520488e89dc",
+      "assignment_id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "field_id": "955a26fd-6aa8-4528-bc4d-e94bd42a877f",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "me.com",
+      "time": null,
+      "created_at": "2026-03-17T22:08:54.165392+00:00",
+      "updated_at": "2026-03-17T22:09:03.725352+00:00"
+    },
+    {
+      "id": "e3019bc7-1e87-4526-be13-0104cb47ef16",
+      "assignment_id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "field_id": "908e704e-d960-4f1d-837b-c6a575f3844a",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-17T22:08:56.114612+00:00",
+      "updated_at": "2026-03-17T22:09:03.777292+00:00"
+    },
+    {
+      "id": "c77b0452-37a2-420c-aa54-cd4e72f5b6a7",
+      "assignment_id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "field_id": "babf71ea-b327-483a-a27e-f397ed2bbe9f",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-17T22:09:00.55779+00:00",
+      "updated_at": "2026-03-17T22:09:03.676667+00:00"
+    },
+    {
+      "id": "ff58f6a9-77a0-4db3-880e-e6afba285970",
+      "assignment_id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "field_id": "9e00710e-16a3-4b4d-85dd-76e99a0a4572",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "value": "me.com",
+      "time": null,
+      "created_at": "2026-03-17T22:09:03.309364+00:00",
+      "updated_at": "2026-03-17T22:09:04.608084+00:00"
+    },
+    {
+      "id": "3cf846da-b664-490d-aff8-3290c41bb0d8",
+      "assignment_id": "91c630e6-d1c4-40f0-b69b-fa52c67eb302",
+      "field_id": "1a31c9d7-68c3-4488-9c32-d528fcc9bf08",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "value": "2",
+      "time": null,
+      "created_at": "2026-03-18T10:32:45.400292+00:00",
+      "updated_at": "2026-03-18T10:33:07.830301+00:00"
+    },
+    {
+      "id": "446d0b47-9c28-478b-8d24-25124617a6c4",
+      "assignment_id": "91c630e6-d1c4-40f0-b69b-fa52c67eb302",
+      "field_id": "955a26fd-6aa8-4528-bc4d-e94bd42a877f",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "value": "kjhkjh",
+      "time": null,
+      "created_at": "2026-03-18T10:33:00.395951+00:00",
+      "updated_at": "2026-03-18T10:33:07.973874+00:00"
+    },
+    {
+      "id": "d76dc934-fa15-4ca4-aa4f-90795f926ead",
+      "assignment_id": "91c630e6-d1c4-40f0-b69b-fa52c67eb302",
+      "field_id": "6fd97eef-985d-4944-9835-5b8478936d83",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "value": "4",
+      "time": null,
+      "created_at": "2026-03-18T10:32:42.645372+00:00",
+      "updated_at": "2026-03-18T10:33:07.870317+00:00"
+    },
+    {
+      "id": "195dc043-a282-406c-9022-be778893aac5",
+      "assignment_id": "91c630e6-d1c4-40f0-b69b-fa52c67eb302",
+      "field_id": "95633d19-6118-440f-91c0-57fd3c81409e",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "value": "0",
+      "time": null,
+      "created_at": "2026-03-18T10:32:57.233533+00:00",
+      "updated_at": "2026-03-18T10:33:07.755468+00:00"
+    },
+    {
+      "id": "78c1ec53-121d-4c09-8588-cf02c0ae1aed",
+      "assignment_id": "91c630e6-d1c4-40f0-b69b-fa52c67eb302",
+      "field_id": "948ceb1c-43da-40b7-83ed-e8b6fe0a6ca6",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "value": "1",
+      "time": null,
+      "created_at": "2026-03-18T10:32:48.415007+00:00",
+      "updated_at": "2026-03-18T10:33:07.927769+00:00"
+    },
+    {
+      "id": "cc6f7810-6b0c-448f-b2d6-9d28bb3a0984",
+      "assignment_id": "91c630e6-d1c4-40f0-b69b-fa52c67eb302",
+      "field_id": "85a64005-de9c-489b-88f0-2f0254b40c8e",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-18T10:32:39.772463+00:00",
+      "updated_at": "2026-03-18T10:33:07.855287+00:00"
+    },
+    {
+      "id": "7be872f6-f8df-4ce3-8d4b-4ffd92380d0b",
+      "assignment_id": "91c630e6-d1c4-40f0-b69b-fa52c67eb302",
+      "field_id": "c48e66a9-d6a1-400f-aacf-8a7c8c5b6f1e",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-18T10:32:53.605428+00:00",
+      "updated_at": "2026-03-18T10:33:07.926767+00:00"
+    },
+    {
+      "id": "5386df12-af89-4ad5-8c9a-9262bd343ded",
+      "assignment_id": "91c630e6-d1c4-40f0-b69b-fa52c67eb302",
+      "field_id": "54286a96-b76c-430c-b537-b6628735bb16",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "value": "2",
+      "time": null,
+      "created_at": "2026-03-18T10:32:37.070266+00:00",
+      "updated_at": "2026-03-18T10:33:07.869259+00:00"
+    },
+    {
+      "id": "4ac2ddee-d1df-44d9-b346-a3769cfbed3f",
+      "assignment_id": "91c630e6-d1c4-40f0-b69b-fa52c67eb302",
+      "field_id": "c536dacd-8b0b-4987-ac45-10d23c71f405",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "value": "jlkjlkj",
+      "time": null,
+      "created_at": "2026-03-18T10:32:51.974998+00:00",
+      "updated_at": "2026-03-18T10:33:07.861972+00:00"
+    },
+    {
+      "id": "26c8bfb0-b736-4afa-9cec-c69724864b47",
+      "assignment_id": "91c630e6-d1c4-40f0-b69b-fa52c67eb302",
+      "field_id": "babf71ea-b327-483a-a27e-f397ed2bbe9f",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "value": "3",
+      "time": null,
+      "created_at": "2026-03-18T10:33:06.278252+00:00",
+      "updated_at": "2026-03-18T10:33:07.905536+00:00"
+    },
+    {
+      "id": "b3d3ed1b-35f0-46a6-b9fc-f06583985ed0",
+      "assignment_id": "91c630e6-d1c4-40f0-b69b-fa52c67eb302",
+      "field_id": "908e704e-d960-4f1d-837b-c6a575f3844a",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "value": "4",
+      "time": null,
+      "created_at": "2026-03-18T10:33:03.152091+00:00",
+      "updated_at": "2026-03-18T10:33:07.908595+00:00"
+    }
+  ],
+  "report_data": [
+    {
+      "id": "d9ed3e61-c611-4fbf-a582-eb647bf9c2a9",
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "overall_score": 3.2,
+      "dimension_scores": {
+        "group_id": "792e2b96-1e95-4494-a537-f21342d9e65b",
+        "target_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+        "dimensions": [
+          {
+            "geonorm": 2.5,
+            "feedback": {
+              "Self": [
+                "me.com 2"
+              ],
+              "Others": [
+                "Ducky",
+                "Donnie isn't good at figuring out how to solve problems. He's a duck.",
+                "jlkjlkj"
+              ],
+              "Direct Report": [
+                "Cheese"
+              ]
+            },
+            "dimension_id": "62e53d02-20d0-42e8-b397-5fab37ea6bec",
+            "overall_score": 1.8333333333333333,
+            "text_feedback": [
+              "me.com 2",
+              "Cheese",
+              "Ducky",
+              "Donnie isn't good at figuring out how to solve problems. He's a duck.",
+              "jlkjlkj"
+            ],
+            "dimension_code": "CPS",
+            "dimension_name": "Creative Problem Solving",
+            "rater_breakdown": {
+              "peer": 1,
+              "self": 2,
+              "other": null,
+              "all_raters": 1.8333333333333333,
+              "supervisor": 2,
+              "direct_report": 2.5
+            },
+            "improvement_needed": true,
+            "industry_benchmark": 4.12,
+            "geonorm_participant_count": 10
+          },
+          {
+            "geonorm": 3.7,
+            "feedback": {
+              "Self": [
+                "me.com 2\n"
+              ],
+              "Others": [
+                "Ducky",
+                "All the other ducks follow Donald. Even if it's in the wrong direction."
+              ],
+              "Direct Report": [
+                "cheese"
+              ]
+            },
+            "dimension_id": "7df7717b-58c4-4322-9a1e-4309094dcc83",
+            "overall_score": 3.3333333333333335,
+            "text_feedback": [
+              "me.com 2\n",
+              "cheese",
+              "Ducky",
+              "All the other ducks follow Donald. Even if it's in the wrong direction."
+            ],
+            "dimension_code": "LA",
+            "dimension_name": "Leadership Adaptability",
+            "rater_breakdown": {
+              "peer": 3,
+              "self": 3,
+              "other": null,
+              "all_raters": 3.3333333333333335,
+              "supervisor": 3,
+              "direct_report": 4
+            },
+            "improvement_needed": true,
+            "industry_benchmark": 3.98,
+            "geonorm_participant_count": 10
+          },
+          {
+            "geonorm": 3.8,
+            "feedback": {
+              "Self": [
+                "me.com 2"
+              ],
+              "Others": [
+                "Ducky",
+                "Ducks always fly in a skein so he collaborates because it's in his DNA."
+              ],
+              "Direct Report": [
+                "cheese"
+              ]
+            },
+            "dimension_id": "2ee4780a-673c-4fc7-9092-00807b62aedd",
+            "overall_score": 3.5,
+            "text_feedback": [
+              "me.com 2",
+              "cheese",
+              "Ducky",
+              "Ducks always fly in a skein so he collaborates because it's in his DNA."
+            ],
+            "dimension_code": "CO",
+            "dimension_name": "Collaboration",
+            "rater_breakdown": {
+              "peer": 3,
+              "self": 3,
+              "other": null,
+              "all_raters": 3.5,
+              "supervisor": 2,
+              "direct_report": 5
+            },
+            "improvement_needed": true,
+            "industry_benchmark": 4.22,
+            "geonorm_participant_count": 10
+          },
+          {
+            "geonorm": 3,
+            "feedback": {
+              "Self": [
+                "me.com 2"
+              ],
+              "Others": [
+                "Ducky",
+                "He's always cleaning his own feathers."
+              ],
+              "Direct Report": [
+                "cheese"
+              ]
+            },
+            "dimension_id": "a206fefd-f36d-42fd-882b-9230c9f0c0eb",
+            "overall_score": 3.6666666666666665,
+            "text_feedback": [
+              "me.com 2",
+              "cheese",
+              "Ducky",
+              "He's always cleaning his own feathers."
+            ],
+            "dimension_code": "SD",
+            "dimension_name": "Self-Development",
+            "rater_breakdown": {
+              "peer": 4.5,
+              "self": 4,
+              "other": null,
+              "all_raters": 3.6666666666666665,
+              "supervisor": 4,
+              "direct_report": 2.5
+            },
+            "improvement_needed": true,
+            "industry_benchmark": 4.01,
+            "geonorm_participant_count": 10
+          },
+          {
+            "geonorm": 2.9,
+            "feedback": {
+              "Self": [
+                "me.com 2"
+              ],
+              "Others": [
+                "Ducky",
+                "He's usually at the back of the wedge and he holds others back too."
+              ],
+              "Direct Report": [
+                "cheese",
+                "jlkjlkj"
+              ]
+            },
+            "dimension_id": "cc64fff9-8f0e-48d4-9160-7511b15d1363",
+            "overall_score": 3.3333333333333335,
+            "text_feedback": [
+              "me.com 2",
+              "cheese",
+              "jlkjlkj",
+              "Ducky",
+              "He's usually at the back of the wedge and he holds others back too."
+            ],
+            "dimension_code": "PM",
+            "dimension_name": "Performance Management",
+            "rater_breakdown": {
+              "peer": 3.5,
+              "self": 4,
+              "other": null,
+              "all_raters": 3.3333333333333335,
+              "supervisor": 2,
+              "direct_report": 3.5
+            },
+            "improvement_needed": true,
+            "industry_benchmark": 4.34,
+            "geonorm_participant_count": 10
+          },
+          {
+            "geonorm": 3,
+            "feedback": {
+              "Self": [
+                "me.com 2\n"
+              ],
+              "Others": [
+                "Ducky",
+                "He does a good job negotiating with Mr. Disney."
+              ],
+              "Direct Report": [
+                "cheese"
+              ]
+            },
+            "dimension_id": "26b99b7f-b9a0-4a6d-bed9-6a0d61edf079",
+            "overall_score": 3.3333333333333335,
+            "text_feedback": [
+              "me.com 2\n",
+              "cheese",
+              "Ducky",
+              "He does a good job negotiating with Mr. Disney."
+            ],
+            "dimension_code": "BM",
+            "dimension_name": "Business Mindset",
+            "rater_breakdown": {
+              "peer": 2,
+              "self": 3,
+              "other": null,
+              "all_raters": 3.3333333333333335,
+              "supervisor": 5,
+              "direct_report": 4
+            },
+            "improvement_needed": true,
+            "industry_benchmark": 4.25,
+            "geonorm_participant_count": 10
+          },
+          {
+            "geonorm": 3.1,
+            "feedback": {
+              "Self": [
+                "me.com 2\n"
+              ],
+              "Others": [
+                "Ducky",
+                "There are no customers, only hunters."
+              ],
+              "Direct Report": [
+                "kjhkjh",
+                "cheese"
+              ]
+            },
+            "dimension_id": "1f295813-e42b-444b-858e-6dfafbbf3262",
+            "overall_score": 2.8333333333333335,
+            "text_feedback": [
+              "me.com 2\n",
+              "kjhkjh",
+              "cheese",
+              "Ducky",
+              "There are no customers, only hunters."
+            ],
+            "dimension_code": "CF",
+            "dimension_name": "Customer Focus",
+            "rater_breakdown": {
+              "peer": 2.5,
+              "self": 4,
+              "other": null,
+              "all_raters": 2.8333333333333335,
+              "supervisor": 4,
+              "direct_report": 2
+            },
+            "improvement_needed": true,
+            "industry_benchmark": 4.36,
+            "geonorm_participant_count": 10
+          },
+          {
+            "geonorm": 2.9,
+            "feedback": {
+              "Self": [
+                "me.com 2"
+              ],
+              "Others": [
+                "Ducky",
+                "Quacks louder than the other ducks."
+              ],
+              "Direct Report": [
+                "cheese"
+              ]
+            },
+            "dimension_id": "298e69b7-25bb-4e30-ac33-4dac9556a8a1",
+            "overall_score": 3.1666666666666665,
+            "text_feedback": [
+              "me.com 2",
+              "cheese",
+              "Ducky",
+              "Quacks louder than the other ducks."
+            ],
+            "dimension_code": "COM",
+            "dimension_name": "Communication",
+            "rater_breakdown": {
+              "peer": 3.5,
+              "self": 3,
+              "other": null,
+              "all_raters": 3.1666666666666665,
+              "supervisor": 2,
+              "direct_report": 3.5
+            },
+            "improvement_needed": true,
+            "industry_benchmark": 4.03,
+            "geonorm_participant_count": 10
+          },
+          {
+            "geonorm": 3,
+            "feedback": {
+              "Self": [
+                "me.com 2"
+              ],
+              "Others": [
+                "I've seen him push other ducks underwater when they are paddling around. For no reason. Just to be mean. That's just not right.",
+                "Ducky"
+              ],
+              "Direct Report": [
+                "cheese"
+              ]
+            },
+            "dimension_id": "b57fdc8d-7072-4340-ad25-5e90149614fe",
+            "overall_score": 3.8333333333333335,
+            "text_feedback": [
+              "me.com 2",
+              "cheese",
+              "I've seen him push other ducks underwater when they are paddling around. For no reason. Just to be mean. That's just not right.",
+              "Ducky"
+            ],
+            "dimension_code": "EI",
+            "dimension_name": "Ethics & Integrity",
+            "rater_breakdown": {
+              "peer": 2.5,
+              "self": 4,
+              "other": null,
+              "all_raters": 3.8333333333333335,
+              "supervisor": 5,
+              "direct_report": 4.5
+            },
+            "improvement_needed": true,
+            "industry_benchmark": 4.58,
+            "geonorm_participant_count": 10
+          }
+        ],
+        "group_name": "Don Duck",
+        "target_name": "Don Duck",
+        "generated_at": "2026-03-18T14:12:00.741Z",
+        "target_email": "j.craig.wallace@me.com",
+        "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+        "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+        "overall_score": 3.2037037037037037,
+        "assessment_title": "Involved-360 - Frontier"
+      },
+      "feedback_assigned": [],
+      "geonorm_data": null,
+      "calculated_at": "2026-03-18T14:12:00.782+00:00",
+      "updated_at": "2026-03-18T14:12:13.245499+00:00",
+      "pdf_status": "ready",
+      "pdf_storage_path": "3eda9e70-c171-475b-820e-295910470e0b/v1.pdf",
+      "pdf_generated_at": "2026-03-18T14:12:13.206+00:00",
+      "pdf_version": 1,
+      "pdf_last_error": null,
+      "pdf_job_id": "7d3b2d36-82f9-4308-9797-628bbe6801ef"
+    },
+    {
+      "id": "10174d83-fa91-46fe-b56c-0f4139332255",
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "overall_score": 3.28,
+      "dimension_scores": {
+        "partial": true,
+        "group_id": "626ebd9d-302d-4888-9ca7-5426fb11dbf3",
+        "target_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+        "dimensions": [
+          {
+            "geonorm": 3.1666666666666665,
+            "feedback": {
+              "Self": [],
+              "Others": [
+                "Craigy",
+                "me.com"
+              ],
+              "Direct Report": [
+                "What happened to the explanations around creative problem solving?",
+                "yahoo"
+              ]
+            },
+            "dimension_id": "62e53d02-20d0-42e8-b397-5fab37ea6bec",
+            "overall_score": 3.75,
+            "text_feedback": [
+              "What happened to the explanations around creative problem solving?",
+              "yahoo",
+              "Craigy",
+              "me.com"
+            ],
+            "dimension_code": "CPS",
+            "dimension_name": "Creative Problem Solving",
+            "rater_breakdown": {
+              "peer": 5,
+              "self": null,
+              "other": null,
+              "all_raters": 3.75,
+              "supervisor": 4,
+              "direct_report": 3
+            },
+            "improvement_needed": true,
+            "industry_benchmark": 4.12,
+            "geonorm_participant_count": 6
+          },
+          {
+            "geonorm": 4,
+            "feedback": {
+              "Self": [],
+              "Others": [
+                "Craigy",
+                "me.com"
+              ],
+              "Direct Report": [
+                "Yup",
+                "yahoo"
+              ]
+            },
+            "dimension_id": "7df7717b-58c4-4322-9a1e-4309094dcc83",
+            "overall_score": 4.5,
+            "text_feedback": [
+              "Yup",
+              "yahoo",
+              "Craigy",
+              "me.com"
+            ],
+            "dimension_code": "LA",
+            "dimension_name": "Leadership Adaptability",
+            "rater_breakdown": {
+              "peer": 5,
+              "self": null,
+              "other": null,
+              "all_raters": 4.5,
+              "supervisor": 4,
+              "direct_report": 4.5
+            },
+            "improvement_needed": false,
+            "industry_benchmark": 3.98,
+            "geonorm_participant_count": 6
+          },
+          {
+            "geonorm": 3.1666666666666665,
+            "feedback": {
+              "Self": [],
+              "Others": [
+                "Craigy",
+                "me.com"
+              ],
+              "Direct Report": [
+                "Works well with others",
+                "yahoo"
+              ]
+            },
+            "dimension_id": "2ee4780a-673c-4fc7-9092-00807b62aedd",
+            "overall_score": 3.5,
+            "text_feedback": [
+              "Works well with others",
+              "yahoo",
+              "Craigy",
+              "me.com"
+            ],
+            "dimension_code": "CO",
+            "dimension_name": "Collaboration",
+            "rater_breakdown": {
+              "peer": 5,
+              "self": null,
+              "other": null,
+              "all_raters": 3.5,
+              "supervisor": 2,
+              "direct_report": 3.5
+            },
+            "improvement_needed": true,
+            "industry_benchmark": 4.22,
+            "geonorm_participant_count": 6
+          },
+          {
+            "geonorm": 3.3333333333333335,
+            "feedback": {
+              "Self": [],
+              "Others": [
+                "Craigy\n",
+                "me.com"
+              ],
+              "Direct Report": [
+                "yahoo"
+              ]
+            },
+            "dimension_id": "a206fefd-f36d-42fd-882b-9230c9f0c0eb",
+            "overall_score": 3,
+            "text_feedback": [
+              "yahoo",
+              "Craigy\n",
+              "me.com"
+            ],
+            "dimension_code": "SD",
+            "dimension_name": "Self-Development",
+            "rater_breakdown": {
+              "peer": 2,
+              "self": null,
+              "other": null,
+              "all_raters": 3,
+              "supervisor": 2,
+              "direct_report": 4
+            },
+            "improvement_needed": true,
+            "industry_benchmark": 4.01,
+            "geonorm_participant_count": 6
+          },
+          {
+            "geonorm": 2.6666666666666665,
+            "feedback": {
+              "Self": [],
+              "Others": [
+                "Craigy\n",
+                "me.com"
+              ],
+              "Direct Report": [
+                "Could be better at reporting progress of team members. Does their work instead of correcting them.",
+                "yahoo"
+              ]
+            },
+            "dimension_id": "cc64fff9-8f0e-48d4-9160-7511b15d1363",
+            "overall_score": 2.5,
+            "text_feedback": [
+              "Could be better at reporting progress of team members. Does their work instead of correcting them.",
+              "yahoo",
+              "Craigy\n",
+              "me.com"
+            ],
+            "dimension_code": "PM",
+            "dimension_name": "Performance Management",
+            "rater_breakdown": {
+              "peer": 2,
+              "self": null,
+              "other": null,
+              "all_raters": 2.5,
+              "supervisor": 4,
+              "direct_report": 2
+            },
+            "improvement_needed": true,
+            "industry_benchmark": 4.34,
+            "geonorm_participant_count": 6
+          },
+          {
+            "geonorm": 3.3333333333333335,
+            "feedback": {
+              "Self": [],
+              "Others": [
+                "Craigy",
+                "me.com"
+              ],
+              "Direct Report": [
+                "At the level expected for a mouse.",
+                "yahoo"
+              ]
+            },
+            "dimension_id": "26b99b7f-b9a0-4a6d-bed9-6a0d61edf079",
+            "overall_score": 3,
+            "text_feedback": [
+              "At the level expected for a mouse.",
+              "yahoo",
+              "Craigy",
+              "me.com"
+            ],
+            "dimension_code": "BM",
+            "dimension_name": "Business Mindset",
+            "rater_breakdown": {
+              "peer": 3,
+              "self": null,
+              "other": null,
+              "all_raters": 3,
+              "supervisor": 2,
+              "direct_report": 3.5
+            },
+            "improvement_needed": true,
+            "industry_benchmark": 4.25,
+            "geonorm_participant_count": 6
+          },
+          {
+            "geonorm": 3.6666666666666665,
+            "feedback": {
+              "Self": [],
+              "Others": [
+                "Craigy",
+                "me.com"
+              ],
+              "Direct Report": [
+                "Cares about the customer but keeps the company's needs in mind.",
+                "yahoo"
+              ]
+            },
+            "dimension_id": "1f295813-e42b-444b-858e-6dfafbbf3262",
+            "overall_score": 3.5,
+            "text_feedback": [
+              "Cares about the customer but keeps the company's needs in mind.",
+              "yahoo",
+              "Craigy",
+              "me.com"
+            ],
+            "dimension_code": "CF",
+            "dimension_name": "Customer Focus",
+            "rater_breakdown": {
+              "peer": 0,
+              "self": null,
+              "other": null,
+              "all_raters": 3.5,
+              "supervisor": 5,
+              "direct_report": 4.5
+            },
+            "improvement_needed": true,
+            "industry_benchmark": 4.36,
+            "geonorm_participant_count": 6
+          },
+          {
+            "geonorm": 2.8333333333333335,
+            "feedback": {
+              "Self": [],
+              "Others": [
+                "me.com",
+                "Craigy"
+              ],
+              "Direct Report": [
+                "Communicates like a champ",
+                "yahoo"
+              ]
+            },
+            "dimension_id": "298e69b7-25bb-4e30-ac33-4dac9556a8a1",
+            "overall_score": 3,
+            "text_feedback": [
+              "Communicates like a champ",
+              "yahoo",
+              "me.com",
+              "Craigy"
+            ],
+            "dimension_code": "COM",
+            "dimension_name": "Communication",
+            "rater_breakdown": {
+              "peer": 0,
+              "self": null,
+              "other": null,
+              "all_raters": 3,
+              "supervisor": 4,
+              "direct_report": 4
+            },
+            "improvement_needed": true,
+            "industry_benchmark": 4.03,
+            "geonorm_participant_count": 6
+          },
+          {
+            "geonorm": 3.3333333333333335,
+            "feedback": {
+              "Self": [],
+              "Others": [
+                "Craigy",
+                "me.com"
+              ],
+              "Direct Report": [
+                "Ethical as far as money can take him.",
+                "yahoo"
+              ]
+            },
+            "dimension_id": "b57fdc8d-7072-4340-ad25-5e90149614fe",
+            "overall_score": 2.75,
+            "text_feedback": [
+              "Ethical as far as money can take him.",
+              "yahoo",
+              "Craigy",
+              "me.com"
+            ],
+            "dimension_code": "EI",
+            "dimension_name": "Ethics & Integrity",
+            "rater_breakdown": {
+              "peer": 0,
+              "self": null,
+              "other": null,
+              "all_raters": 2.75,
+              "supervisor": 4,
+              "direct_report": 3.5
+            },
+            "improvement_needed": true,
+            "industry_benchmark": 4.58,
+            "geonorm_participant_count": 6
+          }
+        ],
+        "group_name": "Mickie Mouse",
+        "target_name": "Mickie Mouse",
+        "generated_at": "2026-03-17T22:31:47.907Z",
+        "target_email": "jeraewallace@yahoo.com",
+        "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+        "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+        "overall_score": 3.2777777777777777,
+        "assessment_title": "Involved-360 - Frontier",
+        "participant_response_summary": {
+          "total": 6,
+          "completed": 4
+        }
+      },
+      "feedback_assigned": [],
+      "geonorm_data": null,
+      "calculated_at": "2026-03-17T22:31:47.974+00:00",
+      "updated_at": "2026-03-17T22:32:08.554014+00:00",
+      "pdf_status": "ready",
+      "pdf_storage_path": "5718f94d-8ce6-4980-94cd-9a652166c913/v1.pdf",
+      "pdf_generated_at": "2026-03-17T22:32:08.527+00:00",
+      "pdf_version": 1,
+      "pdf_last_error": null,
+      "pdf_job_id": "6ba94929-ea7e-4e64-9ff9-00e7c842a417"
+    }
+  ],
+  "assignment_dimension_scores": [
+    {
+      "assignment_id": "19f90795-845f-4092-84b8-484346df32a5",
+      "dimension_id": "26b99b7f-b9a0-4a6d-bed9-6a0d61edf079",
+      "avg_score": 3,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:10:06.994361+00:00"
+    },
+    {
+      "assignment_id": "19f90795-845f-4092-84b8-484346df32a5",
+      "dimension_id": "b57fdc8d-7072-4340-ad25-5e90149614fe",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:10:06.994361+00:00"
+    },
+    {
+      "assignment_id": "19f90795-845f-4092-84b8-484346df32a5",
+      "dimension_id": "62e53d02-20d0-42e8-b397-5fab37ea6bec",
+      "avg_score": 2,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:10:06.994361+00:00"
+    },
+    {
+      "assignment_id": "19f90795-845f-4092-84b8-484346df32a5",
+      "dimension_id": "a206fefd-f36d-42fd-882b-9230c9f0c0eb",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:10:06.994361+00:00"
+    },
+    {
+      "assignment_id": "19f90795-845f-4092-84b8-484346df32a5",
+      "dimension_id": "1f295813-e42b-444b-858e-6dfafbbf3262",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:10:06.994361+00:00"
+    },
+    {
+      "assignment_id": "19f90795-845f-4092-84b8-484346df32a5",
+      "dimension_id": "7df7717b-58c4-4322-9a1e-4309094dcc83",
+      "avg_score": 3,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:10:06.994361+00:00"
+    },
+    {
+      "assignment_id": "19f90795-845f-4092-84b8-484346df32a5",
+      "dimension_id": "cc64fff9-8f0e-48d4-9160-7511b15d1363",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:10:06.994361+00:00"
+    },
+    {
+      "assignment_id": "19f90795-845f-4092-84b8-484346df32a5",
+      "dimension_id": "298e69b7-25bb-4e30-ac33-4dac9556a8a1",
+      "avg_score": 3,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:10:06.994361+00:00"
+    },
+    {
+      "assignment_id": "19f90795-845f-4092-84b8-484346df32a5",
+      "dimension_id": "2ee4780a-673c-4fc7-9092-00807b62aedd",
+      "avg_score": 3,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:10:06.994361+00:00"
+    },
+    {
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "dimension_id": "26b99b7f-b9a0-4a6d-bed9-6a0d61edf079",
+      "avg_score": 5,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T21:54:16.464216+00:00"
+    },
+    {
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "dimension_id": "b57fdc8d-7072-4340-ad25-5e90149614fe",
+      "avg_score": 5,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T21:54:16.464216+00:00"
+    },
+    {
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "dimension_id": "62e53d02-20d0-42e8-b397-5fab37ea6bec",
+      "avg_score": 2,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T21:54:16.464216+00:00"
+    },
+    {
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "dimension_id": "a206fefd-f36d-42fd-882b-9230c9f0c0eb",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T21:54:16.464216+00:00"
+    },
+    {
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "dimension_id": "1f295813-e42b-444b-858e-6dfafbbf3262",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T21:54:16.464216+00:00"
+    },
+    {
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "dimension_id": "7df7717b-58c4-4322-9a1e-4309094dcc83",
+      "avg_score": 3,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T21:54:16.464216+00:00"
+    },
+    {
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "dimension_id": "cc64fff9-8f0e-48d4-9160-7511b15d1363",
+      "avg_score": 2,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T21:54:16.464216+00:00"
+    },
+    {
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "dimension_id": "298e69b7-25bb-4e30-ac33-4dac9556a8a1",
+      "avg_score": 2,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T21:54:16.464216+00:00"
+    },
+    {
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "dimension_id": "2ee4780a-673c-4fc7-9092-00807b62aedd",
+      "avg_score": 2,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T21:54:16.464216+00:00"
+    },
+    {
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "dimension_id": "298e69b7-25bb-4e30-ac33-4dac9556a8a1",
+      "avg_score": 3,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:06:20.976879+00:00"
+    },
+    {
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "dimension_id": "2ee4780a-673c-4fc7-9092-00807b62aedd",
+      "avg_score": 2,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:06:20.976879+00:00"
+    },
+    {
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "dimension_id": "26b99b7f-b9a0-4a6d-bed9-6a0d61edf079",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:06:20.976879+00:00"
+    },
+    {
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "dimension_id": "b57fdc8d-7072-4340-ad25-5e90149614fe",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:06:20.976879+00:00"
+    },
+    {
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "dimension_id": "62e53d02-20d0-42e8-b397-5fab37ea6bec",
+      "avg_score": 2,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:06:20.976879+00:00"
+    },
+    {
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "dimension_id": "a206fefd-f36d-42fd-882b-9230c9f0c0eb",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:06:20.976879+00:00"
+    },
+    {
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "dimension_id": "1f295813-e42b-444b-858e-6dfafbbf3262",
+      "avg_score": 5,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:06:20.976879+00:00"
+    },
+    {
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "dimension_id": "7df7717b-58c4-4322-9a1e-4309094dcc83",
+      "avg_score": 5,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:06:20.976879+00:00"
+    },
+    {
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "dimension_id": "cc64fff9-8f0e-48d4-9160-7511b15d1363",
+      "avg_score": 2,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:06:20.976879+00:00"
+    },
+    {
+      "assignment_id": "73b16b19-9dca-466b-b650-d0fa0e2a2cdc",
+      "dimension_id": "62e53d02-20d0-42e8-b397-5fab37ea6bec",
+      "avg_score": 5,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T21:52:17.827272+00:00"
+    },
+    {
+      "assignment_id": "73b16b19-9dca-466b-b650-d0fa0e2a2cdc",
+      "dimension_id": "a206fefd-f36d-42fd-882b-9230c9f0c0eb",
+      "avg_score": 2,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T21:52:17.827272+00:00"
+    },
+    {
+      "assignment_id": "73b16b19-9dca-466b-b650-d0fa0e2a2cdc",
+      "dimension_id": "1f295813-e42b-444b-858e-6dfafbbf3262",
+      "avg_score": 0,
+      "answer_count": 0,
+      "calculated_at": "2026-03-17T21:52:17.827272+00:00"
+    },
+    {
+      "assignment_id": "73b16b19-9dca-466b-b650-d0fa0e2a2cdc",
+      "dimension_id": "7df7717b-58c4-4322-9a1e-4309094dcc83",
+      "avg_score": 5,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T21:52:17.827272+00:00"
+    },
+    {
+      "assignment_id": "73b16b19-9dca-466b-b650-d0fa0e2a2cdc",
+      "dimension_id": "cc64fff9-8f0e-48d4-9160-7511b15d1363",
+      "avg_score": 2,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T21:52:17.827272+00:00"
+    },
+    {
+      "assignment_id": "73b16b19-9dca-466b-b650-d0fa0e2a2cdc",
+      "dimension_id": "298e69b7-25bb-4e30-ac33-4dac9556a8a1",
+      "avg_score": 0,
+      "answer_count": 0,
+      "calculated_at": "2026-03-17T21:52:17.827272+00:00"
+    },
+    {
+      "assignment_id": "73b16b19-9dca-466b-b650-d0fa0e2a2cdc",
+      "dimension_id": "2ee4780a-673c-4fc7-9092-00807b62aedd",
+      "avg_score": 5,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T21:52:17.827272+00:00"
+    },
+    {
+      "assignment_id": "73b16b19-9dca-466b-b650-d0fa0e2a2cdc",
+      "dimension_id": "26b99b7f-b9a0-4a6d-bed9-6a0d61edf079",
+      "avg_score": 3,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T21:52:17.827272+00:00"
+    },
+    {
+      "assignment_id": "73b16b19-9dca-466b-b650-d0fa0e2a2cdc",
+      "dimension_id": "b57fdc8d-7072-4340-ad25-5e90149614fe",
+      "avg_score": 0,
+      "answer_count": 0,
+      "calculated_at": "2026-03-17T21:52:17.827272+00:00"
+    },
+    {
+      "assignment_id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "dimension_id": "298e69b7-25bb-4e30-ac33-4dac9556a8a1",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:09:04.676956+00:00"
+    },
+    {
+      "assignment_id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "dimension_id": "2ee4780a-673c-4fc7-9092-00807b62aedd",
+      "avg_score": 2,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:09:04.676956+00:00"
+    },
+    {
+      "assignment_id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "dimension_id": "26b99b7f-b9a0-4a6d-bed9-6a0d61edf079",
+      "avg_score": 2,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:09:04.676956+00:00"
+    },
+    {
+      "assignment_id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "dimension_id": "b57fdc8d-7072-4340-ad25-5e90149614fe",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:09:04.676956+00:00"
+    },
+    {
+      "assignment_id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "dimension_id": "62e53d02-20d0-42e8-b397-5fab37ea6bec",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:09:04.676956+00:00"
+    },
+    {
+      "assignment_id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "dimension_id": "a206fefd-f36d-42fd-882b-9230c9f0c0eb",
+      "avg_score": 2,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:09:04.676956+00:00"
+    },
+    {
+      "assignment_id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "dimension_id": "1f295813-e42b-444b-858e-6dfafbbf3262",
+      "avg_score": 5,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:09:04.676956+00:00"
+    },
+    {
+      "assignment_id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "dimension_id": "7df7717b-58c4-4322-9a1e-4309094dcc83",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:09:04.676956+00:00"
+    },
+    {
+      "assignment_id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "dimension_id": "cc64fff9-8f0e-48d4-9160-7511b15d1363",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:09:04.676956+00:00"
+    },
+    {
+      "assignment_id": "814e8e09-485b-497b-ba6e-86aac8dea9bc",
+      "dimension_id": "62e53d02-20d0-42e8-b397-5fab37ea6bec",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:31:45.798304+00:00"
+    },
+    {
+      "assignment_id": "814e8e09-485b-497b-ba6e-86aac8dea9bc",
+      "dimension_id": "a206fefd-f36d-42fd-882b-9230c9f0c0eb",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:31:45.798304+00:00"
+    },
+    {
+      "assignment_id": "814e8e09-485b-497b-ba6e-86aac8dea9bc",
+      "dimension_id": "1f295813-e42b-444b-858e-6dfafbbf3262",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:31:45.798304+00:00"
+    },
+    {
+      "assignment_id": "814e8e09-485b-497b-ba6e-86aac8dea9bc",
+      "dimension_id": "7df7717b-58c4-4322-9a1e-4309094dcc83",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:31:45.798304+00:00"
+    },
+    {
+      "assignment_id": "814e8e09-485b-497b-ba6e-86aac8dea9bc",
+      "dimension_id": "cc64fff9-8f0e-48d4-9160-7511b15d1363",
+      "avg_score": 2,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:31:45.798304+00:00"
+    },
+    {
+      "assignment_id": "814e8e09-485b-497b-ba6e-86aac8dea9bc",
+      "dimension_id": "298e69b7-25bb-4e30-ac33-4dac9556a8a1",
+      "avg_score": 5,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:31:45.798304+00:00"
+    },
+    {
+      "assignment_id": "814e8e09-485b-497b-ba6e-86aac8dea9bc",
+      "dimension_id": "2ee4780a-673c-4fc7-9092-00807b62aedd",
+      "avg_score": 5,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:31:45.798304+00:00"
+    },
+    {
+      "assignment_id": "814e8e09-485b-497b-ba6e-86aac8dea9bc",
+      "dimension_id": "26b99b7f-b9a0-4a6d-bed9-6a0d61edf079",
+      "avg_score": 3,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:31:45.798304+00:00"
+    },
+    {
+      "assignment_id": "814e8e09-485b-497b-ba6e-86aac8dea9bc",
+      "dimension_id": "b57fdc8d-7072-4340-ad25-5e90149614fe",
+      "avg_score": 3,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:31:45.798304+00:00"
+    },
+    {
+      "assignment_id": "91c630e6-d1c4-40f0-b69b-fa52c67eb302",
+      "dimension_id": "62e53d02-20d0-42e8-b397-5fab37ea6bec",
+      "avg_score": 3,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:33:07.973874+00:00"
+    },
+    {
+      "assignment_id": "91c630e6-d1c4-40f0-b69b-fa52c67eb302",
+      "dimension_id": "a206fefd-f36d-42fd-882b-9230c9f0c0eb",
+      "avg_score": 3,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:33:07.973874+00:00"
+    },
+    {
+      "assignment_id": "91c630e6-d1c4-40f0-b69b-fa52c67eb302",
+      "dimension_id": "1f295813-e42b-444b-858e-6dfafbbf3262",
+      "avg_score": 1,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:33:07.973874+00:00"
+    },
+    {
+      "assignment_id": "91c630e6-d1c4-40f0-b69b-fa52c67eb302",
+      "dimension_id": "7df7717b-58c4-4322-9a1e-4309094dcc83",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:33:07.973874+00:00"
+    },
+    {
+      "assignment_id": "91c630e6-d1c4-40f0-b69b-fa52c67eb302",
+      "dimension_id": "cc64fff9-8f0e-48d4-9160-7511b15d1363",
+      "avg_score": 2,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:33:07.973874+00:00"
+    },
+    {
+      "assignment_id": "91c630e6-d1c4-40f0-b69b-fa52c67eb302",
+      "dimension_id": "298e69b7-25bb-4e30-ac33-4dac9556a8a1",
+      "avg_score": 5,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:33:07.973874+00:00"
+    },
+    {
+      "assignment_id": "91c630e6-d1c4-40f0-b69b-fa52c67eb302",
+      "dimension_id": "2ee4780a-673c-4fc7-9092-00807b62aedd",
+      "avg_score": 5,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:33:07.973874+00:00"
+    },
+    {
+      "assignment_id": "91c630e6-d1c4-40f0-b69b-fa52c67eb302",
+      "dimension_id": "26b99b7f-b9a0-4a6d-bed9-6a0d61edf079",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:33:07.973874+00:00"
+    },
+    {
+      "assignment_id": "91c630e6-d1c4-40f0-b69b-fa52c67eb302",
+      "dimension_id": "b57fdc8d-7072-4340-ad25-5e90149614fe",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:33:07.973874+00:00"
+    },
+    {
+      "assignment_id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "dimension_id": "62e53d02-20d0-42e8-b397-5fab37ea6bec",
+      "avg_score": 1,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:40:23.931771+00:00"
+    },
+    {
+      "assignment_id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "dimension_id": "a206fefd-f36d-42fd-882b-9230c9f0c0eb",
+      "avg_score": 5,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:40:23.931771+00:00"
+    },
+    {
+      "assignment_id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "dimension_id": "1f295813-e42b-444b-858e-6dfafbbf3262",
+      "avg_score": 3,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:40:23.931771+00:00"
+    },
+    {
+      "assignment_id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "dimension_id": "7df7717b-58c4-4322-9a1e-4309094dcc83",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:40:23.931771+00:00"
+    },
+    {
+      "assignment_id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "dimension_id": "cc64fff9-8f0e-48d4-9160-7511b15d1363",
+      "avg_score": 2,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:40:23.931771+00:00"
+    },
+    {
+      "assignment_id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "dimension_id": "298e69b7-25bb-4e30-ac33-4dac9556a8a1",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:40:23.931771+00:00"
+    },
+    {
+      "assignment_id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "dimension_id": "2ee4780a-673c-4fc7-9092-00807b62aedd",
+      "avg_score": 3,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:40:23.931771+00:00"
+    },
+    {
+      "assignment_id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "dimension_id": "26b99b7f-b9a0-4a6d-bed9-6a0d61edf079",
+      "avg_score": 3,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:40:23.931771+00:00"
+    },
+    {
+      "assignment_id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "dimension_id": "b57fdc8d-7072-4340-ad25-5e90149614fe",
+      "avg_score": 1,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T22:40:23.931771+00:00"
+    },
+    {
+      "assignment_id": "c435c4f7-6b19-46b0-80a2-2deb0992c440",
+      "dimension_id": "62e53d02-20d0-42e8-b397-5fab37ea6bec",
+      "avg_score": 1,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:40:54.535563+00:00"
+    },
+    {
+      "assignment_id": "c435c4f7-6b19-46b0-80a2-2deb0992c440",
+      "dimension_id": "a206fefd-f36d-42fd-882b-9230c9f0c0eb",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:40:54.535563+00:00"
+    },
+    {
+      "assignment_id": "c435c4f7-6b19-46b0-80a2-2deb0992c440",
+      "dimension_id": "1f295813-e42b-444b-858e-6dfafbbf3262",
+      "avg_score": 2,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:40:54.535563+00:00"
+    },
+    {
+      "assignment_id": "c435c4f7-6b19-46b0-80a2-2deb0992c440",
+      "dimension_id": "7df7717b-58c4-4322-9a1e-4309094dcc83",
+      "avg_score": 2,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:40:54.535563+00:00"
+    },
+    {
+      "assignment_id": "c435c4f7-6b19-46b0-80a2-2deb0992c440",
+      "dimension_id": "cc64fff9-8f0e-48d4-9160-7511b15d1363",
+      "avg_score": 5,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:40:54.535563+00:00"
+    },
+    {
+      "assignment_id": "c435c4f7-6b19-46b0-80a2-2deb0992c440",
+      "dimension_id": "298e69b7-25bb-4e30-ac33-4dac9556a8a1",
+      "avg_score": 3,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:40:54.535563+00:00"
+    },
+    {
+      "assignment_id": "c435c4f7-6b19-46b0-80a2-2deb0992c440",
+      "dimension_id": "2ee4780a-673c-4fc7-9092-00807b62aedd",
+      "avg_score": 3,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:40:54.535563+00:00"
+    },
+    {
+      "assignment_id": "c435c4f7-6b19-46b0-80a2-2deb0992c440",
+      "dimension_id": "26b99b7f-b9a0-4a6d-bed9-6a0d61edf079",
+      "avg_score": 1,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:40:54.535563+00:00"
+    },
+    {
+      "assignment_id": "c435c4f7-6b19-46b0-80a2-2deb0992c440",
+      "dimension_id": "b57fdc8d-7072-4340-ad25-5e90149614fe",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:40:54.535563+00:00"
+    },
+    {
+      "assignment_id": "c861db19-6362-4dd7-8a6b-0626425d41b7",
+      "dimension_id": "62e53d02-20d0-42e8-b397-5fab37ea6bec",
+      "avg_score": 3,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:32:23.454859+00:00"
+    },
+    {
+      "assignment_id": "c861db19-6362-4dd7-8a6b-0626425d41b7",
+      "dimension_id": "a206fefd-f36d-42fd-882b-9230c9f0c0eb",
+      "avg_score": 3,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:32:23.454859+00:00"
+    },
+    {
+      "assignment_id": "c861db19-6362-4dd7-8a6b-0626425d41b7",
+      "dimension_id": "1f295813-e42b-444b-858e-6dfafbbf3262",
+      "avg_score": 5,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:32:23.454859+00:00"
+    },
+    {
+      "assignment_id": "c861db19-6362-4dd7-8a6b-0626425d41b7",
+      "dimension_id": "7df7717b-58c4-4322-9a1e-4309094dcc83",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:32:23.454859+00:00"
+    },
+    {
+      "assignment_id": "c861db19-6362-4dd7-8a6b-0626425d41b7",
+      "dimension_id": "cc64fff9-8f0e-48d4-9160-7511b15d1363",
+      "avg_score": 1,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:32:23.454859+00:00"
+    },
+    {
+      "assignment_id": "c861db19-6362-4dd7-8a6b-0626425d41b7",
+      "dimension_id": "298e69b7-25bb-4e30-ac33-4dac9556a8a1",
+      "avg_score": 1,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:32:23.454859+00:00"
+    },
+    {
+      "assignment_id": "c861db19-6362-4dd7-8a6b-0626425d41b7",
+      "dimension_id": "2ee4780a-673c-4fc7-9092-00807b62aedd",
+      "avg_score": 5,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:32:23.454859+00:00"
+    },
+    {
+      "assignment_id": "c861db19-6362-4dd7-8a6b-0626425d41b7",
+      "dimension_id": "26b99b7f-b9a0-4a6d-bed9-6a0d61edf079",
+      "avg_score": 2,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:32:23.454859+00:00"
+    },
+    {
+      "assignment_id": "c861db19-6362-4dd7-8a6b-0626425d41b7",
+      "dimension_id": "b57fdc8d-7072-4340-ad25-5e90149614fe",
+      "avg_score": 2,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:32:23.454859+00:00"
+    },
+    {
+      "assignment_id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "dimension_id": "62e53d02-20d0-42e8-b397-5fab37ea6bec",
+      "avg_score": 2,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T21:58:40.064659+00:00"
+    },
+    {
+      "assignment_id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "dimension_id": "a206fefd-f36d-42fd-882b-9230c9f0c0eb",
+      "avg_score": 2,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T21:58:40.064659+00:00"
+    },
+    {
+      "assignment_id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "dimension_id": "1f295813-e42b-444b-858e-6dfafbbf3262",
+      "avg_score": 3,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T21:58:40.064659+00:00"
+    },
+    {
+      "assignment_id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "dimension_id": "7df7717b-58c4-4322-9a1e-4309094dcc83",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T21:58:40.064659+00:00"
+    },
+    {
+      "assignment_id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "dimension_id": "cc64fff9-8f0e-48d4-9160-7511b15d1363",
+      "avg_score": 5,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T21:58:40.064659+00:00"
+    },
+    {
+      "assignment_id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "dimension_id": "298e69b7-25bb-4e30-ac33-4dac9556a8a1",
+      "avg_score": 2,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T21:58:40.064659+00:00"
+    },
+    {
+      "assignment_id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "dimension_id": "2ee4780a-673c-4fc7-9092-00807b62aedd",
+      "avg_score": 5,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T21:58:40.064659+00:00"
+    },
+    {
+      "assignment_id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "dimension_id": "26b99b7f-b9a0-4a6d-bed9-6a0d61edf079",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T21:58:40.064659+00:00"
+    },
+    {
+      "assignment_id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "dimension_id": "b57fdc8d-7072-4340-ad25-5e90149614fe",
+      "avg_score": 5,
+      "answer_count": 1,
+      "calculated_at": "2026-03-17T21:58:40.064659+00:00"
+    },
+    {
+      "assignment_id": "f3865332-686f-4e21-aaaa-408177398304",
+      "dimension_id": "62e53d02-20d0-42e8-b397-5fab37ea6bec",
+      "avg_score": 2,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:40:13.970232+00:00"
+    },
+    {
+      "assignment_id": "f3865332-686f-4e21-aaaa-408177398304",
+      "dimension_id": "a206fefd-f36d-42fd-882b-9230c9f0c0eb",
+      "avg_score": 1,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:40:13.970232+00:00"
+    },
+    {
+      "assignment_id": "f3865332-686f-4e21-aaaa-408177398304",
+      "dimension_id": "1f295813-e42b-444b-858e-6dfafbbf3262",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:40:13.970232+00:00"
+    },
+    {
+      "assignment_id": "f3865332-686f-4e21-aaaa-408177398304",
+      "dimension_id": "7df7717b-58c4-4322-9a1e-4309094dcc83",
+      "avg_score": 4,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:40:13.970232+00:00"
+    },
+    {
+      "assignment_id": "f3865332-686f-4e21-aaaa-408177398304",
+      "dimension_id": "cc64fff9-8f0e-48d4-9160-7511b15d1363",
+      "avg_score": 2,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:40:13.970232+00:00"
+    },
+    {
+      "assignment_id": "f3865332-686f-4e21-aaaa-408177398304",
+      "dimension_id": "298e69b7-25bb-4e30-ac33-4dac9556a8a1",
+      "avg_score": 5,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:40:13.970232+00:00"
+    },
+    {
+      "assignment_id": "f3865332-686f-4e21-aaaa-408177398304",
+      "dimension_id": "2ee4780a-673c-4fc7-9092-00807b62aedd",
+      "avg_score": 5,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:40:13.970232+00:00"
+    },
+    {
+      "assignment_id": "f3865332-686f-4e21-aaaa-408177398304",
+      "dimension_id": "26b99b7f-b9a0-4a6d-bed9-6a0d61edf079",
+      "avg_score": 3,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:40:13.970232+00:00"
+    },
+    {
+      "assignment_id": "f3865332-686f-4e21-aaaa-408177398304",
+      "dimension_id": "b57fdc8d-7072-4340-ad25-5e90149614fe",
+      "avg_score": 1,
+      "answer_count": 1,
+      "calculated_at": "2026-03-18T10:40:13.970232+00:00"
+    }
+  ]
+}

@@ -1,6 +1,12 @@
 'use client'
 
-import { REPORT_COLORS, REPORT_SPACING } from '@/lib/reports/report-design-constants'
+import {
+  computeAxisLinePaddingTop,
+  computeBarsRegionHeight,
+  computeGraphContainerHeight,
+  X_AXIS_LABEL_GAP_PX,
+} from '@/lib/reports/chart-axis-layout'
+import { REPORT_COLORS } from '@/lib/reports/report-design-constants'
 
 interface BarData {
   label: string
@@ -55,21 +61,13 @@ export default function HorizontalBarChart({
       ? [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]
       : [0, 1, 2, 3, 4, 5]
 
-  const rowHeight = barHeight + rowGap
-  const barsRegionHeight = scores.length * rowHeight
-  const scaleGap = 34
-  const graphHeight = barsRegionHeight + scaleGap
-  const linePaddingTop = barsRegionHeight + 10
+  const barsRegionHeight = computeBarsRegionHeight(scores.length, barHeight, rowGap)
+  const linePaddingTop = computeAxisLinePaddingTop(barsRegionHeight, X_AXIS_LABEL_GAP_PX)
+  const graphHeight = computeGraphContainerHeight(barsRegionHeight, X_AXIS_LABEL_GAP_PX)
 
-  const is360Style = chartWidth === 563
-  const fixedGraphHeight = REPORT_SPACING.chartHeight
-  const fixedLinePadding = 220
-
-  const effectiveGraphHeight = is360Style ? fixedGraphHeight : graphHeight
-  const effectiveLinePadding = is360Style ? fixedLinePadding : linePaddingTop
-  const containerHeight = is360Style
-    ? Math.max(REPORT_SPACING.chartBarsHeight, graphHeight)
-    : graphHeight
+  const effectiveGraphHeight = graphHeight
+  const effectiveLinePadding = linePaddingTop
+  const containerHeight = graphHeight
 
   return (
     <div
@@ -118,7 +116,15 @@ export default function HorizontalBarChart({
                   paddingTop: `${effectiveLinePadding}px`,
                 }}
               >
-                <span style={{ position: 'relative', top: '4px', fontSize: scale === 'half' ? '14px' : undefined }}>
+                <span
+                  style={{
+                    position: 'relative',
+                    top: '2px',
+                    marginTop: 0,
+                    display: 'block',
+                    fontSize: scale === 'half' ? '14px' : undefined,
+                  }}
+                >
                   {value}
                 </span>
               </div>

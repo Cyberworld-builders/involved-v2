@@ -22,6 +22,13 @@ export function formatDateTime(date: string | Date) {
   }).format(new Date(date))
 }
 
+export function formatDateShort(date: string | Date) {
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+  }).format(new Date(date))
+}
+
 export function truncateText(text: string, maxLength: number) {
   if (text.length <= maxLength) return text
   return text.slice(0, maxLength) + '...'

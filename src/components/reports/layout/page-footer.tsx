@@ -25,7 +25,7 @@ export default function PageFooter({ pageNumber }: PageFooterProps) {
         left: '50%',
         transform: 'translateX(-50%)',
         width: `${REPORT_LAYOUT.footerWidth}px`,
-        fontFamily: REPORT_TYPOGRAPHY.footer.fontSize,
+        fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
         fontSize: REPORT_TYPOGRAPHY.footer.fontSize,
         lineHeight: '9px',
         textAlign: 'center',

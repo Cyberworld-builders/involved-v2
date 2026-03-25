@@ -247,6 +247,33 @@ export default function CreateAssessmentClient() {
         }
       }
 
+      // Save dimension definitions as rich_text fields
+      {
+        const definitionFields = data.dimensions
+          .filter(dim => dim.definition && dim.definition.trim())
+          .map(dim => ({
+            assessment_id: assessment.id,
+            dimension_id: tempIdToDbIdMap.get(dim.id) || dim.id,
+            type: 'rich_text' as const,
+            content: dim.definition!.trim(),
+            order: 0,
+            number: 0,
+            required: false,
+            practice: false,
+            anchors: [],
+          }))
+
+        if (definitionFields.length > 0) {
+          const { error: defError } = await supabase
+            .from('fields')
+            .insert(definitionFields)
+
+          if (defError) {
+            throw new Error(`Failed to save dimension definitions: ${defError.message}`)
+          }
+        }
+      }
+
       // Map dimension_question_counts from temporary IDs to database UUIDs
       if (Object.keys(originalDimensionCounts).length > 0) {
         // Rebuild tempIdToDbIdMap if needed (in case no new dimensions were created)

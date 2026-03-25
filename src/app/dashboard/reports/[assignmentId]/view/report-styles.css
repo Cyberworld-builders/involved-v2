@@ -256,7 +256,7 @@
 /* Charts */
 .chart {
   width: 563px;
-  height: 190px;
+  /* height set dynamically via inline style — do not fix here */
   margin-top: 20px;
 }
 
@@ -269,6 +269,7 @@
   margin-bottom: 45px;
 }
 
+/* Legacy float layout for HTML reports. React ScoreDisplay uses .report-score-display instead. */
 .chart .score {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   width: 141px;
@@ -281,20 +282,20 @@
 
 .chart .bars {
   width: 563px;
-  height: 230px;
+  /* height set dynamically via inline style */
   float: left;
 }
 
 .chart .graph {
   position: relative;
   width: 563px;
-  height: 190px;
+  /* height set dynamically via inline style */
 }
 
 .chart .graph-lines {
   position: absolute;
   width: 422px;
-  height: 190px;
+  /* height and padding-top set dynamically via inline style */
   left: 135px;
   top: 0;
 }
@@ -308,7 +309,7 @@
   color: var(--report-color-text-primary);
   background: linear-gradient(to bottom, var(--report-color-light-gray) 0, var(--report-color-light-gray) calc(100% - 14px), transparent calc(100% - 14px));
   text-indent: -2px;
-  padding-top: 220px;
+  /* padding-top set dynamically via inline style — do not fix here */
 }
 
 .chart .graph-lines .line > span {
@@ -370,14 +371,15 @@
   background: url('/images/reports/triangle-orange.png') no-repeat scroll 0 0 transparent;
 }
 
-/* Norms Display */
+/* Norms Display — inline styles on div.norms control layout in React;
+   keep CSS neutral so it does not fight the component. */
 .norms {
-  position: relative;
-  width: 488px;
+  position: static;
+  width: 100%;
+  max-width: 704px;
   height: 55px;
-  margin: 90px 94px 0;
+  margin: 0;
   color: var(--report-color-text-primary);
-  top: 70px;
 }
 
 .norm-group {
@@ -389,7 +391,7 @@
 
 .norm-group.group {
   width: 220px;
-  border-left: 2px solid var(--report-color-light-gray);
+  /* Divider is rendered in React (360-report-view-fullscreen) — do not add border-left or it doubles up */
 }
 
 .norm {

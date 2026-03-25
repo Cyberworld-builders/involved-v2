@@ -30,9 +30,11 @@ export default function ScoreDisplay({
     ? REPORT_TYPOGRAPHY.score.medium 
     : REPORT_TYPOGRAPHY.score.small
   
+  // Use `report-score-display`, not `score`, so legacy `.chart .score` (float layout,
+  // height: 230px, padding-top: 100px) in report-styles.css does not apply beside React charts.
   return (
     <div
-      className="score"
+      className="report-score-display"
       style={{
         fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
         width: size === 'large' ? '141px' : 'auto',

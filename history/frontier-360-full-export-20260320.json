@@ -1,0 +1,1940 @@
+{
+  "exported_at": "2026-03-20T20:16:03.215Z",
+  "source": "staging (cbpomvoxtxvsatkozhng)",
+  "snapshot": "latest (post-restore to Mar 20 07:05 backup)",
+  "description": "Full Involved-360 Frontier assessment — dimensions, fields, benchmarks, assignments, answers, scores, reports, groups, profiles",
+  "assessment": {
+    "id": "b72cd008-8249-49be-9ef4-00383c586f79",
+    "title": "Involved-360 - Frontier",
+    "description": "<p>A competency-based 360-evaluation that provides an analytically robust picture of strengths and improvement opportunities.</p>",
+    "logo": "https://cbpomvoxtxvsatkozhng.supabase.co/storage/v1/object/public/assessment-assets/assessment-logo-1767554692844.png",
+    "background": null,
+    "primary_color": "#262962",
+    "accent_color": "#F26950",
+    "split_questions": false,
+    "questions_per_page": 10,
+    "timed": false,
+    "time_limit": null,
+    "target": "2",
+    "is_360": true,
+    "type": "360",
+    "status": "active",
+    "created_by": "fe10892f-881a-4156-8479-6df9928140e1",
+    "created_at": "2026-01-06T22:01:48.736016+00:00",
+    "updated_at": "2026-03-19T18:04:59.226456+00:00",
+    "custom_fields": {
+      "tag": [
+        "name",
+        "email",
+        "grouprole"
+      ],
+      "default": [
+        "",
+        "",
+        ""
+      ]
+    },
+    "use_custom_fields": true,
+    "number_of_questions": null,
+    "show_question_numbers": false,
+    "dimension_question_counts": null
+  },
+  "dimensions": [
+    {
+      "id": "cbaf97a4-e8c1-40f9-849c-405a907f908a",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "name": "Creative Problem Solving",
+      "code": "CPS",
+      "parent_id": null,
+      "created_at": "2026-03-19T18:04:57.725375+00:00",
+      "updated_at": "2026-03-19T18:04:57.725375+00:00",
+      "sort_order": 1
+    },
+    {
+      "id": "a471a18d-4764-4b6e-bb6f-bd75c7a0feff",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "name": "Leadership Adaptability",
+      "code": "LA",
+      "parent_id": null,
+      "created_at": "2026-03-19T18:04:57.856528+00:00",
+      "updated_at": "2026-03-19T18:04:57.856528+00:00",
+      "sort_order": 2
+    },
+    {
+      "id": "c7adc3c4-b7f5-43f5-80d2-9ab9eb953f28",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "name": "Collaboration",
+      "code": "CO",
+      "parent_id": null,
+      "created_at": "2026-03-19T18:04:58.010466+00:00",
+      "updated_at": "2026-03-19T18:04:58.010466+00:00",
+      "sort_order": 3
+    },
+    {
+      "id": "10411901-fdbe-499a-8976-1b57caf912bb",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "name": "Self-Development",
+      "code": "SD",
+      "parent_id": null,
+      "created_at": "2026-03-19T18:04:58.172706+00:00",
+      "updated_at": "2026-03-19T18:04:58.172706+00:00",
+      "sort_order": 4
+    },
+    {
+      "id": "e78d7536-7f73-4ae2-8ee5-f5f2596a4304",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "name": "Performance Management",
+      "code": "PM",
+      "parent_id": null,
+      "created_at": "2026-03-19T18:04:58.328393+00:00",
+      "updated_at": "2026-03-19T18:04:58.328393+00:00",
+      "sort_order": 5
+    },
+    {
+      "id": "f45af2cc-02c9-4505-8dcc-42dc55ce03d6",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "name": "Business Mindset",
+      "code": "BM",
+      "parent_id": null,
+      "created_at": "2026-03-19T18:04:58.45942+00:00",
+      "updated_at": "2026-03-19T18:04:58.45942+00:00",
+      "sort_order": 6
+    },
+    {
+      "id": "bb063431-8f25-431b-9de7-1d861496d906",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "name": "Customer Focus",
+      "code": "CF",
+      "parent_id": null,
+      "created_at": "2026-03-19T18:04:58.592388+00:00",
+      "updated_at": "2026-03-19T18:04:58.592388+00:00",
+      "sort_order": 7
+    },
+    {
+      "id": "114a7464-08e0-497b-a62e-ca1a2efbeeda",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "name": "Communication",
+      "code": "COM",
+      "parent_id": null,
+      "created_at": "2026-03-19T18:04:58.680134+00:00",
+      "updated_at": "2026-03-19T18:04:58.680134+00:00",
+      "sort_order": 8
+    },
+    {
+      "id": "02c4719c-23b3-4387-a502-0833b5d1426a",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "name": "Ethics & Integrity",
+      "code": "EI",
+      "parent_id": null,
+      "created_at": "2026-03-19T18:04:58.787875+00:00",
+      "updated_at": "2026-03-19T18:04:58.787875+00:00",
+      "sort_order": 9
+    }
+  ],
+  "fields": [
+    {
+      "id": "8d0a095d-25e5-4ea0-a620-64391fd9c692",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "cbaf97a4-e8c1-40f9-849c-405a907f908a",
+      "type": "rich_text",
+      "content": "this is jay testing the dimension definition interface on the dimensions tab of the assessment editor page",
+      "order": 0,
+      "anchors": [],
+      "created_at": "2026-03-19T18:04:59.134174+00:00",
+      "updated_at": "2026-03-19T18:04:59.134174+00:00",
+      "practice": false,
+      "number": 0,
+      "insights_table": null,
+      "required": false
+    },
+    {
+      "id": "fda9e560-0dd2-4db5-8d35-03a87c50865e",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "cbaf97a4-e8c1-40f9-849c-405a907f908a",
+      "type": "multiple_choice",
+      "content": "<h2>Creative Problem Solving</h2><p><strong>Definition</strong>: Creative Problem Solving is defined as proactive problem-solving focusing on the successful implementation of novel and creative solutions to known or anticipated problems, being mindful of and efficient in using resources (i.e., resourcefulness), and utilizing a visionary mindset.</p><h3><em>Please select your rating for&nbsp;[name] for this dimension.</em></h3><p></p>",
+      "order": 1,
+      "anchors": [
+        {
+          "id": "anchor-1767555172256-0",
+          "name": "Below Expectations",
+          "value": 1,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767555172256-1",
+          "name": "Slightly Below Expectations",
+          "value": 2,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767555172256-2",
+          "name": "Meets Expectations",
+          "value": 3,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767555172256-3",
+          "name": "Slightly Exceeds Expectations",
+          "value": 4,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767555172256-4",
+          "name": "Exceeds Expectations",
+          "value": 5,
+          "practice": false
+        }
+      ],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 1,
+      "insights_table": [],
+      "required": true
+    },
+    {
+      "id": "aa04579c-8205-45d1-9032-eb1ad21dcedc",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "cbaf97a4-e8c1-40f9-849c-405a907f908a",
+      "type": "text_input",
+      "content": "<p><strong>Developmental Comments for Creative Problem Solving:</strong></p>",
+      "order": 2,
+      "anchors": [],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 2,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "8414c50a-4b1d-497b-b285-8e079c550d1f",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": null,
+      "type": "page_break",
+      "content": "",
+      "order": 3,
+      "anchors": [],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 3,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "838c916d-d7cb-4e12-bc97-0be170c006ed",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "a471a18d-4764-4b6e-bb6f-bd75c7a0feff",
+      "type": "multiple_choice",
+      "content": "<h2>Leadership Adaptability</h2><p><strong>Definition</strong>: Leadership Adaptability is having the ability to see the need for change early on. Having the willingness to smoothly and comfortably adjust his/her work style to the change as well as assist his/her team in positively adapting to the change. This competency also captures one's psychological ownership over the change.</p><h3><em>Please select your rating for [name] for this dimension.</em></h3><p></p>",
+      "order": 4,
+      "anchors": [
+        {
+          "id": "anchor-1767556055671-0",
+          "name": "Below Expectations",
+          "value": 1,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556055671-1",
+          "name": "Slightly Below Expectations",
+          "value": 2,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556055671-2",
+          "name": "Meets Expectations",
+          "value": 3,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556055671-3",
+          "name": "Slightly Exceeds Expectations",
+          "value": 4,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556055671-4",
+          "name": "Exceeds Expectations",
+          "value": 5,
+          "practice": false
+        }
+      ],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 4,
+      "insights_table": [],
+      "required": true
+    },
+    {
+      "id": "7d39e312-f05e-4c9e-9746-07f4592ff53d",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "a471a18d-4764-4b6e-bb6f-bd75c7a0feff",
+      "type": "text_input",
+      "content": "<p><strong>Developmental Comments for Leadership Adaptability:</strong></p>",
+      "order": 5,
+      "anchors": [],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 5,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "a9a03804-5238-431b-9ed1-e361d394fde3",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": null,
+      "type": "page_break",
+      "content": "",
+      "order": 6,
+      "anchors": [],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 6,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "7a07822f-3cb2-46c0-b0eb-91073d8ead9a",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "c7adc3c4-b7f5-43f5-80d2-9ab9eb953f28",
+      "type": "multiple_choice",
+      "content": "<h2>Collaboration</h2><p><strong>Definition</strong>: Collaboration is being able to effectively work with internal stakeholders/employees up and down the chain of organizational hierarchy (vertical) and horizontally with peers as well as external individuals/organizations/partners (e.g., vendor, community leaders) all the while&nbsp;knowing and showing ones authentic self to others at work while simultaneously knowing how one is portrayed across all work settings.&nbsp;</p><h3><em>Please select your rating for [name] for this dimension.</em></h3><p></p>",
+      "order": 7,
+      "anchors": [
+        {
+          "id": "anchor-1767556141613-0",
+          "name": "Below Expectations",
+          "value": 1,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556141613-1",
+          "name": "Slightly Below Expectations",
+          "value": 2,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556141613-2",
+          "name": "Meets Expectations",
+          "value": 3,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556141613-3",
+          "name": "Slightly Exceeds Expectations",
+          "value": 4,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556141613-4",
+          "name": "Exceeds Expectations",
+          "value": 5,
+          "practice": false
+        }
+      ],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 7,
+      "insights_table": [],
+      "required": true
+    },
+    {
+      "id": "a209796f-89d0-488f-a9de-74f356b2e9a7",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "c7adc3c4-b7f5-43f5-80d2-9ab9eb953f28",
+      "type": "text_input",
+      "content": "<p><strong>Developmental Comments for Collaboration:</strong></p>",
+      "order": 8,
+      "anchors": [],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 8,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "8a349df3-d79d-4d83-9a5e-2fd2cc547102",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": null,
+      "type": "page_break",
+      "content": "",
+      "order": 9,
+      "anchors": [],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 9,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "1e1f5e63-2ed9-423f-9540-7f3bf85d3275",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "10411901-fdbe-499a-8976-1b57caf912bb",
+      "type": "multiple_choice",
+      "content": "<h2>Self-Development</h2><p><strong>Definition</strong>: Self-Development encompasses identification of weaknesses and positive action to overcome identified weaknesses, continuing to build one's strengths, being self-aware of actions and how they impact others, transferring formal and informal training/development back to one's daily job, and mastering all aspects of management, not just functional expertise.</p><h3><em>Please select your rating for [name] for this dimension.</em></h3><p></p>",
+      "order": 10,
+      "anchors": [
+        {
+          "id": "anchor-1767556260378-0",
+          "name": "Below Expectations",
+          "value": 1,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556260378-1",
+          "name": "Slightly Below Expectations",
+          "value": 2,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556260378-2",
+          "name": "Meets Expectations",
+          "value": 3,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556260378-3",
+          "name": "Slightly Exceeds Expectations",
+          "value": 4,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556260378-4",
+          "name": "Exceeds Expectations",
+          "value": 5,
+          "practice": false
+        }
+      ],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 10,
+      "insights_table": [],
+      "required": true
+    },
+    {
+      "id": "2644c7b8-6a62-41d2-9dbb-34285ac90e7d",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "10411901-fdbe-499a-8976-1b57caf912bb",
+      "type": "text_input",
+      "content": "<p><strong>Developmental Comments for Self-Development:</strong></p>",
+      "order": 11,
+      "anchors": [],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 11,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "31afb1f2-1fa2-4c9e-868c-aa4acf67ef2f",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": null,
+      "type": "page_break",
+      "content": "",
+      "order": 12,
+      "anchors": [],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 12,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "bf2e21ef-367c-403f-ab07-1621e43a702f",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "e78d7536-7f73-4ae2-8ee5-f5f2596a4304",
+      "type": "multiple_choice",
+      "content": "<h2>Performance Management</h2><p><strong>Definition</strong>: Performance Management is defined as the ability to consistently lead and develop individuals and teams, set goals, create&nbsp;and implement&nbsp;a valued rewards structure, consistently hold&nbsp;individuals and teams accountable in an effective and positive manner, and provide the necessary information in a clear and actionable manner.</p><h3><em>Please select your rating for [name] for this dimension.</em></h3><p></p>",
+      "order": 13,
+      "anchors": [
+        {
+          "id": "anchor-1767556337079-0",
+          "name": "Below Expectations",
+          "value": 1,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556337079-1",
+          "name": "Slightly Below Expectations",
+          "value": 2,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556337079-2",
+          "name": "Meets Expectations",
+          "value": 3,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556337079-3",
+          "name": "Slightly Exceeds Expectations",
+          "value": 4,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556337079-4",
+          "name": "Exceeds Expectations",
+          "value": 5,
+          "practice": false
+        }
+      ],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 13,
+      "insights_table": [],
+      "required": true
+    },
+    {
+      "id": "f4d71cc9-8d70-4f3d-8543-399dc82de272",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "e78d7536-7f73-4ae2-8ee5-f5f2596a4304",
+      "type": "text_input",
+      "content": "<p><strong>Developmental Comments for Performance Management:</strong></p>",
+      "order": 14,
+      "anchors": [],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 14,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "44585c78-0fd4-4472-a8cb-9eba69681f36",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": null,
+      "type": "page_break",
+      "content": "",
+      "order": 15,
+      "anchors": [],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 15,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "a02b1e6a-a1bd-4a4f-b1a0-8cb57ecc05d0",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "f45af2cc-02c9-4505-8dcc-42dc55ce03d6",
+      "type": "multiple_choice",
+      "content": "<h2>Business Mindset</h2><p><strong>Definition</strong>: Business Mindset encompasses having a clear and complete focus on the organization as a sustainable/growing business, seeing and implementing the entire vision of the organization, inclusive of internal and external stakeholders, and linking departmental/unit operations to all business indicators (i.e., labor costs, customer satisfaction, quality), and how departmental/unit metrics truly impact the entire business.</p><h3><em>Please select your rating for [name] for this dimension.</em></h3><p></p>",
+      "order": 16,
+      "anchors": [
+        {
+          "id": "anchor-1767556615127-0",
+          "name": "Below Expectations",
+          "value": 1,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556615127-1",
+          "name": "Slightly Below Expectations",
+          "value": 2,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556615127-2",
+          "name": "Meets Expectations",
+          "value": 3,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556615127-3",
+          "name": "Slightly Exceeds Expectations",
+          "value": 4,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556615127-4",
+          "name": "Exceeds Expectations",
+          "value": 5,
+          "practice": false
+        }
+      ],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 16,
+      "insights_table": [],
+      "required": true
+    },
+    {
+      "id": "8b59f11e-7b54-42c1-8db2-5cbf50e8fc94",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "f45af2cc-02c9-4505-8dcc-42dc55ce03d6",
+      "type": "text_input",
+      "content": "<p><strong>Developmental Comments for Business Mindset:</strong></p>",
+      "order": 17,
+      "anchors": [],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 17,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "f0c04ff3-fc20-4db8-9393-acbae787d5ea",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": null,
+      "type": "page_break",
+      "content": "",
+      "order": 18,
+      "anchors": [],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 18,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "3db62fe2-9823-43fe-a9f9-c39df56e49e5",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "bb063431-8f25-431b-9de7-1d861496d906",
+      "type": "multiple_choice",
+      "content": "<h2>Customer Focus</h2><p><strong>Definition</strong>: Customer Focus encompasses anticipating, communicating, and addressing current &amp; emerging customer needs; actively listening to customers’ needs, goals, and expectations; developing, reinforcing and strengthening customer service culture; adjusting priorities to meet multiple and often competing customers’ demands, seeks and incorporates feedback from customers to improve performance, and follows up with customers to insure needs have been met satisfactory. This competency applies to both internal and external customers.​</p><h3><em>Please select your rating for [name] for this dimension.</em></h3><p></p>",
+      "order": 19,
+      "anchors": [
+        {
+          "id": "anchor-1767556699448-0",
+          "name": "Below Expectations",
+          "value": 1,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556699448-1",
+          "name": "Slightly Below Expectations",
+          "value": 2,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556699448-2",
+          "name": "Meets Expectations",
+          "value": 3,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556699448-3",
+          "name": "Slightly Exceeds Expectations",
+          "value": 4,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556699448-4",
+          "name": "Exceeds Expectations",
+          "value": 5,
+          "practice": false
+        }
+      ],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 19,
+      "insights_table": [],
+      "required": true
+    },
+    {
+      "id": "b3d49de3-9359-4d02-bf97-800e690244a3",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "bb063431-8f25-431b-9de7-1d861496d906",
+      "type": "text_input",
+      "content": "<p><strong>Developmental Comments for Customer Focus:</strong></p>",
+      "order": 20,
+      "anchors": [],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 20,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "4077fa56-704f-45c9-b9f1-298a83a0123c",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": null,
+      "type": "page_break",
+      "content": "",
+      "order": 21,
+      "anchors": [],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 21,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "d3416ecb-9236-4258-84ac-52a7a9f7d58d",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "114a7464-08e0-497b-a62e-ca1a2efbeeda",
+      "type": "multiple_choice",
+      "content": "<h2>Communication</h2><p><strong>Definition</strong>: Communication is defined as clearly, concisely, and accurately conveying necessary information when it is needed while avoiding sharing unfounded information/rumors. Communication also encompasses providing rationale behind messages/decisions; seeking to understand others views and priorities, adjusting communication styles to audience, and encouraging open and candid dialogue from others.​</p><h3><em>Please select your rating for [name] for this dimension.</em></h3><p></p>",
+      "order": 22,
+      "anchors": [
+        {
+          "id": "anchor-1767556779094-0",
+          "name": "Below Expectations",
+          "value": 1,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556779094-1",
+          "name": "Slightly Below Expectations",
+          "value": 2,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556779094-2",
+          "name": "Meets Expectations",
+          "value": 3,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556779094-3",
+          "name": "Slightly Exceeds Expectations",
+          "value": 4,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556779094-4",
+          "name": "Exceeds Expectations",
+          "value": 5,
+          "practice": false
+        }
+      ],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 22,
+      "insights_table": [],
+      "required": true
+    },
+    {
+      "id": "a9099e8d-6cf3-4748-833d-3681c3e1de69",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "114a7464-08e0-497b-a62e-ca1a2efbeeda",
+      "type": "text_input",
+      "content": "<p><strong>Developmental Comments for Communication:</strong></p>",
+      "order": 23,
+      "anchors": [],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 23,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "11e65c46-d2e8-4c44-9d88-a4c9d3b35bf0",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": null,
+      "type": "page_break",
+      "content": "",
+      "order": 24,
+      "anchors": [],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 24,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "f9ed1126-eea0-42e2-b567-931007e15c63",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "02c4719c-23b3-4387-a502-0833b5d1426a",
+      "type": "multiple_choice",
+      "content": "<h2>Ethics &amp; Integrity</h2><p><strong>Definition</strong>: Ethics &amp; Integrity competency is defined as instilling mutual trust &amp; confidence, building and reinforcing inclusivity for all, accepting/owning responsibility for mistakes and successes, creating a culture that fosters high standards of integrity &amp; ethics, behaves in a fair, just, and ethical manner to all stakeholders, shows consistency in principles, values, and behaviors, and demonstrates a sense of responsibility and commitment to the organization, colleagues, and all customers.​</p><h3><em>Please select your rating for [name] for this dimension.</em></h3><p></p>",
+      "order": 25,
+      "anchors": [
+        {
+          "id": "anchor-1767556874533-0",
+          "name": "Below Expectations",
+          "value": 1,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556874533-1",
+          "name": "Slightly Below Expectations",
+          "value": 2,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556874533-2",
+          "name": "Meets Expectations",
+          "value": 3,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556874533-3",
+          "name": "Slightly Exceeds Expectations",
+          "value": 4,
+          "practice": false
+        },
+        {
+          "id": "anchor-1767556874533-4",
+          "name": "Exceeds Expectations",
+          "value": 5,
+          "practice": false
+        }
+      ],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 25,
+      "insights_table": [],
+      "required": true
+    },
+    {
+      "id": "3af613da-3fae-4a1c-bb90-11cda35dbb01",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": "02c4719c-23b3-4387-a502-0833b5d1426a",
+      "type": "text_input",
+      "content": "<p><strong>Developmental Comments for Ethics &amp; Integrity:&nbsp;</strong></p>",
+      "order": 26,
+      "anchors": [],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 26,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "44d693cb-4811-41a3-8665-9ac3fc02c176",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": null,
+      "type": "instructions",
+      "content": "{\"text\":\"<h2><strong><em>INSTRUCTIONS - PLEASE READ CAREFULLY</em></strong></h2><p><strong>​</strong>The dimensions below are designed to provide developmental feedback to strengthen leadership. &nbsp;Please use the scales below to indicate your ratings for <strong>[name] </strong>on the following performance dimensions. &nbsp;</p><p>First read the dimension and then review all of the descriptors for a given dimension. These are example descriptions to help you better understand dimension levels.&nbsp;</p><p>Each dimension ranges from ‘below expectations’ to ‘exceeds expectations'. You will notice that under ‘below expectations’, ‘meets expectations’, and ‘exceeds expectations’ there are several statements that define performance at these respective levels. The ratings for ‘slightly below expectations’ and ‘slightly exceeds expectations’ do not have descriptions but would be a mix of the descriptions immediately to the left and right. Please select the rating that is most accurate for <strong>[name]</strong> based upon your experience with<strong> [name]</strong>.&nbsp;</p><p>Third, you are highly encouraged to include examples of observed or documented behaviors to aid in the developmental feedback process. Please provide additional detail to help <strong>[name]</strong> develop as a leader. Only provide information that you have observed - do not report stories or interpretations or things that might be considered 'gossip'.&nbsp;</p>\",\"next\":\"Continue\"}",
+      "order": 27,
+      "anchors": [],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 27,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "69131df1-0248-474e-807c-6244ca1402b9",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": null,
+      "type": "page_break",
+      "content": "",
+      "order": 28,
+      "anchors": [],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 28,
+      "insights_table": null,
+      "required": true
+    },
+    {
+      "id": "718c81f3-f895-459e-826c-bc86d7790aa2",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "dimension_id": null,
+      "type": "page_break",
+      "content": "",
+      "order": 29,
+      "anchors": [],
+      "created_at": "2026-03-19T18:04:58.968987+00:00",
+      "updated_at": "2026-03-19T18:04:58.968987+00:00",
+      "practice": false,
+      "number": 29,
+      "insights_table": null,
+      "required": true
+    }
+  ],
+  "benchmarks": [],
+  "industries": [],
+  "clients": [
+    {
+      "id": "ba72cd88-793d-42b6-a78b-7e8d675bb27a",
+      "name": "Tester 6 on 3.17.26",
+      "address": null,
+      "logo": null,
+      "background": null,
+      "primary_color": "#2D2E30",
+      "accent_color": "#FFBA00",
+      "require_profile": false,
+      "require_research": false,
+      "whitelabel": false,
+      "created_at": "2026-03-17T21:29:15.729015+00:00",
+      "updated_at": "2026-03-17T21:29:15.729015+00:00"
+    }
+  ],
+  "groups": [],
+  "group_members": [],
+  "profiles": [
+    {
+      "id": "afaab69e-063a-4e64-862a-56434b784fca",
+      "name": "Jerae Wallace",
+      "email": "ljeraewallace@gmail.com",
+      "client_id": "ba72cd88-793d-42b6-a78b-7e8d675bb27a",
+      "access_level": "member"
+    },
+    {
+      "id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "name": "Don Duck",
+      "email": "j.craig.wallace@me.com",
+      "client_id": "ba72cd88-793d-42b6-a78b-7e8d675bb27a",
+      "access_level": "member"
+    },
+    {
+      "id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "name": "Mickie Mouse",
+      "email": "jeraewallace@yahoo.com",
+      "client_id": "ba72cd88-793d-42b6-a78b-7e8d675bb27a",
+      "access_level": "member"
+    },
+    {
+      "id": "b69a92c5-a38d-4b62-833f-70ed4bbda5f5",
+      "name": "Goofy NLN",
+      "email": "support@involvedtalent.com",
+      "client_id": "ba72cd88-793d-42b6-a78b-7e8d675bb27a",
+      "access_level": "member"
+    },
+    {
+      "id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "name": "Craig Wallace",
+      "email": "jcraigwallace@gmail.com",
+      "client_id": "ba72cd88-793d-42b6-a78b-7e8d675bb27a",
+      "access_level": "member"
+    },
+    {
+      "id": "7e678250-f739-4a56-9f1d-423885422a8a",
+      "name": "Iron Man",
+      "email": "jcraigwallace@yahoo.com",
+      "client_id": "ba72cd88-793d-42b6-a78b-7e8d675bb27a",
+      "access_level": "member"
+    },
+    {
+      "id": "934464a4-5516-469d-883b-be0909d32be0",
+      "name": "David Altounian",
+      "email": "david@involvedtalent.com",
+      "client_id": "ba72cd88-793d-42b6-a78b-7e8d675bb27a",
+      "access_level": "member"
+    },
+    {
+      "id": "ffd6b96e-b268-4e48-b4fe-349239110f7a",
+      "name": "D Altoun",
+      "email": "daltounian@gmail.com",
+      "client_id": "ba72cd88-793d-42b6-a78b-7e8d675bb27a",
+      "access_level": "member"
+    }
+  ],
+  "assignments": [
+    {
+      "id": "d965ea80-3227-4d1e-b922-b66d55fa3bde",
+      "user_id": "b69a92c5-a38d-4b62-833f-70ed4bbda5f5",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "target_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "custom_fields": {
+        "type": [
+          "name",
+          "email",
+          "role"
+        ],
+        "value": [
+          "Don Duck",
+          "j.craig.wallace@me.com",
+          "Subordinate"
+        ]
+      },
+      "expires": "2026-04-16T03:59:59.999+00:00",
+      "whitelabel": false,
+      "job_id": null,
+      "url": "https://involved-v2.cyberworldbuilders.dev/assignment/d965ea80-3227-4d1e-b922-b66d55fa3bde?u=Z29vZnlubG4%3D&e=MjAyNi0wNC0xNlQwMzo1OTo1OS45OTla&t=ZmVjYTA2OTlhYTVmYTNmMjdhYWUxNTY5YmUyZjgzNjVhNTQ4NzM2NzJjYjU1NGEwNWUzNGM0ZGZhZjQ5OTVlNQ%3D%3D",
+      "completed": true,
+      "started_at": "2026-03-17T21:57:48.42+00:00",
+      "completed_at": "2026-03-17T21:58:40.601+00:00",
+      "created_at": "2026-03-17T21:49:38.593804+00:00",
+      "updated_at": "2026-03-17T21:58:40.633998+00:00",
+      "reminder": true,
+      "reminder_frequency": "+3 days",
+      "next_reminder": "2026-03-18T09:00:00+00:00",
+      "survey_id": "20c0f8b7-df3a-40c3-b8ef-7d43b23f5f56",
+      "group_id": null
+    },
+    {
+      "id": "c861db19-6362-4dd7-8a6b-0626425d41b7",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "target_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "custom_fields": {
+        "type": [
+          "name",
+          "email",
+          "role"
+        ],
+        "value": [
+          "Mickie Mouse",
+          "jeraewallace@yahoo.com",
+          "Self"
+        ]
+      },
+      "expires": "2026-04-16T03:59:59.999+00:00",
+      "whitelabel": false,
+      "job_id": null,
+      "url": "https://involved-v2.cyberworldbuilders.dev/assignment/c861db19-6362-4dd7-8a6b-0626425d41b7?u=bWlja2llbW91c2U%3D&e=MjAyNi0wNC0xNlQwMzo1OTo1OS45OTla&t=MzM5YTU2MzZiMDA2YjVlN2Q1Yzg3NDJkZDliMjAwMDI5MzA0NDYxZmJkZDk2ZTkzZjc2Y2ZiMmRkMDA1YzRkNA%3D%3D",
+      "completed": true,
+      "started_at": "2026-03-17T22:33:38.57+00:00",
+      "completed_at": "2026-03-18T10:32:23.85+00:00",
+      "created_at": "2026-03-17T21:49:42.502062+00:00",
+      "updated_at": "2026-03-18T10:32:23.872294+00:00",
+      "reminder": true,
+      "reminder_frequency": "+3 days",
+      "next_reminder": "2026-03-18T09:00:00+00:00",
+      "survey_id": "20c0f8b7-df3a-40c3-b8ef-7d43b23f5f56",
+      "group_id": null
+    },
+    {
+      "id": "814e8e09-485b-497b-ba6e-86aac8dea9bc",
+      "user_id": "934464a4-5516-469d-883b-be0909d32be0",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "target_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "custom_fields": {
+        "type": [
+          "name",
+          "email",
+          "role"
+        ],
+        "value": [
+          "Mickie Mouse",
+          "jeraewallace@yahoo.com",
+          "Subordinate"
+        ]
+      },
+      "expires": "2026-04-16T03:59:59.999+00:00",
+      "whitelabel": false,
+      "job_id": null,
+      "url": "https://involved-v2.cyberworldbuilders.dev/assignment/814e8e09-485b-497b-ba6e-86aac8dea9bc?u=ZGF2aWRhbHRvdW5pYW4%3D&e=MjAyNi0wNC0xNlQwMzo1OTo1OS45OTla&t=YjhkM2NiOWQ4Njk0NzM5ODZhYWM4ZGJhYmFmY2JlZWJjYThlZTQ4YmY4YThlNDhjNTA4N2QyZWIxY2JhMzZlMw%3D%3D",
+      "completed": true,
+      "started_at": "2026-03-17T22:28:59.802+00:00",
+      "completed_at": "2026-03-17T22:31:46.277+00:00",
+      "created_at": "2026-03-17T21:49:42.936623+00:00",
+      "updated_at": "2026-03-17T22:31:46.312404+00:00",
+      "reminder": true,
+      "reminder_frequency": "+3 days",
+      "next_reminder": "2026-03-18T09:00:00+00:00",
+      "survey_id": "20c0f8b7-df3a-40c3-b8ef-7d43b23f5f56",
+      "group_id": null
+    },
+    {
+      "id": "be5f4e1e-0677-4350-bbcf-b35f5ebecade",
+      "user_id": "ffd6b96e-b268-4e48-b4fe-349239110f7a",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "target_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "custom_fields": {
+        "type": [
+          "name",
+          "email",
+          "role"
+        ],
+        "value": [
+          "Don Duck",
+          "j.craig.wallace@me.com",
+          "Peer"
+        ]
+      },
+      "expires": "2026-04-16T03:59:59.999+00:00",
+      "whitelabel": false,
+      "job_id": null,
+      "url": "https://involved-v2.cyberworldbuilders.dev/assignment/be5f4e1e-0677-4350-bbcf-b35f5ebecade?u=ZGFsdG91bg%3D%3D&e=MjAyNi0wNC0xNlQwMzo1OTo1OS45OTla&t=MjhkZjdiMzFhZGMzYzFjNTU1NjUyOWEwZTE4ZDkzZDFiNjM0Zjg1Nzg0NjA0OTdhZjk3OTAwMmNlNzEyZmUyNg%3D%3D",
+      "completed": true,
+      "started_at": "2026-03-17T22:36:20.36+00:00",
+      "completed_at": "2026-03-17T22:40:24.293+00:00",
+      "created_at": "2026-03-17T21:49:39.20246+00:00",
+      "updated_at": "2026-03-17T22:40:24.316581+00:00",
+      "reminder": true,
+      "reminder_frequency": "+3 days",
+      "next_reminder": "2026-03-18T09:00:00+00:00",
+      "survey_id": "20c0f8b7-df3a-40c3-b8ef-7d43b23f5f56",
+      "group_id": null
+    },
+    {
+      "id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "target_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "custom_fields": {
+        "type": [
+          "name",
+          "email",
+          "role"
+        ],
+        "value": [
+          "Don Duck",
+          "j.craig.wallace@me.com",
+          "Manager"
+        ]
+      },
+      "expires": "2026-04-16T03:59:59.999+00:00",
+      "whitelabel": false,
+      "job_id": null,
+      "url": "https://involved-v2.cyberworldbuilders.dev/assignment/3eda9e70-c171-475b-820e-295910470e0b?u=Y3JhaWd3YWxsYWNlMQ%3D%3D&e=MjAyNi0wNC0xNlQwMzo1OTo1OS45OTla&t=MjIxYzVhMmRhM2M5ZDRkZDg1YmRhNGE2Yjk2ODBjY2U0ZThjYjJiNmEzMjYyZjBhZTMzMWNkM2YzMTc5MWQyYw%3D%3D",
+      "completed": true,
+      "started_at": "2026-03-17T21:53:11.643+00:00",
+      "completed_at": "2026-03-17T21:54:17.604+00:00",
+      "created_at": "2026-03-17T21:49:35.994027+00:00",
+      "updated_at": "2026-03-17T21:54:17.633849+00:00",
+      "reminder": true,
+      "reminder_frequency": "+3 days",
+      "next_reminder": "2026-03-18T09:00:00+00:00",
+      "survey_id": "20c0f8b7-df3a-40c3-b8ef-7d43b23f5f56",
+      "group_id": null
+    },
+    {
+      "id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "user_id": "7e678250-f739-4a56-9f1d-423885422a8a",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "target_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "custom_fields": {
+        "type": [
+          "name",
+          "email",
+          "role"
+        ],
+        "value": [
+          "Mickie Mouse",
+          "jeraewallace@yahoo.com",
+          "Subordinate"
+        ]
+      },
+      "expires": "2026-04-16T03:59:59.999+00:00",
+      "whitelabel": false,
+      "job_id": null,
+      "url": "https://involved-v2.cyberworldbuilders.dev/assignment/5718f94d-8ce6-4980-94cd-9a652166c913?u=aXJvbm1hbg%3D%3D&e=MjAyNi0wNC0xNlQwMzo1OTo1OS45OTla&t=M2I3MjdjMTE1YjY0YWNkYjM5MzJlYzYzYjRiOTg5Mzg1MDZlYWU2ZjU3N2JlZDJhZGNkMDg1NjMxM2E0MTUyYQ%3D%3D",
+      "completed": true,
+      "started_at": "2026-03-17T22:05:35.36+00:00",
+      "completed_at": "2026-03-17T22:06:21.369+00:00",
+      "created_at": "2026-03-17T21:49:40.107213+00:00",
+      "updated_at": "2026-03-17T22:06:21.396693+00:00",
+      "reminder": true,
+      "reminder_frequency": "+3 days",
+      "next_reminder": "2026-03-18T09:00:00+00:00",
+      "survey_id": "20c0f8b7-df3a-40c3-b8ef-7d43b23f5f56",
+      "group_id": null
+    },
+    {
+      "id": "73b16b19-9dca-466b-b650-d0fa0e2a2cdc",
+      "user_id": "37d29659-e65a-4a13-9980-93eeffb979e2",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "target_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "custom_fields": {
+        "type": [
+          "name",
+          "email",
+          "role"
+        ],
+        "value": [
+          "Mickie Mouse",
+          "jeraewallace@yahoo.com",
+          "Peer"
+        ]
+      },
+      "expires": "2026-04-16T03:59:59.999+00:00",
+      "whitelabel": false,
+      "job_id": null,
+      "url": "https://involved-v2.cyberworldbuilders.dev/assignment/73b16b19-9dca-466b-b650-d0fa0e2a2cdc?u=Y3JhaWd3YWxsYWNlMQ%3D%3D&e=MjAyNi0wNC0xNlQwMzo1OTo1OS45OTla&t=ZDUwMGNmZTZlYzgzOWYxNTU4OWZjMDhiYTVlYzVkNGU2NDdlYWZiYmIzYTJlMDZjM2ZkZmUyYTY0M2Q5MTk1Zg%3D%3D",
+      "completed": true,
+      "started_at": "2026-03-17T21:51:02.722+00:00",
+      "completed_at": "2026-03-17T21:52:18.552+00:00",
+      "created_at": "2026-03-17T21:49:40.659774+00:00",
+      "updated_at": "2026-03-17T21:52:18.590563+00:00",
+      "reminder": true,
+      "reminder_frequency": "+3 days",
+      "next_reminder": "2026-03-18T09:00:00+00:00",
+      "survey_id": "20c0f8b7-df3a-40c3-b8ef-7d43b23f5f56",
+      "group_id": null
+    },
+    {
+      "id": "c435c4f7-6b19-46b0-80a2-2deb0992c440",
+      "user_id": "afaab69e-063a-4e64-862a-56434b784fca",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "target_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "custom_fields": {
+        "type": [
+          "name",
+          "email",
+          "role"
+        ],
+        "value": [
+          "Don Duck",
+          "j.craig.wallace@me.com",
+          "Peer"
+        ]
+      },
+      "expires": "2026-04-16T03:59:59.999+00:00",
+      "whitelabel": false,
+      "job_id": null,
+      "url": "https://involved-v2.cyberworldbuilders.dev/assignment/c435c4f7-6b19-46b0-80a2-2deb0992c440?u=amVyYWV3YWxsYWNl&e=MjAyNi0wNC0xNlQwMzo1OTo1OS45OTla&t=Y2Y5NDgyNGI0MjZjOGM5ZTM5N2JiYjQwODc0OThhZjBmZjk2NjEwNjYyODcxNDljNTEzYjk0Y2M2YzcyMThkMA%3D%3D",
+      "completed": true,
+      "started_at": "2026-03-18T10:40:20.678+00:00",
+      "completed_at": "2026-03-18T10:40:55.052+00:00",
+      "created_at": "2026-03-17T21:49:36.699484+00:00",
+      "updated_at": "2026-03-18T10:40:55.077802+00:00",
+      "reminder": true,
+      "reminder_frequency": "+3 days",
+      "next_reminder": "2026-03-18T09:00:00+00:00",
+      "survey_id": "20c0f8b7-df3a-40c3-b8ef-7d43b23f5f56",
+      "group_id": null
+    },
+    {
+      "id": "19f90795-845f-4092-84b8-484346df32a5",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "target_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "custom_fields": {
+        "type": [
+          "name",
+          "email",
+          "role"
+        ],
+        "value": [
+          "Don Duck",
+          "j.craig.wallace@me.com",
+          "self"
+        ]
+      },
+      "expires": "2026-04-16T03:59:59.999+00:00",
+      "whitelabel": false,
+      "job_id": null,
+      "url": "https://involved-v2.cyberworldbuilders.dev/assignment/19f90795-845f-4092-84b8-484346df32a5?u=ZG9uZHVjaw%3D%3D&e=MjAyNi0wNC0xNlQwMzo1OTo1OS45OTla&t=OWI5OGYzMGE2ZmUxY2Q1N2NiYTM1MTAzYjhmY2ZkMzBjNDEyYjg2ZTk1MTIyNzhlOWE1ZWQ5N2I5M2VhZWI1Yg%3D%3D",
+      "completed": true,
+      "started_at": "2026-03-17T22:09:10.466+00:00",
+      "completed_at": "2026-03-17T22:10:07.446+00:00",
+      "created_at": "2026-03-17T21:49:37.368932+00:00",
+      "updated_at": "2026-03-17T22:10:07.467041+00:00",
+      "reminder": true,
+      "reminder_frequency": "+3 days",
+      "next_reminder": "2026-03-18T09:00:00+00:00",
+      "survey_id": "20c0f8b7-df3a-40c3-b8ef-7d43b23f5f56",
+      "group_id": null
+    },
+    {
+      "id": "f3865332-686f-4e21-aaaa-408177398304",
+      "user_id": "afaab69e-063a-4e64-862a-56434b784fca",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "target_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "custom_fields": {
+        "type": [
+          "name",
+          "email",
+          "role"
+        ],
+        "value": [
+          "Mickie Mouse",
+          "jeraewallace@yahoo.com",
+          "Peer"
+        ]
+      },
+      "expires": "2026-04-16T03:59:59.999+00:00",
+      "whitelabel": false,
+      "job_id": null,
+      "url": "https://involved-v2.cyberworldbuilders.dev/assignment/f3865332-686f-4e21-aaaa-408177398304?u=amVyYWV3YWxsYWNl&e=MjAyNi0wNC0xNlQwMzo1OTo1OS45OTla&t=ZDJlZTQwZjBhNzYwYjhlMjU1ZDY3Mzk0NDI3ZTYzOTgwMTIxYWI5NTBlMDU4YTI5MmIyY2Y1MGNjOGM4MmQyMA%3D%3D",
+      "completed": true,
+      "started_at": "2026-03-18T10:39:35.975+00:00",
+      "completed_at": "2026-03-18T10:40:14.504+00:00",
+      "created_at": "2026-03-17T21:49:41.229535+00:00",
+      "updated_at": "2026-03-18T10:40:14.523799+00:00",
+      "reminder": true,
+      "reminder_frequency": "+3 days",
+      "next_reminder": "2026-03-18T09:00:00+00:00",
+      "survey_id": "20c0f8b7-df3a-40c3-b8ef-7d43b23f5f56",
+      "group_id": null
+    },
+    {
+      "id": "806ab3b4-4624-4371-a9ed-d4b8dea65468",
+      "user_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "target_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "custom_fields": {
+        "type": [
+          "name",
+          "email",
+          "role"
+        ],
+        "value": [
+          "Mickie Mouse",
+          "jeraewallace@yahoo.com",
+          "Manager"
+        ]
+      },
+      "expires": "2026-04-16T03:59:59.999+00:00",
+      "whitelabel": false,
+      "job_id": null,
+      "url": "https://involved-v2.cyberworldbuilders.dev/assignment/806ab3b4-4624-4371-a9ed-d4b8dea65468?u=ZG9uZHVjaw%3D%3D&e=MjAyNi0wNC0xNlQwMzo1OTo1OS45OTla&t=ZTkzZWNhNzUzZDcwNjNiY2QwM2E2ZWUxMjVmOTNlOTZjOThmZjcxZmY5MTY5MzE3MTQ2YTJjZjVmMjk4MDA2Zg%3D%3D",
+      "completed": true,
+      "started_at": "2026-03-17T22:08:00.582+00:00",
+      "completed_at": "2026-03-17T22:09:05.298+00:00",
+      "created_at": "2026-03-17T21:49:41.706402+00:00",
+      "updated_at": "2026-03-17T22:09:05.348609+00:00",
+      "reminder": true,
+      "reminder_frequency": "+3 days",
+      "next_reminder": "2026-03-18T09:00:00+00:00",
+      "survey_id": "20c0f8b7-df3a-40c3-b8ef-7d43b23f5f56",
+      "group_id": null
+    },
+    {
+      "id": "91c630e6-d1c4-40f0-b69b-fa52c67eb302",
+      "user_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+      "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+      "target_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+      "custom_fields": {
+        "type": [
+          "name",
+          "email",
+          "role"
+        ],
+        "value": [
+          "Don Duck",
+          "j.craig.wallace@me.com",
+          "Subordinate"
+        ]
+      },
+      "expires": "2026-04-16T03:59:59.999+00:00",
+      "whitelabel": false,
+      "job_id": null,
+      "url": "https://involved-v2.cyberworldbuilders.dev/assignment/91c630e6-d1c4-40f0-b69b-fa52c67eb302?u=bWlja2llbW91c2U%3D&e=MjAyNi0wNC0xNlQwMzo1OTo1OS45OTla&t=MjMyM2E0MzIyMDY2ODMzMTk4NmE0NzIxNzdmNGUyZjFmZGMxMjFkMjQ0ZjI3YzlmNmY5OTM1YTkyMmU1ZjA3Mw%3D%3D",
+      "completed": true,
+      "started_at": "2026-03-18T10:32:31.151+00:00",
+      "completed_at": "2026-03-18T10:33:08.289+00:00",
+      "created_at": "2026-03-17T21:49:37.905772+00:00",
+      "updated_at": "2026-03-18T10:33:08.315787+00:00",
+      "reminder": true,
+      "reminder_frequency": "+3 days",
+      "next_reminder": "2026-03-18T09:00:00+00:00",
+      "survey_id": "20c0f8b7-df3a-40c3-b8ef-7d43b23f5f56",
+      "group_id": null
+    }
+  ],
+  "answers": [],
+  "report_data": [
+    {
+      "id": "10174d83-fa91-46fe-b56c-0f4139332255",
+      "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+      "overall_score": 3.17,
+      "dimension_scores": {
+        "group_id": "626ebd9d-302d-4888-9ca7-5426fb11dbf3",
+        "target_id": "58a83d78-dacd-4e85-809c-4dfb7cc48260",
+        "dimensions": [
+          {
+            "geonorm": 2.8,
+            "feedback": {
+              "Self": [
+                "jlkjjlkj"
+              ],
+              "Others": [
+                "Craigy",
+                "me.com"
+              ],
+              "Direct Report": [
+                "What happened to the explanations around creative problem solving?",
+                "yahoo"
+              ]
+            },
+            "dimension_id": "62e53d02-20d0-42e8-b397-5fab37ea6bec",
+            "overall_score": 3.3333333333333335,
+            "text_feedback": [
+              "jlkjjlkj",
+              "What happened to the explanations around creative problem solving?",
+              "yahoo",
+              "Craigy",
+              "me.com"
+            ],
+            "dimension_code": "CPS",
+            "dimension_name": "Creative Problem Solving",
+            "rater_breakdown": {
+              "peer": 3.5,
+              "self": 3,
+              "other": null,
+              "all_raters": 3.3333333333333335,
+              "supervisor": 4,
+              "direct_report": 3
+            },
+            "improvement_needed": true,
+            "industry_benchmark": 4.12,
+            "geonorm_participant_count": 10
+          },
+          {
+            "geonorm": 3.8,
+            "feedback": {
+              "Self": [
+                "jhkjh\n"
+              ],
+              "Others": [
+                "Craigy",
+                "me.com",
+                "fghjkl"
+              ],
+              "Direct Report": [
+                "Yup",
+                "yahoo"
+              ]
+            },
+            "dimension_id": "7df7717b-58c4-4322-9a1e-4309094dcc83",
+            "overall_score": 4.333333333333333,
+            "text_feedback": [
+              "jhkjh\n",
+              "Yup",
+              "yahoo",
+              "Craigy",
+              "me.com",
+              "fghjkl"
+            ],
+            "dimension_code": "LA",
+            "dimension_name": "Leadership Adaptability",
+            "rater_breakdown": {
+              "peer": 4.5,
+              "self": 4,
+              "other": null,
+              "all_raters": 4.333333333333333,
+              "supervisor": 4,
+              "direct_report": 4.5
+            },
+            "improvement_needed": false,
+            "industry_benchmark": 3.98,
+            "geonorm_participant_count": 10
+          },
+          {
+            "geonorm": 3.7,
+            "feedback": {
+              "Self": [],
+              "Others": [
+                "Craigy",
+                "me.com"
+              ],
+              "Direct Report": [
+                "Works well with others",
+                "yahoo"
+              ]
+            },
+            "dimension_id": "2ee4780a-673c-4fc7-9092-00807b62aedd",
+            "overall_score": 4,
+            "text_feedback": [
+              "Works well with others",
+              "yahoo",
+              "Craigy",
+              "me.com"
+            ],
+            "dimension_code": "CO",
+            "dimension_name": "Collaboration",
+            "rater_breakdown": {
+              "peer": 5,
+              "self": 5,
+              "other": null,
+              "all_raters": 4,
+              "supervisor": 2,
+              "direct_report": 3.5
+            },
+            "improvement_needed": true,
+            "industry_benchmark": 4.22,
+            "geonorm_participant_count": 10
+          },
+          {
+            "geonorm": 3.1,
+            "feedback": {
+              "Self": [
+                "kgfdfghj"
+              ],
+              "Others": [
+                "Craigy\n",
+                "me.com"
+              ],
+              "Direct Report": [
+                "yahoo"
+              ]
+            },
+            "dimension_id": "a206fefd-f36d-42fd-882b-9230c9f0c0eb",
+            "overall_score": 2.6666666666666665,
+            "text_feedback": [
+              "kgfdfghj",
+              "yahoo",
+              "Craigy\n",
+              "me.com"
+            ],
+            "dimension_code": "SD",
+            "dimension_name": "Self-Development",
+            "rater_breakdown": {
+              "peer": 1.5,
+              "self": 3,
+              "other": null,
+              "all_raters": 2.6666666666666665,
+              "supervisor": 2,
+              "direct_report": 4
+            },
+            "improvement_needed": true,
+            "industry_benchmark": 4.01,
+            "geonorm_participant_count": 10
+          },
+          {
+            "geonorm": 2.6,
+            "feedback": {
+              "Self": [
+                "hjkhkj"
+              ],
+              "Others": [
+                "Craigy\n",
+                "me.com"
+              ],
+              "Direct Report": [
+                "Could be better at reporting progress of team members. Does their work instead of correcting them.",
+                "yahoo"
+              ]
+            },
+            "dimension_id": "cc64fff9-8f0e-48d4-9160-7511b15d1363",
+            "overall_score": 2.1666666666666665,
+            "text_feedback": [
+              "hjkhkj",
+              "Could be better at reporting progress of team members. Does their work instead of correcting them.",
+              "yahoo",
+              "Craigy\n",
+              "me.com"
+            ],
+            "dimension_code": "PM",
+            "dimension_name": "Performance Management",
+            "rater_breakdown": {
+              "peer": 2,
+              "self": 1,
+              "other": null,
+              "all_raters": 2.1666666666666665,
+              "supervisor": 4,
+              "direct_report": 2
+            },
+            "improvement_needed": true,
+            "industry_benchmark": 4.34,
+            "geonorm_participant_count": 10
+          },
+          {
+            "geonorm": 3,
+            "feedback": {
+              "Self": [
+                "klkjlkj"
+              ],
+              "Others": [
+                "Craigy",
+                "me.com"
+              ],
+              "Direct Report": [
+                "At the level expected for a mouse.",
+                "yahoo"
+              ]
+            },
+            "dimension_id": "26b99b7f-b9a0-4a6d-bed9-6a0d61edf079",
+            "overall_score": 2.8333333333333335,
+            "text_feedback": [
+              "klkjlkj",
+              "At the level expected for a mouse.",
+              "yahoo",
+              "Craigy",
+              "me.com"
+            ],
+            "dimension_code": "BM",
+            "dimension_name": "Business Mindset",
+            "rater_breakdown": {
+              "peer": 3,
+              "self": 2,
+              "other": null,
+              "all_raters": 2.8333333333333335,
+              "supervisor": 2,
+              "direct_report": 3.5
+            },
+            "improvement_needed": true,
+            "industry_benchmark": 4.25,
+            "geonorm_participant_count": 10
+          },
+          {
+            "geonorm": 3.4,
+            "feedback": {
+              "Self": [],
+              "Others": [
+                "Craigy",
+                "me.com"
+              ],
+              "Direct Report": [
+                "Cares about the customer but keeps the company's needs in mind.",
+                "yahoo"
+              ]
+            },
+            "dimension_id": "1f295813-e42b-444b-858e-6dfafbbf3262",
+            "overall_score": 3.8333333333333335,
+            "text_feedback": [
+              "Cares about the customer but keeps the company's needs in mind.",
+              "yahoo",
+              "Craigy",
+              "me.com"
+            ],
+            "dimension_code": "CF",
+            "dimension_name": "Customer Focus",
+            "rater_breakdown": {
+              "peer": 2,
+              "self": 5,
+              "other": null,
+              "all_raters": 3.8333333333333335,
+              "supervisor": 5,
+              "direct_report": 4.5
+            },
+            "improvement_needed": true,
+            "industry_benchmark": 4.36,
+            "geonorm_participant_count": 10
+          },
+          {
+            "geonorm": 3.1,
+            "feedback": {
+              "Self": [],
+              "Others": [
+                "me.com",
+                "Craigy"
+              ],
+              "Direct Report": [
+                "Communicates like a champ",
+                "yahoo"
+              ]
+            },
+            "dimension_id": "298e69b7-25bb-4e30-ac33-4dac9556a8a1",
+            "overall_score": 3,
+            "text_feedback": [
+              "Communicates like a champ",
+              "yahoo",
+              "me.com",
+              "Craigy"
+            ],
+            "dimension_code": "COM",
+            "dimension_name": "Communication",
+            "rater_breakdown": {
+              "peer": 2.5,
+              "self": 1,
+              "other": null,
+              "all_raters": 3,
+              "supervisor": 4,
+              "direct_report": 4
+            },
+            "improvement_needed": true,
+            "industry_benchmark": 4.03,
+            "geonorm_participant_count": 10
+          },
+          {
+            "geonorm": 3.1,
+            "feedback": {
+              "Self": [],
+              "Others": [
+                "Craigy",
+                "me.com",
+                "jlkjlkj"
+              ],
+              "Direct Report": [
+                "Ethical as far as money can take him.",
+                "yahoo"
+              ]
+            },
+            "dimension_id": "b57fdc8d-7072-4340-ad25-5e90149614fe",
+            "overall_score": 2.3333333333333335,
+            "text_feedback": [
+              "Ethical as far as money can take him.",
+              "yahoo",
+              "Craigy",
+              "me.com",
+              "jlkjlkj"
+            ],
+            "dimension_code": "EI",
+            "dimension_name": "Ethics & Integrity",
+            "rater_breakdown": {
+              "peer": 0.5,
+              "self": 2,
+              "other": null,
+              "all_raters": 2.3333333333333335,
+              "supervisor": 4,
+              "direct_report": 3.5
+            },
+            "improvement_needed": true,
+            "industry_benchmark": 4.58,
+            "geonorm_participant_count": 10
+          }
+        ],
+        "group_name": "Mickie Mouse",
+        "target_name": "Mickie Mouse",
+        "generated_at": "2026-03-19T12:44:04.718Z",
+        "target_email": "jeraewallace@yahoo.com",
+        "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+        "assignment_id": "5718f94d-8ce6-4980-94cd-9a652166c913",
+        "overall_score": 3.166666666666666,
+        "assessment_title": "Involved-360 - Frontier"
+      },
+      "feedback_assigned": [],
+      "geonorm_data": null,
+      "calculated_at": "2026-03-19T12:44:04.777+00:00",
+      "updated_at": "2026-03-19T12:44:13.283429+00:00",
+      "pdf_status": "ready",
+      "pdf_storage_path": "5718f94d-8ce6-4980-94cd-9a652166c913/v1.pdf",
+      "pdf_generated_at": "2026-03-19T12:44:13.257+00:00",
+      "pdf_version": 1,
+      "pdf_last_error": null,
+      "pdf_job_id": "6ba94929-ea7e-4e64-9ff9-00e7c842a417"
+    },
+    {
+      "id": "d9ed3e61-c611-4fbf-a582-eb647bf9c2a9",
+      "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+      "overall_score": 0,
+      "dimension_scores": {
+        "group_id": "792e2b96-1e95-4494-a537-f21342d9e65b",
+        "target_id": "6500d46c-b334-4dcb-b9d7-e9e8239d5d7b",
+        "dimensions": [
+          {
+            "geonorm": null,
+            "feedback": {
+              "Self": [],
+              "Others": [],
+              "Direct Report": []
+            },
+            "description": "this is jay testing the dimension definition interface on the dimensions tab of the assessment editor page",
+            "dimension_id": "cbaf97a4-e8c1-40f9-849c-405a907f908a",
+            "overall_score": 0,
+            "text_feedback": [],
+            "dimension_code": "CPS",
+            "dimension_name": "Creative Problem Solving",
+            "rater_breakdown": {
+              "peer": null,
+              "self": null,
+              "other": null,
+              "all_raters": null,
+              "supervisor": null,
+              "direct_report": null
+            },
+            "improvement_needed": false,
+            "industry_benchmark": null,
+            "geonorm_participant_count": 0
+          },
+          {
+            "geonorm": null,
+            "feedback": {
+              "Self": [],
+              "Others": [],
+              "Direct Report": []
+            },
+            "dimension_id": "a471a18d-4764-4b6e-bb6f-bd75c7a0feff",
+            "overall_score": 0,
+            "text_feedback": [],
+            "dimension_code": "LA",
+            "dimension_name": "Leadership Adaptability",
+            "rater_breakdown": {
+              "peer": null,
+              "self": null,
+              "other": null,
+              "all_raters": null,
+              "supervisor": null,
+              "direct_report": null
+            },
+            "improvement_needed": false,
+            "industry_benchmark": null,
+            "geonorm_participant_count": 0
+          },
+          {
+            "geonorm": null,
+            "feedback": {
+              "Self": [],
+              "Others": [],
+              "Direct Report": []
+            },
+            "dimension_id": "c7adc3c4-b7f5-43f5-80d2-9ab9eb953f28",
+            "overall_score": 0,
+            "text_feedback": [],
+            "dimension_code": "CO",
+            "dimension_name": "Collaboration",
+            "rater_breakdown": {
+              "peer": null,
+              "self": null,
+              "other": null,
+              "all_raters": null,
+              "supervisor": null,
+              "direct_report": null
+            },
+            "improvement_needed": false,
+            "industry_benchmark": null,
+            "geonorm_participant_count": 0
+          },
+          {
+            "geonorm": null,
+            "feedback": {
+              "Self": [],
+              "Others": [],
+              "Direct Report": []
+            },
+            "dimension_id": "10411901-fdbe-499a-8976-1b57caf912bb",
+            "overall_score": 0,
+            "text_feedback": [],
+            "dimension_code": "SD",
+            "dimension_name": "Self-Development",
+            "rater_breakdown": {
+              "peer": null,
+              "self": null,
+              "other": null,
+              "all_raters": null,
+              "supervisor": null,
+              "direct_report": null
+            },
+            "improvement_needed": false,
+            "industry_benchmark": null,
+            "geonorm_participant_count": 0
+          },
+          {
+            "geonorm": null,
+            "feedback": {
+              "Self": [],
+              "Others": [],
+              "Direct Report": []
+            },
+            "dimension_id": "e78d7536-7f73-4ae2-8ee5-f5f2596a4304",
+            "overall_score": 0,
+            "text_feedback": [],
+            "dimension_code": "PM",
+            "dimension_name": "Performance Management",
+            "rater_breakdown": {
+              "peer": null,
+              "self": null,
+              "other": null,
+              "all_raters": null,
+              "supervisor": null,
+              "direct_report": null
+            },
+            "improvement_needed": false,
+            "industry_benchmark": null,
+            "geonorm_participant_count": 0
+          },
+          {
+            "geonorm": null,
+            "feedback": {
+              "Self": [],
+              "Others": [],
+              "Direct Report": []
+            },
+            "dimension_id": "f45af2cc-02c9-4505-8dcc-42dc55ce03d6",
+            "overall_score": 0,
+            "text_feedback": [],
+            "dimension_code": "BM",
+            "dimension_name": "Business Mindset",
+            "rater_breakdown": {
+              "peer": null,
+              "self": null,
+              "other": null,
+              "all_raters": null,
+              "supervisor": null,
+              "direct_report": null
+            },
+            "improvement_needed": false,
+            "industry_benchmark": null,
+            "geonorm_participant_count": 0
+          },
+          {
+            "geonorm": null,
+            "feedback": {
+              "Self": [],
+              "Others": [],
+              "Direct Report": []
+            },
+            "dimension_id": "bb063431-8f25-431b-9de7-1d861496d906",
+            "overall_score": 0,
+            "text_feedback": [],
+            "dimension_code": "CF",
+            "dimension_name": "Customer Focus",
+            "rater_breakdown": {
+              "peer": null,
+              "self": null,
+              "other": null,
+              "all_raters": null,
+              "supervisor": null,
+              "direct_report": null
+            },
+            "improvement_needed": false,
+            "industry_benchmark": null,
+            "geonorm_participant_count": 0
+          },
+          {
+            "geonorm": null,
+            "feedback": {
+              "Self": [],
+              "Others": [],
+              "Direct Report": []
+            },
+            "dimension_id": "114a7464-08e0-497b-a62e-ca1a2efbeeda",
+            "overall_score": 0,
+            "text_feedback": [],
+            "dimension_code": "COM",
+            "dimension_name": "Communication",
+            "rater_breakdown": {
+              "peer": null,
+              "self": null,
+              "other": null,
+              "all_raters": null,
+              "supervisor": null,
+              "direct_report": null
+            },
+            "improvement_needed": false,
+            "industry_benchmark": null,
+            "geonorm_participant_count": 0
+          },
+          {
+            "geonorm": null,
+            "feedback": {
+              "Self": [],
+              "Others": [],
+              "Direct Report": []
+            },
+            "dimension_id": "02c4719c-23b3-4387-a502-0833b5d1426a",
+            "overall_score": 0,
+            "text_feedback": [],
+            "dimension_code": "EI",
+            "dimension_name": "Ethics & Integrity",
+            "rater_breakdown": {
+              "peer": null,
+              "self": null,
+              "other": null,
+              "all_raters": null,
+              "supervisor": null,
+              "direct_report": null
+            },
+            "improvement_needed": false,
+            "industry_benchmark": null,
+            "geonorm_participant_count": 0
+          }
+        ],
+        "group_name": "Don Duck",
+        "target_name": "Don Duck",
+        "generated_at": "2026-03-19T18:29:18.521Z",
+        "target_email": "j.craig.wallace@me.com",
+        "assessment_id": "b72cd008-8249-49be-9ef4-00383c586f79",
+        "assignment_id": "3eda9e70-c171-475b-820e-295910470e0b",
+        "overall_score": 0,
+        "assessment_title": "Involved-360 - Frontier"
+      },
+      "feedback_assigned": [],
+      "geonorm_data": null,
+      "calculated_at": "2026-03-19T18:29:18.618+00:00",
+      "updated_at": "2026-03-19T18:29:30.104265+00:00",
+      "pdf_status": "ready",
+      "pdf_storage_path": "3eda9e70-c171-475b-820e-295910470e0b/v1.pdf",
+      "pdf_generated_at": "2026-03-19T18:29:30.071+00:00",
+      "pdf_version": 1,
+      "pdf_last_error": null,
+      "pdf_job_id": "b2a00030-c5c2-4194-bd53-91e4fd159054"
+    }
+  ],
+  "assignment_dimension_scores": []
+}

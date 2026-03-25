@@ -250,9 +250,8 @@ export async function generatePDFFromView(
         .page-container:last-child {
           page-break-after: auto !important;
         }
-        /* Fix footer positioning - ensure it's at the bottom accounting for page-wrapper padding */
+        /* Keep position only — PageFooter inline bottom:-110px must not be overridden (matches HTML) */
         .page-footer {
-          bottom: 0 !important;
           position: absolute !important;
         }
         /* Reserve space above footer so content doesn't overlap page number */
@@ -302,9 +301,7 @@ export async function generatePDFFromView(
           .page-container:last-child {
             page-break-after: auto !important;
           }
-          /* Fix footer positioning in print */
           .page-footer {
-            bottom: 0 !important;
             position: absolute !important;
           }
           /* Reserve space above footer so content doesn't overlap page number */
