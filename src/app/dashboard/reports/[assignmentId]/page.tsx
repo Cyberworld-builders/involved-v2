@@ -40,6 +40,7 @@ export default async function ReportPage({
     .select(`
       id,
       user_id,
+      target_id,
       assessment_id,
       completed,
       completed_at,
@@ -48,6 +49,10 @@ export default async function ReportPage({
         name,
         email,
         client_id
+      ),
+      target:profiles!assignments_target_id_fkey(
+        id,
+        name
       ),
       assessment:assessments!assignments_assessment_id_fkey(
         id,
@@ -64,6 +69,7 @@ export default async function ReportPage({
 
   const assessment = (assignment.assessment as unknown) as { id: string; title: string; is_360: boolean } | null
   const assignmentUser = (assignment.user as unknown) as { id: string; name: string; email: string; client_id: string } | null
+  const assignmentTarget = (assignment.target as unknown) as { id: string; name: string } | null
   const clientId = assignmentUser?.client_id || profile.client_id
 
   // Check permissions
@@ -95,6 +101,7 @@ export default async function ReportPage({
           <p className="text-gray-600">
             For {assignmentUser?.name || 'Unknown User'}
           </p>
+
         </div>
 
         <Card>
@@ -128,7 +135,7 @@ export default async function ReportPage({
           Assessment Report: {assessment?.title || 'Unknown Assessment'}
         </h1>
         <p className="text-gray-600">
-          {is360 ? '360 Assessment' : 'Assessment'} for {assignmentUser?.name || 'Unknown User'}
+          {is360 ? '360 Assessment' : 'Assessment'} for {(is360 ? assignmentTarget?.name : assignmentUser?.name) || 'Unknown User'}
           {isCompleted ? (
             assignment.completed_at ? ` \u00B7 Completed ${new Date(assignment.completed_at as string).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ' \u00B7 Completed'
           ) : (
