@@ -119,38 +119,10 @@ export default async function SurveyDetailPage({ params }: SurveyDetailPageProps
   let subjects: Subject[] = []
   let scores: Map<string, ScoreData> = new Map()
   
-  // #region agent log
-  console.log('[DEBUG] About to get subjects', {
-    validAssignmentCount: validAssignments.length,
-    assessmentId: assessment.id,
-    is360: assessment.is_360,
-    assignmentUserIds: validAssignments.map(a => a.user_id),
-    assignmentTargetIds: validAssignments.map(a => a.target_id).filter(Boolean)
-  })
-  // #endregion
-  
   try {
     subjects = await getSurveySubjects(validAssignments)
-    
-    // #region agent log
-    console.log('[DEBUG] Got subjects', {
-      subjectCount: subjects.length,
-      subjects: subjects.map(s => ({ id: s.id, name: s.name, assignmentCount: s.assignment_count }))
-    })
-    // #endregion
-    
     scores = await getSurveyScores(subjects, validAssignments, assessment)
-    
-    // #region agent log
-    console.log('[DEBUG] Got scores', { scoresCount: scores.size })
-    // #endregion
   } catch (error) {
-    // #region agent log
-    console.error('[DEBUG] Error getting subjects/scores', {
-      errorMessage: error instanceof Error ? error.message : String(error),
-      errorStack: error instanceof Error ? error.stack : undefined
-    })
-    // #endregion
     console.error('Error loading survey subjects/scores:', error)
     // Continue with empty data rather than redirecting - let the client handle the error display
   }
@@ -160,16 +132,6 @@ export default async function SurveyDetailPage({ params }: SurveyDetailPageProps
   scores.forEach((value, key) => {
     scoresObject[key] = value
   })
-
-  // #region agent log
-  console.log('[DEBUG] SurveyDetailPage: Passing data to client', {
-    subjectCount: subjects.length,
-    subjects: subjects.map(s => ({ id: s.id, name: s.name })),
-    assignmentCount: validAssignments.length,
-    scoresCount: scores.size,
-    scoresObjectKeys: Object.keys(scoresObject)
-  })
-  // #endregion
 
   return (
     <SurveyDetailClient

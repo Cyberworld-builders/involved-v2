@@ -51,15 +51,7 @@ export default function SurveyDetailClient({
   initialScores = {},
 }: SurveyDetailClientProps) {
   const router = useRouter()
-  // #region agent log
-  console.log('[DEBUG] SurveyDetailClient rendered', {
-    initialSubjectsCount: initialSubjects.length,
-    initialSubjects: initialSubjects.map(s => ({ id: s.id, name: s.name })),
-    assignmentCount: initialAssignments.length,
-    is360: assessment.is_360
-  })
-  // #endregion
-  
+
   // Use initial data from server, or empty if not provided
   const [subjects] = useState<Subject[]>(initialSubjects)
   const [scores] = useState<Map<string, ScoreData>>(() => {
@@ -72,16 +64,6 @@ export default function SurveyDetailClient({
   const [isLoading] = useState(false)
   const [message, setMessage] = useState('')
   const _supabase = createClient()
-
-  // #region agent log
-  useEffect(() => {
-    console.log('[DEBUG] State initialized', {
-      subjectsCount: subjects.length,
-      subjects: subjects.map(s => ({ id: s.id, name: s.name })),
-      scoresCount: scores.size
-    })
-  }, [])
-  // #endregion
 
   // No longer need to fetch data client-side since it's passed from server
   // Keep this useEffect empty for now, or remove if not needed
@@ -580,16 +562,6 @@ export default function SurveyDetailClient({
           </div>
         </CardHeader>
         <CardContent>
-          {/* #region agent log */}
-          {(() => {
-            console.log('[DEBUG] Rendering subjects table', {
-              subjectsLength: subjects.length,
-              subjects: subjects.map(s => ({ id: s.id, name: s.name })),
-              is360: assessment.is_360
-            })
-            return null
-          })()}
-          {/* #endregion */}
           {subjects.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <p>No {assessment.is_360 ? 'targets' : 'people being rated'} found for this survey.</p>
