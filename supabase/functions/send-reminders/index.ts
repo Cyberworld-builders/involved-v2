@@ -80,6 +80,8 @@ serve(async (req) => {
       throw new Error('Missing required environment variables: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
     }
 
+
+
     // Initialize Supabase admin client
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
@@ -154,6 +156,7 @@ serve(async (req) => {
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${supabaseServiceKey}`,
+              'apikey': supabaseServiceKey,
             },
             body: JSON.stringify({
               assignment_id: assignment.id,

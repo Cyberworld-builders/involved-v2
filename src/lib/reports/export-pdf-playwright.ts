@@ -63,10 +63,6 @@ export async function generatePDFFromView(
 
     const page = await context.newPage()
 
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'export-pdf-playwright.ts:73',message:'About to navigate to view URL',data:{viewUrl,hasCookies:!!cookies,cookieCount:cookies?.length||0},timestamp:Date.now(),sessionId:'debug-session',runId:'run4',hypothesisId:'E'})}).catch(()=>{});
-    // #endregion
-
     // Navigate to the fullscreen view
     console.log('[Playwright] Navigating to view URL...')
     await page.goto(viewUrl, {
@@ -75,41 +71,18 @@ export async function generatePDFFromView(
     })
     console.log('[Playwright] Navigation complete, final URL:', page.url())
 
-    // #region agent log
-    const finalUrl = page.url()
-    const pageTitle = await page.title().catch(() => 'unknown')
-    const pageContent = await page.content().catch(() => 'error getting content')
-    const contentLength = pageContent?.length || 0
-    fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'export-pdf-playwright.ts:80',message:'After navigation',data:{finalUrl,pageTitle,contentLength,hasPageContainer:pageContent?.includes('page-container'),hasReportLoaded:pageContent?.includes('data-report-loaded')},timestamp:Date.now(),sessionId:'debug-session',runId:'run4',hypothesisId:'E'})}).catch(()=>{});
-    // #endregion
-
     // Wait for React to hydrate and content to load
     try {
       // Wait for the report to be loaded
       await page.waitForSelector('[data-report-loaded]', { timeout: 30000 })
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'export-pdf-playwright.ts:88',message:'Report loaded indicator found',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run4',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
     } catch (e) {
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'export-pdf-playwright.ts:91',message:'Report loaded indicator not found',data:{error:e instanceof Error?e.message:'unknown'},timestamp:Date.now(),sessionId:'debug-session',runId:'run4',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
       console.warn('Report loaded indicator not found, continuing...')
     }
 
     // Wait for at least one page container
     try {
       await page.waitForSelector('.page-container', { timeout: 30000 })
-      // #region agent log
-      const pageContainerCount = await page.$$eval('.page-container', els => els.length).catch(() => 0)
-      fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'export-pdf-playwright.ts:100',message:'Page containers found',data:{count:pageContainerCount},timestamp:Date.now(),sessionId:'debug-session',runId:'run4',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
     } catch {
-      // #region agent log
-      const pageContainerCount = await page.$$eval('.page-container', els => els.length).catch(() => 0)
-      const bodyText = await page.evaluate(() => document.body?.innerText?.substring(0, 200) || 'no body').catch(() => 'error')
-      fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'export-pdf-playwright.ts:106',message:'No page containers found',data:{pageContainerCount,bodyTextPreview:bodyText,finalUrl:page.url()},timestamp:Date.now(),sessionId:'debug-session',runId:'run4',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
       throw new Error('No page containers found - report may not have loaded')
     }
 
@@ -326,19 +299,6 @@ export async function generatePDFFromView(
 
     // Get the total height of all content and detailed measurements
     const pageMeasurements = await page.evaluate(() => {
-      // #region agent log
-      const logData = {
-        location: 'export-pdf-playwright.ts:171',
-        message: 'Measuring page containers AFTER margin removal',
-        data: { containerCount: 0, measurements: [] as Array<Record<string, unknown>> },
-        timestamp: Date.now(),
-        sessionId: 'debug-session',
-        runId: 'post-fix',
-        hypothesisId: 'A'
-      };
-      fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData)}).catch(()=>{});
-      // #endregion
-      
       // Calculate total height - margins should now be 0
       const pageContainers = document.querySelectorAll('.page-container')
       if (pageContainers.length === 0) return { totalHeight: 1080, measurements: [] }
@@ -366,45 +326,11 @@ export async function generatePDFFromView(
         total += totalHeight
       })
       
-      // #region agent log
-      const logData2 = {
-        location: 'export-pdf-playwright.ts:205',
-        message: 'Page container measurements complete (post-fix)',
-        data: { containerCount: pageContainers.length, measurements, totalHeight: total },
-        timestamp: Date.now(),
-        sessionId: 'debug-session',
-        runId: 'post-fix',
-        hypothesisId: 'A'
-      };
-      fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData2)}).catch(()=>{});
-      // #endregion
-      
       return { totalHeight: Math.max(1080, total + 100), measurements }
     })
 
     const totalHeight = pageMeasurements.totalHeight
     console.log(`Total content height: ${totalHeight}px`)
-    
-    // #region agent log
-    const logData3 = {
-      location: 'export-pdf-playwright.ts:217',
-      message: 'Container height analysis (post-fix)',
-      data: { 
-        containerCount: pageMeasurements.measurements.length,
-        avgHeight: pageMeasurements.measurements.reduce((sum, m) => sum + m.height, 0) / pageMeasurements.measurements.length,
-        minHeight: Math.min(...pageMeasurements.measurements.map(m => m.height)),
-        maxHeight: Math.max(...pageMeasurements.measurements.map(m => m.height)),
-        avgTotalHeight: pageMeasurements.measurements.reduce((sum, m) => sum + m.totalHeight, 0) / pageMeasurements.measurements.length,
-        measurements: pageMeasurements.measurements.slice(0, 5) // First 5 for analysis
-      },
-      timestamp: Date.now(),
-      sessionId: 'debug-session',
-      runId: 'post-fix',
-      hypothesisId: 'A'
-    };
-    fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData3)}).catch(()=>{});
-    // #endregion
-
 
     // Emulate print media to ensure print styles are applied
     // This is critical for CSS page-break rules to work
@@ -424,89 +350,8 @@ export async function generatePDFFromView(
     // Check PDF page dimensions and page break CSS before generating
     // Focus on first few pages (cover + TOC) to diagnose blank page issue
     const pdfPageInfo = await page.evaluate(() => {
-      // #region agent log
-      const logData = {
-        location: 'export-pdf-playwright.ts:270',
-        message: 'Checking footer positioning and last page break',
-        data: { 
-          containerCount: document.querySelectorAll('.page-container').length,
-          layoutPadding: null as Record<string, unknown> | null,
-          firstPagePosition: null as Record<string, unknown> | null,
-          lastPageInfo: null as Record<string, unknown> | null,
-          footerPositions: [] as Array<Record<string, unknown>>,
-          pageBreakStyles: [] as Array<Record<string, unknown>>
-        },
-        timestamp: Date.now(),
-        sessionId: 'debug-session',
-        runId: 'run4',
-        hypothesisId: 'K'
-      };
-      
-      // Check layout container padding
-      const layoutContainer = document.querySelector('.report-view-container')
-      const innerContainer = layoutContainer?.querySelector('div')
-      if (layoutContainer) {
-        const layoutStyles = window.getComputedStyle(layoutContainer)
-        const innerStyles = innerContainer ? window.getComputedStyle(innerContainer) : null
-        logData.data.layoutPadding = {
-          outerPaddingTop: layoutStyles.paddingTop,
-          outerPaddingBottom: layoutStyles.paddingBottom,
-          innerPaddingTop: innerStyles?.paddingTop || null,
-          innerPaddingBottom: innerStyles?.paddingBottom || null,
-          totalTopPadding: (parseInt(layoutStyles.paddingTop) || 0) + (parseInt(innerStyles?.paddingTop || '0') || 0)
-        }
-      }
-      
       const containers = document.querySelectorAll('.page-container')
-      
-      // Get first page position
-      const firstPage = containers[0]
-      if (firstPage) {
-        const firstRect = firstPage.getBoundingClientRect()
-        const firstStyles = window.getComputedStyle(firstPage)
-        logData.data.firstPagePosition = {
-          top: firstRect.top,
-          left: firstRect.left,
-          height: firstRect.height,
-          marginTop: firstStyles.marginTop,
-          marginBottom: firstStyles.marginBottom,
-          computedTop: firstStyles.top,
-          offsetTop: (firstPage as HTMLElement).offsetTop
-        }
-      }
-      
-      // Get last page info
-      const lastPage = containers[containers.length - 1]
-      if (lastPage) {
-        const lastStyles = window.getComputedStyle(lastPage)
-        const lastRect = lastPage.getBoundingClientRect()
-        logData.data.lastPageInfo = {
-          index: containers.length - 1,
-          pageBreakAfter: lastStyles.pageBreakAfter || lastStyles.breakAfter,
-          height: lastRect.height,
-          marginBottom: lastStyles.marginBottom
-        }
-      }
-      
-      // Get footer positions for first 3 pages
-      const footerPositions = Array.from(containers).slice(0, 3).map((container, i) => {
-        const footer = container.querySelector('.page-footer')
-        if (footer) {
-          const footerStyles = window.getComputedStyle(footer)
-          const footerRect = footer.getBoundingClientRect()
-          const containerRect = container.getBoundingClientRect()
-          return {
-            pageIndex: i,
-            footerBottom: footerStyles.bottom,
-            footerPosition: footerStyles.position,
-            footerTop: footerRect.top,
-            containerBottom: containerRect.bottom,
-            distanceFromBottom: containerRect.bottom - footerRect.bottom
-          }
-        }
-        return { pageIndex: i, footer: null }
-      })
-      
+
       // Get detailed info for first 3 pages
       const pageBreakStyles = Array.from(containers).slice(0, 3).map((container, i) => {
         const styles = window.getComputedStyle(container)
@@ -522,12 +367,7 @@ export async function generatePDFFromView(
           pageBreakAfter: styles.pageBreakAfter || styles.breakAfter
         }
       })
-      
-      logData.data.pageBreakStyles = pageBreakStyles
-      logData.data.footerPositions = footerPositions
-      fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData)}).catch(()=>{});
-      // #endregion
-      
+
       // A4 dimensions in pixels at 96 DPI: 210mm × 297mm = 794px × 1123px
       // But Playwright uses points: A4 = 595.276 × 841.890 points
       // At 72 DPI (standard for PDF): A4 = 595.276 × 841.890 points ≈ 794px × 1123px at 96 DPI
@@ -546,27 +386,6 @@ export async function generatePDFFromView(
       }
     })
     
-    // #region agent log
-    const logData4 = {
-      location: 'export-pdf-playwright.ts:300',
-      message: 'PDF page dimension analysis - after footer and last page fixes',
-      data: {
-        a4HeightPx: pdfPageInfo.a4HeightPx,
-        containerHeight: pdfPageInfo.containerHeight,
-        containerWithMargins: pdfPageInfo.containerWithMargins,
-        marginTop: pdfPageInfo.marginTop,
-        marginBottom: pdfPageInfo.marginBottom,
-        exceedsA4: pdfPageInfo.containerWithMargins > pdfPageInfo.a4HeightPx,
-        overflow: pdfPageInfo.containerWithMargins - pdfPageInfo.a4HeightPx
-      },
-      timestamp: Date.now(),
-      sessionId: 'debug-session',
-      runId: 'run4',
-      hypothesisId: 'K'
-    };
-    fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData4)}).catch(()=>{});
-    // #endregion
-
     // Generate PDF with A4 size matching legacy dimensions
     // Use displayHeaderFooter: false to avoid browser headers
     // Note: Playwright's PDF generation will automatically handle page breaks based on CSS
@@ -587,19 +406,6 @@ export async function generatePDFFromView(
       // when print media is emulated
     })
     
-    // #region agent log
-    const logData5 = {
-      location: 'export-pdf-playwright.ts:330',
-      message: 'PDF generation complete - after footer and last page fixes',
-      data: { pdfBufferSize: pdfBuffer.length },
-      timestamp: Date.now(),
-      sessionId: 'debug-session',
-      runId: 'run4',
-      hypothesisId: 'K'
-    };
-    fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData5)}).catch(()=>{});
-    // #endregion
-
     await context.close()
     return Buffer.from(pdfBuffer)
   } finally {

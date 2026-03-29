@@ -101,10 +101,6 @@ export default function ClientReports({ clientId }: ClientReportsProps) {
       const { data: assignments, error: assignmentsError } = await assignmentsQuery
         .order('created_at', { ascending: false })
 
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'client-reports.tsx:65',message:'Loaded assignments for surveys',data:{assignmentCount:assignments?.length||0,assignmentsWithSurveyId:assignments?.filter(a=>a.survey_id).length||0,assignmentsWithoutSurveyId:assignments?.filter(a=>!a.survey_id).length||0,error:assignmentsError?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
-
       if (assignmentsError) {
         throw new Error(`Failed to load assignments: ${assignmentsError.message || JSON.stringify(assignmentsError)}`)
       }
@@ -125,9 +121,6 @@ export default function ClientReports({ clientId }: ClientReportsProps) {
 
       assignments.forEach((assignment) => {
         if (!assignment.survey_id) {
-          // #region agent log
-          fetch('http://127.0.0.1:7243/ingest/63306b5a-1726-4764-b733-5d551565958f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'client-reports.tsx:87',message:'Skipping assignment without survey_id',data:{assignmentId:assignment.id,assessmentId:assignment.assessment_id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-          // #endregion
           return // Skip assignments without survey_id
         }
 

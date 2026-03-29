@@ -21,23 +21,10 @@ export default async function ReportViewFullscreenPage({
     : (serviceRoleTokenRaw as string | undefined)
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   
-  // #region agent log
-  console.log('[DEBUG] View page - searchParams keys:', Object.keys(resolvedSearchParams || {}))
-  console.log('[DEBUG] View page - serviceRoleToken present:', !!serviceRoleToken)
-  console.log('[DEBUG] View page - serviceRoleKey present:', !!serviceRoleKey)
-  if (serviceRoleToken && serviceRoleKey) {
-    console.log('[DEBUG] View page - tokens match:', serviceRoleToken === serviceRoleKey)
-  }
-  // #endregion
-  
   const isServiceRole = serviceRoleToken && 
                        serviceRoleKey && 
                        serviceRoleToken === serviceRoleKey
   
-  // #region agent log
-  console.log('[DEBUG] View page - isServiceRole:', isServiceRole)
-  // #endregion
-
   // Get assignment to verify access (needed for both service role and user auth paths)
   const { createAdminClient } = await import('@/lib/supabase/admin')
   const adminClient = createAdminClient()
@@ -134,10 +121,6 @@ export default async function ReportViewFullscreenPage({
   let reportData: unknown = null
   if (isServiceRole) {
     try {
-      // #region agent log
-      console.log('[DEBUG] View page - Fetching report data for service role')
-      // #endregion
-      
       // Check if report data exists
       const { data: existingReportData } = await adminClient
         .from('report_data')
@@ -146,14 +129,8 @@ export default async function ReportViewFullscreenPage({
         .single()
 
       if (existingReportData?.dimension_scores) {
-        // #region agent log
-        console.log('[DEBUG] View page - Using existing report data')
-        // #endregion
         reportData = existingReportData.dimension_scores
       } else {
-        // #region agent log
-        console.log('[DEBUG] View page - Generating new report data')
-        // #endregion
         // Generate report if it doesn't exist
         const { generate360Report } = await import('@/lib/reports/generate-360-report')
         const { generateLeaderBlockerReport } = await import('@/lib/reports/generate-leader-blocker-report')
@@ -164,17 +141,9 @@ export default async function ReportViewFullscreenPage({
           reportData = await generateLeaderBlockerReport(assignmentId)
         }
         
-        // #region agent log
-        console.log('[DEBUG] View page - Report data generated:', {
-          hasData: !!reportData,
-          dataType: reportData ? typeof reportData : 'null'
-        })
-        // #endregion
       }
     } catch (error) {
-      // #region agent log
-      console.error('[DEBUG] View page - Error fetching report data:', error)
-      // #endregion
+      console.error('Error fetching report data:', error)
       // Continue without report data - client component will handle error
     }
   }
