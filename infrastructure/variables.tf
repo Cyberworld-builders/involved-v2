@@ -1,13 +1,13 @@
 variable "aws_region" {
-  description = "AWS region for SES resources"
+  description = "AWS region for SES resources (production access granted in us-east-2)"
   type        = string
-  default     = "us-east-1"
+  default     = "us-east-2"
 }
 
 variable "sender_email" {
-  description = "Email address to use as sender (must be verified in SES)"
+  description = "Primary sender email address (verified in SES)"
   type        = string
-  default     = "jay@cyberworldbuilders.com"
+  default     = "noreply@involvedtalent.com"
 }
 
 variable "sender_name" {
@@ -16,16 +16,22 @@ variable "sender_name" {
   default     = "Involved Talent"
 }
 
-variable "iam_user_name" {
-  description = "Name for the IAM user that will have SES permissions"
+variable "iam_role_name" {
+  description = "Name of the IAM role for Vercel OIDC → SES access"
   type        = string
-  default     = "involved-v2-ses-user"
+  default     = "talent-assessment-vercel-ses-role"
 }
 
-variable "domain_name" {
-  description = "Domain name to verify in SES (optional, leave empty to only verify email)"
+variable "vercel_team_staging" {
+  description = "Vercel team slug for the staging project (Jay's)"
   type        = string
-  default     = ""
+  default     = "jaylong255s-projects"
+}
+
+variable "vercel_team_production" {
+  description = "Vercel team slug for the production project (Involved Talent)"
+  type        = string
+  default     = "involved-talent"
 }
 
 variable "tags" {
