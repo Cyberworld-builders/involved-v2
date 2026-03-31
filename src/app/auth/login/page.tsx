@@ -1,20 +1,73 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
+interface DevProfile {
+  id: string
+  email: string
+  name: string
+  role: string
+  access_level: string
+  client_id: string | null
+  client: { name: string } | null
+}
+
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [devProfiles, setDevProfiles] = useState<DevProfile[]>([])
+  const [devLoading, setDevLoading] = useState(false)
   const router = useRouter()
 
   const supabase = createClient()
+  const isDev = process.env.NODE_ENV === 'development'
+
+  useEffect(() => {
+    if (isDev) {
+      fetch('/api/auth/dev-login')
+        .then(r => r.json())
+        .then(d => setDevProfiles(d.profiles || []))
+        .catch(() => {})
+    }
+  }, [isDev])
+
+  const handleDevLogin = async (profileEmail: string) => {
+    setDevLoading(true)
+    setMessage('')
+    try {
+      const res = await fetch('/api/auth/dev-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: profileEmail }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setMessage(data.error || 'Dev login failed')
+        return
+      }
+      const { error } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      })
+      if (error) {
+        setMessage(error.message)
+      } else {
+        await router.refresh()
+        router.push('/dashboard')
+      }
+    } catch {
+      setMessage('Dev login failed')
+    } finally {
+      setDevLoading(false)
+    }
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -82,7 +135,7 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleLogin} method="POST" action="" className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-900">
                 Email address
@@ -136,6 +189,42 @@ export default function LoginPage() {
           </form>
         </CardContent>
         </Card>
+
+        {isDev && devProfiles.length > 0 && (
+          <Card className="mt-4 border-amber-300 bg-amber-50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm text-amber-800">Dev Login</CardTitle>
+              <CardDescription className="text-xs text-amber-600">
+                Click any user to sign in instantly (dev only)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-1 max-h-64 overflow-y-auto">
+                {devProfiles.map(p => (
+                  <button
+                    key={p.id}
+                    onClick={() => handleDevLogin(p.email)}
+                    disabled={devLoading}
+                    className="w-full text-left px-3 py-2 text-sm rounded hover:bg-amber-100 transition-colors disabled:opacity-50 flex justify-between items-center"
+                  >
+                    <div>
+                      <span className="font-medium text-gray-900">{p.name || p.email}</span>
+                      <span className="text-gray-500 ml-2 text-xs">{p.email}</span>
+                    </div>
+                    <div className="flex gap-1">
+                      {p.role === 'admin' && (
+                        <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">admin</span>
+                      )}
+                      {p.client && (
+                        <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">{p.client.name}</span>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )

@@ -89,13 +89,12 @@ async function runSimulation(
     return
   }
 
-  // Validation: block re-simulation for same group + assessment (existing completed assignments)
+  // Validation: block re-simulation for same group + assessment (existing assignments)
   const memberIds = groupMembers.map((m) => m.profile_id)
   let existingQuery = adminClient
     .from('assignments')
     .select('id')
     .eq('assessment_id', assessment_id)
-    .eq('completed', true)
     .in('user_id', memberIds)
   if (group.target_id != null) {
     existingQuery = existingQuery.eq('target_id', group.target_id)
@@ -138,13 +137,25 @@ async function runSimulation(
   expiresAt.setDate(expiresAt.getDate() + 30)
   const surveyId = crypto.randomUUID()
 
-  writeLine('Creating assignments and answers...')
+  // Randomize completion: always leave at least 1 incomplete, cap at 98%
+  const maxComplete = Math.min(
+    groupMembers.length - 1,
+    Math.floor(groupMembers.length * 0.98)
+  )
+  const minComplete = Math.max(1, Math.floor(groupMembers.length * 0.85))
+  const completionCount = minComplete + Math.floor(Math.random() * (maxComplete - minComplete + 1))
+  // Shuffle to randomize which members complete
+  const shuffledIndices = groupMembers.map((_, i) => i).sort(() => Math.random() - 0.5)
+  const completingIndices = new Set(shuffledIndices.slice(0, completionCount))
+
+  writeLine(`Creating assignments and answers (${completionCount}/${groupMembers.length} will complete)...`)
 
   const total = groupMembers.length
   for (let i = 0; i < groupMembers.length; i++) {
     const member = groupMembers[i]
     const num = i + 1
-    writeLine(`  Member ${num}/${total}: profile ${member.profile_id.slice(0, 8)}...`)
+    const willComplete = completingIndices.has(i)
+    writeLine(`  Member ${num}/${total}: profile ${member.profile_id.slice(0, 8)}...${willComplete ? '' : ' (will not complete)'}`)
 
     const { data: existingAssignment } = await adminClient
       .from('assignments')
@@ -198,6 +209,16 @@ async function runSimulation(
     }
 
     assignmentIds.push(assignmentId)
+
+    if (!willComplete) {
+      // Non-completing member: assignment exists but no answers, not started
+      await adminClient
+        .from('assignments')
+        .update({ started_at: null, completed: false })
+        .eq('id', assignmentId)
+      writeLine(`    Skipped (non-participant).`)
+      continue
+    }
 
     for (const field of answerableFields) {
       let answerValue: string
