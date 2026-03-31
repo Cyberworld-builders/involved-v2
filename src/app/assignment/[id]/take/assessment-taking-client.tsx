@@ -575,11 +575,15 @@ export default function AssessmentTakingClient({
     }
   }
 
-  // Filter out instructions field and sort by order
+  // Filter out instructions and dimension definition fields, then sort by order
   const allFields = [...fields]
     .filter(f => {
       const fieldType = f.type as string
-      return fieldType !== 'instructions' && fieldType !== '10'
+      if (fieldType === 'instructions' || fieldType === '10') return false
+      // Filter out rich_text/description fields that are dimension definitions
+      // (they have a dimension_id and are used in reports, not in the survey)
+      if ((fieldType === 'description' || fieldType === 'rich_text' || fieldType === '2') && f.dimension_id) return false
+      return true
     })
     .sort((a, b) => (a.order || 0) - (b.order || 0))
 
