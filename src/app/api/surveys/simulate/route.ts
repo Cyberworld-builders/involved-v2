@@ -148,7 +148,7 @@ async function runSimulation(
   const shuffledIndices = groupMembers.map((_, i) => i).sort(() => Math.random() - 0.5)
   const completingIndices = new Set(shuffledIndices.slice(0, completionCount))
 
-  writeLine(`Creating assignments and answers (completion rate: ${Math.round(completionRate * 100)}%, ${completionCount}/${groupMembers.length} will complete)...`)
+  writeLine(`Creating assignments and answers (${completionCount}/${groupMembers.length} will complete)...`)
 
   const total = groupMembers.length
   for (let i = 0; i < groupMembers.length; i++) {
