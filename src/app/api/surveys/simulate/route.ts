@@ -137,9 +137,13 @@ async function runSimulation(
   expiresAt.setDate(expiresAt.getDate() + 30)
   const surveyId = crypto.randomUUID()
 
-  // Randomize completion rate between 90-95% to simulate realistic participation
-  const completionRate = 0.90 + Math.random() * 0.05
-  const completionCount = Math.max(1, Math.round(groupMembers.length * completionRate))
+  // Randomize completion: always leave at least 1 incomplete, cap at 98%
+  const maxComplete = Math.min(
+    groupMembers.length - 1,
+    Math.floor(groupMembers.length * 0.98)
+  )
+  const minComplete = Math.max(1, Math.floor(groupMembers.length * 0.85))
+  const completionCount = minComplete + Math.floor(Math.random() * (maxComplete - minComplete + 1))
   // Shuffle to randomize which members complete
   const shuffledIndices = groupMembers.map((_, i) => i).sort(() => Math.random() - 0.5)
   const completingIndices = new Set(shuffledIndices.slice(0, completionCount))
