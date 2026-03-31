@@ -181,8 +181,8 @@ export default async function AssignmentsPage() {
                         )}
                       </div>
                       <div className="ml-4">
-                        {assignment.url ? (() => {
-                          let url = assignment.url.trim()
+                        {(assignment.url || assignment.id) ? (() => {
+                          let url = assignment.url?.trim() || `/assignment/${assignment.id}`
                           
                           // URLs are stored with domain but no protocol (e.g., "involved-v2.cyberworldbuilders.dev/assignment/...")
                           // Strip the domain and keep only the path so React/Next.js can add the domain automatically
