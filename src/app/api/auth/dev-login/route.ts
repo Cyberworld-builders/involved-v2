@@ -5,8 +5,8 @@ const DEV_PASSWORD = 'DevLogin123!'
 
 /**
  * POST /api/auth/dev-login
- * Development-only: ensures an auth account exists for the given email
- * with a known password, handling the profile trigger gracefully.
+ * Development-only: resets a user's password to a known value for instant login.
+ * If no auth account exists, creates one and links it to the existing profile.
  */
 export async function POST(request: NextRequest) {
   if (process.env.NODE_ENV !== 'development') {
@@ -20,12 +20,12 @@ export async function POST(request: NextRequest) {
 
   const adminClient = createAdminClient()
 
-  // Check if auth user already exists
+  // Check if auth user exists
   const { data: users } = await adminClient.auth.admin.listUsers()
   const authUser = users?.users?.find(u => u.email === email)
 
   if (authUser) {
-    // Auth user exists — just reset password
+    // Auth user exists — just reset password to known value
     const { error } = await adminClient.auth.admin.updateUserById(authUser.id, {
       password: DEV_PASSWORD,
     })
@@ -35,71 +35,56 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ email, password: DEV_PASSWORD })
   }
 
-  // No auth user — check for existing profile
+  // No auth user — profile may exist without auth (e.g., imported data).
+  // Get the existing profile so we can preserve its data.
   const { data: existingProfile } = await adminClient
     .from('profiles')
-    .select('id, username, name')
+    .select('id, username, name, client_id, role, access_level, status, industry_id')
     .eq('email', email)
     .single()
 
   if (existingProfile) {
-    // Profile exists without auth user. The auth trigger will INSERT a new
-    // profile on auth.users creation, colliding with the existing one.
-    // Save full profile, delete it, create auth user, then restore fields.
-    const { data: fullProfile } = await adminClient
-      .from('profiles')
-      .select('*')
-      .eq('id', existingProfile.id)
-      .single()
-
-    await adminClient.from('profiles').delete().eq('id', existingProfile.id)
+    // Temporarily remove profile to avoid trigger collision, then restore
+    const saved = { ...existingProfile }
+    await adminClient.from('profiles').delete().eq('id', saved.id)
 
     const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
       email,
       password: DEV_PASSWORD,
       email_confirm: true,
-      user_metadata: {
-        username: existingProfile.username,
-        full_name: existingProfile.name,
-      },
+      user_metadata: { username: saved.username, full_name: saved.name },
     })
 
     if (createError) {
-      // Restore original profile on failure
-      if (fullProfile) {
-        await adminClient.from('profiles').insert(fullProfile)
-      }
+      await adminClient.from('profiles').insert(saved as Record<string, unknown>)
       return NextResponse.json({ error: createError.message }, { status: 500 })
     }
 
-    // Restore saved fields onto the trigger-created profile
-    if (fullProfile && newUser?.user) {
-      await adminClient
-        .from('profiles')
-        .update({
-          client_id: fullProfile.client_id,
-          role: fullProfile.role,
-          access_level: fullProfile.access_level,
-          name: fullProfile.name,
-          username: fullProfile.username,
-          industry_id: fullProfile.industry_id,
-          status: fullProfile.status,
-        })
-        .eq('auth_user_id', newUser.user.id)
+    // Restore original fields onto the trigger-created profile
+    if (newUser?.user) {
+      await adminClient.from('profiles').update({
+        client_id: saved.client_id,
+        role: saved.role,
+        access_level: saved.access_level,
+        status: saved.status,
+        industry_id: saved.industry_id,
+        name: saved.name,
+        username: saved.username,
+      }).eq('auth_user_id', newUser.user.id)
     }
 
     return NextResponse.json({ email, password: DEV_PASSWORD })
   }
 
-  // No profile at all — just create the auth user
-  const { error: createError } = await adminClient.auth.admin.createUser({
+  // No profile at all — just create the auth user (trigger creates profile)
+  const { error } = await adminClient.auth.admin.createUser({
     email,
     password: DEV_PASSWORD,
     email_confirm: true,
   })
 
-  if (createError) {
-    return NextResponse.json({ error: createError.message }, { status: 500 })
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
   return NextResponse.json({ email, password: DEV_PASSWORD })

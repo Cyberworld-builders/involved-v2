@@ -10,14 +10,14 @@ BEGIN;
 -- Create a local admin user for the assessment's created_by FK
 INSERT INTO auth.users (id, instance_id, email, encrypted_password, email_confirmed_at, created_at, updated_at, aud, role,
   confirmation_token, recovery_token, email_change_token_new, email_change, email_change_token_current,
-  phone, phone_change_token, phone_change, reauthentication_token)
+  phone_change_token, phone_change, reauthentication_token)
 VALUES (
   '00000000-0000-0000-0000-000000000001',
   '00000000-0000-0000-0000-000000000000',
   'admin@demo.com',
   crypt('Test123$', gen_salt('bf')),
   now(), now(), now(), 'authenticated', 'authenticated',
-  '', '', '', '', '', '', '', '', ''
+  '', '', '', '', '', '', '', ''
 )
 ON CONFLICT (id) DO NOTHING;
 
@@ -37,33 +37,75 @@ ON CONFLICT (id) DO NOTHING;
 UPDATE profiles SET client_id = '00000000-0000-0000-0000-000000000010'
 WHERE auth_user_id = '00000000-0000-0000-0000-000000000001';
 
--- Test users (no auth accounts needed — they take assessments via magic link)
-INSERT INTO profiles (id, email, name, username, role, client_id, created_at, updated_at) VALUES
-  ('00000000-0000-0000-0000-000000000101', 'alice@test.com', 'Alice Johnson', 'alice', 'user', '00000000-0000-0000-0000-000000000010', now(), now()),
-  ('00000000-0000-0000-0000-000000000102', 'bob@test.com', 'Bob Smith', 'bob', 'user', '00000000-0000-0000-0000-000000000010', now(), now()),
-  ('00000000-0000-0000-0000-000000000103', 'carol@test.com', 'Carol Williams', 'carol', 'user', '00000000-0000-0000-0000-000000000010', now(), now()),
-  ('00000000-0000-0000-0000-000000000104', 'dave@test.com', 'Dave Brown', 'dave', 'user', '00000000-0000-0000-0000-000000000010', now(), now()),
-  ('00000000-0000-0000-0000-000000000105', 'eve@test.com', 'Eve Davis', 'eve', 'user', '00000000-0000-0000-0000-000000000010', now(), now()),
-  ('00000000-0000-0000-0000-000000000106', 'frank@test.com', 'Frank Miller', 'frank', 'user', '00000000-0000-0000-0000-000000000010', now(), now()),
-  ('00000000-0000-0000-0000-000000000107', 'grace@test.com', 'Grace Wilson', 'grace', 'user', '00000000-0000-0000-0000-000000000010', now(), now()),
-  ('00000000-0000-0000-0000-000000000108', 'hank@test.com', 'Hank Taylor', 'hank', 'user', '00000000-0000-0000-0000-000000000010', now(), now())
-ON CONFLICT (id) DO NOTHING;
+-- Test auth users (all use password 'DevLogin123!')
+-- The trigger auto-creates profiles, which we then update with client/role info
+DO $$
+DECLARE
+  users text[][] := ARRAY[
+    ARRAY['00000000-0000-0000-0000-000000000101', 'alice@test.com', 'alice', 'Alice Johnson'],
+    ARRAY['00000000-0000-0000-0000-000000000102', 'bob@test.com', 'bob', 'Bob Smith'],
+    ARRAY['00000000-0000-0000-0000-000000000103', 'carol@test.com', 'carol', 'Carol Williams'],
+    ARRAY['00000000-0000-0000-0000-000000000104', 'dave@test.com', 'dave', 'Dave Brown'],
+    ARRAY['00000000-0000-0000-0000-000000000105', 'eve@test.com', 'eve', 'Eve Davis'],
+    ARRAY['00000000-0000-0000-0000-000000000106', 'frank@test.com', 'frank', 'Frank Miller'],
+    ARRAY['00000000-0000-0000-0000-000000000107', 'grace@test.com', 'grace', 'Grace Wilson'],
+    ARRAY['00000000-0000-0000-0000-000000000108', 'hank@test.com', 'hank', 'Hank Taylor']
+  ];
+  u text[];
+BEGIN
+  FOREACH u SLICE 1 IN ARRAY users LOOP
+    INSERT INTO auth.users (id, instance_id, email, encrypted_password, email_confirmed_at,
+      created_at, updated_at, aud, role, raw_user_meta_data,
+      confirmation_token, recovery_token, email_change_token_new, email_change,
+      email_change_token_current, phone_change_token, phone_change, reauthentication_token)
+    VALUES (
+      u[1]::uuid, '00000000-0000-0000-0000-000000000000'::uuid, u[2],
+      crypt('DevLogin123!', gen_salt('bf')), now(), now(), now(),
+      'authenticated', 'authenticated',
+      json_build_object('username', u[3], 'full_name', u[4])::jsonb,
+      '', '', '', '', '', '', '', ''
+    ) ON CONFLICT (id) DO NOTHING;
+  END LOOP;
+END $$;
 
--- Test group (target_id = Alice — she's who everyone rates in this 360)
+-- Update trigger-created profiles with client assignment and role
+UPDATE profiles SET
+  client_id = '00000000-0000-0000-0000-000000000010',
+  role = 'user'
+WHERE auth_user_id IN (
+  '00000000-0000-0000-0000-000000000101',
+  '00000000-0000-0000-0000-000000000102',
+  '00000000-0000-0000-0000-000000000103',
+  '00000000-0000-0000-0000-000000000104',
+  '00000000-0000-0000-0000-000000000105',
+  '00000000-0000-0000-0000-000000000106',
+  '00000000-0000-0000-0000-000000000107',
+  '00000000-0000-0000-0000-000000000108'
+);
+
+-- Test group (target = Alice — she's who everyone rates in this 360)
 INSERT INTO groups (id, name, client_id, target_id, created_at, updated_at)
-VALUES ('00000000-0000-0000-0000-000000000020', 'Frontier Test Group', '00000000-0000-0000-0000-000000000010', '00000000-0000-0000-0000-000000000101', now(), now())
+VALUES (
+  '00000000-0000-0000-0000-000000000020', 'Frontier Test Group', '00000000-0000-0000-0000-000000000010',
+  (SELECT id FROM profiles WHERE auth_user_id = '00000000-0000-0000-0000-000000000101'),
+  now(), now()
+)
 ON CONFLICT (id) DO NOTHING;
 
--- Add all users to the group
-INSERT INTO group_members (group_id, profile_id, created_at) VALUES
-  ('00000000-0000-0000-0000-000000000020', '00000000-0000-0000-0000-000000000101', now()),
-  ('00000000-0000-0000-0000-000000000020', '00000000-0000-0000-0000-000000000102', now()),
-  ('00000000-0000-0000-0000-000000000020', '00000000-0000-0000-0000-000000000103', now()),
-  ('00000000-0000-0000-0000-000000000020', '00000000-0000-0000-0000-000000000104', now()),
-  ('00000000-0000-0000-0000-000000000020', '00000000-0000-0000-0000-000000000105', now()),
-  ('00000000-0000-0000-0000-000000000020', '00000000-0000-0000-0000-000000000106', now()),
-  ('00000000-0000-0000-0000-000000000020', '00000000-0000-0000-0000-000000000107', now()),
-  ('00000000-0000-0000-0000-000000000020', '00000000-0000-0000-0000-000000000108', now())
+-- Add all test users to the group (look up trigger-created profile IDs)
+INSERT INTO group_members (group_id, profile_id, created_at)
+SELECT '00000000-0000-0000-0000-000000000020', p.id, now()
+FROM profiles p
+WHERE p.auth_user_id IN (
+  '00000000-0000-0000-0000-000000000101',
+  '00000000-0000-0000-0000-000000000102',
+  '00000000-0000-0000-0000-000000000103',
+  '00000000-0000-0000-0000-000000000104',
+  '00000000-0000-0000-0000-000000000105',
+  '00000000-0000-0000-0000-000000000106',
+  '00000000-0000-0000-0000-000000000107',
+  '00000000-0000-0000-0000-000000000108'
+)
 ON CONFLICT DO NOTHING;
 
 -- Assessment (created_by references the auth user ID directly)
