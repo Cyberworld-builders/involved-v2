@@ -9,7 +9,8 @@ const DEV_PASSWORD = 'DevLogin123!'
  * If no auth account exists, creates one and links it to the existing profile.
  */
 export async function POST(request: NextRequest) {
-  if (process.env.NODE_ENV !== 'development') {
+  const enabled = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_ENABLE_DEV_LOGIN === 'true'
+  if (!enabled) {
     return NextResponse.json({ error: 'Not available' }, { status: 404 })
   }
 
@@ -95,7 +96,8 @@ export async function POST(request: NextRequest) {
  * Returns list of all profiles for the user switcher.
  */
 export async function GET() {
-  if (process.env.NODE_ENV !== 'development') {
+  const enabled = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_ENABLE_DEV_LOGIN === 'true'
+  if (!enabled) {
     return NextResponse.json({ error: 'Not available' }, { status: 404 })
   }
 
