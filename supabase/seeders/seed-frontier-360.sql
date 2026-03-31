@@ -260,6 +260,24 @@ INSERT INTO fields (id, assessment_id, dimension_id, type, content, "order", anc
 VALUES ('c7198941-48c1-4834-a1d6-24daaaa13ff2', 'b72cd008-8249-49be-9ef4-00383c586f79', NULL, 'page_break', '', 29, '[]'::jsonb, '2026-03-20T21:36:20.870421+00:00', '2026-03-22T13:04:12.071425+00:00', false, 29, NULL, true)
 ON CONFLICT (id) DO NOTHING;
 
+-- Industry benchmarks (based on staging score averages + ~0.5 offset)
+-- Uses first available industry as a generic benchmark source
+INSERT INTO benchmarks (dimension_id, industry_id, value, created_at, updated_at)
+SELECT d.id, (SELECT id FROM industries LIMIT 1), b.value, now(), now()
+FROM (VALUES
+  ('fe9ef691-ed12-4b99-a60c-03b173db3196'::uuid, 3.1),  -- Creative Problem Solving
+  ('d89c92eb-ffe6-4bce-bdad-557b9e7cb418'::uuid, 4.2),  -- Leadership Adaptability
+  ('f63d9448-53b6-400c-af16-06c5591b4618'::uuid, 4.1),  -- Collaboration
+  ('538385e0-b455-4667-ac08-58a8c610e4ad'::uuid, 3.6),  -- Self-Development
+  ('b7b50624-5ebf-45e0-918c-4707d4216ceb'::uuid, 3.3),  -- Performance Management
+  ('ac1edb09-46c8-403e-b2a9-4948a4652967'::uuid, 3.5),  -- Business Mindset
+  ('3f146659-1598-4ecd-aab5-dd196ca94dde'::uuid, 3.8),  -- Customer Focus
+  ('823f32bf-3339-482f-b3a9-2b6a1e028ced'::uuid, 3.5),  -- Communication
+  ('8d4ec265-a010-4ab2-bba9-53d3555bdaea'::uuid, 3.6)   -- Ethics & Integrity
+) AS b(dim_id, value)
+JOIN dimensions d ON d.id = b.dim_id
+ON CONFLICT DO NOTHING;
+
 COMMIT;
 
 -- Verify
