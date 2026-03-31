@@ -27,7 +27,7 @@ export default function LoginPage() {
   const router = useRouter()
 
   const supabase = createClient()
-  const isDev = process.env.NODE_ENV === 'development'
+  const isDev = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_ENABLE_DEV_LOGIN === 'true'
 
   useEffect(() => {
     if (isDev) {
