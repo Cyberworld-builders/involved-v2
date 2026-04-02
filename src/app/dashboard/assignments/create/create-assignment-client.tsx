@@ -325,6 +325,25 @@ export default function CreateAssignmentClient() {
       const expiresDate = new Date(expirationDate)
       expiresDate.setHours(23, 59, 59, 999)
 
+      // Create or use existing survey
+      let surveyId: string | undefined = existingSurveyId || undefined
+      if (!surveyId && selectedAssessmentIds.length > 0) {
+        // Derive client_id from first user's profile
+        const firstUser = assignmentUsers[0]?.user
+        const clientId = firstUser?.client_id
+        if (clientId) {
+          const surveyRes = await fetch('/api/surveys', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ client_id: clientId, assessment_id: selectedAssessmentIds[0] }),
+          })
+          const surveyData = await surveyRes.json()
+          if (surveyRes.ok && surveyData.survey_id) {
+            surveyId = surveyData.survey_id
+          }
+        }
+      }
+
       // Create assignments for each user
       // Since each user can have different target_id and custom_fields,
       // we make one API call per user with all their assessments
@@ -364,9 +383,7 @@ export default function CreateAssignmentClient() {
           custom_fields: customFields,
           whitelabel: false,
         }
-        if (existingSurveyId) {
-          body.survey_id = existingSurveyId
-        }
+        body.survey_id = surveyId
         const promise = fetch('/api/assignments', {
           method: 'POST',
           headers: {

@@ -580,6 +580,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
+        survey_id: surveyId,
         assignments: assignments.map((a) => ({
           ...a,
           url: assignmentUrls.find((au) => au.id === a.id)?.url,

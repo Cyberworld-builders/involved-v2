@@ -389,8 +389,22 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
       const expiresDate = new Date(expirationDate)
       expiresDate.setHours(23, 59, 59, 999) // Set to end of day
 
-      // Use existing survey_id when adding to a survey, otherwise let the API create one
-      const surveyId = existingSurveyId || undefined
+      // Use existing survey_id when adding to a survey, otherwise create one upfront
+      let surveyId: string | undefined = existingSurveyId || undefined
+      if (!surveyId) {
+        const surveyRes = await fetch('/api/surveys', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ client_id: clientId, assessment_id: selectedAssessmentIds[0] }),
+        })
+        const surveyData = await surveyRes.json()
+        if (!surveyRes.ok || !surveyData.survey_id) {
+          setMessage('Failed to create survey: ' + (surveyData.error || 'Unknown error'))
+          setIsSubmitting(false)
+          return
+        }
+        surveyId = surveyData.survey_id
+      }
 
       // Create assignments using API - one API call per user-assessment combination
       // This allows per-user custom_fields and target_id
