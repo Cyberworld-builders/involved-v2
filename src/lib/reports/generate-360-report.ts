@@ -181,7 +181,7 @@ export async function generate360Report(
   // Get all dimensions for this assessment (needed for both full and partial report)
   const { data: dimensions } = await adminClient
     .from('dimensions')
-    .select('id, name, code, parent_id, sort_order')
+    .select('id, name, code, parent_id, sort_order, definition')
     .eq('assessment_id', assignment.assessment_id)
     .is('parent_id', null) // Get top-level dimensions only
     .order('sort_order', { ascending: true })
@@ -301,21 +301,13 @@ export async function generate360Report(
   // Calculate GEOnorms
   const geonorms = await calculateGEOnorms(group.id, assignment.assessment_id, dimensionIds, assignment.survey_id)
 
-  // Get description fields (rich_text) for each dimension
-  const { data: descriptionFields } = await adminClient
-    .from('fields')
-    .select('dimension_id, content')
-    .eq('assessment_id', assignment.assessment_id)
-    .eq('type', 'rich_text')
-    .in('dimension_id', dimensionIds)
-  
+  // Get definitions from dimensions (single source of truth)
+  // Falls back to rich_text fields for backward compatibility
   const descriptionByDimension = new Map<string, string>()
-  descriptionFields?.forEach((field) => {
-    if (field.dimension_id && field.content) {
-      // If multiple description fields exist for a dimension, use the first one
-      if (!descriptionByDimension.has(field.dimension_id)) {
-        descriptionByDimension.set(field.dimension_id, field.content)
-      }
+  dimensions.forEach((dim) => {
+    const d = dim as { id: string; definition?: string | null }
+    if (d.definition) {
+      descriptionByDimension.set(d.id, d.definition)
     }
   })
 

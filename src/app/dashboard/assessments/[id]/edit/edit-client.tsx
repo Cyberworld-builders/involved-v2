@@ -171,26 +171,16 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
           show_question_numbers: assessment.show_question_numbers !== undefined ? assessment.show_question_numbers : true,
           use_custom_fields: assessment.use_custom_fields ?? false,
           custom_fields: customFields,
-          dimensions: (() => {
-            // Build definition map from rich_text fields
-            const definitionMap = new Map<string, string>()
-            ;(fields || []).forEach(f => {
-              if (f.type === 'rich_text' && f.dimension_id) {
-                definitionMap.set(f.dimension_id, f.content || '')
-              }
-            })
-            return (dimensions || []).map(dim => ({
-              id: dim.id,
-              name: dim.name,
-              code: dim.code,
-              parent_id: dim.parent_id,
-              definition: definitionMap.get(dim.id) || '',
-            }))
-          })(),
+          dimensions: (dimensions || []).map(dim => ({
+            id: dim.id,
+            name: dim.name,
+            code: dim.code,
+            parent_id: dim.parent_id,
+            definition: (dim as Record<string, unknown>).definition as string || '',
+          })),
           // Map fields preserving the order from the database query
           // The fields are already sorted by 'order' column, so we preserve that order
-          // Filter out rich_text fields (dimension definitions) — they are loaded into dimensions above
-          fields: (fields || []).filter(f => f.type !== 'rich_text').map((field, index) => {
+          fields: (fields || []).map((field, index) => {
             type FieldRow = Database['public']['Tables']['fields']['Row']
             const fieldWithExtras = field as FieldRow & { number?: number; practice?: boolean; required?: boolean }
             return {
@@ -518,9 +508,6 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
         const formDimDbIds = new Set(validDims.map(d => tempIdToDbIdMap.get(d.id) || d.id))
         const dimsToDelete = [...existingDimIds].filter(dbId => !formDimDbIds.has(dbId))
         if (dimsToDelete.length > 0) {
-          // Before deleting dimensions, delete their definition fields (rich_text)
-          // so we don't leave orphan fields. This is safe — rich_text fields have no answers.
-          await supabase.from('fields').delete().eq('assessment_id', id).eq('type', 'rich_text').in('dimension_id', dimsToDelete)
           const { error } = await supabase.from('dimensions').delete().in('id', dimsToDelete)
           if (error) throw new Error(`Failed to delete removed dimensions: ${error.message}`)
         }
@@ -604,10 +591,9 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
           if (error) throw new Error(`Failed to insert new fields: ${error.message}`)
         }
 
-        // Delete only fields that were removed from the form (NOT rich_text — handled below)
+        // Delete only fields that were removed from the form
         const formFieldDbIds = new Set(formFields.map(f => f.id).filter(fid => existingFieldIds.has(fid)))
-        const existingNonRichText = (existingFields || []).filter(f => f.type !== 'rich_text')
-        const fieldsToDelete = existingNonRichText.filter(f => !formFieldDbIds.has(f.id)).map(f => f.id)
+        const fieldsToDelete = (existingFields || []).filter(f => !formFieldDbIds.has(f.id)).map(f => f.id)
         if (fieldsToDelete.length > 0) {
           // WARNING: This will CASCADE delete answers for these fields.
           // Only reaches here if the user explicitly removed a question from the form.
@@ -617,46 +603,11 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
         }
       }
 
-      // ─── Dimension definitions (rich_text fields): upsert by dimension_id ───
-      {
-        const existingDefFields = (existingFields || []).filter(f => f.type === 'rich_text')
-        const existingDefByDimId = new Map(existingDefFields.map(f => [f.dimension_id, f]))
-
-        for (const dim of data.dimensions) {
-          const dbDimId = tempIdToDbIdMap.get(dim.id) || dim.id
-          const definition = dim.definition?.trim() || ''
-          const existing = existingDefByDimId.get(dbDimId)
-
-          if (definition && existing) {
-            // Update existing definition field
-            if (existing.content !== definition) {
-              await supabase.from('fields').update({ content: definition }).eq('id', existing.id)
-            }
-            existingDefByDimId.delete(dbDimId) // Mark as handled
-          } else if (definition && !existing) {
-            // Insert new definition field
-            await supabase.from('fields').insert({
-              assessment_id: id,
-              dimension_id: dbDimId,
-              type: 'rich_text' as const,
-              content: definition,
-              order: 0,
-              number: 0,
-              required: false,
-              practice: false,
-              anchors: [],
-            })
-          } else if (!definition && existing) {
-            // Definition cleared — delete the rich_text field (safe, no answers reference rich_text)
-            await supabase.from('fields').delete().eq('id', existing.id)
-            existingDefByDimId.delete(dbDimId)
-          }
-        }
-
-        // Delete orphan definition fields for dimensions that no longer exist
-        for (const [, orphanDef] of existingDefByDimId) {
-          await supabase.from('fields').delete().eq('id', orphanDef.id)
-        }
+      // ─── Dimension definitions: update directly on dimensions table ───
+      for (const dim of data.dimensions) {
+        const dbDimId = tempIdToDbIdMap.get(dim.id) || dim.id
+        const definition = dim.definition?.trim() || null
+        await supabase.from('dimensions').update({ definition }).eq('id', dbDimId)
       }
 
       // Map dimension_question_counts from temporary IDs to database UUIDs
