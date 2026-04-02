@@ -444,7 +444,7 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
                 whitelabel: false,
                 survey_id: surveyId, // All assignments in this batch share the same survey_id
                 reminder: enableReminder,
-                first_reminder_date: enableReminder && firstReminderDate ? `${firstReminderDate}T${firstReminderTime}:00` : null,
+                first_reminder_date: enableReminder && firstReminderDate ? new Date(`${firstReminderDate}T${firstReminderTime}`).toISOString() : null,
                 reminder_frequency: enableReminder ? reminderFrequency : null,
               }),
             })

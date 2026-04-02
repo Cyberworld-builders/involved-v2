@@ -119,7 +119,7 @@ export default function SurveyDetailClient({
         body: JSON.stringify({
           reminder: true,
           reminder_frequency: reminderFrequency,
-          first_reminder_date: `${firstReminderDate}T${firstReminderTime}:00`,
+          first_reminder_date: new Date(`${firstReminderDate}T${firstReminderTime}`).toISOString(),
         }),
       })
       const data = await res.json()
