@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import Link from 'next/link'
-import { Calendar, ChevronDown, ChevronRight, ExternalLink, Pencil, Trash2 } from 'lucide-react'
+import { Calendar, ChevronDown, ChevronRight, Download, ExternalLink, Pencil, Trash2 } from 'lucide-react'
 import { PdfActionButtons } from '@/components/reports/pdf-action-buttons'
 import SurveySnapshots from '@/components/surveys/survey-snapshots'
 import { Subject } from '@/lib/reports/get-survey-subjects'
@@ -405,6 +405,17 @@ export default function SurveyDetailClient({
           >
             <Trash2 className="h-4 w-4 mr-2" />
             Delete survey
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              window.open(`/api/clients/${clientId}/surveys/${surveyId}/export-csv`, '_blank')
+            }}
+            aria-label="Export raw data CSV"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export Raw Data
           </Button>
         </div>
       </div>
