@@ -97,6 +97,63 @@ export default function SurveyDetailClient({
   const [deleteSelectedDialogOpen, setDeleteSelectedDialogOpen] = useState(false)
   const [isDeletingSelected, setIsDeletingSelected] = useState(false)
 
+  // Reminder state
+  const [showReminderSettings, setShowReminderSettings] = useState(false)
+  const [reminderFrequency, setReminderFrequency] = useState('+3 days')
+  const [firstReminderDate, setFirstReminderDate] = useState(() => {
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    return tomorrow.toISOString().split('T')[0]
+  })
+  const [isUpdatingReminders, setIsUpdatingReminders] = useState(false)
+
+  const incompleteCount = assignments.filter(a => !a.completed).length
+
+  const handleEnableReminders = async () => {
+    setIsUpdatingReminders(true)
+    try {
+      const res = await fetch(`/api/clients/${clientId}/surveys/${surveyId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reminder: true,
+          reminder_frequency: reminderFrequency,
+          first_reminder_date: `${firstReminderDate}T09:00:00`,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setMessage(data.error || 'Failed to enable reminders')
+      } else {
+        setMessage(`Reminders enabled for ${incompleteCount} incomplete assignment(s)`)
+        setShowReminderSettings(false)
+      }
+    } catch {
+      setMessage('Failed to enable reminders')
+    } finally {
+      setIsUpdatingReminders(false)
+    }
+  }
+
+  const handleDisableReminders = async () => {
+    setIsUpdatingReminders(true)
+    try {
+      const res = await fetch(`/api/clients/${clientId}/surveys/${surveyId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reminder: false }),
+      })
+      if (res.ok) {
+        setMessage('Reminders disabled')
+        setShowReminderSettings(false)
+      }
+    } catch {
+      setMessage('Failed to disable reminders')
+    } finally {
+      setIsUpdatingReminders(false)
+    }
+  }
+
   const handleDeleteSurvey = async () => {
     setIsDeleting(true)
     setDeleteError(null)
@@ -417,7 +474,58 @@ export default function SurveyDetailClient({
             <Download className="h-4 w-4 mr-2" />
             Export Raw Data
           </Button>
+          {incompleteCount > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowReminderSettings(!showReminderSettings)}
+            >
+              <Calendar className="h-4 w-4 mr-2" />
+              Reminders ({incompleteCount} pending)
+            </Button>
+          )}
         </div>
+
+        {showReminderSettings && (
+          <Card className="border-amber-300 bg-amber-50">
+            <CardContent className="pt-4">
+              <div className="flex flex-wrap gap-4 items-end">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">First Reminder</label>
+                  <input
+                    type="date"
+                    value={firstReminderDate}
+                    onChange={e => setFirstReminderDate(e.target.value)}
+                    className="border rounded px-2 py-1 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Frequency</label>
+                  <select
+                    value={reminderFrequency}
+                    onChange={e => setReminderFrequency(e.target.value)}
+                    className="border rounded px-2 py-1 text-sm"
+                  >
+                    <option value="+1 day">Every day</option>
+                    <option value="+2 days">Every 2 days</option>
+                    <option value="+3 days">Every 3 days</option>
+                    <option value="+1 week">Every week</option>
+                    <option value="+2 weeks">Every 2 weeks</option>
+                  </select>
+                </div>
+                <Button size="sm" onClick={handleEnableReminders} disabled={isUpdatingReminders}>
+                  {isUpdatingReminders ? 'Updating...' : `Enable for ${incompleteCount} incomplete`}
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleDisableReminders} disabled={isUpdatingReminders}>
+                  Disable All
+                </Button>
+              </div>
+              <p className="text-xs text-amber-700 mt-2">
+                Reminders are sent daily at 9 AM UTC to users who haven&apos;t completed their assessment.
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Fixed message (toaster) */}
