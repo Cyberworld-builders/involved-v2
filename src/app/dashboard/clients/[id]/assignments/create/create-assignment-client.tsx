@@ -507,127 +507,28 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
         setMessage(`Successfully created ${createdAssignments.length} assignment(s)!`)
       }
 
-      // Send emails if enabled
+      // Send emails server-side if enabled (fire-and-forget — server handles delivery)
       if (sendEmail && createdAssignments.length > 0) {
-        // Group assignments by user
-        const assignmentsByUser = new Map<string, Array<{ assessmentTitle: string; url?: string | null }>>()
-        
-        for (const assignment of createdAssignments) {
-          const user = assignmentUsers.find(au => au.user_id === assignment.user_id)
-          if (!user) continue
-
-          const assessment = assessments.find(a => a.id === assignment.assessment_id)
-          if (!assessment) continue
-
-          if (!assignmentsByUser.has(user.user_id)) {
-            assignmentsByUser.set(user.user_id, [])
-          }
-          
-          assignmentsByUser.get(user.user_id)!.push({
-            assessmentTitle: assessment.title,
-            url: assignment.url,
-          })
-        }
-
-        // Send email to each user
-        const emailPromises: Array<Promise<Response>> = []
-        const emailUserMap: Array<{ userId: string; email: string; name: string }> = []
-        
-        for (const [userId, userAssignments] of assignmentsByUser.entries()) {
-          const user = assignmentUsers.find(au => au.user_id === userId)
-          if (!user) continue
-
-          emailUserMap.push({
-            userId,
-            email: user.user.email,
-            name: user.user.name,
-          })
-
-          // Get password for this user if available
-          const password = userPasswords.get(userId) || undefined
-
-          emailPromises.push(
-            fetch('/api/assignments/send-email', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                to: user.user.email,
-                toName: user.user.name,
-                username: user.user.username,
-                subject: emailSubject || 'New assessments have been assigned to you',
-                body: emailBody || 'Hello {name}, you have been assigned {assessments}. Please complete by {expiration-date}. Dashboard: {dashboard-link}. © {year} Involved Talent.',
-                assignments: userAssignments,
-                expirationDate: expirationDate,
-                password: password,
-              }),
-            })
-          )
-        }
-
-        // Send all emails and track results
         try {
-          const emailResults = await Promise.allSettled(emailPromises)
-          const emailErrors: string[] = []
-          let emailSuccessCount = 0
-          let emailFailureCount = 0
-
-          // Process email results sequentially to properly await JSON parsing
-          for (let i = 0; i < emailResults.length; i++) {
-            const result = emailResults[i]
-            const userInfo = emailUserMap[i]
-            const userLabel = userInfo ? `${userInfo.name} (${userInfo.email})` : `Email ${i + 1}`
-            
-            if (result.status === 'fulfilled') {
-              const response = result.value
-              try {
-                if (response.ok) {
-                  const data = await response.json().catch(() => ({}))
-                  if (data.success !== false && !data.error) {
-                    emailSuccessCount++
-                    console.log(`✅ Email sent successfully to ${userLabel}`)
-                  } else {
-                    emailFailureCount++
-                    const errorMsg = data.error || data.message || 'Failed to send'
-                    emailErrors.push(`${userLabel}: ${errorMsg}`)
-                    console.error(`❌ Email failed for ${userLabel}:`, errorMsg)
-                  }
-                } else {
-                  emailFailureCount++
-                  const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}` }))
-                  const errorMsg = errorData.error || errorData.message || `HTTP ${response.status}`
-                  emailErrors.push(`${userLabel}: ${errorMsg}`)
-                  console.error(`❌ Email HTTP error for ${userLabel}:`, errorMsg)
-                }
-              } catch (parseError) {
-                emailFailureCount++
-                emailErrors.push(`${userLabel}: Failed to parse response`)
-                console.error(`❌ Email parse error for ${userLabel}:`, parseError)
-              }
-            } else {
-              emailFailureCount++
-              const errorMsg = result.reason?.message || 'Failed to send'
-              emailErrors.push(`${userLabel}: ${errorMsg}`)
-              console.error(`❌ Email promise rejected for ${userLabel}:`, errorMsg)
-            }
-          }
-
-          // Update message with email results
-          if (emailFailureCount > 0) {
-            const emailMsg = `⚠️ Emails: ${emailSuccessCount} sent, ${emailFailureCount} failed. ${emailErrors.slice(0, 3).join('; ')}${emailErrors.length > 3 ? '...' : ''}`
-            console.warn('Email sending issues:', emailMsg)
-            setMessage(prev => prev + (prev ? ' ' : '') + emailMsg)
-          } else if (emailSuccessCount > 0) {
-            console.log(`✅ Successfully sent ${emailSuccessCount} email notification(s)`)
-            setMessage(prev => prev + (prev ? ' ' : '') + `✅ ${emailSuccessCount} email notification(s) sent.`)
+          const batchRes = await fetch('/api/assignments/send-batch-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              assignment_ids: createdAssignments.map(a => a.id),
+              subject: emailSubject || undefined,
+              body: emailBody || undefined,
+              passwords: Object.fromEntries(userPasswords),
+            }),
+          })
+          const batchData = await batchRes.json()
+          if (batchRes.ok) {
+            setMessage(prev => prev + (prev ? ' ' : '') + `✅ ${batchData.queued} email notification(s) queued for delivery.`)
           } else {
-            console.warn('No emails were sent (no valid recipients or all failed)')
+            setMessage(prev => prev + (prev ? ' ' : '') + `⚠️ Email queuing failed: ${batchData.error}`)
           }
         } catch (emailError) {
-          console.error('Error processing email results:', emailError)
-          const emailErrorMsg = `⚠️ Warning: Email sending encountered an error: ${emailError instanceof Error ? emailError.message : 'Unknown error'}`
-          setMessage(prev => prev + (prev ? ' ' : '') + emailErrorMsg)
+          console.error('Error queuing emails:', emailError)
+          setMessage(prev => prev + (prev ? ' ' : '') + '⚠️ Email queuing failed. Check email dashboard for status.')
         }
       }
 
