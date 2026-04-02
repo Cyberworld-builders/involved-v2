@@ -8,6 +8,7 @@ import ClientUsers from './client-users'
 import ClientGroups from './client-groups'
 import ClientAssignments from './client-assignments'
 import ClientReports from './client-reports'
+import ClientSurveys from './client-surveys'
 import ClientSurveySimulator from './client-survey-simulator'
 
 interface ClientTabsProps {
@@ -42,6 +43,7 @@ export default function ClientTabs({ clientId, activeTab: initialTab, client, is
     { id: 'details', label: 'Details' },
     { id: 'users', label: 'Users' },
     { id: 'groups', label: 'Groups' },
+    { id: 'surveys', label: 'Surveys' },
     { id: 'assignments', label: 'Assignments' },
     { id: 'reports', label: 'Reports' },
     ...(isSuperAdmin ? [{ id: 'simulate', label: 'Simulate Survey' }] : []),
@@ -216,6 +218,7 @@ export default function ClientTabs({ clientId, activeTab: initialTab, client, is
 
         {activeTab === 'users' && <ClientUsers clientId={clientId} />}
         {activeTab === 'groups' && <ClientGroups clientId={clientId} />}
+        {activeTab === 'surveys' && <ClientSurveys clientId={clientId} />}
         {activeTab === 'assignments' && <ClientAssignments clientId={clientId} />}
         {activeTab === 'reports' && <ClientReports clientId={clientId} />}
         {activeTab === 'simulate' && isSuperAdmin && <ClientSurveySimulator clientId={clientId} />}

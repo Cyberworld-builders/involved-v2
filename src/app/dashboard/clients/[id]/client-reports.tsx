@@ -16,10 +16,10 @@ interface Survey {
   survey_id: string
   assessment_id: string
   assessment_title: string
+  survey_name: string | null
   created_at: string
   total_assignments: number
   completed_assignments: number
-  first_assignment_date: string
 }
 
 export default function ClientReports({ clientId }: ClientReportsProps) {
@@ -68,122 +68,73 @@ export default function ClientReports({ clientId }: ClientReportsProps) {
     setIsLoading(true)
     setMessage('')
     try {
-      // Load all users for this client first
-      const { data: clientUsers, error: usersError } = await supabase
-        .from('profiles')
-        .select('id')
+      // Fetch surveys directly from the surveys table
+      let surveysQuery = supabase
+        .from('surveys')
+        .select(`
+          id,
+          name,
+          assessment_id,
+          created_at,
+          assessment:assessments!surveys_assessment_id_fkey(id, title)
+        `)
         .eq('client_id', clientId)
-
-      if (usersError) {
-        throw new Error(`Failed to load client users: ${usersError.message}`)
-      }
-
-      if (!clientUsers || clientUsers.length === 0) {
-        setSurveys([])
-        setIsLoading(false)
-        return
-      }
-
-      const userIds = clientUsers.map(u => u.id)
-
-      // Get all assignments for these users (not just completed - we want to see all surveys)
-      let assignmentsQuery = supabase
-        .from('assignments')
-        .select('id, assessment_id, survey_id, completed, created_at')
-        .in('user_id', userIds)
-        .not('survey_id', 'is', null) // Only show assignments with survey_id
+        .order('created_at', { ascending: false })
 
       // Apply assessment filter
       if (filterAssessmentId) {
-        assignmentsQuery = assignmentsQuery.eq('assessment_id', filterAssessmentId)
+        surveysQuery = surveysQuery.eq('assessment_id', filterAssessmentId)
       }
 
-      const { data: assignments, error: assignmentsError } = await assignmentsQuery
-        .order('created_at', { ascending: false })
+      const { data: surveysData, error: surveysError } = await surveysQuery
 
-      if (assignmentsError) {
-        throw new Error(`Failed to load assignments: ${assignmentsError.message || JSON.stringify(assignmentsError)}`)
+      if (surveysError) {
+        throw new Error(`Failed to load surveys: ${surveysError.message}`)
       }
 
-      if (!assignments || assignments.length === 0) {
+      if (!surveysData || surveysData.length === 0) {
         setSurveys([])
         setIsLoading(false)
         return
       }
 
-      // Group assignments by survey_id + assessment_id
-      const surveyMap = new Map<string, {
-        survey_id: string
-        assessment_id: string
-        assignments: Array<{ id: string; completed: boolean; created_at: string }>
-        first_created_at: string
-      }>()
+      // Get assignment counts and completion stats for each survey
+      const surveyIds = surveysData.map(s => s.id)
+      const { data: assignments, error: assignmentsError } = await supabase
+        .from('assignments')
+        .select('survey_id, completed')
+        .in('survey_id', surveyIds)
 
-      assignments.forEach((assignment) => {
-        if (!assignment.survey_id) {
-          return // Skip assignments without survey_id
-        }
-
-        const key = `${assignment.survey_id}_${assignment.assessment_id}`
-        
-        if (!surveyMap.has(key)) {
-          surveyMap.set(key, {
-            survey_id: assignment.survey_id,
-            assessment_id: assignment.assessment_id,
-            assignments: [],
-            first_created_at: assignment.created_at,
-          })
-        }
-
-        const survey = surveyMap.get(key)!
-        survey.assignments.push({
-          id: assignment.id,
-          completed: assignment.completed,
-          created_at: assignment.created_at,
-        })
-
-        // Track earliest created_at for this survey
-        if (new Date(assignment.created_at) < new Date(survey.first_created_at)) {
-          survey.first_created_at = assignment.created_at
-        }
-      })
-
-      // Get unique assessment IDs
-      const assessmentIds = [...new Set(Array.from(surveyMap.values()).map(s => s.assessment_id))]
-
-      // Load assessment metadata
-      const { data: assessmentsData, error: assessmentsError } = await supabase
-        .from('assessments')
-        .select('id, title')
-        .in('id', assessmentIds)
-
-      if (assessmentsError) {
-        throw new Error(`Failed to load assessments: ${assessmentsError.message}`)
+      if (assignmentsError) {
+        throw new Error(`Failed to load assignments: ${assignmentsError.message}`)
       }
 
-      const assessmentMap = new Map<string, string>()
-      assessmentsData?.forEach(a => {
-        assessmentMap.set(a.id, a.title)
-      })
+      // Build assignment stats map
+      const statsMap = new Map<string, { total: number; completed: number }>()
+      for (const a of (assignments || [])) {
+        if (!a.survey_id) continue
+        if (!statsMap.has(a.survey_id)) {
+          statsMap.set(a.survey_id, { total: 0, completed: 0 })
+        }
+        const s = statsMap.get(a.survey_id)!
+        s.total++
+        if (a.completed) s.completed++
+      }
 
-      // Build surveys array with completion stats
-      const surveysList: Survey[] = Array.from(surveyMap.values()).map(survey => {
-        const completedCount = survey.assignments.filter(a => a.completed).length
+      // Build surveys list
+      const surveysList: Survey[] = surveysData.map(s => {
+        const assessment = s.assessment as unknown as { id: string; title: string } | null
+        const stats = statsMap.get(s.id) || { total: 0, completed: 0 }
         return {
-          survey_id: survey.survey_id,
-          assessment_id: survey.assessment_id,
-          assessment_title: assessmentMap.get(survey.assessment_id) || 'Unknown Assessment',
-          created_at: survey.first_created_at,
-          total_assignments: survey.assignments.length,
-          completed_assignments: completedCount,
-          first_assignment_date: survey.first_created_at,
+          survey_id: s.id,
+          assessment_id: s.assessment_id,
+          assessment_title: assessment?.title || 'Unknown Assessment',
+          survey_name: s.name,
+          created_at: s.created_at,
+          total_assignments: stats.total,
+          completed_assignments: stats.completed,
         }
       })
-
-      // Sort by date (newest first)
-      surveysList.sort((a, b) => 
-        new Date(b.first_assignment_date).getTime() - new Date(a.first_assignment_date).getTime()
-      )
 
       setSurveys(surveysList)
 
@@ -196,7 +147,7 @@ export default function ClientReports({ clientId }: ClientReportsProps) {
       setAvailableAssessments(allAssessmentsData || [])
     } catch (error) {
       console.error('Error loading surveys:', error)
-      
+
       let errorMessage = 'Unknown error'
       if (error instanceof Error) {
         errorMessage = error.message
@@ -218,7 +169,7 @@ export default function ClientReports({ clientId }: ClientReportsProps) {
       } else {
         errorMessage = String(error)
       }
-      
+
       setMessage(`Failed to load surveys: ${errorMessage}`)
     } finally {
       setIsLoading(false)
@@ -230,10 +181,7 @@ export default function ClientReports({ clientId }: ClientReportsProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientId, filterAssessmentId])
 
-  const filteredSurveys = surveys.filter((survey) => {
-    if (filterAssessmentId && survey.assessment_id !== filterAssessmentId) return false
-    return true
-  })
+  const filteredSurveys = surveys
 
   if (isLoading) {
     return (
@@ -347,22 +295,26 @@ export default function ClientReports({ clientId }: ClientReportsProps) {
                       ? Math.round((survey.completed_assignments / survey.total_assignments) * 100)
                       : 0
                     const isComplete = survey.completed_assignments === survey.total_assignments && survey.total_assignments > 0
-                    const surveyDate = new Date(survey.first_assignment_date)
+                    const surveyDate = new Date(survey.created_at)
+                    const displayName = survey.survey_name || `${survey.assessment_title} - ${surveyDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
 
                     return (
                       <tr key={survey.survey_id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
-                            {survey.assessment_title}
+                            {displayName}
                           </div>
+                          {survey.survey_name && (
+                            <div className="text-xs text-gray-500">{survey.assessment_title}</div>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">
-                            {surveyDate.toLocaleDateString('en-US', { 
-                              weekday: 'long', 
-                              year: 'numeric', 
-                              month: 'long', 
-                              day: 'numeric' 
+                            {surveyDate.toLocaleDateString('en-US', {
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
                             })}
                           </div>
                           <div className="text-sm text-gray-500 italic">
@@ -445,7 +397,7 @@ export default function ClientReports({ clientId }: ClientReportsProps) {
               </ul>
               <p className="text-sm font-medium text-gray-900 mb-1">Survey:</p>
               <p className="text-sm text-gray-600 mb-4">
-                {surveyToDelete.assessment_title} — {new Date(surveyToDelete.first_assignment_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                {surveyToDelete.survey_name || surveyToDelete.assessment_title} — {new Date(surveyToDelete.created_at).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
               </p>
               {deleteError && (
                 <p className="text-sm text-red-600 mb-4">{deleteError}</p>

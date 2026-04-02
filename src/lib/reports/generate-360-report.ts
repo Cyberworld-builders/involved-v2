@@ -294,7 +294,7 @@ export async function generate360Report(
   benchmarks?.forEach((b) => {
     benchmarkMap.set(b.dimension_id, b.value)
     if (!industryName && b.industry) {
-      industryName = (b.industry as { name: string }).name
+      industryName = ((b.industry as unknown) as { name: string })?.name || null
     }
   })
 

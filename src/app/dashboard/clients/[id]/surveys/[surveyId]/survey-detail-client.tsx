@@ -32,6 +32,11 @@ export type SurveyAssignment = {
 interface SurveyDetailClientProps {
   clientId: string
   surveyId: string
+  surveyMeta?: {
+    id: string
+    name: string | null
+    created_at: string
+  }
   assessment: {
     id: string
     title: string
@@ -45,6 +50,7 @@ interface SurveyDetailClientProps {
 export default function SurveyDetailClient({
   clientId,
   surveyId,
+  surveyMeta,
   assessment,
   assignments: initialAssignments,
   initialSubjects = [],
@@ -205,9 +211,12 @@ export default function SurveyDetailClient({
   const completedCount = assignments.filter(a => a.completed).length
   const totalCount = assignments.length
   const completionPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
-  const surveyDate = assignments.length > 0
-    ? new Date(assignments[0].created_at)
-    : new Date()
+  const surveyDate = surveyMeta?.created_at
+    ? new Date(surveyMeta.created_at)
+    : assignments.length > 0
+      ? new Date(assignments[0].created_at)
+      : new Date()
+  const surveyDisplayName = surveyMeta?.name || `${assessment.title} Survey`
   const currentDeadline = assignments.find(a => a.expires)?.expires
     ? new Date(assignments.find(a => a.expires)!.expires!).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     : null
@@ -365,7 +374,10 @@ export default function SurveyDetailClient({
               ← Back to Surveys
             </Button>
           </Link>
-          <h2 className="text-xl font-bold text-gray-900">{assessment.title} Survey</h2>
+          <h2 className="text-xl font-bold text-gray-900">{surveyDisplayName}</h2>
+          {surveyMeta?.name && (
+            <p className="text-sm text-gray-500">{assessment.title}</p>
+          )}
           <p className="text-gray-600">
             Survey launched on {surveyDate.toLocaleDateString('en-US', { 
               weekday: 'long', 
@@ -903,7 +915,7 @@ export default function SurveyDetailClient({
           </ul>
           <p className="text-sm font-medium text-gray-900 mb-1">Survey:</p>
           <p className="text-sm text-gray-600 mb-4">
-            {assessment.title} — {surveyDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            {surveyDisplayName} — {surveyDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
           {deleteError && (
             <p className="text-sm text-red-600 mb-4">{deleteError}</p>
