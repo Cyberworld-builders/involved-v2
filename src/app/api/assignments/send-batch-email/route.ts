@@ -145,17 +145,17 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // Don't await — let emails send in the background
-  // Vercel keeps the function alive for ongoing promises even after responding
-  Promise.allSettled(emailPromises).then(results => {
-    const sent = results.filter(r => r.status === 'fulfilled').length
-    const failed = results.filter(r => r.status === 'rejected').length
-    console.log(`[Batch Email] Completed: ${sent} sent, ${failed} failed out of ${results.length}`)
-  })
+  // Send all emails in parallel and wait for completion
+  const results = await Promise.allSettled(emailPromises)
+  const sent = results.filter(r => r.status === 'fulfilled').length
+  const failed = results.filter(r => r.status === 'rejected').length
+  console.log(`[Batch Email] Completed: ${sent} sent, ${failed} failed out of ${results.length}`)
 
   return NextResponse.json({
     success: true,
-    queued: byUser.size,
-    message: `${byUser.size} email(s) queued for delivery`,
+    sent,
+    failed,
+    total: byUser.size,
+    message: `${sent} email(s) sent${failed > 0 ? `, ${failed} failed` : ''}`,
   })
 }
