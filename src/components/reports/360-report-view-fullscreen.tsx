@@ -413,7 +413,9 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                                   flexShrink: 0,
                                 }}
                               >
-                                {(dimension.geonorm ?? 0).toFixed(2)}
+                                {dimension.industry_benchmark != null
+                                  ? (dimension.industry_benchmark ?? 0).toFixed(2)
+                                  : '0.00'}
                               </div>
                               <div
                                 className="norm-label"
@@ -426,8 +428,10 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                                   flexShrink: 0,
                                 }}
                               >
-                                GEONORM<br />
-                                <span style={{ fontWeight: 600 }}>Avg Score For This Group</span>
+                                AVG SCORE<br />
+                                <span style={{ fontWeight: 600 }}>
+                                  {dimension.industry_benchmark !== null ? (reportData.industry_name || 'Industry') : 'NO INDUSTRY SET'}
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -478,9 +482,7 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                                   flexShrink: 0,
                                 }}
                               >
-                                {dimension.industry_benchmark != null
-                                  ? (dimension.industry_benchmark ?? 0).toFixed(2)
-                                  : '0.00'}
+                                {(dimension.geonorm ?? 0).toFixed(2)}
                               </div>
                               <div
                                 className="norm-label"
@@ -493,10 +495,8 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                                   flexShrink: 0,
                                 }}
                               >
-                                Benchmark<br />
-                                <span style={{ fontWeight: 600 }}>
-                                  {dimension.industry_benchmark !== null ? (reportData.industry_name || 'Industry') : 'NO INDUSTRY SET'}
-                                </span>
+                                GEONORM<br />
+                                <span style={{ fontWeight: 600 }}>For This Group</span>
                               </div>
                             </div>
                           </div>
