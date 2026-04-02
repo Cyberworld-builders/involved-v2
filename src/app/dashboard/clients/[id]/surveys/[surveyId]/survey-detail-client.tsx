@@ -105,6 +105,7 @@ export default function SurveyDetailClient({
     tomorrow.setDate(tomorrow.getDate() + 1)
     return tomorrow.toISOString().split('T')[0]
   })
+  const [firstReminderTime, setFirstReminderTime] = useState('09:00')
   const [isUpdatingReminders, setIsUpdatingReminders] = useState(false)
 
   const incompleteCount = assignments.filter(a => !a.completed).length
@@ -118,7 +119,7 @@ export default function SurveyDetailClient({
         body: JSON.stringify({
           reminder: true,
           reminder_frequency: reminderFrequency,
-          first_reminder_date: `${firstReminderDate}T09:00:00`,
+          first_reminder_date: `${firstReminderDate}T${firstReminderTime}:00`,
         }),
       })
       const data = await res.json()
@@ -492,12 +493,20 @@ export default function SurveyDetailClient({
               <div className="flex flex-wrap gap-4 items-end">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">First Reminder</label>
-                  <input
-                    type="date"
-                    value={firstReminderDate}
-                    onChange={e => setFirstReminderDate(e.target.value)}
-                    className="border rounded px-2 py-1 text-sm"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="date"
+                      value={firstReminderDate}
+                      onChange={e => setFirstReminderDate(e.target.value)}
+                      className="border rounded px-2 py-1 text-sm"
+                    />
+                    <input
+                      type="time"
+                      value={firstReminderTime}
+                      onChange={e => setFirstReminderTime(e.target.value)}
+                      className="border rounded px-2 py-1 text-sm"
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Frequency</label>
@@ -521,7 +530,7 @@ export default function SurveyDetailClient({
                 </Button>
               </div>
               <p className="text-xs text-amber-700 mt-2">
-                Reminders are sent daily at 9 AM UTC to users who haven&apos;t completed their assessment.
+                First reminder sends at the specified date/time. Subsequent reminders repeat at the selected frequency until completed.
               </p>
             </CardContent>
           </Card>
