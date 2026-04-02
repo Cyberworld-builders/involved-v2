@@ -74,6 +74,7 @@ export async function generate360Report(
       assessment_id,
       target_id,
       group_id,
+      survey_id,
       assessment:assessments!assignments_assessment_id_fkey(
         id,
         title
@@ -123,7 +124,7 @@ export async function generate360Report(
     groupFromDb = groupsByTarget[0]
   }
 
-  // Get all assignments for this target (and this group when known)
+  // Get all assignments for this target, scoped to the same survey
   let allTargetAssignmentsQuery = adminClient
     .from('assignments')
     .select(`
@@ -140,6 +141,10 @@ export async function generate360Report(
     .eq('target_id', assignment.target_id)
     .eq('assessment_id', assignment.assessment_id)
     .eq('completed', true)
+  // Filter by survey_id to prevent cross-survey score contamination
+  if (assignment.survey_id) {
+    allTargetAssignmentsQuery = allTargetAssignmentsQuery.eq('survey_id', assignment.survey_id)
+  }
   if (groupFromDb?.id) {
     allTargetAssignmentsQuery = allTargetAssignmentsQuery.eq('group_id', groupFromDb.id)
   }
@@ -147,7 +152,7 @@ export async function generate360Report(
 
   // When group filter yielded zero, retry without group so partial completion still produces a report
   if (groupFromDb?.id && (!allTargetAssignments || allTargetAssignments.length === 0)) {
-    const { data: fallbackAssignments } = await adminClient
+    let fallbackQuery = adminClient
       .from('assignments')
       .select(`
         id,
@@ -163,6 +168,10 @@ export async function generate360Report(
       .eq('target_id', assignment.target_id)
       .eq('assessment_id', assignment.assessment_id)
       .eq('completed', true)
+    if (assignment.survey_id) {
+      fallbackQuery = fallbackQuery.eq('survey_id', assignment.survey_id)
+    }
+    const { data: fallbackAssignments } = await fallbackQuery
     allTargetAssignments = fallbackAssignments || []
   }
 
@@ -274,19 +283,23 @@ export async function generate360Report(
     .in('assignment_id', assignmentIds)
     .in('dimension_id', dimensionIds)
 
-  // Get industry benchmarks
+  // Get industry benchmarks with industry name
   const { data: benchmarks } = await adminClient
     .from('benchmarks')
-    .select('dimension_id, value')
+    .select('dimension_id, value, industry_id, industry:industries!benchmarks_industry_id_fkey(name)')
     .in('dimension_id', dimensionIds)
 
   const benchmarkMap = new Map<string, number>()
+  let industryName: string | null = null
   benchmarks?.forEach((b) => {
     benchmarkMap.set(b.dimension_id, b.value)
+    if (!industryName && b.industry) {
+      industryName = (b.industry as { name: string }).name
+    }
   })
 
   // Calculate GEOnorms
-  const geonorms = await calculateGEOnorms(group.id, assignment.assessment_id, dimensionIds)
+  const geonorms = await calculateGEOnorms(group.id, assignment.assessment_id, dimensionIds, assignment.survey_id)
 
   // Get description fields (rich_text) for each dimension
   const { data: descriptionFields } = await adminClient
@@ -519,6 +532,7 @@ export async function generate360Report(
     group_id: group.id,
     group_name: group.name,
     overall_score: overallScore,
+    industry_name: industryName,
     dimensions: dimensionReports,
     generated_at: new Date().toISOString(),
     ...(isPartial && {

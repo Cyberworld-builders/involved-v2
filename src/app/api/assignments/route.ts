@@ -350,11 +350,39 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Generate or use provided survey_id for this batch of assignments
-    // All assignments created in this API call will share the same survey_id
-    // If survey_id is provided, use it (for adding to existing survey)
-    // Otherwise, generate a new one
-    const surveyId = survey_id || randomUUID()
+    // Resolve or create survey
+    let surveyId: string
+    if (survey_id) {
+      // Adding to existing survey — validate it exists
+      const { data: existingSurvey } = await adminClient
+        .from('surveys')
+        .select('id')
+        .eq('id', survey_id)
+        .single()
+      if (!existingSurvey) {
+        return NextResponse.json({ error: 'Survey not found' }, { status: 404 })
+      }
+      surveyId = survey_id
+    } else {
+      // Create a new survey
+      // Derive client_id from group or first user
+      const clientId = group_id
+        ? (await adminClient.from('groups').select('client_id').eq('id', group_id).single()).data?.client_id
+        : actorProfile.client_id
+      const { data: newSurvey, error: surveyError } = await adminClient
+        .from('surveys')
+        .insert({
+          client_id: clientId,
+          assessment_id: assessment_ids[0],
+          created_by: user.id,
+        })
+        .select('id')
+        .single()
+      if (surveyError || !newSurvey) {
+        return NextResponse.json({ error: 'Failed to create survey: ' + (surveyError?.message || 'Unknown') }, { status: 500 })
+      }
+      surveyId = newSurvey.id
+    }
 
     // When adding to an existing survey, reject if any requested user already has an
     // identical assignment (same user + assessment + target) in this survey.

@@ -57,6 +57,7 @@ export interface Report360Data {
   group_id: string
   group_name: string
   overall_score: number
+  industry_name?: string | null
   dimensions: DimensionReport360[]
   generated_at: string
   /** True when no or partial responses; report shows placeholders. */

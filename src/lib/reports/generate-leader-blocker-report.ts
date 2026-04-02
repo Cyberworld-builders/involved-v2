@@ -38,6 +38,7 @@ export async function generateLeaderBlockerReport(
       target_id,
       assessment_id,
       created_at,
+      survey_id,
       user:profiles!assignments_user_id_fkey(
         id,
         name,
@@ -146,19 +147,21 @@ export async function generateLeaderBlockerReport(
     geonorms = await calculateGEOnorms(group.id, assignment.assessment_id, allDimensionIds)
   }
 
-  // Get all assignments in the same batch for group score calculation
-  // For Leaders/Blockers: Group scores are calculated across all targets in the group
-  // Same assessment_id and created_at (same assessment batch)
-  // The target's own score comes from all assignments that rated this target (handled separately)
-  const batchCreatedAt = assignment.created_at
-
-  const { data: assignmentBatch } = await adminClient
+  // Get all assignments in the same survey for group score calculation
+  // For Leaders/Blockers: Group scores are calculated across all targets in the survey
+  let batchQuery = adminClient
     .from('assignments')
     .select('id, user_id, target_id, created_at')
     .eq('assessment_id', assignment.assessment_id)
     .eq('completed', true)
-    .eq('created_at', batchCreatedAt)
-    .limit(1000) // Reasonable limit
+    .limit(1000)
+  if (assignment.survey_id) {
+    batchQuery = batchQuery.eq('survey_id', assignment.survey_id)
+  } else {
+    // Legacy fallback: match by created_at timestamp
+    batchQuery = batchQuery.eq('created_at', assignment.created_at)
+  }
+  const { data: assignmentBatch } = await batchQuery
 
   const batchAssignments = assignmentBatch || []
   
