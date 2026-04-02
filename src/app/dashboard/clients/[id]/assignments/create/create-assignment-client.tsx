@@ -522,7 +522,7 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
           })
           const batchData = await batchRes.json()
           if (batchRes.ok) {
-            setMessage(prev => prev + (prev ? ' ' : '') + `✅ ${batchData.queued} email notification(s) queued for delivery.`)
+            setMessage(prev => prev + (prev ? ' ' : '') + `✅ ${batchData.message}`)
           } else {
             setMessage(prev => prev + (prev ? ' ' : '') + `⚠️ Email queuing failed: ${batchData.error}`)
           }
