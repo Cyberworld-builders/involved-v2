@@ -1,143 +1,26 @@
-# Log of Initiatives for Involved V2
+The definitions of the dimensions now show on the assessment page - like a list of them, then the first questions. They appear on the first dimension page, not the others. The page is right after the instructions. This is for the Involve-360 Frontier. The rest of the workflow seems to work nicely. Once this is fixed, I will have everybody take the 360 so we can test reporting, data integraity, pdfs, etc.
 
-you were using:
-admin@demo.com
-Test123$
+we need to review the example in the production environment where he's testing and consider that we may have done something weird during the data migration. confirm first whether this is a new record or whether it builds on existing records that we migrated over. 
 
-so it sounds like the reason the client didn't see any changes was because there were undeployed changes. and a reason why he might still not see some of them is because the report was generated before the changes were made and is cached in a way and will need to be rerun to pick up the changes. also, he might still not notice the dimention definitions becuase they may actually not be defined. but other than that he should see many updates.
+actually, lets do this differently. lets export the frontier 360 assessment including fields, dimensions, etc and we'll add it to a seeder so that we can still run reset and then use the seeder and survey simulator to test a comparable campaign.
 
-do you have the context of what all the client last reported when we started this branch? we had a client pipeline in gusclaw that had mixed results but it did manage to create many issues even if the prs didn't quite address everything without a human touch given the nature of the changes (style, layout, etc.). check the gus memory and the recent issues and the client pipeline for insight into what all was requested in terms of bug fixes and revisions. we want to try and compare this to the commit history and the current state of the code and address anything we missed.
+we also need to discuss how we're going to smoke test and load test this for the first client. we need to prepare a test plan based on what we expect the initial user base to be and map out some scenarios that might be found in the wild. i want to pay particularly close attention to things like emails, notificaitons, login flows, pdf generation, data exports, score validation. i want to map out end to end scenarios for surveys and then run different variants to try and find edge cases. we need to make sure we're covering all of the bases and that we're not missing anything. we're in a unique position in that our first client is a fairly definable set of cases that will be controlled for a period of time. we should be able to exhaustively plan for frontier airlines. in the future this will be more organic and unpredictable as we scale. but if we can nail frontier, it will unlock more possibilities to expand. 
 
-on the front page of the reports, the involved logo is too high. our latest example is https://involved-v2.cyberworldbuilders.dev/reports/3eda9e70-c171-475b-820e-295910470e0b/view. we've gotten it a lot lower but it looks like he wants it all the way down to the bottom of the page.
+we also want to improve upon our email tracking interface. lets review what we've built and consider what is possible with ses. we need to be able to track the assignment and notification emails for each participant in each survey. we're going to need to be able to support users if anything goes wrong. so i need to be able to quickly respond to any issues that arise. it's very important that we have a solid system in place so that we can confidently enter into tech support issues assuming user error as opposed to assuming that a bug needs to be patched. many of these presumed bugs will be related to emails. keep in mind that most of the users are going to be employees that could care less if they participate in these surveys. some of them will even be combative. if they can find a bug or make us think that we have a bug, they can get us on our back foot and create doubt in management in our ability to deliver on this project. most users will not be excited to use our product by its very nature. we should anticipate a lot of foot dragging and sand bagging. any user that is tech savy in any way and resentful will actively try to break and potentially exploit bugs. so we need a clear and dependable trail of activity so that we can present clear evidence of abuse. some examples are:
+- "i never got the email." we need to be able to pull up ses logs and show where the email went out. or if we can show somewhere that they entered their email in incorrectly or at least say with confidence that the assignment was not sent. it could be user error on the part of the admin. we need to be able to show in the audit trail that it was not a bug. that x person who is an admin creating the survey entered y assignment in wrong. consider that some of the accusation of bugs may come from our own team. i need to be able to quickly diagnose exactly what happened. did the participant get selected in the survey? was the notification/reminder box checked at assignment time? was it updated later? did the email get queued? did it get triggered in ses? did ses attempt to send the email? we need to be able to pull this entire trail end to end quickly so that we do not get pressure to troubleshoot the codebase and deploy patches franticly. there's probably a potential for the queue to get overloaded so we need to make sure and reduce the possibiliy of congestion as much as possible.
+- "i can't log in". we need a trail of what all they clicked on. this could be access logs, audit logs, etc. we need to be able to trace what all they are trying to do quickly before they even set up a support session. we have gone to great lengths to simplify the login process. they should be able to log in from a magic link straight from the login screen. we need to be able to know if maybe they entered in the wrong email address in the login link request. we might even want to make the link to the assessment act as a magic login link (that's probably not possible since magic links need an expiration. we probably just have to tolerate one step of extra friction). at the very least we need a trail of activity in case they're doing something obviously stupid.
+- "i can't find my assessment". maybe we should add some tooltips to help them navigate their dashboard. after they log in for the first time, linking out to assessments should be smooth. the flow is designed to take them straight to the assessment in the email. however, sometimes the assessments will pile up. i think we have it where the user gets one email with all assessments. we may have removed that altogether in favor of the dashboard to avoid confusion. it could be a hybrid, though. they could be sending multiple links for a single assessment if they are assigned to multiple surveys simultaneously in order to reduce spam but there is a scenario where they get added to or removed from surveys later. this is why the dashboard is so important. (lets investigate and discuss). but the fallback is the dashboard where all assessments are listed. we need this to be intuitive with helpful tooltips or messages that guide them along. 
 
-page two has some text that mentions "norms". this should be changed to "geonorms".
+----
 
-ok i see what's happening. on the titles that are long enough to wrap, it goes full width. i don't have an example in the "clean" report that wraps so it's unclear what to do in this scenario. maybe we should actually make the title smaller to try and avoid wrapping. 
+analyze this video from yesterday. generate a transcript for reference. ask me any clarifying questions. the examples are all in the production environment at my.involvedtalent.com. the staging environment seems to be working fine. it seems like a lot of this is related to a recent data migration where we moved several survey/assessment records with complex relations to other tables. so review the history of the migration for additional context. there apears to be about 5 points to address:
+1. Survey collisions. The data from two separate surveys appears to be combining in the scores. There is an example in the video. 
+2. Geonorm/score cards switched. For some reason these cards are swapped. This should be a simple fix. May want to check other reports and see if this is consistent across all of them. 
+3. PDF generation is broken. This appears to be consistent across all reports. The fix should fix all of them.
+4. Benchmarks are empty on reports. The benchmarks are set but they are not appearing in the reports. This is probably related to the migration but don't take my word for it. Let's investigate and fix.
+5. Email reminders. We're not seeing any logs for a recent email reminder that was supposed to be sent out. First we need to verify that the reminder box was checked and that the reminder date and frequency were set correctly. Look for any records at all. There should be less than 5 and maybe as few as 2 events where reminders were tested, although at least one of these was a whole group. so we should see logs in our email tracker that combines aws ses log ingestion with our own internal logging. i know i worked on this recently. he can't remember for sure if he checked the box and i don't recall if i tested on prod or just staging. and i can't remember when i fixed what i fixed so it could have been fixed after he tested his. or i could have started the test and walked away and forgot about it and it actually never got fixed. 
+6. Industry not showing correctly. In the example instead of the actual industry it says "Industry". Please investigate. 
 
-Replacing the single-rater image with the marked-up version and updating the README: removing it from "preferred" references and documenting it as a problem example.
+but do a deep analysis of the video before you start anything.  just keep this in mind as a studyguide so to speak.
 
-Updating the README: the single-rater asset is a problem example with markup; only the five-rater image remains the preferred reference.
-
-README.md
-+22
--7
-| [`client-feedback-creative-problem-solving.png`](./client-feedback-creative-problem-solving.png) | Client pen annotations on competency page — multiple issues || [`reference-preferred-tight-chart-to-norms-single-rater.png`](./reference-preferred-tight-chart-to-norms-single-rater.png) | **Preferred spacing**: single rater row — tight gap from x-axis (0–5) to GEONORM / summary row || [`reference-preferred-tight-chart-to-norms-five-raters.png`](./reference-preferred-tight-chart-to-norms-five-raters.png) | **Preferred spacing**: five rater rows — tight gap from x-axis to industry norm + group average row |
-| [`reference-preferred-tight-chart-to-norms-single-rater.png`](./reference-preferred-tight-chart-to-norms-single-rater.png) | **Preferred spacing**: single rater row — tight gap from x-axis (0–5) to GEONORM / summary row || [`client-feedback-creative-problem-solving.png`](./client-feedback-creative-problem-solving.png) | Client pen annotations on competency page — multiple issues || [`client-feedback-vertical-spacing-single-rater-markup.png`](./client-feedback-vertical-spacing-single-rater-markup.png) | **Problem (avoid)**: Creative Problem Solving, single rater — **markup** flags **too much** vertical space (legend→chart **and** axis→GEONORM). Not a “good” reference. || [`reference-preferred-tight-chart-to-norms-five-raters.png`](./reference-preferred-tight-chart-to-norms-five-raters.png) | **Preferred spacing**: five rater rows — tight gap from x-axis to industry norm + group average row |
-README.md
-+1
--1
-Reference: [`client-feedback-creative-problem-solving.png`](./client-feedback-creative-problem-solving.png)
-Reference: [`client-feedback-creative-problem-solving.png`](./client-feedback-creative-problem-solving.png)References: [`client-feedback-creative-problem-solving.png`](./client-feedback-creative-problem-solving.png) (pen), [`client-feedback-vertical-spacing-single-rater-markup.png`](./client-feedback-vertical-spacing-single-rater-markup.png) (spacing markup, single rater)
-README.md
-+1
-| Top banner arrow | (Unclear — possibly header adjustment) | Addressed (commit 22a920a) |
-| Top banner arrow | (Unclear — possibly header adjustment) | Addressed (commit 22a920a) || Vertical spacing markup (single rater) | Arrow **1**: less space between growth legend and chart; arrow **2**: less space between x-axis and GEONORM | **Pending** — see [Problem: Excessive vertical spacing](#problem-excessive-vertical-spacing-single-rater-markup) |
-Here’s what changed:
-
-Image
-Removed reference-preferred-tight-chart-to-norms-single-rater.png (it was treated as “good” but had no markup and was the wrong story).
-Added client-feedback-vertical-spacing-single-rater-markup.png from
-image-96e14c4c-67d7-4da8-830f-a73727eceaf1.png — Creative Problem Solving, single rater, with arrows for the bad spacing.
-README
-Images table: single-rater file is documented as problem / avoid, not preferred; only reference-preferred-tight-chart-to-norms-five-raters.png is called out for preferred chart-to-norms spacing.
-New section “Problem: Excessive vertical spacing (single rater, markup)”: explains this is what’s wrong, with a table for markup 1 (legend → chart) and markup 2 (axis → GEONORM) and pointers to 360-report-view-fullscreen / chart height / norms.
-“Preferred: Chart-to-norms…”: narrowed to the five-rater shot as the good reference; technical notes updated (bar-count sensitivity now cites the new markup image; added legend-to-chart note; contrast bullet lists both client-feedback PNGs vs the five-rater target).
-Client Feedback table: second reference + a Pending row for the two spacing arrows.
-So: tight “good” example = five-rater file only; single-rater with arrows = problem example with explicit markup locations.
-
-
-we need a way to export all data for a survey as system agnostic structured data. then we need a way to re-create system data from the export object.
-
-we might do this: take a snapshot, restore to the most recent backup, export the data (we need a good way to export survey data as system agonstic data anyway). at that poitn we can export the survey data as an object, then restore back to the snapshot we just took. then import the survey data export on top of that. what do you think? is that better than what you proposed? or the same?
-
-ok maybe we went a little overboard on removing whitespace. now the score labels are bunching up on the chart please advise in this md
-
-### 2026-03-20 — Report: “bunching” after tightening whitespace (chart vs norms row)
-
-**What people are seeing:** The **0–5 x-axis numbers** sit very close to—or **overlap**—the **norms row** below (“GEONORM…”, “AVG SCORE…”). It can look like the **“5” tick collides with the “GROUP” / footer text**, or that “score labels” are crammed against the chart. That’s usually **vertical clearance**, not the horizontal bar labels (Peer, Self, etc.).
-
-**Why it happened:** We removed dead space in three places: legacy `.norms { top: 70px }`, `alignItems: flex-start` on the score+chart row, and possibly smaller `margin-top` on norms. Together, the **chart’s axis band** and the **norms row** can occupy the same vertical band in the PDF/view.
-
-**What to do (pick one or combine lightly — don’t bring back the old 70px gap):**
-
-1. **Norms row:** Add a **small** top margin only if needed, e.g. `marginTop: '6px'`–`'12px'` on `div.norms` in `360-report-view-fullscreen.tsx` — enough to clear descenders/axis ticks, not a huge band.
-2. **Chart component:** In `horizontal-bar-chart.tsx` / `chart-axis-layout.ts`, bump **`X_AXIS_LABEL_GAP_PX`** slightly (e.g. +4–8px) so tick labels sit **lower** with a predictable gap above the norms row.
-3. **Norms row horizontal:** If the issue is **footer divider / text** crowding the chart grid, that’s separate from vertical tightening — norms use `max-content` + a dedicated divider; don’t confuse with axis overlap.
-
-**Principle:** Treat **axis-to-norms** as its own minimum clearance (~one line height); treat **chart-to-norms** tightening as separate from **legend-to-chart** tightening.
-
-it's still too high. so, these charts may vary in how tall they are so the scores should really be positioned directly below wherever that ends. this should fix the remaining overlap and be flexible for different chart heights. also, there appears to be two verticle divider lines between the scores now. 
-
-### 2026-03-20 — Norms under chart column + single divider (follow-up)
-
-**Request:** (1) Position GEONORM / group scores **directly below the bar chart** so variable chart heights don’t leave the footer overlapping the x-axis ticks. (2) **Two vertical lines** between the two score blocks — remove duplicate.
-
-**What we changed (involved-v2):**
-
-1. **DOM / layout:** Wrapped `HorizontalBarChart` and `div.norms` in a **column** (`flexDirection: 'column'`) inside the **chart area only** (`width: chartAreaWidth360` = 563px), beside the left score column. Norms are no longer a full-width sibling below the whole score+chart row, so they always sit **immediately under** the chart’s bottom (including axis), not under a taller flex row box.
-
-2. **Double divider:** Legacy `report-styles.css` had `.norm-group.group { border-left: 2px ... }` **and** React rendered a separate 2px divider `div`. **Removed the CSS border-left**; only the React divider remains.
-
-**Refs:** `src/components/reports/360-report-view-fullscreen.tsx`, `src/app/dashboard/reports/[assignmentId]/view/report-styles.css`, `REPORT_SPACING.chartAreaWidth360` in `report-design-constants.ts`.
-
-### 2026-03-20 — Axis ticks vs GEONORM overlap (code, not docs-only)
-
-**Issue:** 0–5 tick labels and GEONORM row were **vertically colliding** — `.bars` / `.graph` height was only `barsRegion + X_AXIS_LABEL_GAP_PX`, but tick `<span>`s sit **below** that padding with CSS `margin-top: 14px` + inline `top: 4px`, so labels extended **past** the container while the norms row started right after.
-
-**Fix (implemented):** `computeGraphContainerHeight()` adds **`X_AXIS_TICK_TEXT_RESERVE_PX` (34)** so the chart wrapper is tall enough for the full tick block. `linePaddingTop` unchanged — tick position relative to bars stays the same.
-
-**Earlier same day:** `ScoreDisplay` renamed to **`report-score-display`** so legacy `.chart .score` (`height: 230px`, `padding-top: 100px`) does not apply; that was a separate bug from axis/norms overlap.
-
-**Refs:** `src/lib/reports/chart-axis-layout.ts`, `src/components/reports/charts/horizontal-bar-chart.tsx`.
-
-### 2026-03-20 — Tighter axis ticks, centered norms, PDF duplicate divider
-
-**Feedback:** (1) 0–5 numbers still too low vs bars — want them **directly under** the axis. (2) **Center** GEONORM / group blocks on **full page** width, not only under the chart column. (3) **Double vertical lines** — second line was **`border-left` on `.norm-group.group`** in the **(reports)** PDF stylesheet, not the dashboard one.
-
-**Changes:**
-
-1. **`chart-axis-layout.ts`** — `X_AXIS_LABEL_GAP_PX` **26 → 16**; `X_AXIS_TICK_TEXT_RESERVE_PX` **34 → 22** (container still clears norms).
-2. **`horizontal-bar-chart.tsx`** — Tick `<span>` **`marginTop: 0`**, **`top: 2px`** (overrides CSS `margin-top: 14px` on `.line > span`) so labels sit tighter under the bars.
-3. **`360-report-view-fullscreen.tsx`** — Norms row **outside** the score+chart flex: full-width wrapper with **`justifyContent: 'center'`**; norms **`maxWidth: contentWidth`**, **`justifyContent: 'center'`**. **`norm-group.group`** inline **`borderLeft: 'none'`, `paddingLeft: 0`**.
-4. **`src/app/(reports)/reports/[assignmentId]/view/report-styles.css`** — Removed **`border-left`** and **`padding-left`** from `.norm-group.group` (matched dashboard; PDF had been doubling the React divider).
-
-**Refs:** `chart-axis-layout.ts`, `horizontal-bar-chart.tsx`, `360-report-view-fullscreen.tsx`, both `report-styles.css` paths.
-
-### 2026-03-20 — Score vs chart vertical center; norms divider between blocks
-
-**Feedback:** (1) Large **overall score** on the left sat **too high** — should be **vertically centered** with the bar chart. (2) **Vertical divider** between GEONORM and group scores should sit **on the midpoint** between the **two** score blocks, not offset.
-
-**Changes (`360-report-view-fullscreen.tsx`):**
-
-1. Score + chart row: **`alignItems: 'flex-start'` → `'center'`** so the score column centers against the chart height.
-2. **`score-container`:** **`alignItems: 'center'`** (was `flex-start`) so the big number is centered in its column.
-3. When **`geonorm !== null`:** norms row uses **`display: flex`** with **`flex: 1`** left and right **wrappers** — industry **`justifyContent: 'flex-end'`**, group **`justifyContent: 'flex-start'`**, fixed-width divider **between** — so the line is **horizontally centered between** the two clusters. When **`geonorm === null`**, single GEONORM block stays **centered** as before.
-
-### 2026-03-20 — Norms: more gap below chart; center cards in each half
-
-**Feedback:** (1) A bit **more space** between the **chart** and the **norms** row. (2) Divider was **geometrically** centered but looked off because the **right** card sat flush to the divider — **match** the **visual** space card-to-divider on **both** sides.
-
-**Changes (`360-report-view-fullscreen.tsx`):**
-
-1. Norms **outer** wrapper **`marginTop`**: **`8px` → `16px` → `20px`** (spacing under chart).
-2. **`geonorm`** two-column row: each **`flex: 1`** half **`justifyContent: 'center'`** (replacing **`flex-end`** / **`flex-start`**) so each **norm-group** is **centered** in its half — balanced slack **toward the divider** and **toward the outer** margin.
-
-review the changes we just made in involved.md and in the staged and unstaged changes and commit, push and deploy staging.
-
-we're looking good. so, i was wrong about the dimension definitions. they do in fact need to be rich text. change the fields on the assessment edit interface to support rich text and make sure they are parsing the tags in the report.
-
-ok this is interesting. i just updated one of the dimension descriptions and suddenly all of the answer data for the survey got nuked. please investigate.
-
-so once assignments are created, their assessment needs to be locked. the user needs to be warned that by editing assessments after assignment, they risk causing data inaccuracy. in the reports. it needs to be a warning like "this assessment is currently being used in active surveys. editing it may cause data inaccuracies. are you sure you want to continue?"
-
-we may actually want to include in the message that they may want to save a survey snapshot before editing. 
-
-i like the lock on the assessment edit page. we should add a lock icon next to the assessment in the assessment index page with a more brief tooltip message.
-
-### 2026-03-20 — PDF page numbers too high vs HTML
-
-**Cause:** Both **`export-pdf-puppeteer.ts`** and **`export-pdf-playwright.ts`** inject print CSS with **`.page-footer { bottom: 0 !important; }`**. **`PageFooter`** uses inline **`bottom: '-110px'`** (positions the label in the band below **`.page-wrapper`**). **`!important` beats inline**, so **PDF** pinned the footer to **`bottom: 0`** while **HTML** kept **`-110px`** — page numbers looked **too high** in the PDF.
-
-**Fix:** Dropped **`bottom: 0 !important`** from **`.page-footer`** in both exporters (kept **`position: absolute !important`** only). **Puppeteer** also aligned **`.page-wrapper { padding-bottom }`** **59px → 64px** to match **`PageWrapper`** / Playwright (**`footerAreaHeight`**). **`page-footer.tsx`:** **`fontFamily`** was incorrectly set to **`fontSize`**; set to the report Helvetica stack.
-
-**Refs:** `src/lib/reports/export-pdf-puppeteer.ts`, `src/lib/reports/export-pdf-playwright.ts`, `src/components/reports/layout/page-footer.tsx`.
+we have tools to analyze video. start with a whisper transcript. then you can use the mmfpeg and python to select and analyze frames based on the analysis of the transcript by timestamps provided by whisper. use the gus-claw memory tool to review the last time we did something similar. it was just a few days ago.

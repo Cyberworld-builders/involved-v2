@@ -110,7 +110,7 @@ export async function GET(
     // Construct the fullscreen view URL (using the route group path, no dashboard layout)
     // If service role authentication, add token to query parameter for view page
     const viewUrl = isServiceRole 
-      ? `${baseUrl}/reports/${assignmentId}/view?service_role_token=${encodeURIComponent(normalizedServiceKey!)}`
+      ? `${baseUrl}/reports/${assignmentId}/view?service_role_token=${encodeURIComponent(serviceRoleKey!)}`
       : `${baseUrl}/reports/${assignmentId}/view`
 
     // Generate PDF from the fullscreen view
