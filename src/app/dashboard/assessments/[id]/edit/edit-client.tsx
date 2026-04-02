@@ -180,7 +180,8 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
           })),
           // Map fields preserving the order from the database query
           // The fields are already sorted by 'order' column, so we preserve that order
-          fields: (fields || []).map((field, index) => {
+          // Filter out rich_text definition fields (dimension_id set) — definitions now live on dimensions table
+          fields: (fields || []).filter(f => !(f.type === 'rich_text' && f.dimension_id)).map((field, index) => {
             type FieldRow = Database['public']['Tables']['fields']['Row']
             const fieldWithExtras = field as FieldRow & { number?: number; practice?: boolean; required?: boolean }
             return {
