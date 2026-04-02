@@ -389,8 +389,8 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
       const expiresDate = new Date(expirationDate)
       expiresDate.setHours(23, 59, 59, 999) // Set to end of day
 
-      // Use existing survey_id when adding to a survey, otherwise generate a new one
-      const surveyId = existingSurveyId || crypto.randomUUID()
+      // Use existing survey_id when adding to a survey, otherwise let the API create one
+      const surveyId = existingSurveyId || undefined
 
       // Create assignments using API - one API call per user-assessment combination
       // This allows per-user custom_fields and target_id
