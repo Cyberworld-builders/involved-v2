@@ -85,15 +85,12 @@ serve(async (req) => {
     // Initialize Supabase admin client
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Get current time and tomorrow (to catch reminders due today)
+    // Find reminders that are due (next_reminder <= now)
     const now = new Date()
-    const tomorrow = new Date(now)
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    tomorrow.setHours(0, 0, 0, 0)
 
-    console.log(`🔍 Checking for reminders due between ${now.toISOString()} and ${tomorrow.toISOString()}`)
+    console.log(`🔍 Checking for reminders due before ${now.toISOString()}`)
 
-    // Query assignments due for reminders
+    // Query assignments where reminder time has passed
     const { data: assignments, error: queryError } = await supabase
       .from('assignments')
       .select(`
@@ -108,8 +105,7 @@ serve(async (req) => {
       .eq('reminder', true)
       .eq('completed', false)
       .not('next_reminder', 'is', null)
-      .gte('next_reminder', now.toISOString())
-      .lt('next_reminder', tomorrow.toISOString())
+      .lte('next_reminder', now.toISOString())
 
     if (queryError) {
       console.error('❌ Error querying assignments:', queryError)

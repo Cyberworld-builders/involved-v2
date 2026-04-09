@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import Link from 'next/link'
-import { Calendar, ChevronDown, ChevronRight, ExternalLink, Pencil, Trash2 } from 'lucide-react'
+import { Calendar, ChevronDown, ChevronRight, Download, ExternalLink, Pencil, Trash2 } from 'lucide-react'
 import { PdfActionButtons } from '@/components/reports/pdf-action-buttons'
 import SurveySnapshots from '@/components/surveys/survey-snapshots'
 import { Subject } from '@/lib/reports/get-survey-subjects'
@@ -32,6 +32,11 @@ export type SurveyAssignment = {
 interface SurveyDetailClientProps {
   clientId: string
   surveyId: string
+  surveyMeta?: {
+    id: string
+    name: string | null
+    created_at: string
+  }
   assessment: {
     id: string
     title: string
@@ -45,6 +50,7 @@ interface SurveyDetailClientProps {
 export default function SurveyDetailClient({
   clientId,
   surveyId,
+  surveyMeta,
   assessment,
   assignments: initialAssignments,
   initialSubjects = [],
@@ -90,6 +96,64 @@ export default function SurveyDetailClient({
   const [selectedAssignmentIds, setSelectedAssignmentIds] = useState<Set<string>>(new Set())
   const [deleteSelectedDialogOpen, setDeleteSelectedDialogOpen] = useState(false)
   const [isDeletingSelected, setIsDeletingSelected] = useState(false)
+
+  // Reminder state
+  const [showReminderSettings, setShowReminderSettings] = useState(false)
+  const [reminderFrequency, setReminderFrequency] = useState('+3 days')
+  const [firstReminderDate, setFirstReminderDate] = useState(() => {
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    return tomorrow.toISOString().split('T')[0]
+  })
+  const [firstReminderTime, setFirstReminderTime] = useState('09:00')
+  const [isUpdatingReminders, setIsUpdatingReminders] = useState(false)
+
+  const incompleteCount = assignments.filter(a => !a.completed).length
+
+  const handleEnableReminders = async () => {
+    setIsUpdatingReminders(true)
+    try {
+      const res = await fetch(`/api/clients/${clientId}/surveys/${surveyId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reminder: true,
+          reminder_frequency: reminderFrequency,
+          first_reminder_date: new Date(`${firstReminderDate}T${firstReminderTime}`).toISOString(),
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setMessage(data.error || 'Failed to enable reminders')
+      } else {
+        setMessage(`Reminders enabled for ${incompleteCount} incomplete assignment(s)`)
+        setShowReminderSettings(false)
+      }
+    } catch {
+      setMessage('Failed to enable reminders')
+    } finally {
+      setIsUpdatingReminders(false)
+    }
+  }
+
+  const handleDisableReminders = async () => {
+    setIsUpdatingReminders(true)
+    try {
+      const res = await fetch(`/api/clients/${clientId}/surveys/${surveyId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reminder: false }),
+      })
+      if (res.ok) {
+        setMessage('Reminders disabled')
+        setShowReminderSettings(false)
+      }
+    } catch {
+      setMessage('Failed to disable reminders')
+    } finally {
+      setIsUpdatingReminders(false)
+    }
+  }
 
   const handleDeleteSurvey = async () => {
     setIsDeleting(true)
@@ -205,9 +269,12 @@ export default function SurveyDetailClient({
   const completedCount = assignments.filter(a => a.completed).length
   const totalCount = assignments.length
   const completionPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
-  const surveyDate = assignments.length > 0
-    ? new Date(assignments[0].created_at)
-    : new Date()
+  const surveyDate = surveyMeta?.created_at
+    ? new Date(surveyMeta.created_at)
+    : assignments.length > 0
+      ? new Date(assignments[0].created_at)
+      : new Date()
+  const surveyDisplayName = surveyMeta?.name || `${assessment.title} Survey`
   const currentDeadline = assignments.find(a => a.expires)?.expires
     ? new Date(assignments.find(a => a.expires)!.expires!).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     : null
@@ -365,7 +432,10 @@ export default function SurveyDetailClient({
               ← Back to Surveys
             </Button>
           </Link>
-          <h2 className="text-xl font-bold text-gray-900">{assessment.title} Survey</h2>
+          <h2 className="text-xl font-bold text-gray-900">{surveyDisplayName}</h2>
+          {surveyMeta?.name && (
+            <p className="text-sm text-gray-500">{assessment.title}</p>
+          )}
           <p className="text-gray-600">
             Survey launched on {surveyDate.toLocaleDateString('en-US', { 
               weekday: 'long', 
@@ -394,7 +464,77 @@ export default function SurveyDetailClient({
             <Trash2 className="h-4 w-4 mr-2" />
             Delete survey
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              window.open(`/api/clients/${clientId}/surveys/${surveyId}/export-csv`, '_blank')
+            }}
+            aria-label="Export raw data CSV"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export Raw Data
+          </Button>
+          {incompleteCount > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowReminderSettings(!showReminderSettings)}
+            >
+              <Calendar className="h-4 w-4 mr-2" />
+              Reminders ({incompleteCount} pending)
+            </Button>
+          )}
         </div>
+
+        {showReminderSettings && (
+          <Card className="border-amber-300 bg-amber-50">
+            <CardContent className="pt-4">
+              <div className="flex flex-wrap gap-4 items-end">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">First Reminder</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="date"
+                      value={firstReminderDate}
+                      onChange={e => setFirstReminderDate(e.target.value)}
+                      className="border rounded px-2 py-1 text-sm"
+                    />
+                    <input
+                      type="time"
+                      value={firstReminderTime}
+                      onChange={e => setFirstReminderTime(e.target.value)}
+                      className="border rounded px-2 py-1 text-sm"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Frequency</label>
+                  <select
+                    value={reminderFrequency}
+                    onChange={e => setReminderFrequency(e.target.value)}
+                    className="border rounded px-2 py-1 text-sm"
+                  >
+                    <option value="+1 day">Every day</option>
+                    <option value="+2 days">Every 2 days</option>
+                    <option value="+3 days">Every 3 days</option>
+                    <option value="+1 week">Every week</option>
+                    <option value="+2 weeks">Every 2 weeks</option>
+                  </select>
+                </div>
+                <Button size="sm" onClick={handleEnableReminders} disabled={isUpdatingReminders}>
+                  {isUpdatingReminders ? 'Updating...' : `Enable for ${incompleteCount} incomplete`}
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleDisableReminders} disabled={isUpdatingReminders}>
+                  Disable All
+                </Button>
+              </div>
+              <p className="text-xs text-amber-700 mt-2">
+                First reminder sends at the specified date/time. Subsequent reminders repeat at the selected frequency until completed.
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Fixed message (toaster) */}
@@ -903,7 +1043,7 @@ export default function SurveyDetailClient({
           </ul>
           <p className="text-sm font-medium text-gray-900 mb-1">Survey:</p>
           <p className="text-sm text-gray-600 mb-4">
-            {assessment.title} — {surveyDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            {surveyDisplayName} — {surveyDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
           {deleteError && (
             <p className="text-sm text-red-600 mb-4">{deleteError}</p>

@@ -154,14 +154,24 @@ export async function POST(
       )
     }
 
-    // Ensure report_data exists (create if not)
-    if (!currentReportData) {
-      await adminClient
-        .from('report_data')
-        .insert({
-          assignment_id: assignmentId,
-          dimension_scores: {},
-        })
+    // Ensure report_data exists with actual report content (not just a stub)
+    if (!currentReportData || !currentReportData.assignment_id) {
+      // Generate the report first so the view page has data to render
+      const generateUrl = new URL(`/api/reports/generate/${assignmentId}`, request.url)
+      const generateRes = await fetch(generateUrl.toString(), {
+        method: 'POST',
+        headers: {
+          'Cookie': request.headers.get('cookie') || '',
+          'Content-Type': 'application/json',
+        },
+      })
+      if (!generateRes.ok) {
+        const errData = await generateRes.json().catch(() => ({}))
+        return NextResponse.json(
+          { error: 'Report must be generated before PDF export', details: errData.error },
+          { status: 400 }
+        )
+      }
     }
 
     // Generate job ID for tracking

@@ -135,7 +135,24 @@ async function runSimulation(
   const assignmentIds: string[] = []
   const expiresAt = new Date()
   expiresAt.setDate(expiresAt.getDate() + 30)
-  const surveyId = crypto.randomUUID()
+
+  // Create a survey row
+  const { data: newSurvey, error: surveyError } = await adminClient
+    .from('surveys')
+    .insert({
+      client_id: group.client_id,
+      assessment_id: assessment_id,
+      created_by: user.id,
+    })
+    .select('id')
+    .single()
+
+  if (surveyError || !newSurvey) {
+    writeLine(JSON.stringify({ done: true, error: 'Failed to create survey: ' + (surveyError?.message || 'Unknown') }))
+    return
+  }
+  const surveyId = newSurvey.id
+  writeLine(`Created survey ${surveyId.slice(0, 8)}...`)
 
   // Randomize completion: always leave at least 1 incomplete, cap at 98%
   const maxComplete = Math.min(

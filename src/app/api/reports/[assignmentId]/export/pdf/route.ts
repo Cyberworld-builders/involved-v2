@@ -29,14 +29,12 @@ export async function GET(
     const authHeader = request.headers.get('authorization')
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-    // Normalize both strings for comparison (trim whitespace)
-    const normalizedAuthHeader = authHeader?.trim()
-    const normalizedServiceKey = serviceRoleKey?.trim()
-    const expectedAuthHeader = normalizedServiceKey ? `Bearer ${normalizedServiceKey}` : null
-
-    const isServiceRole = normalizedAuthHeader?.startsWith('Bearer ') &&
-                         normalizedServiceKey &&
-                         normalizedAuthHeader === expectedAuthHeader
+    // Check for service role: compare Bearer token against our service role key
+    let isServiceRole = false
+    if (authHeader && serviceRoleKey) {
+      const token = authHeader.replace(/^Bearer\s+/i, '').trim()
+      isServiceRole = token === serviceRoleKey.trim()
+    }
 
     if (!isServiceRole) {
       const {
@@ -45,6 +43,10 @@ export async function GET(
       } = await supabase.auth.getUser()
 
       if (authError || !user) {
+        console.error('[PDF Export] Auth failed. isServiceRole:', isServiceRole,
+          'authHeader present:', !!authHeader,
+          'authHeader length:', authHeader?.length,
+          'serviceRoleKey length:', serviceRoleKey?.length)
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       }
     }
@@ -108,7 +110,7 @@ export async function GET(
     // Construct the fullscreen view URL (using the route group path, no dashboard layout)
     // If service role authentication, add token to query parameter for view page
     const viewUrl = isServiceRole 
-      ? `${baseUrl}/reports/${assignmentId}/view?service_role_token=${encodeURIComponent(normalizedServiceKey!)}`
+      ? `${baseUrl}/reports/${assignmentId}/view?service_role_token=${encodeURIComponent(serviceRoleKey!)}`
       : `${baseUrl}/reports/${assignmentId}/view`
 
     // Generate PDF from the fullscreen view

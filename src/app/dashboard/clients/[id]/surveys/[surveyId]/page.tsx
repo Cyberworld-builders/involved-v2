@@ -15,24 +15,24 @@ export default async function SurveyDetailPage({ params }: SurveyDetailPageProps
   const { id: clientId, surveyId } = await params
   const adminClient = createAdminClient()
 
-  // Validate survey exists and get first assignment to determine assessment
-  const { data: firstAssignment, error: assignmentError } = await adminClient
-    .from('assignments')
+  // Fetch survey metadata from the surveys table
+  const { data: surveyRow, error: surveyError } = await adminClient
+    .from('surveys')
     .select(`
       id,
+      name,
       assessment_id,
       created_at,
-      assessment:assessments!assignments_assessment_id_fkey(
+      assessment:assessments!surveys_assessment_id_fkey(
         id,
         title,
         is_360
       )
     `)
-    .eq('survey_id', surveyId)
-    .limit(1)
+    .eq('id', surveyId)
     .single()
 
-  if (assignmentError || !firstAssignment) {
+  if (surveyError || !surveyRow) {
     redirect(`/dashboard/clients/${clientId}?tab=reports`)
   }
 
@@ -105,7 +105,7 @@ export default async function SurveyDetailPage({ params }: SurveyDetailPageProps
   })
 
   // Type assertion for assessment
-  const assessment = (firstAssignment.assessment as unknown) as {
+  const assessment = (surveyRow.assessment as unknown) as {
     id: string
     title: string
     is_360: boolean
@@ -113,6 +113,13 @@ export default async function SurveyDetailPage({ params }: SurveyDetailPageProps
 
   if (!assessment) {
     redirect(`/dashboard/clients/${clientId}?tab=reports`)
+  }
+
+  // Build survey metadata for the client component
+  const surveyMeta = {
+    id: surveyRow.id,
+    name: surveyRow.name as string | null,
+    created_at: surveyRow.created_at,
   }
 
   // Get subjects and scores on the server (these functions use admin client)
@@ -137,6 +144,7 @@ export default async function SurveyDetailPage({ params }: SurveyDetailPageProps
     <SurveyDetailClient
       clientId={clientId}
       surveyId={surveyId}
+      surveyMeta={surveyMeta}
       assessment={assessment}
       assignments={validAssignments}
       initialSubjects={subjects}

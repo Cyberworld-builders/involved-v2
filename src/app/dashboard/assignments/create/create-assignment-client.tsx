@@ -141,32 +141,44 @@ export default function CreateAssignmentClient() {
           }
         }
 
-        // Load assignments to build existing surveys list (for "Add to existing survey" dropdown)
-        const assignmentsRes = await fetch('/api/assignments')
-        const assignmentsData = await assignmentsRes.json().catch(() => ({}))
-        const allAssignments = Array.isArray(assignmentsData.assignments) ? assignmentsData.assignments : []
-        const bySurvey = new Map<string, { assessment_ids: Set<string>; expires: string; user_ids: Set<string>; assessmentTitles: string[] }>()
-        for (const a of allAssignments as Array<{ survey_id: string | null; assessment_id: string; user_id: string; expires: string; assessment?: { title?: string } }>) {
-          if (!a.survey_id) continue
-          if (!bySurvey.has(a.survey_id)) {
-            bySurvey.set(a.survey_id, { assessment_ids: new Set(), expires: a.expires, user_ids: new Set(), assessmentTitles: [] })
-          }
-          const g = bySurvey.get(a.survey_id)!
-          g.assessment_ids.add(a.assessment_id)
-          g.user_ids.add(a.user_id)
-          if (a.assessment?.title && !g.assessmentTitles.includes(a.assessment.title)) {
-            g.assessmentTitles.push(a.assessment.title)
-          }
+        // Load existing surveys from the surveys table
+        const { data: surveysData } = await supabase
+          .from('surveys')
+          .select(`
+            id,
+            name,
+            assessment_id,
+            created_at,
+            assessment:assessments!surveys_assessment_id_fkey(id, title)
+          `)
+          .order('created_at', { ascending: false })
+
+        // Get assignment stats per survey for the label
+        const surveyIds = (surveysData || []).map(s => s.id)
+        let assignmentStats: Array<{ survey_id: string; user_id: string; expires: string }> = []
+        if (surveyIds.length > 0) {
+          const { data: statsData } = await supabase
+            .from('assignments')
+            .select('survey_id, user_id, expires')
+            .in('survey_id', surveyIds)
+          assignmentStats = statsData || []
         }
-        const surveys: SurveyOption[] = []
-        bySurvey.forEach((g, survey_id) => {
-          const assessment_ids = Array.from(g.assessment_ids)
-          const user_ids = Array.from(g.user_ids)
-          const expiresDate = g.expires.slice(0, 10)
-          const label = g.assessmentTitles.length
-            ? `${g.assessmentTitles[0]}${g.assessmentTitles.length > 1 ? ` (+${g.assessmentTitles.length - 1} more)` : ''} – expires ${expiresDate} – ${user_ids.length} participant${user_ids.length !== 1 ? 's' : ''}`
-            : `Survey – expires ${expiresDate} – ${user_ids.length} participant${user_ids.length !== 1 ? 's' : ''}`
-          surveys.push({ survey_id, assessment_ids, expires: g.expires, user_ids, label })
+
+        const surveys: SurveyOption[] = (surveysData || []).map(s => {
+          const assessment = s.assessment as unknown as { id: string; title: string } | null
+          const surveyAssignments = assignmentStats.filter(a => a.survey_id === s.id)
+          const uniqueUserIds = [...new Set(surveyAssignments.map(a => a.user_id))]
+          const expires = surveyAssignments[0]?.expires || ''
+          const expiresDate = expires ? expires.slice(0, 10) : 'no expiry'
+          const title = s.name || assessment?.title || 'Survey'
+          const label = `${title} – expires ${expiresDate} – ${uniqueUserIds.length} participant${uniqueUserIds.length !== 1 ? 's' : ''}`
+          return {
+            survey_id: s.id,
+            assessment_ids: [s.assessment_id],
+            expires,
+            user_ids: uniqueUserIds,
+            label,
+          }
         })
         setSurveysList(surveys)
 
@@ -313,6 +325,25 @@ export default function CreateAssignmentClient() {
       const expiresDate = new Date(expirationDate)
       expiresDate.setHours(23, 59, 59, 999)
 
+      // Create or use existing survey
+      let surveyId: string | undefined = existingSurveyId || undefined
+      if (!surveyId && selectedAssessmentIds.length > 0) {
+        // Derive client_id from first user's profile
+        const firstUser = assignmentUsers[0]?.user
+        const clientId = firstUser?.client_id
+        if (clientId) {
+          const surveyRes = await fetch('/api/surveys', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ client_id: clientId, assessment_id: selectedAssessmentIds[0] }),
+          })
+          const surveyData = await surveyRes.json()
+          if (surveyRes.ok && surveyData.survey_id) {
+            surveyId = surveyData.survey_id
+          }
+        }
+      }
+
       // Create assignments for each user
       // Since each user can have different target_id and custom_fields,
       // we make one API call per user with all their assessments
@@ -352,9 +383,7 @@ export default function CreateAssignmentClient() {
           custom_fields: customFields,
           whitelabel: false,
         }
-        if (existingSurveyId) {
-          body.survey_id = existingSurveyId
-        }
+        body.survey_id = surveyId
         const promise = fetch('/api/assignments', {
           method: 'POST',
           headers: {

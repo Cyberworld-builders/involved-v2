@@ -55,11 +55,11 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { expires, delete_assignment_ids } = body
+    const { expires, delete_assignment_ids, reminder, reminder_frequency, first_reminder_date } = body
 
-    if (!expires && !delete_assignment_ids) {
+    if (!expires && !delete_assignment_ids && reminder === undefined) {
       return NextResponse.json(
-        { error: 'No valid fields to update. Provide expires or delete_assignment_ids.' },
+        { error: 'No valid fields to update.' },
         { status: 400 }
       )
     }
@@ -128,6 +128,43 @@ export async function PATCH(
       }
 
       result.updated_assignments = count ?? surveyAssignmentIds.length
+    }
+
+    // Batch update reminders (only for incomplete assignments)
+    if (reminder !== undefined) {
+      const updateData: Record<string, unknown> = {
+        reminder: !!reminder,
+      }
+
+      if (reminder) {
+        // Calculate next_reminder
+        if (first_reminder_date) {
+          updateData.next_reminder = new Date(first_reminder_date).toISOString()
+        } else {
+          // Default: tomorrow at 9 AM UTC
+          const tomorrow = new Date()
+          tomorrow.setDate(tomorrow.getDate() + 1)
+          tomorrow.setUTCHours(9, 0, 0, 0)
+          updateData.next_reminder = tomorrow.toISOString()
+        }
+        updateData.reminder_frequency = reminder_frequency || '+3 days'
+      } else {
+        updateData.next_reminder = null
+        updateData.reminder_frequency = null
+      }
+
+      const { error: reminderError, count } = await adminClient
+        .from('assignments')
+        .update(updateData)
+        .in('id', surveyAssignmentIds)
+        .eq('completed', false)
+
+      if (reminderError) {
+        console.error('Error updating reminders:', reminderError)
+        return NextResponse.json({ error: 'Failed to update reminders' }, { status: 500 })
+      }
+
+      result.updated_assignments = (result.updated_assignments || 0) + (count ?? 0)
     }
 
     // Batch delete specific assignments

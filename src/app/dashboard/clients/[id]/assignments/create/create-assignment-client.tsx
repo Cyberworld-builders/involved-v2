@@ -173,32 +173,45 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
           setAvailableGroups(transformedGroups)
         }
 
-        // Load assignments to build existing surveys list (for "Add to existing survey" dropdown)
-        const assignmentsRes = await fetch('/api/assignments')
-        const assignmentsData = await assignmentsRes.json().catch(() => ({}))
-        const allAssignments = Array.isArray(assignmentsData.assignments) ? assignmentsData.assignments : []
-        const bySurvey = new Map<string, { assessment_ids: Set<string>; expires: string; user_ids: Set<string>; assessmentTitles: string[] }>()
-        for (const a of allAssignments as Array<{ survey_id: string | null; assessment_id: string; user_id: string; expires: string; assessment?: { title?: string } }>) {
-          if (!a.survey_id) continue
-          if (!bySurvey.has(a.survey_id)) {
-            bySurvey.set(a.survey_id, { assessment_ids: new Set(), expires: a.expires, user_ids: new Set(), assessmentTitles: [] })
-          }
-          const g = bySurvey.get(a.survey_id)!
-          g.assessment_ids.add(a.assessment_id)
-          g.user_ids.add(a.user_id)
-          if (a.assessment?.title && !g.assessmentTitles.includes(a.assessment.title)) {
-            g.assessmentTitles.push(a.assessment.title)
-          }
+        // Load existing surveys from the surveys table (scoped to this client)
+        const { data: surveysData } = await supabase
+          .from('surveys')
+          .select(`
+            id,
+            name,
+            assessment_id,
+            created_at,
+            assessment:assessments!surveys_assessment_id_fkey(id, title)
+          `)
+          .eq('client_id', clientId)
+          .order('created_at', { ascending: false })
+
+        // Get assignment stats per survey for the label
+        const surveyIds = (surveysData || []).map(s => s.id)
+        let assignmentStats: Array<{ survey_id: string; user_id: string; expires: string }> = []
+        if (surveyIds.length > 0) {
+          const { data: statsData } = await supabase
+            .from('assignments')
+            .select('survey_id, user_id, expires')
+            .in('survey_id', surveyIds)
+          assignmentStats = statsData || []
         }
-        const surveys: SurveyOption[] = []
-        bySurvey.forEach((g, survey_id) => {
-          const assessment_ids = Array.from(g.assessment_ids)
-          const user_ids = Array.from(g.user_ids)
-          const expiresDate = g.expires.slice(0, 10)
-          const label = g.assessmentTitles.length
-            ? `${g.assessmentTitles[0]}${g.assessmentTitles.length > 1 ? ` (+${g.assessmentTitles.length - 1} more)` : ''} – expires ${expiresDate} – ${user_ids.length} participant${user_ids.length !== 1 ? 's' : ''}`
-            : `Survey – expires ${expiresDate} – ${user_ids.length} participant${user_ids.length !== 1 ? 's' : ''}`
-          surveys.push({ survey_id, assessment_ids, expires: g.expires, user_ids, label })
+
+        const surveys: SurveyOption[] = (surveysData || []).map(s => {
+          const assessment = s.assessment as unknown as { id: string; title: string } | null
+          const surveyAssignments = assignmentStats.filter(a => a.survey_id === s.id)
+          const uniqueUserIds = [...new Set(surveyAssignments.map(a => a.user_id))]
+          const expires = surveyAssignments[0]?.expires || ''
+          const expiresDate = expires ? expires.slice(0, 10) : 'no expiry'
+          const title = s.name || assessment?.title || 'Survey'
+          const label = `${title} – expires ${expiresDate} – ${uniqueUserIds.length} participant${uniqueUserIds.length !== 1 ? 's' : ''}`
+          return {
+            survey_id: s.id,
+            assessment_ids: [s.assessment_id],
+            expires,
+            user_ids: uniqueUserIds,
+            label,
+          }
         })
         setSurveysList(surveys)
 
@@ -376,8 +389,22 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
       const expiresDate = new Date(expirationDate)
       expiresDate.setHours(23, 59, 59, 999) // Set to end of day
 
-      // Use existing survey_id when adding to a survey, otherwise generate a new one
-      const surveyId = existingSurveyId || crypto.randomUUID()
+      // Use existing survey_id when adding to a survey, otherwise create one upfront
+      let surveyId: string | undefined = existingSurveyId || undefined
+      if (!surveyId) {
+        const surveyRes = await fetch('/api/surveys', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ client_id: clientId, assessment_id: selectedAssessmentIds[0] }),
+        })
+        const surveyData = await surveyRes.json()
+        if (!surveyRes.ok || !surveyData.survey_id) {
+          setMessage('Failed to create survey: ' + (surveyData.error || 'Unknown error'))
+          setIsSubmitting(false)
+          return
+        }
+        surveyId = surveyData.survey_id
+      }
 
       // Create assignments using API - one API call per user-assessment combination
       // This allows per-user custom_fields and target_id
@@ -417,7 +444,7 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
                 whitelabel: false,
                 survey_id: surveyId, // All assignments in this batch share the same survey_id
                 reminder: enableReminder,
-                first_reminder_date: enableReminder && firstReminderDate ? `${firstReminderDate}T${firstReminderTime}:00` : null,
+                first_reminder_date: enableReminder && firstReminderDate ? new Date(`${firstReminderDate}T${firstReminderTime}`).toISOString() : null,
                 reminder_frequency: enableReminder ? reminderFrequency : null,
               }),
             })
@@ -480,127 +507,28 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
         setMessage(`Successfully created ${createdAssignments.length} assignment(s)!`)
       }
 
-      // Send emails if enabled
+      // Send emails server-side if enabled (fire-and-forget — server handles delivery)
       if (sendEmail && createdAssignments.length > 0) {
-        // Group assignments by user
-        const assignmentsByUser = new Map<string, Array<{ assessmentTitle: string; url?: string | null }>>()
-        
-        for (const assignment of createdAssignments) {
-          const user = assignmentUsers.find(au => au.user_id === assignment.user_id)
-          if (!user) continue
-
-          const assessment = assessments.find(a => a.id === assignment.assessment_id)
-          if (!assessment) continue
-
-          if (!assignmentsByUser.has(user.user_id)) {
-            assignmentsByUser.set(user.user_id, [])
-          }
-          
-          assignmentsByUser.get(user.user_id)!.push({
-            assessmentTitle: assessment.title,
-            url: assignment.url,
-          })
-        }
-
-        // Send email to each user
-        const emailPromises: Array<Promise<Response>> = []
-        const emailUserMap: Array<{ userId: string; email: string; name: string }> = []
-        
-        for (const [userId, userAssignments] of assignmentsByUser.entries()) {
-          const user = assignmentUsers.find(au => au.user_id === userId)
-          if (!user) continue
-
-          emailUserMap.push({
-            userId,
-            email: user.user.email,
-            name: user.user.name,
-          })
-
-          // Get password for this user if available
-          const password = userPasswords.get(userId) || undefined
-
-          emailPromises.push(
-            fetch('/api/assignments/send-email', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                to: user.user.email,
-                toName: user.user.name,
-                username: user.user.username,
-                subject: emailSubject || 'New assessments have been assigned to you',
-                body: emailBody || 'Hello {name}, you have been assigned {assessments}. Please complete by {expiration-date}. Dashboard: {dashboard-link}. © {year} Involved Talent.',
-                assignments: userAssignments,
-                expirationDate: expirationDate,
-                password: password,
-              }),
-            })
-          )
-        }
-
-        // Send all emails and track results
         try {
-          const emailResults = await Promise.allSettled(emailPromises)
-          const emailErrors: string[] = []
-          let emailSuccessCount = 0
-          let emailFailureCount = 0
-
-          // Process email results sequentially to properly await JSON parsing
-          for (let i = 0; i < emailResults.length; i++) {
-            const result = emailResults[i]
-            const userInfo = emailUserMap[i]
-            const userLabel = userInfo ? `${userInfo.name} (${userInfo.email})` : `Email ${i + 1}`
-            
-            if (result.status === 'fulfilled') {
-              const response = result.value
-              try {
-                if (response.ok) {
-                  const data = await response.json().catch(() => ({}))
-                  if (data.success !== false && !data.error) {
-                    emailSuccessCount++
-                    console.log(`✅ Email sent successfully to ${userLabel}`)
-                  } else {
-                    emailFailureCount++
-                    const errorMsg = data.error || data.message || 'Failed to send'
-                    emailErrors.push(`${userLabel}: ${errorMsg}`)
-                    console.error(`❌ Email failed for ${userLabel}:`, errorMsg)
-                  }
-                } else {
-                  emailFailureCount++
-                  const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}` }))
-                  const errorMsg = errorData.error || errorData.message || `HTTP ${response.status}`
-                  emailErrors.push(`${userLabel}: ${errorMsg}`)
-                  console.error(`❌ Email HTTP error for ${userLabel}:`, errorMsg)
-                }
-              } catch (parseError) {
-                emailFailureCount++
-                emailErrors.push(`${userLabel}: Failed to parse response`)
-                console.error(`❌ Email parse error for ${userLabel}:`, parseError)
-              }
-            } else {
-              emailFailureCount++
-              const errorMsg = result.reason?.message || 'Failed to send'
-              emailErrors.push(`${userLabel}: ${errorMsg}`)
-              console.error(`❌ Email promise rejected for ${userLabel}:`, errorMsg)
-            }
-          }
-
-          // Update message with email results
-          if (emailFailureCount > 0) {
-            const emailMsg = `⚠️ Emails: ${emailSuccessCount} sent, ${emailFailureCount} failed. ${emailErrors.slice(0, 3).join('; ')}${emailErrors.length > 3 ? '...' : ''}`
-            console.warn('Email sending issues:', emailMsg)
-            setMessage(prev => prev + (prev ? ' ' : '') + emailMsg)
-          } else if (emailSuccessCount > 0) {
-            console.log(`✅ Successfully sent ${emailSuccessCount} email notification(s)`)
-            setMessage(prev => prev + (prev ? ' ' : '') + `✅ ${emailSuccessCount} email notification(s) sent.`)
+          const batchRes = await fetch('/api/assignments/send-batch-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              assignment_ids: createdAssignments.map(a => a.id),
+              subject: emailSubject || undefined,
+              body: emailBody || undefined,
+              passwords: Object.fromEntries(userPasswords),
+            }),
+          })
+          const batchData = await batchRes.json()
+          if (batchRes.ok) {
+            setMessage(prev => prev + (prev ? ' ' : '') + `✅ ${batchData.message}`)
           } else {
-            console.warn('No emails were sent (no valid recipients or all failed)')
+            setMessage(prev => prev + (prev ? ' ' : '') + `⚠️ Email queuing failed: ${batchData.error}`)
           }
         } catch (emailError) {
-          console.error('Error processing email results:', emailError)
-          const emailErrorMsg = `⚠️ Warning: Email sending encountered an error: ${emailError instanceof Error ? emailError.message : 'Unknown error'}`
-          setMessage(prev => prev + (prev ? ' ' : '') + emailErrorMsg)
+          console.error('Error queuing emails:', emailError)
+          setMessage(prev => prev + (prev ? ' ' : '') + '⚠️ Email queuing failed. Check email dashboard for status.')
         }
       }
 

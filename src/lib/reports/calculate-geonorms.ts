@@ -25,7 +25,8 @@ export interface GEOnorm {
 export async function calculateGEOnorms(
   groupId: string,
   assessmentId: string,
-  dimensionIds: string[]
+  dimensionIds: string[],
+  surveyId?: string | null
 ): Promise<Map<string, GEOnorm>> {
   const adminClient = createAdminClient()
 
@@ -45,13 +46,17 @@ export async function calculateGEOnorms(
 
   const memberIds = groupMembers.map((gm) => gm.profile_id)
 
-  // Get all completed assignments for group members and this assessment
-  const { data: assignments } = await adminClient
+  // Get all completed assignments for group members, scoped to this survey
+  let assignmentsQuery = adminClient
     .from('assignments')
     .select('id, user_id')
     .in('user_id', memberIds)
     .eq('assessment_id', assessmentId)
     .eq('completed', true)
+  if (surveyId) {
+    assignmentsQuery = assignmentsQuery.eq('survey_id', surveyId)
+  }
+  const { data: assignments } = await assignmentsQuery
 
   if (!assignments || assignments.length === 0) {
     return new Map()

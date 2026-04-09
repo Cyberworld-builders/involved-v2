@@ -74,6 +74,7 @@ export async function generate360Report(
       assessment_id,
       target_id,
       group_id,
+      survey_id,
       assessment:assessments!assignments_assessment_id_fkey(
         id,
         title
@@ -123,7 +124,7 @@ export async function generate360Report(
     groupFromDb = groupsByTarget[0]
   }
 
-  // Get all assignments for this target (and this group when known)
+  // Get all assignments for this target, scoped to the same survey
   let allTargetAssignmentsQuery = adminClient
     .from('assignments')
     .select(`
@@ -140,6 +141,10 @@ export async function generate360Report(
     .eq('target_id', assignment.target_id)
     .eq('assessment_id', assignment.assessment_id)
     .eq('completed', true)
+  // Filter by survey_id to prevent cross-survey score contamination
+  if (assignment.survey_id) {
+    allTargetAssignmentsQuery = allTargetAssignmentsQuery.eq('survey_id', assignment.survey_id)
+  }
   if (groupFromDb?.id) {
     allTargetAssignmentsQuery = allTargetAssignmentsQuery.eq('group_id', groupFromDb.id)
   }
@@ -147,7 +152,7 @@ export async function generate360Report(
 
   // When group filter yielded zero, retry without group so partial completion still produces a report
   if (groupFromDb?.id && (!allTargetAssignments || allTargetAssignments.length === 0)) {
-    const { data: fallbackAssignments } = await adminClient
+    let fallbackQuery = adminClient
       .from('assignments')
       .select(`
         id,
@@ -163,6 +168,10 @@ export async function generate360Report(
       .eq('target_id', assignment.target_id)
       .eq('assessment_id', assignment.assessment_id)
       .eq('completed', true)
+    if (assignment.survey_id) {
+      fallbackQuery = fallbackQuery.eq('survey_id', assignment.survey_id)
+    }
+    const { data: fallbackAssignments } = await fallbackQuery
     allTargetAssignments = fallbackAssignments || []
   }
 
@@ -172,7 +181,7 @@ export async function generate360Report(
   // Get all dimensions for this assessment (needed for both full and partial report)
   const { data: dimensions } = await adminClient
     .from('dimensions')
-    .select('id, name, code, parent_id, sort_order')
+    .select('id, name, code, parent_id, sort_order, definition')
     .eq('assessment_id', assignment.assessment_id)
     .is('parent_id', null) // Get top-level dimensions only
     .order('sort_order', { ascending: true })
@@ -274,35 +283,31 @@ export async function generate360Report(
     .in('assignment_id', assignmentIds)
     .in('dimension_id', dimensionIds)
 
-  // Get industry benchmarks
+  // Get industry benchmarks with industry name
   const { data: benchmarks } = await adminClient
     .from('benchmarks')
-    .select('dimension_id, value')
+    .select('dimension_id, value, industry_id, industry:industries!benchmarks_industry_id_fkey(name)')
     .in('dimension_id', dimensionIds)
 
   const benchmarkMap = new Map<string, number>()
+  let industryName: string | null = null
   benchmarks?.forEach((b) => {
     benchmarkMap.set(b.dimension_id, b.value)
+    if (!industryName && b.industry) {
+      industryName = ((b.industry as unknown) as { name: string })?.name || null
+    }
   })
 
   // Calculate GEOnorms
-  const geonorms = await calculateGEOnorms(group.id, assignment.assessment_id, dimensionIds)
+  const geonorms = await calculateGEOnorms(group.id, assignment.assessment_id, dimensionIds, assignment.survey_id)
 
-  // Get description fields (rich_text) for each dimension
-  const { data: descriptionFields } = await adminClient
-    .from('fields')
-    .select('dimension_id, content')
-    .eq('assessment_id', assignment.assessment_id)
-    .eq('type', 'rich_text')
-    .in('dimension_id', dimensionIds)
-  
+  // Get definitions from dimensions (single source of truth)
+  // Falls back to rich_text fields for backward compatibility
   const descriptionByDimension = new Map<string, string>()
-  descriptionFields?.forEach((field) => {
-    if (field.dimension_id && field.content) {
-      // If multiple description fields exist for a dimension, use the first one
-      if (!descriptionByDimension.has(field.dimension_id)) {
-        descriptionByDimension.set(field.dimension_id, field.content)
-      }
+  dimensions.forEach((dim) => {
+    const d = dim as { id: string; definition?: string | null }
+    if (d.definition) {
+      descriptionByDimension.set(d.id, d.definition)
     }
   })
 
@@ -519,6 +524,7 @@ export async function generate360Report(
     group_id: group.id,
     group_name: group.name,
     overall_score: overallScore,
+    industry_name: industryName,
     dimensions: dimensionReports,
     generated_at: new Date().toISOString(),
     ...(isPartial && {

@@ -428,9 +428,9 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                                   flexShrink: 0,
                                 }}
                               >
-                                GEONORM for<br />
+                                AVG SCORE<br />
                                 <span style={{ fontWeight: 600 }}>
-                                  {dimension.industry_benchmark !== null ? 'Industry' : 'NO INDUSTRY SET'}
+                                  {dimension.industry_benchmark !== null ? (reportData.industry_name || 'Industry') : 'NO INDUSTRY SET'}
                                 </span>
                               </div>
                             </div>
@@ -495,7 +495,7 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                                   flexShrink: 0,
                                 }}
                               >
-                                Avg Score<br />
+                                GEONORM<br />
                                 <span style={{ fontWeight: 600 }}>For This Group</span>
                               </div>
                             </div>
@@ -552,7 +552,7 @@ export default function Report360ViewFullscreen({ reportData }: Report360ViewFul
                             >
                               GEONORM for<br />
                               <span style={{ fontWeight: 600 }}>
-                                {dimension.industry_benchmark !== null ? 'Industry' : 'NO INDUSTRY SET'}
+                                {dimension.industry_benchmark !== null ? (reportData.industry_name || 'Industry') : 'NO INDUSTRY SET'}
                               </span>
                             </div>
                           </div>
