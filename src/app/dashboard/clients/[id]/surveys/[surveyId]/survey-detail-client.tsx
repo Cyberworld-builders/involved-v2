@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import Link from 'next/link'
-import { Calendar, ChevronDown, ChevronRight, Download, ExternalLink, Pencil, Trash2 } from 'lucide-react'
+import { Calendar, ChevronDown, ChevronRight, Download, ExternalLink, Pencil, Trash2, UserPlus } from 'lucide-react'
 import { PdfActionButtons } from '@/components/reports/pdf-action-buttons'
 import SurveySnapshots from '@/components/surveys/survey-snapshots'
 import { Subject } from '@/lib/reports/get-survey-subjects'
@@ -446,6 +446,12 @@ export default function SurveyDetailClient({
           </p>
         </div>
         <div className="flex gap-2">
+          <Link href={`/dashboard/clients/${clientId}/assignments/create?survey_id=${surveyId}`}>
+            <Button variant="outline" size="sm">
+              <UserPlus className="h-4 w-4 mr-2" />
+              Add Users to Survey
+            </Button>
+          </Link>
           <Button
             variant="outline"
             size="sm"
