@@ -64,5 +64,9 @@ export default async function EditAssignmentPage({ params }: EditAssignmentPageP
     }
   }
 
-  return <EditAssignmentClient assignment={assignment} />
+  // Resolve the client_id for routing "Add Users to Survey" to the client-scoped page
+  const assignmentUser = assignment.user as { id: string; client_id: string | null } | null
+  const clientId = assignmentUser?.client_id || profile.client_id || null
+
+  return <EditAssignmentClient assignment={assignment} clientId={clientId} />
 }

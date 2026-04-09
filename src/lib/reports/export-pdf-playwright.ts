@@ -223,7 +223,7 @@ export async function generatePDFFromView(
         .page-container:last-child {
           page-break-after: auto !important;
         }
-        /* Keep position only — PageFooter inline bottom:-110px must not be overridden (matches HTML) */
+        /* Keep position only — PageFooter inline bottom:-130px must not be overridden (matches HTML) */
         .page-footer {
           position: absolute !important;
         }

@@ -33,9 +33,10 @@ interface AssignmentData {
 
 interface EditAssignmentClientProps {
   assignment: AssignmentData
+  clientId?: string | null
 }
 
-export default function EditAssignmentClient({ assignment }: EditAssignmentClientProps) {
+export default function EditAssignmentClient({ assignment, clientId }: EditAssignmentClientProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
@@ -233,7 +234,11 @@ export default function EditAssignmentClient({ assignment }: EditAssignmentClien
                 <p className="text-sm text-gray-500 mb-2">
                   Add more users to this same survey batch.
                 </p>
-                <Link href={`/dashboard/assignments/create?survey_id=${assignment.survey_id}`}>
+                <Link href={
+                  clientId
+                    ? `/dashboard/clients/${clientId}/assignments/create?survey_id=${assignment.survey_id}`
+                    : `/dashboard/assignments/create?survey_id=${assignment.survey_id}`
+                }>
                   <Button variant="outline" size="sm">
                     Add Users to Survey
                   </Button>

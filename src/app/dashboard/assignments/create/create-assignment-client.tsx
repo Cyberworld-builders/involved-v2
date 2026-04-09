@@ -106,14 +106,34 @@ export default function CreateAssignmentClient() {
             .single()
 
           if (profile) {
+            // Determine client scope: client_admin uses their own client_id,
+            // super_admin scopes to the survey's client when adding to an existing survey
+            let scopeClientId = profile.client_id
+            const surveyIdParam = searchParams.get('survey_id')
+
+            if (profile.access_level === 'super_admin' && surveyIdParam) {
+              // Look up the survey's client by finding an assignment in this survey
+              const { data: surveyAssignment } = await supabase
+                .from('assignments')
+                .select('user_id, user:profiles!assignments_user_id_fkey(client_id)')
+                .eq('survey_id', surveyIdParam)
+                .limit(1)
+                .single()
+
+              if (surveyAssignment?.user) {
+                const assignmentUser = surveyAssignment.user as unknown as { client_id: string | null }
+                scopeClientId = assignmentUser.client_id
+              }
+            }
+
             let usersQuery = supabase
               .from('profiles')
               .select('id, name, email, username, client_id')
               .order('name', { ascending: true })
 
-            // Client admins only see their client's users
-            if (profile.access_level === 'client_admin' && profile.client_id) {
-              usersQuery = usersQuery.eq('client_id', profile.client_id)
+            // Scope users to client (for client_admin always, for super_admin when survey context)
+            if (scopeClientId) {
+              usersQuery = usersQuery.eq('client_id', scopeClientId)
             }
 
             const { data: usersData } = await usersQuery
@@ -131,9 +151,9 @@ export default function CreateAssignmentClient() {
               `)
               .order('name', { ascending: true })
 
-            // Client admins only see their client's groups
-            if (profile.access_level === 'client_admin' && profile.client_id) {
-              groupsQuery = groupsQuery.eq('client_id', profile.client_id)
+            // Scope groups to client
+            if (scopeClientId) {
+              groupsQuery = groupsQuery.eq('client_id', scopeClientId)
             }
 
             const { data: groupsData } = await groupsQuery
