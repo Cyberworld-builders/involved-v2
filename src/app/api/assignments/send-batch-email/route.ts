@@ -92,14 +92,24 @@ export async function POST(request: NextRequest) {
       return `<li>${a.assessmentTitle}</li>`
     }).join('')
 
+    // Button HTML to inject after assessment list
+    const buttonHtml = `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 24px 0;">
+              <tr>
+                <td align="center" style="background-color: #4F46E5; border-radius: 4px;">
+                  <a href="${loginLink}" target="_blank" style="display: inline-block; padding: 14px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 16px;">Go to Dashboard</a>
+                </td>
+              </tr>
+            </table>`
+
     // If custom emailBody was provided, process shortcodes on it
+    // The {assessments} shortcode is followed by the button automatically
     let customBodyHtml = ''
     if (emailBody) {
       customBodyHtml = emailBody
         .replace(/{name}/g, u.name)
         .replace(/{username}/g, u.username || u.email)
         .replace(/{email}/g, u.email)
-        .replace(/{assessments}/g, assessmentList)
+        .replace(/{assessments}/g, `${assessmentList}</p>${buttonHtml}<p style="margin: 0 0 16px 0;">`)
         .replace(/{expiration-date}/g, expirationStr)
         .replace(/{dashboard-link}/g, loginLink)
         .replace(/{year}/g, String(year))
@@ -116,13 +126,6 @@ export async function POST(request: NextRequest) {
             <h2 style="margin: 0; color: #ffffff;">Assessment Notification</h2>
           </div>
           <div style="padding: 30px 20px;">
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 24px 0;">
-              <tr>
-                <td align="center" style="background-color: #4F46E5; border-radius: 4px;">
-                  <a href="${loginLink}" target="_blank" style="display: inline-block; padding: 14px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 16px;">Go to Dashboard</a>
-                </td>
-              </tr>
-            </table>
             ${customBodyHtml.split('\n').map(line => `<p style="margin: 0 0 16px 0;">${line}</p>`).join('')}
             ${password ? `<p style="background: #f3f4f6; padding: 12px; border-radius: 4px;"><strong>Your temporary password:</strong> ${password}</p>` : ''}
           </div>
