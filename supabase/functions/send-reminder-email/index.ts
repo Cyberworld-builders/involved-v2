@@ -36,10 +36,11 @@ function generateReminderEmailBody(
   assessmentTitle: string,
   assignmentUrl: string,
   frequency: string,
-  dashboardUrl: string
+  dashboardUrl: string,
+  userEmail: string
 ): string {
   const formattedFrequency = formatFrequency(frequency)
-  const loginUrl = dashboardUrl.replace(/\/dashboard\/?$/, '/auth/forgot-password')
+  const loginUrl = dashboardUrl.replace(/\/dashboard\/?$/, `/auth/forgot-password?email=${encodeURIComponent(userEmail)}`)
 
   return `<!DOCTYPE html>
 <html>
@@ -102,10 +103,11 @@ function generateReminderEmailText(
   assessmentTitle: string,
   _assignmentUrl: string,
   frequency: string,
-  dashboardUrl: string
+  dashboardUrl: string,
+  userEmail: string
 ): string {
   const formattedFrequency = formatFrequency(frequency)
-  const loginUrl = dashboardUrl.replace(/\/dashboard\/?$/, '/auth/forgot-password')
+  const loginUrl = dashboardUrl.replace(/\/dashboard\/?$/, `/auth/forgot-password?email=${encodeURIComponent(userEmail)}`)
 
   return `
 Reminder: Complete Your Assessment
@@ -268,14 +270,16 @@ serve(async (req) => {
       assessment_title,
       assignment_url,
       reminder_frequency,
-      dashboardUrl
+      dashboardUrl,
+      user_email
     )
     const textBody = generateReminderEmailText(
       user_name,
       assessment_title,
       assignment_url,
       reminder_frequency,
-      dashboardUrl
+      dashboardUrl,
+      user_email
     )
 
     // Send email

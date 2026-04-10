@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
   }
 
   const baseUrl = getAppUrl()
-  const loginLink = `${baseUrl}/auth/forgot-password`
+  const baseLoginLink = `${baseUrl}/auth/forgot-password`
   const dashboardLink = `${baseUrl}/dashboard`
   const year = new Date().getFullYear()
 
@@ -80,6 +80,7 @@ export async function POST(request: NextRequest) {
 
   for (const [userId, data] of byUser) {
     const { user: u, assignments: userAssignments } = data
+    const loginLink = `${baseLoginLink}?email=${encodeURIComponent(u.email)}`
     const password = passwords?.[userId]
     const assessmentList = userAssignments.map(a => a.assessmentTitle).join(', ')
     const firstExpires = userAssignments[0]?.expires
