@@ -95,10 +95,11 @@ export default function AssignmentStageClient({ assignment }: AssignmentStageCli
                   className="object-contain"
                 />
               </div>
-            ) : null}
-            <CardTitle className="text-3xl font-bold" style={{ color: assessment.accent_color || '#FFBA00' }}>
-              {assessment.title}
-            </CardTitle>
+            ) : (
+              <CardTitle className="text-3xl font-bold" style={{ color: assessment.accent_color || '#FFBA00' }}>
+                {assessment.title}
+              </CardTitle>
+            )}
             {assessment.description && (
               <CardDescription 
                 className="mt-4 text-base"
