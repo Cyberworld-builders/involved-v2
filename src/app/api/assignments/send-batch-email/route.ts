@@ -115,10 +115,16 @@ export async function POST(request: NextRequest) {
           <div style="background-color: #2D2E30; color: #ffffff; padding: 20px; text-align: center;">
             <h2 style="margin: 0; color: #ffffff;">Assessment Notification</h2>
           </div>
-          <div style="padding: 20px;">
-            ${customBodyHtml.split('\n').map(line => `<p>${line}</p>`).join('')}
+          <div style="padding: 30px 20px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 24px 0;">
+              <tr>
+                <td align="center" style="background-color: #4F46E5; border-radius: 4px;">
+                  <a href="${loginLink}" target="_blank" style="display: inline-block; padding: 14px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 16px;">Go to Dashboard</a>
+                </td>
+              </tr>
+            </table>
+            ${customBodyHtml.split('\n').map(line => `<p style="margin: 0 0 16px 0;">${line}</p>`).join('')}
             ${password ? `<p style="background: #f3f4f6; padding: 12px; border-radius: 4px;"><strong>Your temporary password:</strong> ${password}</p>` : ''}
-            <p><a href="${loginLink}" style="background-color: #FFBA00; color: #2D2E30; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;">Go to Dashboard</a></p>
           </div>
           <div style="padding: 16px 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666;">
             &copy; ${year} Involved Talent
