@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
         .replace(/{name}/g, u.name)
         .replace(/{username}/g, u.username || u.email)
         .replace(/{email}/g, u.email)
-        .replace(/{assessments}/g, `${assessmentList}</p>${buttonHtml}<p style="margin: 0 0 16px 0;">`)
+        .replace(/{assessments}/g, `${assessmentList}${buttonHtml}`)
         .replace(/{expiration-date}/g, expirationStr)
         .replace(/{dashboard-link}/g, loginLink)
         .replace(/{year}/g, String(year))
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
             <h2 style="margin: 0; color: #ffffff;">Assessment Notification</h2>
           </div>
           <div style="padding: 30px 20px;">
-            ${customBodyHtml.split('\n').map(line => `<p style="margin: 0 0 16px 0;">${line}</p>`).join('')}
+            ${customBodyHtml}
             ${password ? `<p style="background: #f3f4f6; padding: 12px; border-radius: 4px;"><strong>Your temporary password:</strong> ${password}</p>` : ''}
           </div>
           <div style="padding: 16px 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666;">
