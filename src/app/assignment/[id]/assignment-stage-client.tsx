@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
+import SafeImage from '@/components/ui/safe-image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -87,7 +87,7 @@ export default function AssignmentStageClient({ assignment }: AssignmentStageCli
           <CardHeader className="text-center">
             {assessment.logo ? (
               <div className="flex justify-center mb-4">
-                <Image
+                <SafeImage
                   src={assessment.logo}
                   alt="Assessment Logo"
                   width={120}
@@ -95,11 +95,10 @@ export default function AssignmentStageClient({ assignment }: AssignmentStageCli
                   className="object-contain"
                 />
               </div>
-            ) : (
-              <CardTitle className="text-3xl font-bold" style={{ color: assessment.accent_color || '#FFBA00' }}>
-                {assessment.title}
-              </CardTitle>
-            )}
+            ) : null}
+            <CardTitle className="text-3xl font-bold" style={{ color: assessment.accent_color || '#FFBA00' }}>
+              {assessment.title}
+            </CardTitle>
             {assessment.description && (
               <CardDescription 
                 className="mt-4 text-base"
