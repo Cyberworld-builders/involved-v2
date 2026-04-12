@@ -30,6 +30,12 @@ async function updatePdfStatus(
 ) {
   const updateData: Record<string, unknown> = {
     pdf_status: status,
+    pdf_status_changed_at: new Date().toISOString(),
+  }
+
+  // Clear previous error on non-failed transitions
+  if (status !== 'failed') {
+    updateData.pdf_last_error = null
   }
 
   if (updates?.storage_path) {
@@ -79,13 +85,14 @@ async function generatePDF(
     }
     const assignmentId = urlParts[1].split('/')[0]
 
-    // Call the Next.js API route that has Playwright
-    // We use the service role key for authentication (passed in request body)
-    const apiUrl = `${nextjsApiUrl}/api/reports/${assignmentId}/export/pdf?download=true`
-    
-    console.log(`[Edge Function] Calling Next.js API: ${apiUrl}`)
+    // Call the Next.js API route that has Playwright/Puppeteer.
+    // We use the service role key for authentication via both Authorization header
+    // AND query parameter for redundancy.
+    const apiUrl = `${nextjsApiUrl}/api/reports/${assignmentId}/export/pdf?download=true&service_role_token=${encodeURIComponent(serviceRoleKey)}`
+
+    console.log(`[Edge Function] Calling Next.js API: ${nextjsApiUrl}/api/reports/${assignmentId}/export/pdf`)
     console.log(`[Edge Function] Service role key present: ${!!serviceRoleKey}, length: ${serviceRoleKey?.length || 0}`)
-    
+
     const response = await fetch(apiUrl, {
       method: 'GET',
       headers: {

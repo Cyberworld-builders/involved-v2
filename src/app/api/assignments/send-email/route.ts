@@ -77,14 +77,14 @@ export async function POST(request: NextRequest) {
     const { to, toName, username: providedUsername, subject, body: emailBody, assignments, expirationDate, password, assignmentId } = body
 
     const baseUrl = getAppUrl()
-    const dashboardUrl = `${baseUrl}/dashboard`
+    const loginLink = `${baseUrl}/auth/forgot-password?email=${encodeURIComponent(to)}`
 
     // Format assessments as a simple list of names with a single dashboard button
     const assessmentNames = assignments.map((a) => a.assessmentTitle)
     const assessmentNamesList = assessmentNames
       .map((name) => `<li style="padding: 2px 0;">${name}</li>`)
       .join('')
-    const assessmentsHtml = `<ul style="margin: 8px 0; padding-left: 20px;">${assessmentNamesList}</ul><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 16px 0;"><tr><td style="background-color: #4F46E5; border-radius: 4px;"><a href="${dashboardUrl}" target="_blank" style="display: inline-block; padding: 10px 20px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px;">Go to Dashboard</a></td></tr></table>`
+    const assessmentsHtml = `<ul style="margin: 8px 0; padding-left: 20px;">${assessmentNamesList}</ul><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 24px 0;"><tr><td align="center" style="background-color: #4F46E5; border-radius: 4px;"><a href="${loginLink}" target="_blank" style="display: inline-block; padding: 14px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 16px;">Go to Dashboard</a></td></tr></table>`
 
     // Also create a plain text version for text/plain email body
     const assessmentsListText = assessmentNames
@@ -98,24 +98,25 @@ export async function POST(request: NextRequest) {
     const username = providedUsername || to.split('@')[0]
     const year = new Date().getFullYear()
 
-    // Replace shortcodes in email body (use HTML version for assessments)
-    let processedBody = replaceShortcodes(
-      emailBody,
+    // The {assessments} shortcode produces block-level HTML (ul + table button),
+    // so break out of any surrounding <p> tag to avoid invalid nesting.
+    let processedBody = emailBody
+      .replace(/<p>\s*\{assessments\}\s*<\/p>/g, assessmentsHtml)
+      .replace(/{assessments}/g, assessmentsHtml)
+    processedBody = replaceShortcodes(
+      processedBody,
       toName,
       username,
       to,
       assessmentsHtml,
       formattedExpiration,
       password,
-      dashboardUrl,
+      loginLink,
       year
     )
-    
-    // Add dashboard link at the bottom (use <p> tag since body is HTML from RichTextEditor)
-    processedBody += `<p>You can also open your dashboard to see all your assignments: ${dashboardUrl}</p>`
-    
+
     // Create plain text version for text/plain email body
-    let processedBodyText = replaceShortcodes(
+    const processedBodyText = replaceShortcodes(
       emailBody,
       toName,
       username,
@@ -123,12 +124,9 @@ export async function POST(request: NextRequest) {
       assessmentsListText,
       formattedExpiration,
       password,
-      dashboardUrl,
+      loginLink,
       year
     )
-    
-    // Add dashboard link at the bottom of plain text body
-    processedBodyText += `\n\nYou can also open your dashboard to see all your assignments: ${dashboardUrl}\n`
 
     // Check if email service is configured
     // Priority: AWS SES with OIDC (AWS_ROLE_ARN) > AWS SES with access keys > Resend > SendGrid > SMTP

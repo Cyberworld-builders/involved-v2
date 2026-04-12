@@ -14,6 +14,7 @@ interface ReminderEmailRequest {
   assessment_title: string
   assignment_url: string
   reminder_frequency: string
+  expires?: string
 }
 
 /**
@@ -37,10 +38,14 @@ function generateReminderEmailBody(
   assignmentUrl: string,
   frequency: string,
   dashboardUrl: string,
-  userEmail: string
+  userEmail: string,
+  expires?: string
 ): string {
   const formattedFrequency = formatFrequency(frequency)
   const loginUrl = dashboardUrl.replace(/\/dashboard\/?$/, `/auth/forgot-password?email=${encodeURIComponent(userEmail)}`)
+  const expirationStr = expires
+    ? new Date(expires).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+    : ''
 
   return `<!DOCTYPE html>
 <html>
@@ -74,6 +79,7 @@ function generateReminderEmailBody(
                 </tr>
               </table>
               <p style="margin: 0 0 16px 0;">Please click the button above to open your dashboard. You will need to request a log-in magic link to complete your assessment. You will be prompted to do so immediately upon landing on the dashboard.</p>
+              ${expirationStr ? `<p style="margin: 0 0 16px 0;">Please complete your assignments by ${expirationStr}.</p>` : ''}
               <p style="margin: 0 0 16px 0;">You will receive reminders every ${formattedFrequency} until this assessment is completed.</p>
               <p style="margin: 0 0 16px 0;">You can access your assignments at any time from your dashboard (<a href="${loginUrl}" style="color: #4F46E5;">${dashboardUrl}</a>) by requesting a log-in magic link.</p>
               <p style="margin: 0 0 16px 0;">If you have any questions, please contact us at: <a href="mailto:support@involvedtalent.com" style="color: #4F46E5;">support@involvedtalent.com</a></p>
@@ -104,10 +110,14 @@ function generateReminderEmailText(
   _assignmentUrl: string,
   frequency: string,
   dashboardUrl: string,
-  userEmail: string
+  userEmail: string,
+  expires?: string
 ): string {
   const formattedFrequency = formatFrequency(frequency)
   const loginUrl = dashboardUrl.replace(/\/dashboard\/?$/, `/auth/forgot-password?email=${encodeURIComponent(userEmail)}`)
+  const expirationStr = expires
+    ? new Date(expires).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+    : ''
 
   return `
 Reminder: Complete Your Assessment
@@ -121,7 +131,7 @@ ${assessmentTitle}
 Visit your dashboard to complete your assessment: ${loginUrl}
 
 You will need to request a log-in magic link to complete your assessment.
-
+${expirationStr ? `\nPlease complete your assignments by ${expirationStr}.\n` : ''}
 You will receive reminders every ${formattedFrequency} until this assessment is completed.
 
 You can access your assignments at any time from your dashboard (${dashboardUrl}) by requesting a log-in magic link.
@@ -147,6 +157,7 @@ serve(async (req) => {
       assessment_title,
       assignment_url,
       reminder_frequency,
+      expires,
     } = body
 
     let baseUrl = (Deno.env.get('NEXT_PUBLIC_APP_URL') || Deno.env.get('APP_URL') || 'http://localhost:3000').trim().replace(/\/+$/, '')
@@ -271,7 +282,8 @@ serve(async (req) => {
       assignment_url,
       reminder_frequency,
       dashboardUrl,
-      user_email
+      user_email,
+      expires
     )
     const textBody = generateReminderEmailText(
       user_name,
@@ -279,7 +291,8 @@ serve(async (req) => {
       assignment_url,
       reminder_frequency,
       dashboardUrl,
-      user_email
+      user_email,
+      expires
     )
 
     // Send email

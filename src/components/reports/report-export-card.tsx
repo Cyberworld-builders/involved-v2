@@ -3,6 +3,7 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { usePdfState } from '@/hooks/use-pdf-state'
+import { friendlyPdfError } from '@/lib/reports/pdf-error-messages'
 import { formatDateTime } from '@/lib/utils'
 import { Download, FileSpreadsheet, FileText, ExternalLink, RefreshCw, Loader2 } from 'lucide-react'
 
@@ -22,6 +23,8 @@ export default function ReportExportCard({
   const {
     state,
     isLoading,
+    actionError,
+    clearError,
     handleGenerate,
     handleView,
     handleDownload,
@@ -40,6 +43,14 @@ export default function ReportExportCard({
   return (
     <Card>
       <CardContent className="!p-8">
+        {/* Transient action error banner */}
+        {actionError && (
+          <div className="bg-red-50 border border-red-200 rounded px-3 py-2 text-sm text-red-800 flex items-start gap-2 mb-4">
+            <span className="flex-1">{actionError.message}</span>
+            <button onClick={clearError} className="text-red-400 hover:text-red-600 flex-shrink-0" aria-label="Dismiss">×</button>
+          </div>
+        )}
+
         <div className="grid grid-cols-3 gap-8">
           {/* Column 1: PDF Report */}
           <div>
@@ -93,14 +104,17 @@ export default function ReportExportCard({
             )}
             {pdfStatus === 'failed' && (
               <div>
+                <div className="bg-red-50 border border-red-200 rounded px-3 py-2 text-sm text-red-800 mb-2">
+                  {friendlyPdfError(state?.lastError)}
+                </div>
                 <Button onClick={handleRegenerateAndRefresh} disabled={isLoading} variant="destructive" size="sm">
                   <RefreshCw className="w-4 h-4 mr-2" />
-                  Retry
+                  {isLoading ? 'Retrying...' : 'Retry'}
                 </Button>
                 {state?.lastError && (
                   <details className="text-xs text-gray-500 mt-2">
-                    <summary className="cursor-pointer">Error details</summary>
-                    <p className="mt-1 text-red-600">{state.lastError}</p>
+                    <summary className="cursor-pointer">Technical details</summary>
+                    <p className="mt-1 text-red-600 break-words">{state.lastError}</p>
                   </details>
                 )}
               </div>

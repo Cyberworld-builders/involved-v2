@@ -11,6 +11,8 @@ interface ReminderAssignment {
   user_id: string
   assessment_id: string
   reminder_frequency: string
+  expires?: string
+  url?: string
   user: {
     id: string
     name: string
@@ -99,6 +101,7 @@ serve(async (req) => {
         assessment_id,
         reminder_frequency,
         url,
+        expires,
         user:profiles!assignments_user_id_fkey(id, name, email, username),
         assessment:assessments!assignments_assessment_id_fkey(id, title)
       `)
@@ -162,6 +165,7 @@ serve(async (req) => {
               assessment_title: assignment.assessment.title,
               assignment_url: assignmentUrl,
               reminder_frequency: assignment.reminder_frequency,
+              expires: assignment.expires,
             }),
           }
         )

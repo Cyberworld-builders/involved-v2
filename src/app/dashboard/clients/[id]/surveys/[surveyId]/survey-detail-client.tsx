@@ -427,7 +427,7 @@ export default function SurveyDetailClient({
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <Link href={`/dashboard/clients/${clientId}?tab=reports`}>
+          <Link href={`/dashboard/clients/${clientId}?tab=surveys`}>
             <Button variant="ghost" size="sm" className="mb-2">
               ← Back to Surveys
             </Button>

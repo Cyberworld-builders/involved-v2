@@ -3,9 +3,15 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getAppUrl } from '@/lib/config'
 
+// Staleness thresholds — if a job sits in these states longer than this, auto-recover to "failed"
+const QUEUED_TIMEOUT_MS = 2 * 60 * 1000    // 2 minutes
+const GENERATING_TIMEOUT_MS = 5 * 60 * 1000 // 5 minutes
+
 /**
  * GET /api/reports/[assignmentId]/pdf
- * Get current PDF status and metadata
+ * Get current PDF status and metadata.
+ * Includes automatic staleness recovery: stuck "queued"/"generating" jobs are
+ * transitioned to "failed" so the user can retry.
  */
 export async function GET(
   request: NextRequest,
@@ -29,7 +35,7 @@ export async function GET(
     // Get PDF status from report_data
     const { data: reportData, error: reportError } = await adminClient
       .from('report_data')
-      .select('pdf_status, pdf_storage_path, pdf_generated_at, pdf_version, pdf_last_error, pdf_job_id')
+      .select('pdf_status, pdf_storage_path, pdf_generated_at, pdf_version, pdf_last_error, pdf_job_id, pdf_status_changed_at')
       .eq('assignment_id', assignmentId)
       .single()
 
@@ -52,8 +58,48 @@ export async function GET(
       )
     }
 
+    let currentStatus = reportData?.pdf_status || 'not_requested'
+
+    // --- Staleness recovery ---
+    // If a job has been stuck in "queued" or "generating" beyond the timeout,
+    // auto-transition to "failed" so the user sees a retry button instead of
+    // an infinite spinner.
+    if (
+      (currentStatus === 'queued' || currentStatus === 'generating') &&
+      reportData?.pdf_status_changed_at
+    ) {
+      const changedAt = new Date(reportData.pdf_status_changed_at).getTime()
+      const elapsed = Date.now() - changedAt
+      const timeout = currentStatus === 'queued' ? QUEUED_TIMEOUT_MS : GENERATING_TIMEOUT_MS
+
+      if (elapsed > timeout) {
+        const timeoutLabel = currentStatus === 'queued' ? '2 minutes' : '5 minutes'
+        const timeoutError = `PDF generation timed out — the job was stuck in "${currentStatus}" for over ${timeoutLabel}. Please try again.`
+        console.warn(`[PDF] Staleness recovery: assignment ${assignmentId} stuck in "${currentStatus}" for ${Math.round(elapsed / 1000)}s, transitioning to failed`)
+
+        await adminClient
+          .from('report_data')
+          .update({
+            pdf_status: 'failed',
+            pdf_last_error: timeoutError,
+            pdf_status_changed_at: new Date().toISOString(),
+          })
+          .eq('assignment_id', assignmentId)
+
+        currentStatus = 'failed'
+        return NextResponse.json({
+          status: 'failed',
+          version: reportData?.pdf_version || null,
+          generatedAt: reportData?.pdf_generated_at || null,
+          storagePath: reportData?.pdf_storage_path || null,
+          lastError: timeoutError,
+          jobId: reportData?.pdf_job_id || null,
+        })
+      }
+    }
+
     return NextResponse.json({
-      status: reportData?.pdf_status || 'not_requested',
+      status: currentStatus,
       version: reportData?.pdf_version || null,
       generatedAt: reportData?.pdf_generated_at || null,
       storagePath: reportData?.pdf_storage_path || null,
@@ -177,12 +223,14 @@ export async function POST(
     // Generate job ID for tracking
     const jobId = crypto.randomUUID()
 
-    // Atomically transition to 'queued' status
+    // Atomically transition to 'queued' status, clear previous errors
     const { error: updateError } = await adminClient
       .from('report_data')
       .update({
         pdf_status: 'queued',
         pdf_job_id: jobId,
+        pdf_last_error: null,
+        pdf_status_changed_at: new Date().toISOString(),
       })
       .eq('assignment_id', assignmentId)
       .select('pdf_status, pdf_job_id')
@@ -247,6 +295,7 @@ export async function POST(
             .update({
               pdf_status: 'failed',
               pdf_last_error: `Failed to trigger PDF generation: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              pdf_status_changed_at: new Date().toISOString(),
             })
             .eq('assignment_id', assignmentId)
         })

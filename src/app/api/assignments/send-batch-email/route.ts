@@ -82,7 +82,6 @@ export async function POST(request: NextRequest) {
     const { user: u, assignments: userAssignments } = data
     const loginLink = `${baseLoginLink}?email=${encodeURIComponent(u.email)}`
     const password = passwords?.[userId]
-    const assessmentList = userAssignments.map(a => a.assessmentTitle).join(', ')
     const firstExpires = userAssignments[0]?.expires
     const expirationStr = firstExpires
       ? new Date(firstExpires).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
@@ -102,15 +101,20 @@ export async function POST(request: NextRequest) {
               </tr>
             </table>`
 
+    // Assessment list + button as standalone block elements (not inside <p> tags)
+    const assessmentsBlockHtml = `<ul style="margin: 0 0 16px 0;">${assessmentListHtml}</ul>${buttonHtml}`
+
     // If custom emailBody was provided, process shortcodes on it
-    // The {assessments} shortcode is followed by the button automatically
+    // The {assessments} shortcode produces block-level HTML (ul + table), so we
+    // break out of any surrounding <p> tag to avoid invalid nesting.
     let customBodyHtml = ''
     if (emailBody) {
       customBodyHtml = emailBody
+        .replace(/<p>\s*\{assessments\}\s*<\/p>/g, assessmentsBlockHtml)
+        .replace(/{assessments}/g, assessmentsBlockHtml)
         .replace(/{name}/g, u.name)
         .replace(/{username}/g, u.username || u.email)
         .replace(/{email}/g, u.email)
-        .replace(/{assessments}/g, `${assessmentList}${buttonHtml}`)
         .replace(/{expiration-date}/g, expirationStr)
         .replace(/{dashboard-link}/g, loginLink)
         .replace(/{year}/g, String(year))
@@ -166,7 +170,7 @@ export async function POST(request: NextRequest) {
 
     const textBody = `Hello ${u.name},
 
-You have been assigned the following assessment(s): ${assessmentList}
+You have been assigned the following assessment(s): ${userAssignments.map(a => a.assessmentTitle).join(', ')}
 
 Please complete your assignments by ${expirationStr}.
 

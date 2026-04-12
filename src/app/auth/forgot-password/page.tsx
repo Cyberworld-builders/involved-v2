@@ -2,7 +2,6 @@
 
 import { Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -80,20 +79,13 @@ function ForgotPasswordForm() {
       )}
 
       <div className="w-full max-w-md">
-        <div className="mb-4">
-          <Link href="/auth/login" className="text-sm text-indigo-600 hover:text-indigo-500 flex items-center">
-            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to sign in
-          </Link>
-        </div>
-
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl text-center text-gray-900">Request a login link</CardTitle>
             <CardDescription className="text-center text-gray-600">
-              Enter your email and we&apos;ll send you a temporary login link. No password needed.
+              Enter your email and we&apos;ll send you a magic link to access your dashboard.
+              <br />
+              No password needed
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -121,11 +113,6 @@ function ForgotPasswordForm() {
               </Button>
             </form>
 
-            <div className="mt-6 text-center">
-              <Link href="/auth/login" className="text-sm text-indigo-600 hover:text-indigo-500">
-                Return to sign in
-              </Link>
-            </div>
           </CardContent>
         </Card>
       </div>
