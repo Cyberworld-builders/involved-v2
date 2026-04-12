@@ -172,6 +172,7 @@ export async function POST(
           assignment_id: assignmentId,
           view_url: viewUrl,
           nextjs_api_url: baseUrl,
+          service_role_key: supabaseServiceKey,
         }),
       }).catch(error => {
         console.error('Error triggering PDF generation (non-blocking):', error)

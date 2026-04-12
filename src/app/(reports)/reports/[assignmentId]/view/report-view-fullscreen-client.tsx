@@ -165,12 +165,32 @@ export default function ReportViewFullscreenClient({ assignmentId, is360, initia
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center text-red-600">
-          <p>Error: {error}</p>
-          <button onClick={loadReport} className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded">
-            Retry
-          </button>
+      <div className="min-h-screen flex items-center justify-center bg-white p-8">
+        <div className="max-w-md w-full text-center">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-red-900 mb-2">Unable to Load Report</h2>
+            <p className="text-sm text-red-800 mb-4">
+              {/unauthorized|401/i.test(error)
+                ? 'Your session may have expired. Please log in again to view this report.'
+                : /not found|404/i.test(error)
+                ? 'This assignment could not be found. It may have been removed.'
+                : /must be completed/i.test(error)
+                ? 'The assessment needs to be completed before the report is available.'
+                : /dimension|group|target/i.test(error)
+                ? 'There\'s a configuration issue with this assessment. Please contact an administrator.'
+                : 'Something went wrong while loading the report. Please try again.'}
+            </p>
+            <button
+              onClick={loadReport}
+              className="px-5 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-sm font-medium"
+            >
+              Try Again
+            </button>
+            <details className="mt-4 text-xs text-gray-500">
+              <summary className="cursor-pointer">Technical details</summary>
+              <p className="mt-1 text-left text-red-600 break-words bg-white rounded p-2">{error}</p>
+            </details>
+          </div>
         </div>
       </div>
     )
@@ -178,9 +198,20 @@ export default function ReportViewFullscreenClient({ assignmentId, is360, initia
 
   if (!reportData) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center text-gray-500">
-          <p>No report data available</p>
+      <div className="min-h-screen flex items-center justify-center bg-white p-8">
+        <div className="max-w-md w-full text-center">
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">No Report Data</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Report data hasn&apos;t been generated yet for this assignment. Try generating it from the report dashboard.
+            </p>
+            <button
+              onClick={loadReport}
+              className="px-5 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-sm font-medium"
+            >
+              Retry
+            </button>
+          </div>
         </div>
       </div>
     )

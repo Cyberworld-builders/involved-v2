@@ -34,7 +34,7 @@ const PRINT_CSS = `
   .page-container:nth-child(2) {
     page-break-before: always !important;
   }
-  /* Do not set bottom — PageFooter uses inline bottom:-110px to sit in the margin below .page-wrapper;
+  /* Do not set bottom — PageFooter uses inline bottom:-130px to sit in the margin below .page-wrapper;
      bottom:0 !important was overriding that and made PDF page numbers sit too high vs HTML. */
   .page-footer {
     position: absolute !important;

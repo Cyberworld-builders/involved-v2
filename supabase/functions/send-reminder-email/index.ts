@@ -14,6 +14,7 @@ interface ReminderEmailRequest {
   assessment_title: string
   assignment_url: string
   reminder_frequency: string
+  expires?: string
 }
 
 /**
@@ -36,9 +37,15 @@ function generateReminderEmailBody(
   assessmentTitle: string,
   assignmentUrl: string,
   frequency: string,
-  dashboardUrl: string
+  dashboardUrl: string,
+  userEmail: string,
+  expires?: string
 ): string {
   const formattedFrequency = formatFrequency(frequency)
+  const loginUrl = dashboardUrl.replace(/\/dashboard\/?$/, `/auth/forgot-password?email=${encodeURIComponent(userEmail)}`)
+  const expirationStr = expires
+    ? new Date(expires).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+    : ''
 
   return `<!DOCTYPE html>
 <html>
@@ -61,34 +68,28 @@ function generateReminderEmailBody(
           <tr>
             <td style="padding: 30px 20px;">
               <p style="margin: 0 0 16px 0;">Hello ${userName},</p>
-              <p style="margin: 0 0 16px 0;">This is a friendly reminder that you have an incomplete assessment assignment:</p>
+              <p style="margin: 0 0 16px 0;">This is a friendly reminder that you have an incomplete assessment assignment. Please complete this assessment at your earliest convenience:</p>
               <p style="margin: 0 0 16px 0;"><strong>${assessmentTitle}</strong></p>
-              <p style="margin: 0 0 16px 0;">Please complete this assessment at your earliest convenience.</p>
-              <!-- Bulletproof Button -->
+              <!-- Big Blue Button -->
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 24px 0;">
                 <tr>
                   <td align="center" style="background-color: #4F46E5; border-radius: 4px;">
-                    <a href="${assignmentUrl}" target="_blank" style="display: inline-block; padding: 12px 24px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 16px;">Complete Assessment</a>
+                    <a href="${loginUrl}" target="_blank" style="display: inline-block; padding: 14px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 16px;">Go to Dashboard</a>
                   </td>
                 </tr>
               </table>
+              <p style="margin: 0 0 16px 0;">Please click the button above to open your dashboard. You will need to request a log-in magic link to complete your assessment. You will be prompted to do so immediately upon landing on the dashboard.</p>
+              ${expirationStr ? `<p style="margin: 0 0 16px 0;">Please complete your assignments by ${expirationStr}.</p>` : ''}
               <p style="margin: 0 0 16px 0;">You will receive reminders every ${formattedFrequency} until this assessment is completed.</p>
-              <p style="margin: 0 0 16px 0;">You can also access your dashboard: <a href="${dashboardUrl}" style="color: #4F46E5; text-decoration: underline;">${dashboardUrl}</a></p>
-              <!-- Fallback URL -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 24px; border-top: 1px solid #dddddd;">
-                <tr>
-                  <td style="padding-top: 16px;">
-                    <p style="margin: 0 0 8px 0; font-size: 12px; color: #666666;">If the button above doesn't work, copy and paste this link into your browser:</p>
-                    <p style="margin: 0; font-size: 12px; color: #666666; word-break: break-all;">${assignmentUrl}</p>
-                  </td>
-                </tr>
-              </table>
+              <p style="margin: 0 0 16px 0;">You can access your assignments at any time from your dashboard (<a href="${loginUrl}" style="color: #4F46E5;">${dashboardUrl}</a>) by requesting a log-in magic link.</p>
+              <p style="margin: 0 0 16px 0;">If you have any questions, please contact us at: <a href="mailto:support@involvedtalent.com" style="color: #4F46E5;">support@involvedtalent.com</a></p>
+              <p style="margin: 0 0 8px 0;">Thank you!</p>
+              <p style="margin: 0 0 16px 0;">-Involved Talent Team</p>
             </td>
           </tr>
           <!-- Footer -->
           <tr>
             <td style="padding: 16px 20px; border-top: 1px solid #dddddd;">
-              <p style="margin: 0 0 8px 0; font-size: 12px; color: #666666;">If you have any questions, please contact your administrator.</p>
               <p style="margin: 0; font-size: 12px; color: #666666;">&copy; ${new Date().getFullYear()} Involved Talent</p>
             </td>
           </tr>
@@ -106,34 +107,39 @@ function generateReminderEmailBody(
 function generateReminderEmailText(
   userName: string,
   assessmentTitle: string,
-  assignmentUrl: string,
+  _assignmentUrl: string,
   frequency: string,
-  dashboardUrl: string
+  dashboardUrl: string,
+  userEmail: string,
+  expires?: string
 ): string {
   const formattedFrequency = formatFrequency(frequency)
-  
+  const loginUrl = dashboardUrl.replace(/\/dashboard\/?$/, `/auth/forgot-password?email=${encodeURIComponent(userEmail)}`)
+  const expirationStr = expires
+    ? new Date(expires).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+    : ''
+
   return `
 Reminder: Complete Your Assessment
 
 Hello ${userName},
 
-This is a friendly reminder that you have an incomplete assessment assignment:
+This is a friendly reminder that you have an incomplete assessment assignment. Please complete this assessment at your earliest convenience:
 
 ${assessmentTitle}
 
-Please complete this assessment at your earliest convenience.
+Visit your dashboard to complete your assessment: ${loginUrl}
 
-Access your assessment here: ${assignmentUrl}
-
-If the link doesn't work, copy and paste the URL above into your browser.
-
+You will need to request a log-in magic link to complete your assessment.
+${expirationStr ? `\nPlease complete your assignments by ${expirationStr}.\n` : ''}
 You will receive reminders every ${formattedFrequency} until this assessment is completed.
 
-You can also open your dashboard to see all your assignments: ${dashboardUrl}
+You can access your assignments at any time from your dashboard (${dashboardUrl}) by requesting a log-in magic link.
 
-If you have any questions, please contact your administrator.
+If you have any questions, please contact us at: support@involvedtalent.com
 
-This is an automated reminder email.
+Thank you!
+-Involved Talent Team
   `.trim()
 }
 
@@ -151,6 +157,7 @@ serve(async (req) => {
       assessment_title,
       assignment_url,
       reminder_frequency,
+      expires,
     } = body
 
     let baseUrl = (Deno.env.get('NEXT_PUBLIC_APP_URL') || Deno.env.get('APP_URL') || 'http://localhost:3000').trim().replace(/\/+$/, '')
@@ -274,14 +281,18 @@ serve(async (req) => {
       assessment_title,
       assignment_url,
       reminder_frequency,
-      dashboardUrl
+      dashboardUrl,
+      user_email,
+      expires
     )
     const textBody = generateReminderEmailText(
       user_name,
       assessment_title,
       assignment_url,
       reminder_frequency,
-      dashboardUrl
+      dashboardUrl,
+      user_email,
+      expires
     )
 
     // Send email

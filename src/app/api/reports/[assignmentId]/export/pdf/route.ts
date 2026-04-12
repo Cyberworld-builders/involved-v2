@@ -29,11 +29,37 @@ export async function GET(
     const authHeader = request.headers.get('authorization')
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-    // Check for service role: compare Bearer token against our service role key
+    // Check for service role: compare Bearer token against our service role key.
+    // Also accept the token via ?service_role_token= query param as fallback
+    // (matches the view page auth pattern).
     let isServiceRole = false
     if (authHeader && serviceRoleKey) {
       const token = authHeader.replace(/^Bearer\s+/i, '').trim()
       isServiceRole = token === serviceRoleKey.trim()
+
+      // If exact match failed, try comparing just the JWT payload (ignore whitespace/encoding diffs)
+      if (!isServiceRole) {
+        // Log diagnostic info for debugging (don't log full keys)
+        const tokenPrefix = token.substring(0, 20)
+        const keyPrefix = serviceRoleKey.trim().substring(0, 20)
+        console.warn(`[PDF Export] Service role key mismatch. Token prefix: ${tokenPrefix}...(${token.length}), Expected prefix: ${keyPrefix}...(${serviceRoleKey.trim().length})`)
+
+        // Try a more lenient comparison: trim all whitespace characters
+        const cleanToken = token.replace(/\s/g, '')
+        const cleanKey = serviceRoleKey.replace(/\s/g, '')
+        isServiceRole = cleanToken === cleanKey
+        if (isServiceRole) {
+          console.log('[PDF Export] Service role matched after whitespace cleanup')
+        }
+      }
+    }
+
+    // Fallback: check query parameter (used by view page pattern)
+    if (!isServiceRole) {
+      const tokenParam = searchParams.get('service_role_token')
+      if (tokenParam && serviceRoleKey && tokenParam.trim() === serviceRoleKey.trim()) {
+        isServiceRole = true
+      }
     }
 
     if (!isServiceRole) {
@@ -46,7 +72,8 @@ export async function GET(
         console.error('[PDF Export] Auth failed. isServiceRole:', isServiceRole,
           'authHeader present:', !!authHeader,
           'authHeader length:', authHeader?.length,
-          'serviceRoleKey length:', serviceRoleKey?.length)
+          'serviceRoleKey present:', !!serviceRoleKey,
+          'serviceRoleKey length:', serviceRoleKey?.trim().length)
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       }
     }

@@ -69,62 +69,121 @@ export async function POST(request: NextRequest) {
   }
 
   const baseUrl = getAppUrl()
+  const baseLoginLink = `${baseUrl}/auth/forgot-password`
   const dashboardLink = `${baseUrl}/dashboard`
   const year = new Date().getFullYear()
 
   const defaultSubject = subject || 'New assessments have been assigned to you'
-  const defaultBody = emailBody || 'Hello {name}, you have been assigned {assessments}. Please complete by {expiration-date}. Dashboard: {dashboard-link}. © {year} Involved Talent.'
 
-  // Send emails — fire and forget (don't await, let them complete in background)
+  // Send emails in parallel
   const emailPromises: Promise<void>[] = []
 
   for (const [userId, data] of byUser) {
     const { user: u, assignments: userAssignments } = data
+    const loginLink = `${baseLoginLink}?email=${encodeURIComponent(u.email)}`
     const password = passwords?.[userId]
-    const assessmentList = userAssignments.map(a => a.assessmentTitle).join(', ')
     const firstExpires = userAssignments[0]?.expires
-    const expirationStr = firstExpires ? new Date(firstExpires).toLocaleDateString() : 'N/A'
+    const expirationStr = firstExpires
+      ? new Date(firstExpires).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+      : 'N/A'
 
-    // Build assignment links HTML
-    const assignmentLinksHtml = userAssignments.map(a => {
-      const link = a.url ? `<a href="${a.url}">${a.assessmentTitle}</a>` : a.assessmentTitle
-      return `<li>${link}</li>`
+    // Build assessment list HTML (listed once)
+    const assessmentListHtml = userAssignments.map(a => {
+      return `<li>${a.assessmentTitle}</li>`
     }).join('')
 
-    // Replace shortcodes
-    let processedBody = defaultBody
-      .replace(/{name}/g, u.name)
-      .replace(/{username}/g, u.username || u.email)
-      .replace(/{email}/g, u.email)
-      .replace(/{assessments}/g, assessmentList)
-      .replace(/{expiration-date}/g, expirationStr)
-      .replace(/{dashboard-link}/g, dashboardLink)
-      .replace(/{year}/g, String(year))
+    // Button HTML to inject after assessment list
+    const buttonHtml = `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 24px 0;">
+              <tr>
+                <td align="center" style="background-color: #4F46E5; border-radius: 4px;">
+                  <a href="${loginLink}" target="_blank" style="display: inline-block; padding: 14px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 16px;">Go to Dashboard</a>
+                </td>
+              </tr>
+            </table>`
 
-    if (password) {
-      processedBody = processedBody.replace(/{password}/g, password)
-    } else {
-      processedBody = processedBody.replace(/{password}/g, '')
+    // Assessment list + button as standalone block elements (not inside <p> tags)
+    const assessmentsBlockHtml = `<ul style="margin: 0 0 16px 0;">${assessmentListHtml}</ul>${buttonHtml}`
+
+    // If custom emailBody was provided, process shortcodes on it
+    // The {assessments} shortcode produces block-level HTML (ul + table), so we
+    // break out of any surrounding <p> tag to avoid invalid nesting.
+    let customBodyHtml = ''
+    if (emailBody) {
+      customBodyHtml = emailBody
+        .replace(/<p>\s*\{assessments\}\s*<\/p>/g, assessmentsBlockHtml)
+        .replace(/{assessments}/g, assessmentsBlockHtml)
+        .replace(/{name}/g, u.name)
+        .replace(/{username}/g, u.username || u.email)
+        .replace(/{email}/g, u.email)
+        .replace(/{expiration-date}/g, expirationStr)
+        .replace(/{dashboard-link}/g, loginLink)
+        .replace(/{year}/g, String(year))
+      if (password) {
+        customBodyHtml = customBodyHtml.replace(/{password}/g, password)
+      } else {
+        customBodyHtml = customBodyHtml.replace(/{password}/g, '')
+      }
     }
 
-    const htmlBody = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background-color: #2D2E30; color: #ffffff; padding: 20px; text-align: center;">
-          <h2 style="margin: 0; color: #ffffff;">Assessment Notification</h2>
-        </div>
-        <div style="padding: 20px;">
-          ${processedBody.split('\n').map(line => `<p>${line}</p>`).join('')}
-          ${assignmentLinksHtml ? `<ul>${assignmentLinksHtml}</ul>` : ''}
-          ${password ? `<p style="background: #f3f4f6; padding: 12px; border-radius: 4px;"><strong>Your temporary password:</strong> ${password}</p>` : ''}
-          <p><a href="${dashboardLink}" style="background-color: #FFBA00; color: #2D2E30; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;">Go to Dashboard</a></p>
-        </div>
-        <div style="padding: 16px 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666;">
-          &copy; ${year} Involved Talent
-        </div>
-      </div>
-    `
+    const htmlBody = customBodyHtml
+      ? `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background-color: #2D2E30; color: #ffffff; padding: 20px; text-align: center;">
+            <h2 style="margin: 0; color: #ffffff;">Assessment Notification</h2>
+          </div>
+          <div style="padding: 30px 20px;">
+            ${customBodyHtml}
+            ${password ? `<p style="background: #f3f4f6; padding: 12px; border-radius: 4px;"><strong>Your temporary password:</strong> ${password}</p>` : ''}
+          </div>
+          <div style="padding: 16px 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666;">
+            &copy; ${year} Involved Talent
+          </div>
+        </div>`
+      : `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background-color: #2D2E30; color: #ffffff; padding: 20px; text-align: center;">
+            <h2 style="margin: 0; color: #ffffff;">Assessment Notification</h2>
+          </div>
+          <div style="padding: 30px 20px;">
+            <p style="margin: 0 0 16px 0;">Hello ${u.name},</p>
+            <p style="margin: 0 0 16px 0;">You have been assigned the following assessment(s):</p>
+            <ul style="margin: 0 0 16px 0;">${assessmentListHtml}</ul>
+            <!-- Big Blue Button at top -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 24px 0;">
+              <tr>
+                <td align="center" style="background-color: #4F46E5; border-radius: 4px;">
+                  <a href="${loginLink}" target="_blank" style="display: inline-block; padding: 14px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 16px;">Go to Dashboard</a>
+                </td>
+              </tr>
+            </table>
+            <p style="margin: 0 0 16px 0;">Please click the button above to open your dashboard. You will need to request a log-in magic link to complete your assessment. You will be prompted to do so immediately upon landing on the dashboard.</p>
+            <p style="margin: 0 0 16px 0;">Please complete your assignments by ${expirationStr}.</p>
+            <p style="margin: 0 0 16px 0;">You can access your assignments at any time from your dashboard (<a href="${loginLink}" style="color: #4F46E5;">${dashboardLink}</a>) by requesting a log-in magic link.</p>
+            <p style="margin: 0 0 16px 0;">SAVE this email and BOOKMARK your login page.</p>
+            ${password ? `<p style="background: #f3f4f6; padding: 12px; border-radius: 4px; margin: 0 0 16px 0;"><strong>Your temporary password:</strong> ${password}</p>` : ''}
+            <p style="margin: 0 0 16px 0;">If you have any questions, please contact us at: <a href="mailto:support@involvedtalent.com" style="color: #4F46E5;">support@involvedtalent.com</a></p>
+            <p style="margin: 0 0 8px 0;">Thank you!</p>
+            <p style="margin: 0 0 16px 0;">-Involved Talent Team</p>
+          </div>
+          <div style="padding: 16px 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666;">
+            &copy; ${year} Involved Talent
+          </div>
+        </div>`
 
-    const textBody = processedBody
+    const textBody = `Hello ${u.name},
+
+You have been assigned the following assessment(s): ${userAssignments.map(a => a.assessmentTitle).join(', ')}
+
+Please complete your assignments by ${expirationStr}.
+
+You can access your assignments at any time from your dashboard (${loginLink}) by requesting a log-in magic link.
+
+SAVE this email and BOOKMARK your login page.
+${password ? `\nYour temporary password: ${password}\n` : ''}
+If you have any questions, please contact us at: support@involvedtalent.com
+
+Thank you!
+-Involved Talent Team
+
+© ${year} Involved Talent`
 
     emailPromises.push(
       sendEmail(u.email, defaultSubject, htmlBody, textBody, {
