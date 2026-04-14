@@ -18,6 +18,7 @@ interface EmailLogRow {
   related_entity_type: string | null
   related_entity_id: string | null
   status: string
+  error_message: string | null
   created_at: string
   related_display: string | null
 }
@@ -175,6 +176,7 @@ export default function EmailDashboardClient() {
             >
               <option value="">All</option>
               <option value="sent">Sent</option>
+              <option value="failed">Failed</option>
               <option value="delivered">Delivered</option>
               <option value="bounced">Bounced</option>
               <option value="complained">Complained</option>
@@ -270,8 +272,22 @@ export default function EmailDashboardClient() {
                           </td>
                         )}
                         {visibleColumns.includes('status') && (
-                          <td className="whitespace-nowrap px-3 py-2 text-sm text-gray-900 sm:px-4">
-                            {row.status}
+                          <td className="whitespace-nowrap px-3 py-2 text-sm sm:px-4">
+                            <span className={
+                              row.status === 'failed' || row.status === 'bounced' || row.status === 'complained'
+                                ? 'inline-flex items-center rounded bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700'
+                                : row.status === 'delivered'
+                                  ? 'inline-flex items-center rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700'
+                                  : 'text-gray-900'
+                            }>
+                              {row.status}
+                            </span>
+                            {row.error_message && (
+                              <details className="mt-1 text-xs text-gray-600">
+                                <summary className="cursor-pointer text-red-600">error</summary>
+                                <p className="mt-1 break-words text-red-700">{row.error_message}</p>
+                              </details>
+                            )}
                           </td>
                         )}
                         {visibleColumns.includes('related_display') && (

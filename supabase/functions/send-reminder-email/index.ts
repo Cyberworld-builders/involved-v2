@@ -1,5 +1,39 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { SESClient, SendEmailCommand } from 'https://esm.sh/@aws-sdk/client-ses@3'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+/**
+ * Log an outbound reminder email to email_logs. Best-effort; never throws.
+ */
+async function logReminderEmail(params: {
+  assignment_id: string
+  recipient_email: string
+  subject: string
+  status: 'sent' | 'failed'
+  provider_message_id?: string
+  error_message?: string
+}) {
+  try {
+    const url = Deno.env.get('SUPABASE_URL')!
+    const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const supabase = createClient(url, key)
+    const { error } = await supabase.from('email_logs').insert({
+      email_type: 'reminder',
+      recipient_email: params.recipient_email,
+      subject: params.subject,
+      provider_message_id: params.provider_message_id ?? null,
+      related_entity_type: 'assignment',
+      related_entity_id: params.assignment_id,
+      status: params.status,
+      error_message: params.error_message ?? null,
+    })
+    if (error) {
+      console.error('[send-reminder-email] logEmail insert failed:', error.message)
+    }
+  } catch (e) {
+    console.error('[send-reminder-email] logEmail threw:', e)
+  }
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -133,8 +167,11 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  // Hoisted so catch block can log failure with request context
+  let body: ReminderEmailRequest | undefined
+
   try {
-    const body: ReminderEmailRequest = await req.json()
+    body = await req.json() as ReminderEmailRequest
     const {
       user_email,
       user_name,
@@ -303,8 +340,17 @@ serve(async (req) => {
       },
     })
 
+    const subject = `Reminder: Complete Your Assessment - ${assessment_title}`
     const response = await sesClient.send(sendCommand)
     console.log(`✅ Reminder email sent to ${user_email}. Message ID: ${response.MessageId}`)
+
+    await logReminderEmail({
+      assignment_id,
+      recipient_email: user_email,
+      subject,
+      status: 'sent',
+      provider_message_id: response.MessageId,
+    })
 
     return new Response(
       JSON.stringify({
@@ -316,10 +362,20 @@ serve(async (req) => {
     )
   } catch (error) {
     console.error('❌ Error sending reminder email:', error)
+    const errMsg = error instanceof Error ? error.message : 'Unknown error'
+    if (body?.user_email && body?.assignment_id) {
+      await logReminderEmail({
+        assignment_id: body.assignment_id,
+        recipient_email: body.user_email,
+        subject: `Reminder: Complete Your Assessment - ${body.assessment_title ?? ''}`,
+        status: 'failed',
+        error_message: errMsg,
+      })
+    }
     return new Response(
       JSON.stringify({
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: errMsg,
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )

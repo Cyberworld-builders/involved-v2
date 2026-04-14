@@ -17,7 +17,7 @@ import nodemailer from 'nodemailer'
 import dns from 'dns'
 import { promisify } from 'util'
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
-import { logEmail, type EmailLogType } from '@/lib/email-log'
+import { logEmail, logEmailFailure, type EmailLogType } from '@/lib/email-log'
 
 const resolve4 = promisify(dns.resolve4)
 
@@ -564,10 +564,16 @@ export async function sendEmail(
       console.log('[Email Service] Falling back to SMTP after SES failure')
       // If no SMTP is configured either, return the SES error
       if (!process.env.SMTP_HOST && process.env.NODE_ENV !== 'development') {
-        return {
-          success: false,
-          error: `AWS SES failed: ${errorMessage}. No SMTP fallback configured. Please verify your SES credentials and IAM permissions.`,
+        const finalError = `AWS SES failed: ${errorMessage}. No SMTP fallback configured. Please verify your SES credentials and IAM permissions.`
+        if (options?.logMetadata) {
+          await logEmailFailure({
+            ...options.logMetadata,
+            recipientEmail: to,
+            subject,
+            errorMessage: finalError,
+          })
         }
+        return { success: false, error: finalError }
       }
     }
   }
@@ -625,6 +631,15 @@ export async function sendEmail(
       userFriendlyError = 'DNS resolution failed. Please use AWS SES SDK by setting AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_REGION environment variables.'
     }
     
+    if (options?.logMetadata) {
+      await logEmailFailure({
+        ...options.logMetadata,
+        recipientEmail: to,
+        subject,
+        errorMessage: userFriendlyError,
+      })
+    }
+
     return {
       success: false,
       error: userFriendlyError,

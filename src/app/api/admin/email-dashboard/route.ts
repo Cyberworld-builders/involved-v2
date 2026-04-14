@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
 
     let query = admin
       .from('email_logs')
-      .select('id, email_type, recipient_email, subject, provider_message_id, sent_at, related_entity_type, related_entity_id, status, created_at', { count: 'exact' })
+      .select('id, email_type, recipient_email, subject, provider_message_id, sent_at, related_entity_type, related_entity_id, status, error_message, created_at', { count: 'exact' })
       .order('sent_at', { ascending: false })
       .range(page * pageSize, (page + 1) * pageSize - 1)
 

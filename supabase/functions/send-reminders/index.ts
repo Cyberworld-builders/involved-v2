@@ -1,5 +1,43 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { SESClient, SendEmailCommand } from 'https://esm.sh/@aws-sdk/client-ses@3'
+
+/**
+ * Fire a single admin summary alert when reminder sends fail.
+ * Best-effort; logs but never throws.
+ */
+async function sendAdminAlert(subject: string, body: string) {
+  try {
+    const to = Deno.env.get('ADMIN_ALERT_EMAIL')?.trim()
+    if (!to) {
+      console.warn('[send-reminders] ADMIN_ALERT_EMAIL not set; skipping admin alert')
+      return
+    }
+    const awsAccessKeyId = Deno.env.get('AWS_SES_ACCESS_KEY_ID') || Deno.env.get('AWS_ACCESS_KEY_ID')
+    const awsSecretAccessKey = Deno.env.get('AWS_SES_SECRET_ACCESS_KEY') || Deno.env.get('AWS_SECRET_ACCESS_KEY')
+    const awsRegion = (Deno.env.get('AWS_SES_REGION') || Deno.env.get('AWS_REGION') || 'us-east-1').trim()
+    const fromEmail = (Deno.env.get('EMAIL_FROM') || Deno.env.get('AWS_SES_FROM_EMAIL') || 'noreply@example.com').trim()
+    if (!awsAccessKeyId || !awsSecretAccessKey) {
+      console.warn('[send-reminders] No AWS creds available for admin alert')
+      return
+    }
+    const ses = new SESClient({
+      region: awsRegion,
+      credentials: { accessKeyId: awsAccessKeyId, secretAccessKey: awsSecretAccessKey },
+    })
+    await ses.send(new SendEmailCommand({
+      Source: fromEmail,
+      Destination: { ToAddresses: [to] },
+      Message: {
+        Subject: { Data: subject, Charset: 'UTF-8' },
+        Body: { Text: { Data: body, Charset: 'UTF-8' } },
+      },
+    }))
+    console.log(`[send-reminders] Admin alert sent to ${to}`)
+  } catch (e) {
+    console.error('[send-reminders] Failed to send admin alert:', e)
+  }
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -208,6 +246,26 @@ serve(async (req) => {
     }
 
     console.log(`📊 Reminder processing complete:`, response)
+
+    // Alert admins if any reminders failed. One summary per run, regardless of count.
+    if (results.failed > 0) {
+      const body = [
+        `Reminder cron run at ${now.toISOString()} had failures.`,
+        ``,
+        `Processed: ${assignments.length}`,
+        `Sent: ${results.sent}`,
+        `Failed: ${results.failed}`,
+        ``,
+        `First few errors:`,
+        ...results.errors.slice(0, 10).map((e) => `- ${e}`),
+        ``,
+        `Investigate at: https://supabase.com/dashboard/project/${(supabaseUrl.match(/https?:\/\/([^.]+)/) || [])[1] ?? ''}/functions/send-reminders/logs`,
+      ].join('\n')
+      await sendAdminAlert(
+        `[Involved Talent] ${results.failed} reminder email(s) failed`,
+        body
+      )
+    }
 
     return new Response(
       JSON.stringify(response),
