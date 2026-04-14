@@ -56,6 +56,10 @@ const ERROR_PATTERNS: Array<{ pattern: RegExp; message: string }> = [
     pattern: /navigation timeout|timeout.*exceeded|ERR_CONNECTION/i,
     message: 'The report page took too long to load during PDF generation. Please try again.',
   },
+  {
+    pattern: /ETXTBSY|EBUSY|spawn.*EAGAIN/i,
+    message: 'PDF generation was blocked by a temporary server conflict. Please wait a moment and try again.',
+  },
 ]
 
 /**

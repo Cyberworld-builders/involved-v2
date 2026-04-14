@@ -102,11 +102,29 @@ export async function generatePDFFromViewPuppeteer(
     '--disable-extensions',
   ]
 
-  const browser = await puppeteer.default.launch({
-    headless: true,
-    ...(executablePath && { executablePath }),
-    args: launchArgs,
-  })
+  // Retry launch on ETXTBSY — @sparticuz/chromium extraction can race when
+  // multiple concurrent invocations hit a warm serverless container.
+  let browser: Awaited<ReturnType<typeof puppeteer.default.launch>> | null = null
+  const maxAttempts = 3
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      browser = await puppeteer.default.launch({
+        headless: true,
+        ...(executablePath && { executablePath }),
+        args: launchArgs,
+      })
+      break
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      const isTransient = /ETXTBSY|EBUSY|EAGAIN/i.test(msg)
+      if (!isTransient || attempt === maxAttempts) {
+        throw err
+      }
+      console.warn(`[Puppeteer] Launch attempt ${attempt} failed (${msg}); retrying...`)
+      await delay(500 * attempt)
+    }
+  }
+  if (!browser) throw new Error('Failed to launch browser after retries')
   console.log('[Puppeteer] Browser launched')
 
   try {
