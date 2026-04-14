@@ -76,6 +76,11 @@ serve(async (req) => {
     // Get environment variables
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    // Supabase's new-format service role keys (sb_secret_*) aren't JWTs and the
+    // edge function gateway requires a JWT Authorization header for function-to-
+    // function calls. We store the legacy JWT-format key as EDGE_FUNCTION_JWT
+    // for internal invocations. Falls back to the service key for older envs.
+    const edgeFunctionJwt = Deno.env.get('EDGE_FUNCTION_JWT') || supabaseServiceKey
     const baseUrl = Deno.env.get('BASE_URL') || supabaseUrl.replace('.supabase.co', '') // Fallback
     
     if (!supabaseUrl || !supabaseServiceKey) {
@@ -147,15 +152,16 @@ serve(async (req) => {
         // The URL should already be generated and stored when assignment is created
         const assignmentUrl = assignment.url || `${baseUrl}/assignment/${assignment.id}`
 
-        // Send reminder email via the email API
+        // Send reminder email via the email API. The Supabase edge function
+        // gateway requires a JWT Authorization header; see edgeFunctionJwt above.
         const emailResponse = await fetch(
           `${supabaseUrl}/functions/v1/send-reminder-email`,
           {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${supabaseServiceKey}`,
-              'apikey': supabaseServiceKey,
+              'Authorization': `Bearer ${edgeFunctionJwt}`,
+              'apikey': edgeFunctionJwt,
             },
             body: JSON.stringify({
               assignment_id: assignment.id,
