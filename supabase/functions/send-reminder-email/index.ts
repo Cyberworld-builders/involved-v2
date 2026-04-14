@@ -18,17 +18,6 @@ interface ReminderEmailRequest {
 }
 
 /**
- * Format reminder frequency for display
- */
-function formatFrequency(frequency: string): string {
-  if (frequency === '+1 week') return '1 week'
-  if (frequency === '+2 weeks') return '2 weeks'
-  if (frequency === '+3 weeks') return '3 weeks'
-  if (frequency === '+1 month') return '1 month'
-  return frequency
-}
-
-/**
  * Generate reminder email HTML body
  * Uses inline styles on the button for Outlook compatibility; includes raw URL and dashboard link.
  */
@@ -41,7 +30,7 @@ function generateReminderEmailBody(
   userEmail: string,
   expires?: string
 ): string {
-  const formattedFrequency = formatFrequency(frequency)
+  void frequency
   const loginUrl = dashboardUrl.replace(/\/dashboard\/?$/, `/auth/forgot-password?email=${encodeURIComponent(userEmail)}`)
   const expirationStr = expires
     ? new Date(expires).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
@@ -68,7 +57,7 @@ function generateReminderEmailBody(
           <tr>
             <td style="padding: 30px 20px;">
               <p style="margin: 0 0 16px 0;">Hello ${userName},</p>
-              <p style="margin: 0 0 16px 0;">This is a friendly reminder that you have an incomplete assessment assignment. Please complete this assessment at your earliest convenience:</p>
+              <p style="margin: 0 0 16px 0;">This is a friendly reminder that you have an incomplete assessment assignment:</p>
               <p style="margin: 0 0 16px 0;"><strong>${assessmentTitle}</strong></p>
               <!-- Big Blue Button -->
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 24px 0;">
@@ -78,9 +67,8 @@ function generateReminderEmailBody(
                   </td>
                 </tr>
               </table>
-              <p style="margin: 0 0 16px 0;">Please click the button above to open your dashboard. You will need to request a log-in magic link to complete your assessment. You will be prompted to do so immediately upon landing on the dashboard.</p>
+              <p style="margin: 0 0 16px 0;">Click the button above to open your dashboard. You will need to request a log-in magic link to complete your assessment. You will be prompted to do so immediately upon landing on the dashboard.</p>
               ${expirationStr ? `<p style="margin: 0 0 16px 0;">Please complete your assignments by ${expirationStr}.</p>` : ''}
-              <p style="margin: 0 0 16px 0;">You will receive reminders every ${formattedFrequency} until this assessment is completed.</p>
               <p style="margin: 0 0 16px 0;">You can access your assignments at any time from your dashboard (<a href="${loginUrl}" style="color: #4F46E5;">${dashboardUrl}</a>) by requesting a log-in magic link.</p>
               <p style="margin: 0 0 16px 0;">If you have any questions, please contact us at: <a href="mailto:support@involvedtalent.com" style="color: #4F46E5;">support@involvedtalent.com</a></p>
               <p style="margin: 0 0 8px 0;">Thank you!</p>
@@ -113,27 +101,23 @@ function generateReminderEmailText(
   userEmail: string,
   expires?: string
 ): string {
-  const formattedFrequency = formatFrequency(frequency)
+  void frequency
   const loginUrl = dashboardUrl.replace(/\/dashboard\/?$/, `/auth/forgot-password?email=${encodeURIComponent(userEmail)}`)
   const expirationStr = expires
     ? new Date(expires).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
     : ''
 
   return `
-Reminder: Complete Your Assessment
-
 Hello ${userName},
 
-This is a friendly reminder that you have an incomplete assessment assignment. Please complete this assessment at your earliest convenience:
+This is a friendly reminder that you have an incomplete assessment assignment:
 
 ${assessmentTitle}
 
-Visit your dashboard to complete your assessment: ${loginUrl}
+Go to Dashboard: ${loginUrl}
 
-You will need to request a log-in magic link to complete your assessment.
+Click the link above to open your dashboard. You will need to request a log-in magic link to complete your assessment. You will be prompted to do so immediately upon landing on the dashboard.
 ${expirationStr ? `\nPlease complete your assignments by ${expirationStr}.\n` : ''}
-You will receive reminders every ${formattedFrequency} until this assessment is completed.
-
 You can access your assignments at any time from your dashboard (${dashboardUrl}) by requesting a log-in magic link.
 
 If you have any questions, please contact us at: support@involvedtalent.com

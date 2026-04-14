@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
             <p style="margin: 0 0 16px 0;">Please click the button above to open your dashboard. You will need to request a log-in magic link to complete your assessment. You will be prompted to do so immediately upon landing on the dashboard.</p>
             <p style="margin: 0 0 16px 0;">Please complete your assignments by ${expirationStr}.</p>
             <p style="margin: 0 0 16px 0;">You can access your assignments at any time from your dashboard (<a href="${loginLink}" style="color: #4F46E5;">${dashboardLink}</a>) by requesting a log-in magic link.</p>
-            <p style="margin: 0 0 16px 0;">SAVE this email and BOOKMARK your login page.</p>
+            <p style="margin: 0 0 16px 0;">SAVE this email and BOOKMARK the login page.</p>
             ${password ? `<p style="background: #f3f4f6; padding: 12px; border-radius: 4px; margin: 0 0 16px 0;"><strong>Your temporary password:</strong> ${password}</p>` : ''}
             <p style="margin: 0 0 16px 0;">If you have any questions, please contact us at: <a href="mailto:support@involvedtalent.com" style="color: #4F46E5;">support@involvedtalent.com</a></p>
             <p style="margin: 0 0 8px 0;">Thank you!</p>
@@ -176,7 +176,7 @@ Please complete your assignments by ${expirationStr}.
 
 You can access your assignments at any time from your dashboard (${loginLink}) by requesting a log-in magic link.
 
-SAVE this email and BOOKMARK your login page.
+SAVE this email and BOOKMARK the login page.
 ${password ? `\nYour temporary password: ${password}\n` : ''}
 If you have any questions, please contact us at: support@involvedtalent.com
 
