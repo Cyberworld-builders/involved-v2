@@ -86,7 +86,6 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
   const [firstReminderDate, setFirstReminderDate] = useState('')
   const [firstReminderTime, setFirstReminderTime] = useState('09:00')
   const [reminderFrequency, setReminderFrequency] = useState('+3 days')
-  const [reminderBody, setReminderBody] = useState('Hello {name}, this is a reminder that you have incomplete assignments:\n\n{assessments}\n\nPlease complete them by {expiration-date}.')
   const [assignmentUsers, setAssignmentUsers] = useState<AssignmentUser[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   
@@ -867,19 +866,9 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
                           </optgroup>
                         </select>
                       </div>
-                      <div className="mt-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Reminder Email Body
-                        </label>
-                        <RichTextEditor
-                          content={reminderBody}
-                          onChange={setReminderBody}
-                          placeholder="Hello {name}, this is a reminder that you have incomplete assignments:\n\n{assessments}\n\nPlease complete them by {expiration-date}."
-                        />
-                        <p className="text-xs text-gray-500 mt-1">
-                          Available shortcodes: <code>{'{name}'}</code>, <code>{'{username}'}</code>, <code>{'{email}'}</code>, <code>{'{assessments}'}</code>, <code>{'{expiration-date}'}</code>, <code>{'{password}'}</code>, <code>{'{dashboard-link}'}</code>, <code>{'{year}'}</code>
-                        </p>
-                      </div>
+                      <p className="mt-4 text-xs text-gray-500">
+                        Reminder email content uses the standard template approved for this application — no per-assignment customization. Recipients will see the same reminder text regardless of which survey this is attached to.
+                      </p>
                     </>
                   )}
                 </div>
