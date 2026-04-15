@@ -173,6 +173,7 @@ serve(async (req) => {
   try {
     body = await req.json() as ReminderEmailRequest
     const {
+      assignment_id,
       user_email,
       user_name,
       assessment_title,
