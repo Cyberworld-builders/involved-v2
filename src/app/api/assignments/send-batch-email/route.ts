@@ -87,10 +87,10 @@ export async function POST(request: NextRequest) {
       ? new Date(firstExpires).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
       : 'N/A'
 
-    // Build assessment list HTML (listed once)
-    const assessmentListHtml = userAssignments.map(a => {
-      return `<li>${a.assessmentTitle}</li>`
-    }).join('')
+    // Build assessment list HTML. Dedupe by title so a user with multiple
+    // assignments for the same assessment sees the title once, not N times.
+    const uniqueTitles = Array.from(new Set(userAssignments.map(a => a.assessmentTitle)))
+    const assessmentListHtml = uniqueTitles.map(t => `<li>${t}</li>`).join('')
 
     // Button HTML to inject after assessment list
     const buttonHtml = `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 24px 0;">
@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
 
     const textBody = `Hello ${u.name},
 
-You have been assigned the following assessment(s): ${userAssignments.map(a => a.assessmentTitle).join(', ')}
+You have been assigned the following assessment(s): ${uniqueTitles.join(', ')}
 
 Please complete your assignments by ${expirationStr}.
 
