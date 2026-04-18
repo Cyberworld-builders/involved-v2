@@ -3,10 +3,12 @@ import { SESClient, SendEmailCommand } from 'https://esm.sh/@aws-sdk/client-ses@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 /**
- * Log an outbound reminder email to email_logs. Best-effort; never throws.
+ * Log an outbound reminder email to email_logs, one row per assignment in
+ * the batch. All rows share a provider_message_id so the audit UI can tie
+ * them back to the same send. Best-effort; never throws.
  */
 async function logReminderEmail(params: {
-  assignment_id: string
+  assignment_ids: string[]
   recipient_email: string
   subject: string
   status: 'sent' | 'failed'
@@ -17,16 +19,17 @@ async function logReminderEmail(params: {
     const url = Deno.env.get('SUPABASE_URL')!
     const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(url, key)
-    const { error } = await supabase.from('email_logs').insert({
+    const rows = params.assignment_ids.map((id) => ({
       email_type: 'reminder',
       recipient_email: params.recipient_email,
       subject: params.subject,
       provider_message_id: params.provider_message_id ?? null,
       related_entity_type: 'assignment',
-      related_entity_id: params.assignment_id,
+      related_entity_id: id,
       status: params.status,
       error_message: params.error_message ?? null,
-    })
+    }))
+    const { error } = await supabase.from('email_logs').insert(rows)
     if (error) {
       console.error('[send-reminder-email] logEmail insert failed:', error.message)
     }
@@ -41,34 +44,38 @@ const corsHeaders = {
 }
 
 interface ReminderEmailRequest {
-  assignment_id: string
+  assignment_ids: string[]
   user_email: string
   user_name: string
   user_username: string
-  assessment_title: string
-  assignment_url: string
+  assessment_titles: string[]
   reminder_frequency: string
   expires?: string
 }
 
 /**
- * Generate reminder email HTML body
+ * Generate reminder email HTML body.
+ * Accepts an array of assessment titles so one email can cover every pending
+ * assignment a user has, instead of firing N separate reminders.
  * Uses inline styles on the button for Outlook compatibility; includes raw URL and dashboard link.
  */
 function generateReminderEmailBody(
   userName: string,
-  assessmentTitle: string,
-  assignmentUrl: string,
-  frequency: string,
+  assessmentTitles: string[],
   dashboardUrl: string,
   userEmail: string,
   expires?: string
 ): string {
-  void frequency
   const loginUrl = dashboardUrl.replace(/\/dashboard\/?$/, `/auth/forgot-password?email=${encodeURIComponent(userEmail)}`)
   const expirationStr = expires
     ? new Date(expires).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
     : ''
+  const multiple = assessmentTitles.length > 1
+  const heading = multiple ? 'Reminder: Complete Your Assessments' : 'Reminder: Complete Your Assessment'
+  const intro = multiple
+    ? 'This is a friendly reminder that you have incomplete assessment assignments:'
+    : 'This is a friendly reminder that you have an incomplete assessment assignment:'
+  const listHtml = assessmentTitles.map((t) => `<li>${t}</li>`).join('')
 
   return `<!DOCTYPE html>
 <html>
@@ -84,15 +91,15 @@ function generateReminderEmailBody(
           <!-- Header -->
           <tr>
             <td style="background-color: #2D2E30; color: #ffffff; padding: 20px; text-align: center;">
-              <h2 style="margin: 0; font-size: 20px; color: #ffffff;">Reminder: Complete Your Assessment</h2>
+              <h2 style="margin: 0; font-size: 20px; color: #ffffff;">${heading}</h2>
             </td>
           </tr>
           <!-- Content -->
           <tr>
             <td style="padding: 30px 20px;">
               <p style="margin: 0 0 16px 0;">Hello ${userName},</p>
-              <p style="margin: 0 0 16px 0;">This is a friendly reminder that you have an incomplete assessment assignment:</p>
-              <p style="margin: 0 0 16px 0;"><strong>${assessmentTitle}</strong></p>
+              <p style="margin: 0 0 16px 0;">${intro}</p>
+              <ul style="margin: 0 0 16px 0;">${listHtml}</ul>
               <!-- Big Blue Button -->
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 24px 0;">
                 <tr>
@@ -101,7 +108,7 @@ function generateReminderEmailBody(
                   </td>
                 </tr>
               </table>
-              <p style="margin: 0 0 16px 0;">Click the button above to open your dashboard. You will need to request a log-in magic link to complete your assessment. You will be prompted to do so immediately upon landing on the dashboard.</p>
+              <p style="margin: 0 0 16px 0;">Click the button above to open your dashboard. You will need to request a log-in magic link to complete your ${multiple ? 'assessments' : 'assessment'}. You will be prompted to do so immediately upon landing on the dashboard.</p>
               ${expirationStr ? `<p style="margin: 0 0 16px 0;">Please complete your assignments by ${expirationStr}.</p>` : ''}
               <p style="margin: 0 0 16px 0;">You can access your assignments at any time from your dashboard (<a href="${loginUrl}" style="color: #4F46E5;">${dashboardUrl}</a>) by requesting a log-in magic link.</p>
               <p style="margin: 0 0 16px 0;">If you have any questions, please contact us at: <a href="mailto:support@involvedtalent.com" style="color: #4F46E5;">support@involvedtalent.com</a></p>
@@ -128,29 +135,31 @@ function generateReminderEmailBody(
  */
 function generateReminderEmailText(
   userName: string,
-  assessmentTitle: string,
-  _assignmentUrl: string,
-  frequency: string,
+  assessmentTitles: string[],
   dashboardUrl: string,
   userEmail: string,
   expires?: string
 ): string {
-  void frequency
   const loginUrl = dashboardUrl.replace(/\/dashboard\/?$/, `/auth/forgot-password?email=${encodeURIComponent(userEmail)}`)
   const expirationStr = expires
     ? new Date(expires).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
     : ''
+  const multiple = assessmentTitles.length > 1
+  const intro = multiple
+    ? 'This is a friendly reminder that you have incomplete assessment assignments:'
+    : 'This is a friendly reminder that you have an incomplete assessment assignment:'
+  const listText = assessmentTitles.map((t) => `- ${t}`).join('\n')
 
   return `
 Hello ${userName},
 
-This is a friendly reminder that you have an incomplete assessment assignment:
+${intro}
 
-${assessmentTitle}
+${listText}
 
 Go to Dashboard: ${loginUrl}
 
-Click the link above to open your dashboard. You will need to request a log-in magic link to complete your assessment. You will be prompted to do so immediately upon landing on the dashboard.
+Click the link above to open your dashboard. You will need to request a log-in magic link to complete your ${multiple ? 'assessments' : 'assessment'}. You will be prompted to do so immediately upon landing on the dashboard.
 ${expirationStr ? `\nPlease complete your assignments by ${expirationStr}.\n` : ''}
 You can access your assignments at any time from your dashboard (${dashboardUrl}) by requesting a log-in magic link.
 
@@ -173,14 +182,25 @@ serve(async (req) => {
   try {
     body = await req.json() as ReminderEmailRequest
     const {
-      assignment_id,
+      assignment_ids,
       user_email,
       user_name,
-      assessment_title,
-      assignment_url,
-      reminder_frequency,
+      assessment_titles,
       expires,
     } = body
+
+    if (!Array.isArray(assignment_ids) || assignment_ids.length === 0) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'assignment_ids (array) is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    if (!Array.isArray(assessment_titles) || assessment_titles.length === 0) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'assessment_titles (array) is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
     let baseUrl = (Deno.env.get('NEXT_PUBLIC_APP_URL') || Deno.env.get('APP_URL') || 'http://localhost:3000').trim().replace(/\/+$/, '')
     if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
@@ -300,22 +320,22 @@ serve(async (req) => {
     // Generate email content
     const htmlBody = generateReminderEmailBody(
       user_name,
-      assessment_title,
-      assignment_url,
-      reminder_frequency,
+      assessment_titles,
       dashboardUrl,
       user_email,
       expires
     )
     const textBody = generateReminderEmailText(
       user_name,
-      assessment_title,
-      assignment_url,
-      reminder_frequency,
+      assessment_titles,
       dashboardUrl,
       user_email,
       expires
     )
+
+    const subject = assessment_titles.length > 1
+      ? 'Reminder: Complete Your Assessments'
+      : `Reminder: Complete Your Assessment - ${assessment_titles[0]}`
 
     // Send email
     const sendCommand = new SendEmailCommand({
@@ -325,7 +345,7 @@ serve(async (req) => {
       },
       Message: {
         Subject: {
-          Data: `Reminder: Complete Your Assessment - ${assessment_title}`,
+          Data: subject,
           Charset: 'UTF-8',
         },
         Body: {
@@ -341,12 +361,11 @@ serve(async (req) => {
       },
     })
 
-    const subject = `Reminder: Complete Your Assessment - ${assessment_title}`
     const response = await sesClient.send(sendCommand)
-    console.log(`✅ Reminder email sent to ${user_email}. Message ID: ${response.MessageId}`)
+    console.log(`✅ Reminder email sent to ${user_email} covering ${assignment_ids.length} assignment(s). Message ID: ${response.MessageId}`)
 
     await logReminderEmail({
-      assignment_id,
+      assignment_ids,
       recipient_email: user_email,
       subject,
       status: 'sent',
@@ -364,11 +383,15 @@ serve(async (req) => {
   } catch (error) {
     console.error('❌ Error sending reminder email:', error)
     const errMsg = error instanceof Error ? error.message : 'Unknown error'
-    if (body?.user_email && body?.assignment_id) {
+    if (body?.user_email && Array.isArray(body?.assignment_ids) && body.assignment_ids.length > 0) {
+      const titles = body.assessment_titles ?? []
+      const failedSubject = titles.length > 1
+        ? 'Reminder: Complete Your Assessments'
+        : `Reminder: Complete Your Assessment - ${titles[0] ?? ''}`
       await logReminderEmail({
-        assignment_id: body.assignment_id,
+        assignment_ids: body.assignment_ids,
         recipient_email: body.user_email,
-        subject: `Reminder: Complete Your Assessment - ${body.assessment_title ?? ''}`,
+        subject: failedSubject,
         status: 'failed',
         error_message: errMsg,
       })
