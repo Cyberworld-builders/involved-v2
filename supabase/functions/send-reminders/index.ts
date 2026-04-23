@@ -218,7 +218,16 @@ serve(async (req) => {
       errors: [] as string[],
     }
 
+    // Throttle inter-function calls to stay under Supabase's function-to-function
+    // rate limit (observed: unthrottled bursts hit "Rate limit exceeded" after ~60
+    // back-to-back invocations). 500ms pacing still hit the limit intermittently at
+    // 100 users; 1000ms (≤1/sec) clears it. For 200+ due users in one run, expect
+    // to approach the 150s edge-function timeout — retry-on-429 is the next tier.
+    const THROTTLE_MS = 1000
+    let isFirst = true
     for (const [userId, group] of dueUsers) {
+      if (!isFirst) await new Promise(r => setTimeout(r, THROTTLE_MS))
+      isFirst = false
       const primary = group[0]
       try {
         // Most aggressive cadence wins so we don't silently stretch reminders.
