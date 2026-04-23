@@ -1,6 +1,272 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { SESClient, SendEmailCommand } from 'https://esm.sh/@aws-sdk/client-ses@3'
+
+// ────────────────────────────────────────────────────────────────────────────
+// Inline reminder-send path
+// ────────────────────────────────────────────────────────────────────────────
+// Previously this function called a separate `send-reminder-email` edge function
+// over HTTP for each user. That inter-function call hit Supabase's rate limit
+// after ~60 back-to-back invocations. This version inlines the SES send + log
+// into the same function process, eliminating that hop. SES client + STS
+// credentials are cached at module scope so we only assume-role once per warm
+// instance.
+
+let cachedSesClient: SESClient | null = null
+let cachedSesRegion: string | null = null
+let cachedSupabaseForLogs: SupabaseClient | null = null
+
+function getLogsClient(): SupabaseClient {
+  if (cachedSupabaseForLogs) return cachedSupabaseForLogs
+  const url = Deno.env.get('SUPABASE_URL')!
+  const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  cachedSupabaseForLogs = createClient(url, key)
+  return cachedSupabaseForLogs
+}
+
+async function getReminderSesClient(): Promise<SESClient> {
+  const awsRegion = (Deno.env.get('AWS_SES_REGION') || Deno.env.get('AWS_REGION') || 'us-east-1').trim()
+  if (cachedSesClient && cachedSesRegion === awsRegion) return cachedSesClient
+
+  const awsRoleArn = Deno.env.get('AWS_ROLE_ARN')?.trim()
+  const awsAccessKeyId = Deno.env.get('AWS_SES_ACCESS_KEY_ID') || Deno.env.get('AWS_ACCESS_KEY_ID')
+  const awsSecretAccessKey = Deno.env.get('AWS_SES_SECRET_ACCESS_KEY') || Deno.env.get('AWS_SECRET_ACCESS_KEY')
+
+  const hasAwsSesOidc = !!awsRoleArn
+  const hasAwsSesAccessKeys = !!(awsAccessKeyId && awsSecretAccessKey)
+  if (!hasAwsSesOidc && !hasAwsSesAccessKeys) {
+    throw new Error('AWS SES not configured. Set AWS_ROLE_ARN or AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY')
+  }
+
+  let credentials: { accessKeyId: string; secretAccessKey: string; sessionToken?: string }
+  if (awsRoleArn) {
+    const awsExternalId = Deno.env.get('AWS_EXTERNAL_ID')
+    if (awsExternalId) {
+      try {
+        const { STSClient, AssumeRoleCommand } = await import('https://esm.sh/@aws-sdk/client-sts@3')
+        const stsClient = new STSClient({
+          region: awsRegion,
+          credentials: (awsAccessKeyId && awsSecretAccessKey)
+            ? { accessKeyId: awsAccessKeyId, secretAccessKey: awsSecretAccessKey }
+            : undefined,
+        })
+        const resp = await stsClient.send(new AssumeRoleCommand({
+          RoleArn: awsRoleArn,
+          RoleSessionName: `supabase-send-reminders-${Date.now()}`,
+          ExternalId: awsExternalId,
+          DurationSeconds: 3600,
+        }))
+        if (!resp.Credentials) throw new Error('AssumeRole returned no credentials')
+        credentials = {
+          accessKeyId: resp.Credentials.AccessKeyId!,
+          secretAccessKey: resp.Credentials.SecretAccessKey!,
+          sessionToken: resp.Credentials.SessionToken!,
+        }
+        console.log('[send-reminders] ✅ Assumed IAM role via STS')
+      } catch (stsError) {
+        console.warn('[send-reminders] STS assume-role failed, falling back to access keys:', stsError)
+        if (awsAccessKeyId && awsSecretAccessKey) {
+          credentials = { accessKeyId: awsAccessKeyId, secretAccessKey: awsSecretAccessKey }
+        } else {
+          throw new Error(`STS failed and no access-key fallback: ${stsError instanceof Error ? stsError.message : 'unknown'}`)
+        }
+      }
+    } else {
+      if (!awsAccessKeyId || !awsSecretAccessKey) {
+        throw new Error('AWS_ROLE_ARN set but no AWS_EXTERNAL_ID or access keys available')
+      }
+      credentials = { accessKeyId: awsAccessKeyId, secretAccessKey: awsSecretAccessKey }
+    }
+  } else {
+    credentials = { accessKeyId: awsAccessKeyId!, secretAccessKey: awsSecretAccessKey! }
+  }
+
+  cachedSesClient = new SESClient({
+    region: awsRegion,
+    credentials,
+    maxAttempts: 3,
+  })
+  cachedSesRegion = awsRegion
+  return cachedSesClient
+}
+
+async function logReminderEmail(params: {
+  assignment_ids: string[]
+  recipient_email: string
+  subject: string
+  status: 'sent' | 'failed'
+  provider_message_id?: string
+  error_message?: string
+}) {
+  try {
+    const supabase = getLogsClient()
+    const rows = params.assignment_ids.map((id) => ({
+      email_type: 'reminder',
+      recipient_email: params.recipient_email,
+      subject: params.subject,
+      provider_message_id: params.provider_message_id ?? null,
+      related_entity_type: 'assignment',
+      related_entity_id: id,
+      status: params.status,
+      error_message: params.error_message ?? null,
+    }))
+    const { error } = await supabase.from('email_logs').insert(rows)
+    if (error) console.error('[send-reminders] logReminderEmail insert failed:', error.message)
+  } catch (e) {
+    console.error('[send-reminders] logReminderEmail threw:', e)
+  }
+}
+
+function generateReminderEmailBody(
+  userName: string,
+  assessmentTitles: string[],
+  dashboardUrl: string,
+  userEmail: string,
+  expires?: string
+): string {
+  const loginUrl = dashboardUrl.replace(/\/dashboard\/?$/, `/auth/forgot-password?email=${encodeURIComponent(userEmail)}`)
+  const expirationStr = expires
+    ? new Date(expires).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+    : ''
+  const multiple = assessmentTitles.length > 1
+  const heading = multiple ? 'Reminder: Complete Your Assessments' : 'Reminder: Complete Your Assessment'
+  const intro = multiple
+    ? 'This is a friendly reminder that you have incomplete assessment assignments:'
+    : 'This is a friendly reminder that you have an incomplete assessment assignment:'
+  const listHtml = assessmentTitles.map((t) => `<li>${t}</li>`).join('')
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; line-height: 1.6; color: #333333; background-color: #f4f4f4;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f4f4;">
+    <tr>
+      <td align="center" style="padding: 20px 0;">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%; background-color: #ffffff;">
+          <tr>
+            <td style="background-color: #2D2E30; color: #ffffff; padding: 20px; text-align: center;">
+              <h2 style="margin: 0; font-size: 20px; color: #ffffff;">${heading}</h2>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 30px 20px;">
+              <p style="margin: 0 0 16px 0;">Hello ${userName},</p>
+              <p style="margin: 0 0 16px 0;">${intro}</p>
+              <ul style="margin: 0 0 16px 0;">${listHtml}</ul>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 24px 0;">
+                <tr>
+                  <td align="center" style="background-color: #4F46E5; border-radius: 4px;">
+                    <a href="${loginUrl}" target="_blank" style="display: inline-block; padding: 14px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 16px;">Go to Dashboard</a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin: 0 0 16px 0;">Click the button above to open your dashboard. You will need to request a log-in magic link to complete your ${multiple ? 'assessments' : 'assessment'}. You will be prompted to do so immediately upon landing on the dashboard.</p>
+              ${expirationStr ? `<p style="margin: 0 0 16px 0;">Please complete your assignments by ${expirationStr}.</p>` : ''}
+              <p style="margin: 0 0 16px 0;">You can access your assignments at any time from your dashboard (<a href="${loginUrl}" style="color: #4F46E5;">${dashboardUrl}</a>) by requesting a log-in magic link.</p>
+              <p style="margin: 0 0 16px 0;">If you have any questions, please contact us at: <a href="mailto:support@involvedtalent.com" style="color: #4F46E5;">support@involvedtalent.com</a></p>
+              <p style="margin: 0 0 8px 0;">Thank you!</p>
+              <p style="margin: 0 0 16px 0;">-Involved Talent Team</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 16px 20px; border-top: 1px solid #dddddd;">
+              <p style="margin: 0; font-size: 12px; color: #666666;">&copy; ${new Date().getFullYear()} Involved Talent</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+}
+
+function generateReminderEmailText(
+  userName: string,
+  assessmentTitles: string[],
+  dashboardUrl: string,
+  userEmail: string,
+  expires?: string
+): string {
+  const loginUrl = dashboardUrl.replace(/\/dashboard\/?$/, `/auth/forgot-password?email=${encodeURIComponent(userEmail)}`)
+  const expirationStr = expires
+    ? new Date(expires).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+    : ''
+  const multiple = assessmentTitles.length > 1
+  const intro = multiple
+    ? 'This is a friendly reminder that you have incomplete assessment assignments:'
+    : 'This is a friendly reminder that you have an incomplete assessment assignment:'
+  const listText = assessmentTitles.map((t) => `- ${t}`).join('\n')
+
+  return `
+Hello ${userName},
+
+${intro}
+
+${listText}
+
+Go to Dashboard: ${loginUrl}
+
+Click the link above to open your dashboard. You will need to request a log-in magic link to complete your ${multiple ? 'assessments' : 'assessment'}. You will be prompted to do so immediately upon landing on the dashboard.
+${expirationStr ? `\nPlease complete your assignments by ${expirationStr}.\n` : ''}
+You can access your assignments at any time from your dashboard (${dashboardUrl}) by requesting a log-in magic link.
+
+If you have any questions, please contact us at: support@involvedtalent.com
+
+Thank you!
+-Involved Talent Team
+  `.trim()
+}
+
+/**
+ * Inline send-a-reminder-email. Returns messageId on success; throws on failure.
+ * Always attempts to log to email_logs (sent or failed) before returning/throwing.
+ */
+async function sendReminderEmailInline(params: {
+  assignment_ids: string[]
+  user_email: string
+  user_name: string
+  assessment_titles: string[]
+  expires?: string
+}): Promise<string> {
+  const { assignment_ids, user_email, user_name, assessment_titles, expires } = params
+
+  let baseUrl = (Deno.env.get('NEXT_PUBLIC_APP_URL') || Deno.env.get('APP_URL') || 'http://localhost:3000').trim().replace(/\/+$/, '')
+  if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) baseUrl = `https://${baseUrl}`
+  const dashboardUrl = `${baseUrl}/dashboard`
+  const fromEmail = (Deno.env.get('EMAIL_FROM') || Deno.env.get('AWS_SES_FROM_EMAIL') || 'noreply@example.com').trim()
+
+  const subject = assessment_titles.length > 1
+    ? 'Reminder: Complete Your Assessments'
+    : `Reminder: Complete Your Assessment - ${assessment_titles[0]}`
+  const htmlBody = generateReminderEmailBody(user_name, assessment_titles, dashboardUrl, user_email, expires)
+  const textBody = generateReminderEmailText(user_name, assessment_titles, dashboardUrl, user_email, expires)
+
+  try {
+    const ses = await getReminderSesClient()
+    const resp = await ses.send(new SendEmailCommand({
+      Source: fromEmail,
+      Destination: { ToAddresses: [user_email] },
+      Message: {
+        Subject: { Data: subject, Charset: 'UTF-8' },
+        Body: {
+          Html: { Data: htmlBody, Charset: 'UTF-8' },
+          Text: { Data: textBody, Charset: 'UTF-8' },
+        },
+      },
+    }))
+    const messageId = resp.MessageId ?? `ses-${Date.now()}`
+    await logReminderEmail({ assignment_ids, recipient_email: user_email, subject, status: 'sent', provider_message_id: messageId })
+    return messageId
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown SES error'
+    await logReminderEmail({ assignment_ids, recipient_email: user_email, subject, status: 'failed', error_message: errorMessage })
+    throw new Error(errorMessage)
+  }
+}
 
 /**
  * Fire a single admin summary alert when reminder sends fail.
@@ -131,11 +397,6 @@ serve(async (req) => {
     // Get environment variables
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    // Supabase's new-format service role keys (sb_secret_*) aren't JWTs and the
-    // edge function gateway requires a JWT Authorization header for function-to-
-    // function calls. We store the legacy JWT-format key as EDGE_FUNCTION_JWT
-    // for internal invocations. Falls back to the service key for older envs.
-    const edgeFunctionJwt = Deno.env.get('EDGE_FUNCTION_JWT') || supabaseServiceKey
 
     if (!supabaseUrl || !supabaseServiceKey) {
       throw new Error('Missing required environment variables: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
@@ -218,16 +479,9 @@ serve(async (req) => {
       errors: [] as string[],
     }
 
-    // Throttle inter-function calls to stay under Supabase's function-to-function
-    // rate limit (observed: unthrottled bursts hit "Rate limit exceeded" after ~60
-    // back-to-back invocations). 500ms pacing still hit the limit intermittently at
-    // 100 users; 1000ms (≤1/sec) clears it. For 200+ due users in one run, expect
-    // to approach the 150s edge-function timeout — retry-on-429 is the next tier.
-    const THROTTLE_MS = 1000
-    let isFirst = true
+    // Inline send — no inter-function fetch(), no Supabase rate limit to dodge.
+    // Sequential loop keeps SES well under 14/s for any realistic size.
     for (const [userId, group] of dueUsers) {
-      if (!isFirst) await new Promise(r => setTimeout(r, THROTTLE_MS))
-      isFirst = false
       const primary = group[0]
       try {
         // Most aggressive cadence wins so we don't silently stretch reminders.
@@ -244,31 +498,13 @@ serve(async (req) => {
           .sort()
         const soonestExpires = expiresDates[0]
 
-        const emailResponse = await fetch(
-          `${supabaseUrl}/functions/v1/send-reminder-email`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${edgeFunctionJwt}`,
-              'apikey': edgeFunctionJwt,
-            },
-            body: JSON.stringify({
-              assignment_ids: group.map(a => a.id),
-              user_email: primary.user.email,
-              user_name: primary.user.name,
-              user_username: primary.user.username,
-              assessment_titles: uniqueTitles,
-              reminder_frequency: mostFrequent,
-              expires: soonestExpires,
-            }),
-          }
-        )
-
-        if (!emailResponse.ok) {
-          const errorData = await emailResponse.json().catch(() => ({ error: 'Unknown error' }))
-          throw new Error(`Email send failed: ${errorData.error || emailResponse.statusText}`)
-        }
+        await sendReminderEmailInline({
+          assignment_ids: group.map(a => a.id),
+          user_email: primary.user.email,
+          user_name: primary.user.name,
+          assessment_titles: uniqueTitles,
+          expires: soonestExpires,
+        })
 
         // Reschedule all of this user's pending assignments together
         const { error: updateError } = await supabase
