@@ -344,11 +344,70 @@ function createTransporter() {
   return nodemailer.createTransport(transporterConfig)
 }
 
+// Module-scoped cache for the SES client. Creating a new SESClient + OIDC credential
+// provider per sendEmail() call triggers a fresh STS AssumeRoleWithWebIdentity for
+// every email, which rate-limits at STS and fails unpredictably under high
+// concurrency (observed: 500-parallel sends → 0-80% success variance). A single
+// cached client reuses AWS SDK's internal credential cache (~15min TTL) and issues
+// at most one STS call per warm function instance.
+let cachedSesClient: SESClient | null = null
+let cachedSesRegion: string | null = null
+
+async function getSesClient(): Promise<SESClient> {
+  const awsRoleArn = process.env.AWS_ROLE_ARN?.trim()
+  const awsAccessKeyId = process.env.AWS_ACCESS_KEY_ID?.trim()
+  const awsSecretAccessKey = process.env.AWS_SECRET_ACCESS_KEY?.trim()
+  const awsRegion = (process.env.AWS_REGION || 'us-east-1').trim()
+
+  if (cachedSesClient && cachedSesRegion === awsRegion) {
+    return cachedSesClient
+  }
+
+  if (!awsRoleArn && (!awsAccessKeyId || !awsSecretAccessKey)) {
+    throw new Error('AWS credentials not configured. Set AWS_ROLE_ARN (preferred) or AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY')
+  }
+  if (!awsRoleArn && awsAccessKeyId && awsSecretAccessKey) {
+    if (awsAccessKeyId.length < 16 || awsSecretAccessKey.length < 20) {
+      throw new Error('AWS credentials appear to be invalid (too short)')
+    }
+  }
+
+  let credentials
+  if (awsRoleArn) {
+    try {
+      const { awsCredentialsProvider } = await import('@vercel/functions/oidc')
+      credentials = awsCredentialsProvider({ roleArn: awsRoleArn })
+      console.log('[Email Service] ✅ Initializing SES client with OIDC credentials')
+    } catch (oidcError) {
+      console.warn('[Email Service] ⚠️ OIDC provider not available, falling back to access keys:', oidcError)
+      if (awsAccessKeyId && awsSecretAccessKey) {
+        credentials = { accessKeyId: awsAccessKeyId, secretAccessKey: awsSecretAccessKey }
+        console.log('[Email Service] Using access keys as fallback')
+      } else {
+        throw new Error('OIDC failed and no access keys available')
+      }
+    }
+  } else {
+    credentials = { accessKeyId: awsAccessKeyId!, secretAccessKey: awsSecretAccessKey! }
+    console.log('[Email Service] ⚠️ Using access keys (consider using AWS_ROLE_ARN for production)')
+  }
+
+  cachedSesClient = new SESClient({
+    region: awsRegion,
+    credentials,
+    requestHandler: { requestTimeout: 10000 },
+    // Bound retry attempts so bursts above throughput fail fast rather than stacking
+    maxAttempts: 3,
+  })
+  cachedSesRegion = awsRegion
+  return cachedSesClient
+}
+
 /**
  * Send an email using AWS SES SDK
- * 
+ *
  * This bypasses SMTP and DNS resolution issues in serverless environments.
- * 
+ *
  * @param to - Recipient email address
  * @param subject - Email subject
  * @param htmlBody - HTML body content
@@ -361,72 +420,8 @@ async function sendEmailViaSES(
   htmlBody: string,
   textBody: string
 ): Promise<EmailDeliveryResult> {
-  // Prefer OIDC (AWS_ROLE_ARN) over access keys for security (AWS best practice)
-  const awsRoleArn = process.env.AWS_ROLE_ARN?.trim()
-  const awsAccessKeyId = process.env.AWS_ACCESS_KEY_ID?.trim()
-  const awsSecretAccessKey = process.env.AWS_SECRET_ACCESS_KEY?.trim()
-  // Trim whitespace from region to prevent SDK errors
-  const awsRegion = (process.env.AWS_REGION || 'us-east-1').trim()
-  // Get sender email - must be verified in AWS SES
-  // Trim to prevent issues with trailing spaces
   const fromEmail = (process.env.SMTP_FROM || process.env.AWS_SES_FROM_EMAIL || 'noreply@involvedtalent.com').trim()
-  
-  // Log the sender email for debugging
-  console.log('[Email Service] Using sender email:', fromEmail)
-  
-  // Check for OIDC or access keys
-  if (!awsRoleArn && (!awsAccessKeyId || !awsSecretAccessKey)) {
-    throw new Error('AWS credentials not configured. Set AWS_ROLE_ARN (preferred) or AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY')
-  }
-  
-  // Validate access keys if using them (not needed for OIDC)
-  if (!awsRoleArn && awsAccessKeyId && awsSecretAccessKey) {
-    if (awsAccessKeyId.length < 16 || awsSecretAccessKey.length < 20) {
-      throw new Error('AWS credentials appear to be invalid (too short)')
-    }
-  }
-  
-  // Get credentials - prefer OIDC over access keys
-  let credentials
-  if (awsRoleArn) {
-    try {
-      // Dynamic import to avoid errors in non-Vercel environments
-      const { awsCredentialsProvider } = await import('@vercel/functions/oidc')
-      credentials = awsCredentialsProvider({
-        roleArn: awsRoleArn,
-      })
-      console.log('[Email Service] ✅ Using OIDC credentials (AWS_ROLE_ARN)')
-    } catch (oidcError) {
-      console.warn('[Email Service] ⚠️ OIDC provider not available, falling back to access keys:', oidcError)
-      // Fallback to access keys if OIDC fails (e.g., local development)
-      if (awsAccessKeyId && awsSecretAccessKey) {
-        credentials = {
-          accessKeyId: awsAccessKeyId,
-          secretAccessKey: awsSecretAccessKey,
-        }
-        console.log('[Email Service] Using access keys as fallback')
-      } else {
-        throw new Error('OIDC failed and no access keys available')
-      }
-    }
-  } else {
-    // Use access keys (fallback for local development)
-    credentials = {
-      accessKeyId: awsAccessKeyId!,
-      secretAccessKey: awsSecretAccessKey!,
-    }
-    console.log('[Email Service] ⚠️ Using access keys (consider using AWS_ROLE_ARN for production)')
-  }
-  
-  // Create SES client with credentials (OIDC or access keys)
-  const sesClient = new SESClient({
-    region: awsRegion,
-    credentials,
-    // Add request handler to help with debugging
-    requestHandler: {
-      requestTimeout: 10000,
-    },
-  })
+  const sesClient = await getSesClient()
   
   const command = new SendEmailCommand({
     Source: fromEmail,
