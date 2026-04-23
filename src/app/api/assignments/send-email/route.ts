@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
-import { logEmail } from '@/lib/email-log'
+import { logEmail, logEmailFailure } from '@/lib/email-log'
 import { getAppUrl } from '@/lib/config'
 
 interface SendEmailRequest {
@@ -72,9 +72,16 @@ function formatExpirationDate(dateString: string): string {
  * like Resend, SendGrid, AWS SES, or similar
  */
 export async function POST(request: NextRequest) {
+  // Hoisted so failure path can log them
+  let to = ''
+  let subject = ''
+  let assignmentId: string | undefined
   try {
     const body: SendEmailRequest = await request.json()
-    const { to, toName, username: providedUsername, subject, body: emailBody, assignments, expirationDate, password, assignmentId } = body
+    const { toName, username: providedUsername, body: emailBody, assignments, expirationDate, password } = body
+    to = body.to
+    subject = body.subject
+    assignmentId = body.assignmentId
 
     const baseUrl = getAppUrl()
     const loginLink = `${baseUrl}/auth/forgot-password?email=${encodeURIComponent(to)}`
@@ -309,10 +316,19 @@ export async function POST(request: NextRequest) {
     throw new Error('Email service configuration error')
   } catch (error) {
     console.error('Error sending email:', error)
+    const errMsg = error instanceof Error ? error.message : 'Failed to send email'
+    await logEmailFailure({
+      emailType: 'assignment',
+      recipientEmail: to,
+      subject,
+      relatedEntityType: assignmentId ? 'assignment' : null,
+      relatedEntityId: assignmentId ?? null,
+      errorMessage: errMsg,
+    })
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to send email',
+        error: errMsg,
       },
       { status: 500 }
     )

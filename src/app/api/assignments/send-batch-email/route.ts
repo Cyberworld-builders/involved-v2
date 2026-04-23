@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
   // Group assignments by user for consolidated emails
   const byUser = new Map<string, {
     user: { name: string; email: string; username: string }
-    assignments: Array<{ assessmentTitle: string; url?: string | null; expires?: string | null }>
+    assignments: Array<{ assignmentId: string; assessmentTitle: string; url?: string | null; expires?: string | null }>
   }>()
 
   for (const a of assignments) {
@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
       byUser.set(u.id, { user: u, assignments: [] })
     }
     byUser.get(u.id)!.assignments.push({
+      assignmentId: a.id,
       assessmentTitle: assess?.title || 'Assessment',
       url: a.url,
       expires: a.expires,
@@ -75,6 +76,21 @@ export async function POST(request: NextRequest) {
 
   const defaultSubject = subject || 'New assessments have been assigned to you'
 
+  // Collect log entries during sends; flush with a single bulk insert at the end.
+  // Rationale: per-email logEmail() calls at >500 parallel exhaust the admin-client
+  // connection pool and drop rows silently, breaking the audit trail.
+  type LogRow = {
+    email_type: 'assignment'
+    recipient_email: string
+    subject: string
+    provider_message_id: string | null
+    related_entity_type: 'assignment'
+    related_entity_id: string | null
+    status: 'sent' | 'failed'
+    error_message: string | null
+  }
+  const logRows: LogRow[] = []
+
   // Send emails in parallel
   const emailPromises: Promise<void>[] = []
 
@@ -87,10 +103,10 @@ export async function POST(request: NextRequest) {
       ? new Date(firstExpires).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
       : 'N/A'
 
-    // Build assessment list HTML (listed once)
-    const assessmentListHtml = userAssignments.map(a => {
-      return `<li>${a.assessmentTitle}</li>`
-    }).join('')
+    // Build assessment list HTML. Dedupe by title so a user with multiple
+    // assignments for the same assessment sees the title once, not N times.
+    const uniqueTitles = Array.from(new Set(userAssignments.map(a => a.assessmentTitle)))
+    const assessmentListHtml = uniqueTitles.map(t => `<li>${t}</li>`).join('')
 
     // Button HTML to inject after assessment list
     const buttonHtml = `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 24px 0;">
@@ -157,7 +173,7 @@ export async function POST(request: NextRequest) {
             <p style="margin: 0 0 16px 0;">Please click the button above to open your dashboard. You will need to request a log-in magic link to complete your assessment. You will be prompted to do so immediately upon landing on the dashboard.</p>
             <p style="margin: 0 0 16px 0;">Please complete your assignments by ${expirationStr}.</p>
             <p style="margin: 0 0 16px 0;">You can access your assignments at any time from your dashboard (<a href="${loginLink}" style="color: #4F46E5;">${dashboardLink}</a>) by requesting a log-in magic link.</p>
-            <p style="margin: 0 0 16px 0;">SAVE this email and BOOKMARK your login page.</p>
+            <p style="margin: 0 0 16px 0;">SAVE this email and BOOKMARK the login page.</p>
             ${password ? `<p style="background: #f3f4f6; padding: 12px; border-radius: 4px; margin: 0 0 16px 0;"><strong>Your temporary password:</strong> ${password}</p>` : ''}
             <p style="margin: 0 0 16px 0;">If you have any questions, please contact us at: <a href="mailto:support@involvedtalent.com" style="color: #4F46E5;">support@involvedtalent.com</a></p>
             <p style="margin: 0 0 8px 0;">Thank you!</p>
@@ -170,13 +186,13 @@ export async function POST(request: NextRequest) {
 
     const textBody = `Hello ${u.name},
 
-You have been assigned the following assessment(s): ${userAssignments.map(a => a.assessmentTitle).join(', ')}
+You have been assigned the following assessment(s): ${uniqueTitles.join(', ')}
 
 Please complete your assignments by ${expirationStr}.
 
 You can access your assignments at any time from your dashboard (${loginLink}) by requesting a log-in magic link.
 
-SAVE this email and BOOKMARK your login page.
+SAVE this email and BOOKMARK the login page.
 ${password ? `\nYour temporary password: ${password}\n` : ''}
 If you have any questions, please contact us at: support@involvedtalent.com
 
@@ -185,20 +201,34 @@ Thank you!
 
 © ${year} Involved Talent`
 
+    const relatedEntityId = userAssignments[0]?.assignmentId ?? null
+
     emailPromises.push(
-      sendEmail(u.email, defaultSubject, htmlBody, textBody, {
-        logMetadata: {
-          emailType: 'assignment',
-          relatedEntityType: 'assignment',
-          relatedEntityId: assignment_ids.find(id =>
-            assignments.find(a => a.id === id && ((a.user as unknown) as { id: string })?.id === userId)
-          ) || null,
-        },
-      }).then(result => {
+      sendEmail(u.email, defaultSubject, htmlBody, textBody).then(result => {
+        logRows.push({
+          email_type: 'assignment',
+          recipient_email: u.email,
+          subject: defaultSubject,
+          provider_message_id: result.success ? (result.messageId ?? null) : null,
+          related_entity_type: 'assignment',
+          related_entity_id: relatedEntityId,
+          status: result.success ? 'sent' : 'failed',
+          error_message: result.success ? null : (result.error ?? null),
+        })
         if (!result.success) {
           console.error(`Failed to send email to ${u.email}:`, result.error)
         }
       }).catch(err => {
+        logRows.push({
+          email_type: 'assignment',
+          recipient_email: u.email,
+          subject: defaultSubject,
+          provider_message_id: null,
+          related_entity_type: 'assignment',
+          related_entity_id: relatedEntityId,
+          status: 'failed',
+          error_message: err instanceof Error ? err.message : String(err),
+        })
         console.error(`Error sending email to ${u.email}:`, err)
       })
     )
@@ -206,9 +236,22 @@ Thank you!
 
   // Send all emails in parallel and wait for completion
   const results = await Promise.allSettled(emailPromises)
-  const sent = results.filter(r => r.status === 'fulfilled').length
-  const failed = results.filter(r => r.status === 'rejected').length
-  console.log(`[Batch Email] Completed: ${sent} sent, ${failed} failed out of ${results.length}`)
+  const sentRows = logRows.filter(r => r.status === 'sent').length
+  const failedRows = logRows.filter(r => r.status === 'failed').length
+  console.log(`[Batch Email] Completed: ${sentRows} sent, ${failedRows} failed out of ${results.length}`)
+
+  // Single bulk insert — atomic, survives high parallelism without pool exhaustion.
+  if (logRows.length > 0) {
+    const { error: logErr } = await adminClient.from('email_logs').insert(logRows)
+    if (logErr) {
+      console.error(`[Batch Email] CRITICAL: failed to write ${logRows.length} email_logs rows:`, logErr)
+    } else {
+      console.log(`[Batch Email] email_logs wrote ${logRows.length} row(s)`)
+    }
+  }
+
+  const sent = sentRows
+  const failed = failedRows
 
   return NextResponse.json({
     success: true,

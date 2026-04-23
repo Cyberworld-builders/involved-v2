@@ -4,8 +4,10 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getAppUrl } from '@/lib/config'
 
 // Staleness thresholds — if a job sits in these states longer than this, auto-recover to "failed"
-const QUEUED_TIMEOUT_MS = 2 * 60 * 1000    // 2 minutes
-const GENERATING_TIMEOUT_MS = 5 * 60 * 1000 // 5 minutes
+const QUEUED_TIMEOUT_MS = 2 * 60 * 1000     // 2 minutes
+// 8 minutes: edge function retries up to 5 times with exponential backoff.
+// Worst-case ~6 min; 8 min gives headroom before staleness recovery kicks in.
+const GENERATING_TIMEOUT_MS = 8 * 60 * 1000
 
 /**
  * GET /api/reports/[assignmentId]/pdf

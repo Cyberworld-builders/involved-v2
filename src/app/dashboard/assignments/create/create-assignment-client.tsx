@@ -61,7 +61,7 @@ export default function CreateAssignmentClient() {
   const [expirationDate, setExpirationDate] = useState('')
   const [sendEmail, setSendEmail] = useState(false)
   const [emailSubject, setEmailSubject] = useState('New assessments have been assigned to you')
-  const defaultEmailBody = '<p>Hello {name},</p><p>You have been assigned the following assessment(s):</p><p>{assessments}</p><p>Please click the button above to open your dashboard. You will need to request a log-in magic link to complete your assessment. You will be prompted to do so immediately upon landing on the dashboard.</p><p>Please complete your assignments by {expiration-date}.</p><p>You can access your assignments at any time from your dashboard ({dashboard-link}) by requesting a log-in magic link.</p><p>SAVE this email and BOOKMARK your login page.</p><p>If you have any questions, please contact us at: support@involvedtalent.com</p><p>Thank you!</p><p>-Involved Talent Team</p><p>© {year} Involved Talent</p>'
+  const defaultEmailBody = '<p>Hello {name},</p><p>You have been assigned the following assessment(s):</p><p>{assessments}</p><p>Please click the button above to open your dashboard. You will need to request a log-in magic link to complete your assessment. You will be prompted to do so immediately upon landing on the dashboard.</p><p>Please complete your assignments by {expiration-date}.</p><p>You can access your assignments at any time from your dashboard ({dashboard-link}) by requesting a log-in magic link.</p><p>SAVE this email and BOOKMARK the login page.</p><p>If you have any questions, please contact us at: support@involvedtalent.com</p><p>Thank you!</p><p>-Involved Talent Team</p>'
   const [emailBody, setEmailBody] = useState(defaultEmailBody)
   
   // Assignment targets
@@ -222,9 +222,7 @@ export default function CreateAssignmentClient() {
         }
 
         // Set default email body (HTML so RichTextEditor preserves paragraphs)
-        setEmailBody(
-          '<p>Hello {name},</p><p>You have been assigned the following assessment(s):</p><p>{assessments}</p><p>Please click the button above to open your dashboard and log in. Please complete your assignments by {expiration-date}.</p><p>You can access your assignments at any time from your dashboard ({dashboard-link}).</p><p>SAVE this email and BOOKMARK your login page.</p><p>If you have any questions, please contact us at: support@involvedtalent.com</p><p>Thank you!</p><p>-Involved Talent Team</p><p>© {year} Involved Talent</p>'
-        )
+        setEmailBody(defaultEmailBody)
       } catch (error) {
         console.error('Error loading data:', error)
         setMessage('Failed to load data')

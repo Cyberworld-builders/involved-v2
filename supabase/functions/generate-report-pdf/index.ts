@@ -204,65 +204,61 @@ serve(async (req) => {
     // Update status to 'generating'
     await updatePdfStatus(supabase, assignment_id, 'generating')
 
-    try {
-      // Get current PDF version
-      const { data: reportData } = await supabase
-        .from('report_data')
-        .select('pdf_version')
-        .eq('assignment_id', assignment_id)
-        .single()
+    // Get current PDF version
+    const { data: reportData } = await supabase
+      .from('report_data')
+      .select('pdf_version')
+      .eq('assignment_id', assignment_id)
+      .single()
 
-      const currentVersion = reportData?.pdf_version || 1
-      const nextVersion = currentVersion
+    const currentVersion = reportData?.pdf_version || 1
+    const nextVersion = currentVersion
+    const keyForNextJs = service_role_key || supabaseServiceKey
 
-      // Use service role key from request (passed from Next.js) or fall back to environment variable
-      // This ensures we use the same key that Next.js is expecting
-      const keyForNextJs = service_role_key || supabaseServiceKey
+    // Retry transient failures (Vercel serverless Chromium races: ETXTBSY/EBUSY/EAGAIN,
+    // navigation timeouts). Status stays in 'generating' across attempts so the UI
+    // keeps showing progress instead of flickering through 'failed'.
+    const MAX_ATTEMPTS = 5
+    const TRANSIENT_PATTERN = /ETXTBSY|EBUSY|EAGAIN|spawn|navigation timeout|timeout.*exceeded|ECONNRESET|socket hang up|fetch failed/i
+    let lastError: Error | null = null
 
-      // Generate PDF by calling Next.js API route
-      const pdfBuffer = await generatePDF(view_url, nextjsApiUrl, keyForNextJs)
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      try {
+        console.log(`[Edge Function] PDF generation attempt ${attempt}/${MAX_ATTEMPTS}`)
+        const pdfBuffer = await generatePDF(view_url, nextjsApiUrl, keyForNextJs)
+        const storagePath = await uploadPDFToStorage(supabase, assignment_id, pdfBuffer, nextVersion)
 
-      // Upload to storage
-      const storagePath = await uploadPDFToStorage(supabase, assignment_id, pdfBuffer, nextVersion)
-
-      // Update status to 'ready' with storage path and timestamp
-      await updatePdfStatus(supabase, assignment_id, 'ready', {
-        storage_path: storagePath,
-        generated_at: new Date().toISOString(),
-        version: nextVersion,
-      })
-
-      return new Response(
-        JSON.stringify({
-          success: true,
+        await updatePdfStatus(supabase, assignment_id, 'ready', {
           storage_path: storagePath,
+          generated_at: new Date().toISOString(),
           version: nextVersion,
-        }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      )
-    } catch (error) {
-      // Update status to 'failed' with error message
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      await updatePdfStatus(supabase, assignment_id, 'failed', {
-        last_error: errorMessage,
-      })
+        })
 
-      console.error('PDF generation failed:', error)
+        return new Response(
+          JSON.stringify({ success: true, storage_path: storagePath, version: nextVersion, attempts: attempt }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error))
+        const isTransient = TRANSIENT_PATTERN.test(lastError.message)
+        console.warn(`[Edge Function] Attempt ${attempt} failed (transient=${isTransient}): ${lastError.message}`)
 
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: errorMessage,
-        }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      )
+        if (!isTransient || attempt === MAX_ATTEMPTS) break
+
+        // Exponential backoff: 2s, 4s, 8s, 16s
+        const backoffMs = Math.min(2000 * Math.pow(2, attempt - 1), 16000)
+        await new Promise((resolve) => setTimeout(resolve, backoffMs))
+      }
     }
+
+    const errorMessage = lastError?.message || 'Unknown error'
+    await updatePdfStatus(supabase, assignment_id, 'failed', { last_error: errorMessage })
+    console.error('PDF generation failed after all retries:', errorMessage)
+
+    return new Response(
+      JSON.stringify({ success: false, error: errorMessage, attempts: MAX_ATTEMPTS }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
   } catch (error) {
     console.error('Edge function error:', error)
     return new Response(

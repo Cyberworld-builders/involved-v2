@@ -80,13 +80,12 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
   const [expirationDate, setExpirationDate] = useState('')
   const [sendEmail, setSendEmail] = useState(false)
   const [emailSubject, setEmailSubject] = useState('New assessments have been assigned to you')
-  const defaultEmailBody = '<p>Hello {name},</p><p>You have been assigned the following assessment(s):</p><p>{assessments}</p><p>Please click the button above to open your dashboard. You will need to request a log-in magic link to complete your assessment. You will be prompted to do so immediately upon landing on the dashboard.</p><p>Please complete your assignments by {expiration-date}.</p><p>You can access your assignments at any time from your dashboard ({dashboard-link}) by requesting a log-in magic link.</p><p>SAVE this email and BOOKMARK your login page.</p><p>If you have any questions, please contact us at: support@involvedtalent.com</p><p>Thank you!</p><p>-Involved Talent Team</p><p>© {year} Involved Talent</p>'
+  const defaultEmailBody = '<p>Hello {name},</p><p>You have been assigned the following assessment(s):</p><p>{assessments}</p><p>Please click the button above to open your dashboard. You will need to request a log-in magic link to complete your assessment. You will be prompted to do so immediately upon landing on the dashboard.</p><p>Please complete your assignments by {expiration-date}.</p><p>You can access your assignments at any time from your dashboard ({dashboard-link}) by requesting a log-in magic link.</p><p>SAVE this email and BOOKMARK the login page.</p><p>If you have any questions, please contact us at: support@involvedtalent.com</p><p>Thank you!</p><p>-Involved Talent Team</p>'
   const [emailBody, setEmailBody] = useState(defaultEmailBody)
   const [enableReminder, setEnableReminder] = useState(false)
   const [firstReminderDate, setFirstReminderDate] = useState('')
   const [firstReminderTime, setFirstReminderTime] = useState('09:00')
   const [reminderFrequency, setReminderFrequency] = useState('+3 days')
-  const [reminderBody, setReminderBody] = useState('Hello {name}, this is a reminder that you have incomplete assignments:\n\n{assessments}\n\nPlease complete them by {expiration-date}.')
   const [assignmentUsers, setAssignmentUsers] = useState<AssignmentUser[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   
@@ -225,9 +224,7 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
         setFirstReminderDate(defaultFirstReminder.toISOString().split('T')[0])
 
         // Set default email body (HTML so RichTextEditor preserves paragraphs)
-        setEmailBody(
-          '<p>Hello {name},</p><p>You have been assigned the following assessment(s):</p><p>{assessments}</p><p>Please click the button above to open your dashboard and log in. Please complete your assignments by {expiration-date}.</p><p>You can access your assignments at any time from your dashboard ({dashboard-link}).</p><p>SAVE this email and BOOKMARK your login page.</p><p>If you have any questions, please contact us at: support@involvedtalent.com</p><p>Thank you!</p><p>-Involved Talent Team</p><p>© {year} Involved Talent</p>'
-        )
+        setEmailBody(defaultEmailBody)
       } catch (error) {
         console.error('Error loading data:', error)
         setMessage('Failed to load data')
@@ -869,19 +866,9 @@ export default function CreateAssignmentClient({ clientId }: CreateAssignmentCli
                           </optgroup>
                         </select>
                       </div>
-                      <div className="mt-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Reminder Email Body
-                        </label>
-                        <RichTextEditor
-                          content={reminderBody}
-                          onChange={setReminderBody}
-                          placeholder="Hello {name}, this is a reminder that you have incomplete assignments:\n\n{assessments}\n\nPlease complete them by {expiration-date}."
-                        />
-                        <p className="text-xs text-gray-500 mt-1">
-                          Available shortcodes: <code>{'{name}'}</code>, <code>{'{username}'}</code>, <code>{'{email}'}</code>, <code>{'{assessments}'}</code>, <code>{'{expiration-date}'}</code>, <code>{'{password}'}</code>, <code>{'{dashboard-link}'}</code>, <code>{'{year}'}</code>
-                        </p>
-                      </div>
+                      <p className="mt-4 text-xs text-gray-500">
+                        Reminder email content uses the standard template approved for this application — no per-assignment customization. Recipients will see the same reminder text regardless of which survey this is attached to.
+                      </p>
                     </>
                   )}
                 </div>

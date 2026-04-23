@@ -3,6 +3,7 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { usePdfState } from '@/hooks/use-pdf-state'
+import { usePdfProgressMessage } from '@/hooks/use-pdf-progress-message'
 import { friendlyPdfError } from '@/lib/reports/pdf-error-messages'
 import { formatDateTime } from '@/lib/utils'
 import { Download, FileSpreadsheet, FileText, ExternalLink, RefreshCw, Loader2 } from 'lucide-react'
@@ -36,9 +37,12 @@ export default function ReportExportCard({
     onRegenerate?.()
   }
 
-  if (!isCompleted && !is360) return null
-
   const pdfStatus = state?.status || 'not_requested'
+  const progressMessage = usePdfProgressMessage(
+    pdfStatus === 'queued' || pdfStatus === 'generating'
+  )
+
+  if (!isCompleted && !is360) return null
 
   return (
     <Card>
@@ -68,11 +72,9 @@ export default function ReportExportCard({
               <div>
                 <Button disabled size="sm">
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {pdfStatus === 'queued' ? 'Queued...' : 'Generating...'}
+                  {progressMessage}
                 </Button>
-                <p className="text-xs text-gray-400 mt-2">
-                  {pdfStatus === 'queued' ? 'Waiting to start' : 'This can take ~10-30s'}
-                </p>
+                <p className="text-xs text-gray-400 mt-2">This usually takes under a minute.</p>
               </div>
             )}
             {pdfStatus === 'ready' && (

@@ -154,7 +154,7 @@ export async function PATCH(
 
     const { data: targetProfile, error: targetProfileError } = await supabase
       .from('profiles')
-      .select('id, role, access_level, client_id')
+      .select('id, role, access_level, client_id, email, auth_user_id')
       .eq('id', id)
       .single()
 
@@ -296,6 +296,39 @@ export async function PATCH(
       )
     }
 
+    // Sync email to auth.users before the profile write so we never end up in
+    // "profile updated, auth stale" — that's the silently-broken-login state
+    // (see scripts/audit-profile-auth-email-drift.ts). Order: auth first, then
+    // profile, with a best-effort rollback if the profile write fails. Skip
+    // when the email isn't actually changing or when the profile has no linked
+    // auth user yet (e.g. bulk-uploaded users before first assignment).
+    const previousEmail = targetProfile.email
+    const emailIsChanging =
+      typeof updates.email === 'string' && updates.email !== previousEmail
+    if (emailIsChanging && targetProfile.auth_user_id) {
+      const adminClient = createAdminClient()
+      const { error: authUpdateError } = await adminClient.auth.admin.updateUserById(
+        targetProfile.auth_user_id,
+        { email: updates.email as string, email_confirm: true }
+      )
+      if (authUpdateError) {
+        console.error('Error syncing email to auth.users:', authUpdateError)
+        const isDuplicate =
+          authUpdateError.status === 422 ||
+          authUpdateError.code === 'email_exists' ||
+          /already/i.test(authUpdateError.message ?? '')
+        return NextResponse.json(
+          {
+            error: isDuplicate
+              ? 'Email already in use by another account'
+              : 'Failed to update email in authentication system',
+            details: authUpdateError.message,
+          },
+          { status: isDuplicate ? 409 : 500 }
+        )
+      }
+    }
+
     // Update user
     const { data: updatedUser, error } = await supabase
       .from('profiles')
@@ -303,6 +336,24 @@ export async function PATCH(
       .eq('id', id)
       .select()
       .single()
+
+    // If the profile write failed after we already changed auth, roll auth
+    // back to the previous email so the two records stay aligned. A rollback
+    // failure is not recoverable here — log loudly so an operator can see it
+    // in the audit of the PATCH endpoint.
+    if (error && emailIsChanging && targetProfile.auth_user_id && previousEmail) {
+      const adminClient = createAdminClient()
+      const { error: rollbackError } = await adminClient.auth.admin.updateUserById(
+        targetProfile.auth_user_id,
+        { email: previousEmail, email_confirm: true }
+      )
+      if (rollbackError) {
+        console.error(
+          `CRITICAL: auth.users.email was updated to "${updates.email}" but profile write failed and rollback failed. auth_user_id=${targetProfile.auth_user_id}`,
+          rollbackError
+        )
+      }
+    }
 
     if (error) {
       if (error.code === 'PGRST116') {

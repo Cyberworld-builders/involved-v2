@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { usePdfState } from '@/hooks/use-pdf-state'
+import { usePdfProgressMessage } from '@/hooks/use-pdf-progress-message'
 import { friendlyPdfError } from '@/lib/reports/pdf-error-messages'
 
 export type { PdfStatus, PdfState } from '@/hooks/use-pdf-state'
@@ -32,6 +33,11 @@ export function PdfActionButtons({
     handleRegenerate,
   } = usePdfState(assignmentId)
 
+  const currentStatus = state?.status || 'not_requested'
+  const progressMessage = usePdfProgressMessage(
+    currentStatus === 'queued' || currentStatus === 'generating'
+  )
+
   if (isLoading && !state) {
     return (
       <Button variant={variant} size={size} disabled>
@@ -39,8 +45,6 @@ export function PdfActionButtons({
       </Button>
     )
   }
-
-  const currentStatus = state?.status || 'not_requested'
 
   return (
     <div className="flex flex-col gap-1">
@@ -61,21 +65,12 @@ export function PdfActionButtons({
         </>
       )}
 
-      {currentStatus === 'queued' && (
+      {(currentStatus === 'queued' || currentStatus === 'generating') && (
         <>
           <Button variant={variant} size={size} disabled>
-            Queued...
+            {progressMessage}
           </Button>
-          <p className="text-xs text-gray-500">Waiting to start</p>
-        </>
-      )}
-
-      {currentStatus === 'generating' && (
-        <>
-          <Button variant={variant} size={size} disabled>
-            Generating...
-          </Button>
-          <p className="text-xs text-gray-500">This can take ~10-30s</p>
+          <p className="text-xs text-gray-500">This usually takes under a minute.</p>
         </>
       )}
 

@@ -21,6 +21,8 @@ export interface LogEmailParams {
   providerMessageId?: string | null
   relatedEntityType?: string | null
   relatedEntityId?: string | null
+  status?: 'sent' | 'failed'
+  errorMessage?: string | null
 }
 
 export async function logEmail(params: LogEmailParams): Promise<void> {
@@ -31,6 +33,8 @@ export async function logEmail(params: LogEmailParams): Promise<void> {
     providerMessageId,
     relatedEntityType,
     relatedEntityId,
+    status = 'sent',
+    errorMessage,
   } = params
 
   try {
@@ -42,7 +46,8 @@ export async function logEmail(params: LogEmailParams): Promise<void> {
       provider_message_id: providerMessageId ?? null,
       related_entity_type: relatedEntityType ?? null,
       related_entity_id: relatedEntityId ?? null,
-      status: 'sent',
+      status,
+      error_message: errorMessage ?? null,
     })
 
     if (error) {
@@ -51,4 +56,11 @@ export async function logEmail(params: LogEmailParams): Promise<void> {
   } catch (err) {
     console.error('[email-log] Error logging email:', err)
   }
+}
+
+/**
+ * Shorthand for logging a failed email send. Best-effort; never throws.
+ */
+export async function logEmailFailure(params: Omit<LogEmailParams, 'status' | 'providerMessageId'> & { errorMessage: string }): Promise<void> {
+  return logEmail({ ...params, status: 'failed' })
 }
