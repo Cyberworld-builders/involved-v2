@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
   // Group assignments by user for consolidated emails
   const byUser = new Map<string, {
     user: { name: string; email: string; username: string }
-    assignments: Array<{ assessmentTitle: string; url?: string | null; expires?: string | null }>
+    assignments: Array<{ assignmentId: string; assessmentTitle: string; url?: string | null; expires?: string | null }>
   }>()
 
   for (const a of assignments) {
@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
       byUser.set(u.id, { user: u, assignments: [] })
     }
     byUser.get(u.id)!.assignments.push({
+      assignmentId: a.id,
       assessmentTitle: assess?.title || 'Assessment',
       url: a.url,
       expires: a.expires,
@@ -74,6 +75,21 @@ export async function POST(request: NextRequest) {
   const year = new Date().getFullYear()
 
   const defaultSubject = subject || 'New assessments have been assigned to you'
+
+  // Collect log entries during sends; flush with a single bulk insert at the end.
+  // Rationale: per-email logEmail() calls at >500 parallel exhaust the admin-client
+  // connection pool and drop rows silently, breaking the audit trail.
+  type LogRow = {
+    email_type: 'assignment'
+    recipient_email: string
+    subject: string
+    provider_message_id: string | null
+    related_entity_type: 'assignment'
+    related_entity_id: string | null
+    status: 'sent' | 'failed'
+    error_message: string | null
+  }
+  const logRows: LogRow[] = []
 
   // Send emails in parallel
   const emailPromises: Promise<void>[] = []
@@ -185,20 +201,34 @@ Thank you!
 
 © ${year} Involved Talent`
 
+    const relatedEntityId = userAssignments[0]?.assignmentId ?? null
+
     emailPromises.push(
-      sendEmail(u.email, defaultSubject, htmlBody, textBody, {
-        logMetadata: {
-          emailType: 'assignment',
-          relatedEntityType: 'assignment',
-          relatedEntityId: assignment_ids.find(id =>
-            assignments.find(a => a.id === id && ((a.user as unknown) as { id: string })?.id === userId)
-          ) || null,
-        },
-      }).then(result => {
+      sendEmail(u.email, defaultSubject, htmlBody, textBody).then(result => {
+        logRows.push({
+          email_type: 'assignment',
+          recipient_email: u.email,
+          subject: defaultSubject,
+          provider_message_id: result.success ? (result.messageId ?? null) : null,
+          related_entity_type: 'assignment',
+          related_entity_id: relatedEntityId,
+          status: result.success ? 'sent' : 'failed',
+          error_message: result.success ? null : (result.error ?? null),
+        })
         if (!result.success) {
           console.error(`Failed to send email to ${u.email}:`, result.error)
         }
       }).catch(err => {
+        logRows.push({
+          email_type: 'assignment',
+          recipient_email: u.email,
+          subject: defaultSubject,
+          provider_message_id: null,
+          related_entity_type: 'assignment',
+          related_entity_id: relatedEntityId,
+          status: 'failed',
+          error_message: err instanceof Error ? err.message : String(err),
+        })
         console.error(`Error sending email to ${u.email}:`, err)
       })
     )
@@ -206,9 +236,22 @@ Thank you!
 
   // Send all emails in parallel and wait for completion
   const results = await Promise.allSettled(emailPromises)
-  const sent = results.filter(r => r.status === 'fulfilled').length
-  const failed = results.filter(r => r.status === 'rejected').length
-  console.log(`[Batch Email] Completed: ${sent} sent, ${failed} failed out of ${results.length}`)
+  const sentRows = logRows.filter(r => r.status === 'sent').length
+  const failedRows = logRows.filter(r => r.status === 'failed').length
+  console.log(`[Batch Email] Completed: ${sentRows} sent, ${failedRows} failed out of ${results.length}`)
+
+  // Single bulk insert — atomic, survives high parallelism without pool exhaustion.
+  if (logRows.length > 0) {
+    const { error: logErr } = await adminClient.from('email_logs').insert(logRows)
+    if (logErr) {
+      console.error(`[Batch Email] CRITICAL: failed to write ${logRows.length} email_logs rows:`, logErr)
+    } else {
+      console.log(`[Batch Email] email_logs wrote ${logRows.length} row(s)`)
+    }
+  }
+
+  const sent = sentRows
+  const failed = failedRows
 
   return NextResponse.json({
     success: true,
