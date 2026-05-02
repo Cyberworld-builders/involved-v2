@@ -423,6 +423,11 @@ async function sendEmailViaSES(
   const fromEmail = (process.env.SMTP_FROM || process.env.AWS_SES_FROM_EMAIL || 'noreply@involvedtalent.com').trim()
   const sesClient = await getSesClient()
   
+  // ConfigurationSetName routes Bounce/Complaint/Delivery events through SES →
+  // SNS → /api/webhooks/ses-feedback. Without it, SES events never reach us and
+  // the campaign dashboard's bounce/complaint signals stay blank.
+  const configurationSetName = process.env.SES_CONFIGURATION_SET?.trim() || undefined
+
   const command = new SendEmailCommand({
     Source: fromEmail,
     Destination: {
@@ -444,6 +449,7 @@ async function sendEmailViaSES(
         },
       },
     },
+    ConfigurationSetName: configurationSetName,
   })
   
   try {
