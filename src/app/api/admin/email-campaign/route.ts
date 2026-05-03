@@ -148,10 +148,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Assignments under this survey
-    const { data: assignments } = await admin
+    const { data: assignments, error: assignErr } = await admin
       .from('assignments')
-      .select('id, completed, expires, target_id, user_id, sent_at, completed_at')
+      .select('id, completed, expires, target_id, user_id, completed_at, created_at')
       .eq('survey_id', surveyId)
+    if (assignErr) {
+      // Surface this rather than silently returning zeros — the dashboard would
+      // otherwise render "all green" for a survey we can't actually query.
+      return NextResponse.json({ error: `assignments query failed: ${assignErr.message}` }, { status: 500 })
+    }
 
     const assignmentIds = (assignments ?? []).map(a => a.id)
     const totalAssignments = assignmentIds.length
