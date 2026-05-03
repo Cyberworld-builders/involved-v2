@@ -58,6 +58,12 @@ export interface Report360Data {
   group_name: string
   overall_score: number
   industry_name?: string | null
+  /** Industry whose benchmarks the report used (after applying any override). */
+  industry_id?: string | null
+  /** Target's profiles.industry_id at generation time — the default. */
+  target_industry_id?: string | null
+  /** Override applied via report_data.industry_id_override, if any. NULL means no override is in effect (default applies). */
+  industry_id_override?: string | null
   dimensions: DimensionReport360[]
   generated_at: string
   /** True when no or partial responses; report shows placeholders. */
