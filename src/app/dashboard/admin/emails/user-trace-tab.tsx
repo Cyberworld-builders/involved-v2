@@ -2,22 +2,34 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 
+type EventType =
+  | 'sent' | 'delivered' | 'bounced' | 'complained' | 'failed'
+  | 'login' | 'logout' | 'magic_link_or_recovery' | 'signup' | 'auth_other'
+  | 'started_assignment' | 'completed_assignment' | 'last_answer'
+
 interface TimelineEvent {
   id: string
-  event_type: 'sent' | 'delivered' | 'bounced' | 'complained' | 'failed'
-  email_type: string
-  subject: string
+  event_type: EventType
+  source: 'email' | 'auth' | 'assignment' | 'answers'
+  email_type?: string
+  subject?: string
+  assignment_title?: string
   timestamp: string
   detail?: string
-  related_entity_type: string | null
-  related_entity_id: string | null
-  provider_message_id: string | null
+  related_entity_type?: string | null
+  related_entity_id?: string | null
+  provider_message_id?: string | null
 }
 
 interface TraceResponse {
   recipient: string
+  profile: { id: string; name: string | null; client_name: string | null } | null
   events: TimelineEvent[]
-  totals: { sends: number; deliveries: number; bounces: number; complaints: number; failures: number }
+  totals: {
+    sends: number; deliveries: number; bounces: number; complaints: number; failures: number
+    logins: number; magic_links_or_recoveries: number; signups: number
+    started_assignments: number; completed_assignments: number; total_answers: number
+  }
   earliest: string | null
   latest: string | null
 }
@@ -26,13 +38,21 @@ function fmtDate(iso: string) {
   return new Date(iso).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'medium' })
 }
 
-function eventStyle(t: TimelineEvent['event_type']) {
+function eventStyle(t: EventType) {
   switch (t) {
-    case 'sent': return { dot: 'bg-gray-400', label: 'Sent', text: 'text-gray-700' }
-    case 'delivered': return { dot: 'bg-green-500', label: 'Delivered', text: 'text-green-700' }
-    case 'bounced': return { dot: 'bg-amber-500', label: 'Bounced', text: 'text-amber-700' }
-    case 'complained': return { dot: 'bg-red-500', label: 'Complained', text: 'text-red-700' }
-    case 'failed': return { dot: 'bg-red-300', label: 'Failed at send', text: 'text-red-700' }
+    case 'sent':                  return { dot: 'bg-gray-400',   label: 'Email sent',         text: 'text-gray-700' }
+    case 'delivered':             return { dot: 'bg-green-500',  label: 'Delivered',          text: 'text-green-700' }
+    case 'bounced':               return { dot: 'bg-amber-500',  label: 'Bounced',            text: 'text-amber-700' }
+    case 'complained':            return { dot: 'bg-red-500',    label: 'Complained',         text: 'text-red-700' }
+    case 'failed':                return { dot: 'bg-red-300',    label: 'Failed at send',     text: 'text-red-700' }
+    case 'login':                 return { dot: 'bg-blue-500',   label: 'Logged in',          text: 'text-blue-700' }
+    case 'logout':                return { dot: 'bg-blue-300',   label: 'Logged out',         text: 'text-blue-600' }
+    case 'magic_link_or_recovery': return { dot: 'bg-blue-400',  label: 'Magic link / recovery requested', text: 'text-blue-700' }
+    case 'signup':                return { dot: 'bg-blue-600',   label: 'Account created',    text: 'text-blue-700' }
+    case 'auth_other':            return { dot: 'bg-blue-200',   label: 'Auth event',         text: 'text-blue-600' }
+    case 'started_assignment':    return { dot: 'bg-indigo-500', label: 'Started assessment', text: 'text-indigo-700' }
+    case 'completed_assignment':  return { dot: 'bg-indigo-700', label: 'Completed assessment', text: 'text-indigo-800' }
+    case 'last_answer':           return { dot: 'bg-indigo-300', label: 'Last activity',      text: 'text-indigo-600' }
   }
 }
 
@@ -67,10 +87,6 @@ export default function UserTraceTab({ initialRecipient = '' }: { initialRecipie
     void performSearch(recipient.trim())
   }, [recipient, performSearch])
 
-  // Auto-fire when the parent hands us a recipient (e.g. user clicked a row in
-  // the campaign tab). Tracks the last value we auto-searched so re-mounts
-  // with the same value don't loop, and so changing the input + clicking
-  // Search still works normally.
   useEffect(() => {
     if (initialRecipient && initialRecipient !== lastAutoSearched.current) {
       setRecipient(initialRecipient)
@@ -106,8 +122,8 @@ export default function UserTraceTab({ initialRecipient = '' }: { initialRecipie
           </button>
         </div>
         <p className="mt-2 text-xs text-gray-500">
-          Returns every email_logs row for this recipient with its status and any SNS feedback (bounce/complaint/delivery).
-          Useful for &quot;they say they didn&apos;t get it&quot; support questions.
+          Unified timeline: emails sent + SES feedback, login/recovery events, and assessment activity (started, answered, completed).
+          Useful for &quot;they say they didn&apos;t get the email / couldn&apos;t log in / didn&apos;t take the assessment&quot; questions.
         </p>
       </div>
 
@@ -115,30 +131,56 @@ export default function UserTraceTab({ initialRecipient = '' }: { initialRecipie
 
       {trace && trace.events.length === 0 && (
         <div className="bg-gray-50 border border-gray-200 rounded p-6 text-sm text-gray-600 text-center">
-          No email activity found for <span className="font-mono">{trace.recipient}</span>.
+          No activity found for <span className="font-mono">{trace.recipient}</span>.
         </div>
       )}
 
       {trace && trace.events.length > 0 && (
         <>
           {/* Summary header */}
-          <div className="bg-white border border-gray-200 rounded-lg p-4">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="text-xs text-gray-500">Recipient</p>
-                <p className="font-mono text-sm text-gray-900">{trace.recipient}</p>
-                {trace.earliest && trace.latest && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    {fmtDate(trace.earliest)} → {fmtDate(trace.latest)}
-                  </p>
-                )}
-              </div>
-              <div className="grid grid-cols-5 gap-3 text-center">
+          <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
+            <div>
+              <p className="text-xs text-gray-500">Recipient</p>
+              <p className="font-mono text-sm text-gray-900">{trace.recipient}</p>
+              {trace.profile && (
+                <p className="text-xs text-gray-500 mt-1">
+                  {trace.profile.name ? `${trace.profile.name} · ` : ''}
+                  {trace.profile.client_name ?? 'No client'}
+                </p>
+              )}
+              {trace.earliest && trace.latest && (
+                <p className="text-xs text-gray-500 mt-1">
+                  {fmtDate(trace.earliest)} → {fmtDate(trace.latest)}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold text-gray-700 mb-1">Email</p>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                 <Mini label="Sent" value={trace.totals.sends} />
                 <Mini label="Delivered" value={trace.totals.deliveries} positive />
                 <Mini label="Bounced" value={trace.totals.bounces} warn={trace.totals.bounces > 0} />
                 <Mini label="Complaints" value={trace.totals.complaints} danger={trace.totals.complaints > 0} />
                 <Mini label="Failures" value={trace.totals.failures} warn={trace.totals.failures > 0} />
+              </div>
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold text-gray-700 mb-1">Auth</p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <Mini label="Logins" value={trace.totals.logins} positive={trace.totals.logins > 0} />
+                <Mini label="Magic link / recovery" value={trace.totals.magic_links_or_recoveries} />
+                <Mini label="Signups" value={trace.totals.signups} />
+              </div>
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold text-gray-700 mb-1">Assessment</p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <Mini label="Started" value={trace.totals.started_assignments} />
+                <Mini label="Completed" value={trace.totals.completed_assignments} positive={trace.totals.completed_assignments > 0} />
+                <Mini label="Total answers" value={trace.totals.total_answers} />
               </div>
             </div>
           </div>
@@ -149,20 +191,24 @@ export default function UserTraceTab({ initialRecipient = '' }: { initialRecipie
             <ol className="space-y-3">
               {trace.events.map((ev) => {
                 const s = eventStyle(ev.event_type)
+                const sourceTag = `${ev.source}`
                 return (
-                  <li key={ev.id + ev.event_type + ev.timestamp} className="flex gap-3">
+                  <li key={`${ev.source}-${ev.id}-${ev.event_type}-${ev.timestamp}`} className="flex gap-3">
                     <div className={`mt-1 h-2.5 w-2.5 rounded-full flex-shrink-0 ${s.dot}`} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-baseline justify-between gap-2">
                         <p className={`text-sm font-medium ${s.text}`}>
-                          {s.label} <span className="text-gray-500 font-normal">— {ev.email_type}</span>
+                          {s.label}
+                          {ev.email_type && <span className="text-gray-500 font-normal"> — {ev.email_type}</span>}
+                          {ev.assignment_title && <span className="text-gray-500 font-normal"> — {ev.assignment_title}</span>}
                         </p>
-                        <p className="text-xs text-gray-500 whitespace-nowrap">{fmtDate(ev.timestamp)}</p>
+                        <p className="text-xs text-gray-500 whitespace-nowrap">
+                          {fmtDate(ev.timestamp)}
+                          <span className="ml-2 text-gray-400 uppercase tracking-wider text-[10px]">{sourceTag}</span>
+                        </p>
                       </div>
-                      <p className="text-xs text-gray-600 truncate">{ev.subject}</p>
-                      {ev.detail && (
-                        <p className="text-xs text-gray-500 mt-0.5">{ev.detail}</p>
-                      )}
+                      {ev.subject && <p className="text-xs text-gray-600 truncate">{ev.subject}</p>}
+                      {ev.detail && <p className="text-xs text-gray-500 mt-0.5">{ev.detail}</p>}
                       {ev.provider_message_id && (
                         <p className="text-xs text-gray-400 font-mono mt-0.5 truncate">
                           msg={ev.provider_message_id}
@@ -174,9 +220,11 @@ export default function UserTraceTab({ initialRecipient = '' }: { initialRecipie
               })}
             </ol>
             <p className="mt-4 text-xs text-gray-500">
-              Each row reflects an <span className="font-mono">email_logs</span> entry plus any SNS feedback events that updated it
-              (delivered_at, feedback_received_at). Login/auth events from Supabase aren&apos;t included yet — the trace shows
-              what we sent and how SES reported it.
+              Sources: <span className="font-mono">email_logs</span> + SNS feedback,
+              {' '}<span className="font-mono">auth.audit_log_entries</span> via SECURITY DEFINER RPC,
+              {' '}<span className="font-mono">assignments</span> (started_at / completed_at), and
+              {' '}<span className="font-mono">answers</span> rollups (last activity per incomplete assignment).
+              Token refresh events are filtered out to keep the timeline readable.
             </p>
           </div>
         </>
