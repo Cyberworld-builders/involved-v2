@@ -93,12 +93,21 @@ export async function GET(
         new Date(reportData.calculated_at) < new Date(assessmentMeta.updated_at))
 
     if (needsRegeneration) {
+      // Carry forward any stored industry override so auto-regen produces
+      // the same industry-filtered output the user previously chose.
+      const { data: storedRow } = await adminClient
+        .from('report_data')
+        .select('industry_id_override')
+        .eq('assignment_id', assignmentId)
+        .maybeSingle()
+      const storedOverride = (storedRow?.industry_id_override as string | null | undefined) ?? undefined
+
       // Generate report
       let report: unknown
       let overallScore: number | null = null
 
       if (assessment?.is_360) {
-        report = await generate360Report(assignmentId)
+        report = await generate360Report(assignmentId, { industryIdOverride: storedOverride })
         // Extract overall_score from 360 report
         if (report && typeof report === 'object' && 'overall_score' in report) {
           overallScore = typeof report.overall_score === 'number' ? report.overall_score : null

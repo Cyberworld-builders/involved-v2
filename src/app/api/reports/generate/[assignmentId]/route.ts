@@ -80,12 +80,63 @@ export async function POST(
       }
     }
 
+    // Industry override resolution. Three inputs, precedence in order:
+    //   1. Body-supplied industry_id_override (explicit user action — set or clear)
+    //   2. Existing report_data.industry_id_override (sticky across regens)
+    //   3. undefined → generator falls back to target.industry_id (the default)
+    //
+    // The body has explicit semantics: `null` clears the override (forces "no
+    // industry"); omitting the key preserves the existing stored override.
+    //
+    // Setting an override is a privileged operation — it changes the data that
+    // gets cached and shown to everyone who views this report. Restrict to
+    // admin / client_admin / super_admin. Non-privileged callers can still
+    // regenerate, but their body's industry_id_override (if any) is ignored.
+    let bodyIndustryOverride: string | null | undefined = undefined
+    let bodyIndustryOverrideKeyPresent = false
+    try {
+      const body = (await request.clone().json().catch(() => null)) as { industry_id_override?: string | null } | null
+      if (body && Object.prototype.hasOwnProperty.call(body, 'industry_id_override')) {
+        const { data: callerProfile } = await supabase
+          .from('profiles')
+          .select('access_level, role')
+          .eq('auth_user_id', user.id)
+          .single()
+        const role = callerProfile?.role
+        const accessLevel = callerProfile?.access_level
+        const canOverride =
+          accessLevel === 'super_admin' ||
+          role === 'admin' ||
+          role === 'client_admin'
+        if (canOverride) {
+          bodyIndustryOverrideKeyPresent = true
+          bodyIndustryOverride = body.industry_id_override ?? null
+        }
+      }
+    } catch {
+      // body parse failure is fine — no override supplied
+    }
+
+    let storedIndustryOverride: string | null = null
+    if (!bodyIndustryOverrideKeyPresent) {
+      const { data: existing } = await adminClient
+        .from('report_data')
+        .select('industry_id_override')
+        .eq('assignment_id', assignmentId)
+        .maybeSingle()
+      storedIndustryOverride = (existing?.industry_id_override as string | null) ?? null
+    }
+
+    const effectiveOverride: string | null | undefined = bodyIndustryOverrideKeyPresent
+      ? bodyIndustryOverride
+      : (storedIndustryOverride ?? undefined)
+
     // Generate report based on assessment type
     let reportData: unknown
     let overallScore: number | null = null
 
     if (assessment?.is_360) {
-      reportData = await generate360Report(assignmentId)
+      reportData = await generate360Report(assignmentId, { industryIdOverride: effectiveOverride })
       // Extract overall_score from 360 report
       if (reportData && typeof reportData === 'object' && 'overall_score' in reportData) {
         overallScore = typeof reportData.overall_score === 'number' ? reportData.overall_score : null
@@ -132,16 +183,22 @@ export async function POST(
       reportData = applyTemplateToReport(reportData as unknown as ReportData, template as unknown as ReportTemplate)
     }
 
-    // Store report data
+    // Store report data. industry_id_override is included only when the body
+    // explicitly set it (null clears, string sets); otherwise we leave the
+    // existing column value untouched.
+    const upsertRow: Record<string, unknown> = {
+      assignment_id: assignmentId,
+      overall_score: overallScore,
+      dimension_scores: reportData,
+      calculated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+    if (bodyIndustryOverrideKeyPresent) {
+      upsertRow.industry_id_override = bodyIndustryOverride
+    }
     const { error: storeError } = await adminClient
       .from('report_data')
-      .upsert({
-        assignment_id: assignmentId,
-        overall_score: overallScore,
-        dimension_scores: reportData,
-        calculated_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }, {
+      .upsert(upsertRow, {
         onConflict: 'assignment_id',
       })
 

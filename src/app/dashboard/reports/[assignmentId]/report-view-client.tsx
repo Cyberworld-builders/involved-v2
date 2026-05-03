@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Report360View from '@/components/reports/360-report-view'
 import ReportLeaderBlockerView from '@/components/reports/leader-blocker-report-view'
+import ReportIndustryOverrideBar from './report-industry-override-bar'
 import {
   useReportDebug,
   setReportDebugGlobal,
@@ -176,6 +177,13 @@ export default function ReportViewClient({ assignmentId, is360, onLoadReport }: 
 
   return (
     <div>
+      {is360 && (
+        <ReportIndustryOverrideBar
+          assignmentId={assignmentId}
+          reportData={reportData as Report360Data}
+          onApplied={() => void loadReport()}
+        />
+      )}
       {is360 ? (
         <Report360View reportData={reportData as Report360Data} />
       ) : (

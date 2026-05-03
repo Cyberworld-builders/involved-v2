@@ -60,12 +60,24 @@ function mapPositionToRaterType(position: string | null | undefined): 'peer' | '
 /**
  * Generate 360 report data for an assignment
  */
+export interface Generate360ReportOptions {
+  /**
+   * Override which industry's benchmarks to filter against. When set, takes
+   * precedence over the target's profiles.industry_id. Pass `null` to force
+   * "no industry" even if the target has one. Pass `undefined` (or omit) to
+   * use the default (target's industry).
+   */
+  industryIdOverride?: string | null
+}
+
 export async function generate360Report(
-  assignmentId: string
+  assignmentId: string,
+  options: Generate360ReportOptions = {}
 ): Promise<Report360Data> {
   const adminClient = createAdminClient()
 
-  // Get assignment with target and assessment info
+  // Get assignment with target and assessment info. target.industry_id drives
+  // the default benchmark-filter selection (see resolved industry below).
   const { data: assignment, error: assignmentError } = await adminClient
     .from('assignments')
     .select(`
@@ -82,7 +94,8 @@ export async function generate360Report(
       target:profiles!assignments_target_id_fkey(
         id,
         name,
-        email
+        email,
+        industry_id
       )
     `)
     .eq('id', assignmentId)
@@ -206,14 +219,24 @@ export async function generate360Report(
   // When no completed assignments, return a partial report so the UI can show "no data yet" instead of throwing
   const completedCount = allTargetAssignments?.length ?? 0
   if (completedCount === 0) {
-    const { data: benchmarks } = await adminClient
-      .from('benchmarks')
-      .select('dimension_id, value')
-      .in('dimension_id', dimensionIds)
+    // Same industry filtering as the full path — partial reports were
+    // contributing to the same mixed-industry footgun.
+    const partialTargetProfile = assignment.target as { industry_id?: string | null } | null
+    const partialResolvedIndustryId =
+      options.industryIdOverride !== undefined
+        ? options.industryIdOverride
+        : (partialTargetProfile?.industry_id ?? null)
     const benchmarkMapPartial = new Map<string, number>()
-    benchmarks?.forEach((b) => {
-      benchmarkMapPartial.set(b.dimension_id, b.value)
-    })
+    if (partialResolvedIndustryId) {
+      const { data: benchmarks } = await adminClient
+        .from('benchmarks')
+        .select('dimension_id, value')
+        .in('dimension_id', dimensionIds)
+        .eq('industry_id', partialResolvedIndustryId)
+      benchmarks?.forEach((b) => {
+        benchmarkMapPartial.set(b.dimension_id, b.value)
+      })
+    }
     const emptyRaterBreakdown = {
       peer: null,
       direct_report: null,
@@ -283,11 +306,29 @@ export async function generate360Report(
     .in('assignment_id', assignmentIds)
     .in('dimension_id', dimensionIds)
 
-  // Get industry benchmarks with industry name
-  const { data: benchmarks } = await adminClient
-    .from('benchmarks')
-    .select('dimension_id, value, industry_id, industry:industries!benchmarks_industry_id_fkey(name)')
-    .in('dimension_id', dimensionIds)
+  // ─── Industry resolution ────────────────────────────────────────────────
+  // Default: target's profiles.industry_id. Override (when set on the report
+  // or passed via options) wins. `null` override forces "no industry" even
+  // when the target has one. Without a resolved industry, we don't render
+  // benchmarks at all — better than the previous behavior of returning rows
+  // from whichever industries happened to have benchmark data for these
+  // dimensions, with a label that may or may not have matched the values.
+  const targetProfile = assignment.target as { industry_id?: string | null } | null
+  const targetIndustryId = targetProfile?.industry_id ?? null
+  const resolvedIndustryId =
+    options.industryIdOverride !== undefined
+      ? options.industryIdOverride
+      : targetIndustryId
+
+  let benchmarks: Array<{ dimension_id: string; value: number; industry_id: string; industry: { name: string } | { name: string }[] | null }> | null = null
+  if (resolvedIndustryId) {
+    const { data } = await adminClient
+      .from('benchmarks')
+      .select('dimension_id, value, industry_id, industry:industries!benchmarks_industry_id_fkey(name)')
+      .in('dimension_id', dimensionIds)
+      .eq('industry_id', resolvedIndustryId)
+    benchmarks = data
+  }
 
   const benchmarkMap = new Map<string, number>()
   let industryName: string | null = null
@@ -525,6 +566,9 @@ export async function generate360Report(
     group_name: group.name,
     overall_score: overallScore,
     industry_name: industryName,
+    industry_id: resolvedIndustryId,
+    target_industry_id: targetIndustryId,
+    industry_id_override: options.industryIdOverride !== undefined ? options.industryIdOverride : null,
     dimensions: dimensionReports,
     generated_at: new Date().toISOString(),
     ...(isPartial && {
