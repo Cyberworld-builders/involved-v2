@@ -62,10 +62,9 @@ function mapPositionToRaterType(position: string | null | undefined): 'peer' | '
  */
 export interface Generate360ReportOptions {
   /**
-   * Override which industry's benchmarks to filter against. When set, takes
-   * precedence over the target's profiles.industry_id. Pass `null` to force
-   * "no industry" even if the target has one. Pass `undefined` (or omit) to
-   * use the default (target's industry).
+   * Override which industry's benchmarks to filter against. When set to a
+   * UUID, takes precedence over the target's profiles.industry_id. Pass
+   * `null` or `undefined` (or omit) to use the default (target's industry).
    */
   industryIdOverride?: string | null
 }
@@ -223,9 +222,7 @@ export async function generate360Report(
     // contributing to the same mixed-industry footgun.
     const partialTargetProfile = assignment.target as { industry_id?: string | null } | null
     const partialResolvedIndustryId =
-      options.industryIdOverride !== undefined
-        ? options.industryIdOverride
-        : (partialTargetProfile?.industry_id ?? null)
+      options.industryIdOverride ?? (partialTargetProfile?.industry_id ?? null)
     const benchmarkMapPartial = new Map<string, number>()
     if (partialResolvedIndustryId) {
       const { data: benchmarks } = await adminClient
@@ -307,18 +304,15 @@ export async function generate360Report(
     .in('dimension_id', dimensionIds)
 
   // ─── Industry resolution ────────────────────────────────────────────────
-  // Default: target's profiles.industry_id. Override (when set on the report
-  // or passed via options) wins. `null` override forces "no industry" even
-  // when the target has one. Without a resolved industry, we don't render
+  // Default: target's profiles.industry_id. Override (when set to a UUID)
+  // wins. A null/undefined override clears any prior override and falls back
+  // to the target's industry. Without a resolved industry, we don't render
   // benchmarks at all — better than the previous behavior of returning rows
   // from whichever industries happened to have benchmark data for these
   // dimensions, with a label that may or may not have matched the values.
   const targetProfile = assignment.target as { industry_id?: string | null } | null
   const targetIndustryId = targetProfile?.industry_id ?? null
-  const resolvedIndustryId =
-    options.industryIdOverride !== undefined
-      ? options.industryIdOverride
-      : targetIndustryId
+  const resolvedIndustryId = options.industryIdOverride ?? targetIndustryId
 
   let benchmarks: Array<{ dimension_id: string; value: number; industry_id: string; industry: { name: string } | { name: string }[] | null }> | null = null
   if (resolvedIndustryId) {
@@ -568,7 +562,7 @@ export async function generate360Report(
     industry_name: industryName,
     industry_id: resolvedIndustryId,
     target_industry_id: targetIndustryId,
-    industry_id_override: options.industryIdOverride !== undefined ? options.industryIdOverride : null,
+    industry_id_override: options.industryIdOverride ?? null,
     dimensions: dimensionReports,
     generated_at: new Date().toISOString(),
     ...(isPartial && {

@@ -62,7 +62,7 @@ export interface Report360Data {
   industry_id?: string | null
   /** Target's profiles.industry_id at generation time — the default. */
   target_industry_id?: string | null
-  /** Override applied via report_data.industry_id_override, if any. Distinct from industry_id when override == null forces "no industry". */
+  /** Override applied via report_data.industry_id_override, if any. NULL means no override is in effect (default applies). */
   industry_id_override?: string | null
   dimensions: DimensionReport360[]
   generated_at: string
