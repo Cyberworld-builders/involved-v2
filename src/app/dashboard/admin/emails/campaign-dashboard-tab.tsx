@@ -79,7 +79,7 @@ function isoDate(d: Date) {
   return d.toISOString().slice(0, 10)
 }
 
-export default function CampaignDashboardTab() {
+export default function CampaignDashboardTab({ onTraceRecipient }: { onTraceRecipient?: (recipient: string) => void }) {
   const [surveys, setSurveys] = useState<SurveyListItem[]>([])
   const [selectedSurvey, setSelectedSurvey] = useState<string>('')
   const [clientFilter, setClientFilter] = useState<string>('')
@@ -121,12 +121,13 @@ export default function CampaignDashboardTab() {
     setError(null)
     try {
       const params = new URLSearchParams({ survey: selectedSurvey })
-      if (fromDate) params.set('from', new Date(fromDate).toISOString())
-      if (toDate) {
-        const t = new Date(toDate)
-        t.setHours(23, 59, 59, 999)
-        params.set('to', t.toISOString())
-      }
+      // Treat the picked dates as UTC day boundaries. Naive `new Date(yyyy-mm-dd)`
+      // parses as UTC midnight, but `setHours(...)` mutates local components,
+      // which produces a `to` that's wrong by the user's UTC offset (e.g. CDT
+      // users would lose ~5h of "today"). Constructing the UTC ISO string
+      // directly avoids the mixed-mode bug.
+      if (fromDate) params.set('from', `${fromDate}T00:00:00.000Z`)
+      if (toDate) params.set('to', `${toDate}T23:59:59.999Z`)
       const res = await fetch(`/api/admin/email-campaign?${params.toString()}`)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const json: SurveyDetail = await res.json()
@@ -314,7 +315,19 @@ export default function CampaignDashboardTab() {
                   <tbody>
                     {detail.bounce_complaint_rows.map((r, i) => (
                       <tr key={i} className="border-b last:border-0">
-                        <td className="py-2 pr-3 font-mono text-xs">{r.recipient_email}</td>
+                        <td className="py-2 pr-3 font-mono text-xs">
+                          {onTraceRecipient ? (
+                            <button
+                              onClick={() => onTraceRecipient(r.recipient_email)}
+                              className="text-indigo-600 hover:text-indigo-800 underline decoration-dotted"
+                              title="View this recipient's timeline"
+                            >
+                              {r.recipient_email}
+                            </button>
+                          ) : (
+                            r.recipient_email
+                          )}
+                        </td>
                         <td className="py-2 pr-3">
                           <span className={r.status === 'complained' ? 'text-red-700 font-semibold' : 'text-amber-700 font-semibold'}>
                             {r.status}
@@ -379,7 +392,17 @@ export default function CampaignDashboardTab() {
               <ul className="text-xs text-gray-600 space-y-1">
                 {detail.recent_deliveries.map((r, i) => (
                   <li key={i} className="flex justify-between gap-2">
-                    <span className="font-mono truncate">{r.recipient_email}</span>
+                    {onTraceRecipient ? (
+                      <button
+                        onClick={() => onTraceRecipient(r.recipient_email)}
+                        className="font-mono truncate text-indigo-600 hover:text-indigo-800 underline decoration-dotted text-left"
+                        title="View this recipient's timeline"
+                      >
+                        {r.recipient_email}
+                      </button>
+                    ) : (
+                      <span className="font-mono truncate">{r.recipient_email}</span>
+                    )}
                     <span className="text-gray-500">{r.delivered_at ? fmtDate(r.delivered_at) : '—'}</span>
                   </li>
                 ))}

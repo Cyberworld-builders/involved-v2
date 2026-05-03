@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 
 interface TimelineEvent {
   id: string
@@ -36,14 +36,14 @@ function eventStyle(t: TimelineEvent['event_type']) {
   }
 }
 
-export default function UserTraceTab() {
-  const [recipient, setRecipient] = useState('')
+export default function UserTraceTab({ initialRecipient = '' }: { initialRecipient?: string }) {
+  const [recipient, setRecipient] = useState(initialRecipient)
   const [trace, setTrace] = useState<TraceResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const lastAutoSearched = useRef<string>('')
 
-  const search = useCallback(async () => {
-    const r = recipient.trim()
+  const performSearch = useCallback(async (r: string) => {
     if (!r) return
     setLoading(true)
     setError(null)
@@ -61,10 +61,26 @@ export default function UserTraceTab() {
     } finally {
       setLoading(false)
     }
-  }, [recipient])
+  }, [])
+
+  const search = useCallback(() => {
+    void performSearch(recipient.trim())
+  }, [recipient, performSearch])
+
+  // Auto-fire when the parent hands us a recipient (e.g. user clicked a row in
+  // the campaign tab). Tracks the last value we auto-searched so re-mounts
+  // with the same value don't loop, and so changing the input + clicking
+  // Search still works normally.
+  useEffect(() => {
+    if (initialRecipient && initialRecipient !== lastAutoSearched.current) {
+      setRecipient(initialRecipient)
+      lastAutoSearched.current = initialRecipient
+      void performSearch(initialRecipient)
+    }
+  }, [initialRecipient, performSearch])
 
   const onKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') void search()
+    if (e.key === 'Enter') search()
   }
 
   return (

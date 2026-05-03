@@ -28,19 +28,9 @@ async function main() {
   // 2) assignments under this survey
   const { data: assignments, error: assignErr } = await sb
     .from('assignments')
-    .select('id, completed, expires, target_id, user_id, sent_at, completed_at')
+    .select('id, completed, expires, target_id, user_id, completed_at, created_at')
     .eq('survey_id', surveyId)
   console.log(`assignments: ${assignments?.length ?? 0} rows  err=${assignErr?.message ?? 'none'}`)
-
-  // 3) Try without sent_at — maybe the column doesn't exist
-  if (assignErr) {
-    console.log('retrying without sent_at column...')
-    const { data: a2, error: e2 } = await sb
-      .from('assignments')
-      .select('id, completed, expires, target_id, user_id, completed_at')
-      .eq('survey_id', surveyId)
-    console.log(`  retry: ${a2?.length ?? 0} rows  err=${e2?.message ?? 'none'}`)
-  }
 
   // 4) email_logs joined to assignments
   const ids = (assignments ?? []).map(a => a.id)

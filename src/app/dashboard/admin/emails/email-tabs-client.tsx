@@ -32,12 +32,21 @@ function getInitialTab(): TabId {
   return 'audit-log'
 }
 
+function getInitialRecipient(): string {
+  if (typeof window === 'undefined') return ''
+  return new URLSearchParams(window.location.search).get('recipient') ?? ''
+}
+
 export default function EmailTabsClient() {
   const [activeTab, setActiveTab] = useState<TabId>('audit-log')
+  // Recipient pre-fill for the user-trace tab, set when other tabs deep-link
+  // ("View trace" buttons) or when the URL has ?recipient=… on initial load.
+  const [traceRecipient, setTraceRecipient] = useState<string>('')
 
   // Hydrate from URL after mount to keep SSR happy.
   useEffect(() => {
     setActiveTab(getInitialTab())
+    setTraceRecipient(getInitialRecipient())
   }, [])
 
   // Reflect tab choice in the URL so the page is shareable + survives refresh.
@@ -46,6 +55,20 @@ export default function EmailTabsClient() {
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href)
       url.searchParams.set('tab', id)
+      // Drop ?recipient when navigating away from user-trace so the URL stays clean.
+      if (id !== 'user-trace') url.searchParams.delete('recipient')
+      window.history.replaceState({}, '', url.toString())
+    }
+  }
+
+  // Called by other tabs to "drill into" a single recipient's timeline.
+  const switchToTrace = (recipient: string) => {
+    setTraceRecipient(recipient)
+    setActiveTab('user-trace')
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href)
+      url.searchParams.set('tab', 'user-trace')
+      url.searchParams.set('recipient', recipient)
       window.history.replaceState({}, '', url.toString())
     }
   }
@@ -78,9 +101,9 @@ export default function EmailTabsClient() {
 
       <p className="text-sm text-gray-600">{active.description}</p>
 
-      {activeTab === 'audit-log' && <EmailDashboardClient />}
-      {activeTab === 'campaign' && <CampaignDashboardTab />}
-      {activeTab === 'user-trace' && <UserTraceTab />}
+      {activeTab === 'audit-log' && <EmailDashboardClient onTraceRecipient={switchToTrace} />}
+      {activeTab === 'campaign' && <CampaignDashboardTab onTraceRecipient={switchToTrace} />}
+      {activeTab === 'user-trace' && <UserTraceTab initialRecipient={traceRecipient} />}
     </div>
   )
 }
