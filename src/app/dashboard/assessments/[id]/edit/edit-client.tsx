@@ -485,11 +485,32 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
         }
         const sortedNew = [...newToInsert].sort((a, b) => getDimensionLevel(a.id) - getDimensionLevel(b.id))
 
+        // Idempotency: if a prior save partially committed a dim row (insert succeeded
+        // but a later step in this handler threw), the form still holds the temp id.
+        // On retry, route those temp-id rows to UPDATE against the existing DB row
+        // matched by (assessment_id, name) so we don't trip the UNIQUE constraint.
+        const existingByName = new Map<string, { id: string }>()
+        for (const d of existingDimensions || []) existingByName.set(d.name, { id: d.id })
+
         for (const dim of sortedNew) {
           let parentId: string | null = null
           if (dim.parent_id) {
             parentId = tempIdToDbIdMap.get(dim.parent_id) || (uuidRegex.test(dim.parent_id) ? dim.parent_id : null)
           }
+          const sortOrder = originalOrder.indexOf(dim.id) + 1
+
+          const collision = existingByName.get(dim.name)
+          if (collision) {
+            const { error } = await supabase
+              .from('dimensions')
+              .update({ name: dim.name, code: dim.code, parent_id: parentId, sort_order: sortOrder })
+              .eq('id', collision.id)
+            if (error) throw new Error(`Failed to reconcile dimension: ${error.message}`)
+            tempIdToDbIdMap.set(dim.id, collision.id)
+            existingDimIds.add(collision.id)
+            continue
+          }
+
           const { data: inserted, error } = await supabase
             .from('dimensions')
             .insert({
@@ -497,12 +518,15 @@ export default function EditAssessmentClient({ id }: EditAssessmentClientProps) 
               name: dim.name,
               code: dim.code,
               parent_id: parentId,
-              sort_order: originalOrder.indexOf(dim.id) + 1,
+              sort_order: sortOrder,
             })
             .select('id')
             .single()
           if (error) throw new Error(`Failed to insert dimension: ${error.message}`)
-          if (inserted) tempIdToDbIdMap.set(dim.id, inserted.id)
+          if (inserted) {
+            tempIdToDbIdMap.set(dim.id, inserted.id)
+            existingByName.set(dim.name, { id: inserted.id })
+          }
         }
 
         // Delete dimensions that were removed from the form
