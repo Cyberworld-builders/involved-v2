@@ -333,6 +333,19 @@ export async function generate360Report(
     }
   })
 
+  // If we resolved an industry but it has no benchmarks for this assessment,
+  // we still want the report to show the industry's name (otherwise the UI
+  // looks like "no industry" even though one was deliberately picked). Look
+  // it up directly from the industries table as a fallback.
+  if (resolvedIndustryId && !industryName) {
+    const { data: industryRow } = await adminClient
+      .from('industries')
+      .select('name')
+      .eq('id', resolvedIndustryId)
+      .maybeSingle()
+    industryName = industryRow?.name ?? null
+  }
+
   // Calculate GEOnorms
   const geonorms = await calculateGEOnorms(group.id, assignment.assessment_id, dimensionIds, assignment.survey_id)
 

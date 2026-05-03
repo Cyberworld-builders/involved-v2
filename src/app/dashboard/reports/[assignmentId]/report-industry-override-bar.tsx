@@ -12,6 +12,7 @@ interface ReportIndustryFields {
   target_industry_id?: string | null
   industry_id_override?: string | null
   industry_name?: string | null
+  dimensions?: Array<{ industry_benchmark?: number | null }>
 }
 
 /**
@@ -55,6 +56,11 @@ export default function ReportIndustryOverrideBar({
   const targetId = reportData.target_industry_id ?? null
   const overrideId = reportData.industry_id_override ?? null
   const isOverridden = overrideId !== null && overrideId !== undefined
+  // If we resolved an industry but no dimension carries an industry_benchmark,
+  // that industry has no benchmark rows for this assessment's dimensions —
+  // surface that explicitly so the user knows why bars look empty.
+  const hasAnyBenchmark = (reportData.dimensions ?? []).some(d => d.industry_benchmark != null)
+  const industryHasNoBenchmarks = usedId !== null && !hasAnyBenchmark
 
   const apply = useCallback(async (next: string | null | 'use-target') => {
     setSaving(true)
@@ -96,6 +102,11 @@ export default function ReportIndustryOverrideBar({
         )}
         {!isOverridden && targetId && usedId === targetId && (
           <span className="text-xs text-gray-500">(from target&apos;s profile)</span>
+        )}
+        {industryHasNoBenchmarks && (
+          <span className="text-xs text-amber-700">
+            (no benchmarks loaded for this industry on this assessment)
+          </span>
         )}
         <div className="ml-auto">
           <button
