@@ -245,6 +245,11 @@ async function sendReminderEmailInline(params: {
   const htmlBody = generateReminderEmailBody(user_name, assessment_titles, dashboardUrl, user_email, expires)
   const textBody = generateReminderEmailText(user_name, assessment_titles, dashboardUrl, user_email, expires)
 
+  // ConfigurationSetName routes Bounce/Complaint/Delivery events through SES →
+  // SNS → /api/webhooks/ses-feedback. Reminders need this for the same reason
+  // batch sends do — without it, no SNS feedback flows for reminder emails.
+  const configurationSetName = Deno.env.get('SES_CONFIGURATION_SET')?.trim() || undefined
+
   try {
     const ses = await getReminderSesClient()
     const resp = await ses.send(new SendEmailCommand({
@@ -257,6 +262,7 @@ async function sendReminderEmailInline(params: {
           Text: { Data: textBody, Charset: 'UTF-8' },
         },
       },
+      ConfigurationSetName: configurationSetName,
     }))
     const messageId = resp.MessageId ?? `ses-${Date.now()}`
     await logReminderEmail({ assignment_ids, recipient_email: user_email, subject, status: 'sent', provider_message_id: messageId })

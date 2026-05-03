@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import EmailDashboardClient from './email-dashboard-client'
+import EmailTabsClient from './email-tabs-client'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -31,12 +31,12 @@ export default async function AdminEmailsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Email dashboard</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Email management</h1>
         <p className="text-gray-600">
-          View outbound email log and SES aggregate stats. Use provider message ID to investigate in AWS when needed.
+          Audit log, per-survey campaign observability, and per-user send/delivery traces.
         </p>
       </div>
-      <EmailDashboardClient />
+      <EmailTabsClient />
     </div>
   )
 }

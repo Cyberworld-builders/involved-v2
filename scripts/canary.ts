@@ -166,33 +166,78 @@ async function ensureAdmin(supabase: SupabaseClient, clientId: string): Promise<
   return { authId, profileId: newProfile.id }
 }
 
-async function ensureUsers(supabase: SupabaseClient, clientId: string, target: number) {
+type RecipientType = 'success' | 'bounce' | 'complaint'
+
+const TYPE_PREFIX: Record<RecipientType, string> = {
+  success: 'success',
+  bounce: 'bounce',
+  complaint: 'complaint',
+}
+
+// SES simulator addresses (all support plus addressing). Each user gets a
+// distinct subaddress so the email_logs rows are individually addressable.
+function buildEmail(type: RecipientType, seq: string) {
+  return `${TYPE_PREFIX[type]}+canary-${seq}@${SIMULATOR_DOMAIN}`
+}
+
+// Idempotent per-type seeding. Counts existing users matching the type prefix
+// and inserts only the gap. Lets you re-run seed with a larger mix without
+// duplicating rows or hitting the unique constraint on profile.email.
+async function ensureUsers(supabase: SupabaseClient, clientId: string, mix: Record<RecipientType, number>) {
   const { data: existing } = await supabase
     .from('profiles')
     .select('id, email')
     .eq('client_id', clientId)
     .like('email', `%@${SIMULATOR_DOMAIN}`)
     .neq('email', CANARY_ADMIN_EMAIL)
-  const existingCount = existing?.length ?? 0
-  console.log(`  users: ${existingCount} already exist, target ${target}`)
-  if (existingCount >= target) return
-  const toCreate = target - existingCount
-  const rows = []
-  for (let i = 0; i < toCreate; i++) {
-    const n = existingCount + i + 1
-    const seq = String(n).padStart(3, '0')
-    rows.push({
-      email: `success+canary-${seq}@${SIMULATOR_DOMAIN}`,
-      name: `Canary User ${seq}`,
-      username: `canary-user-${seq}`,
-      client_id: clientId,
-      role: 'user',
-      access_level: 'member',
-    })
+  const byType: Record<RecipientType, number> = { success: 0, bounce: 0, complaint: 0 }
+  for (const u of existing ?? []) {
+    if (u.email.startsWith('success+canary-')) byType.success++
+    else if (u.email.startsWith('bounce+canary-')) byType.bounce++
+    else if (u.email.startsWith('complaint+canary-')) byType.complaint++
+  }
+  console.log(`  users present: success=${byType.success} bounce=${byType.bounce} complaint=${byType.complaint}`)
+  console.log(`  users target:  success=${mix.success} bounce=${mix.bounce} complaint=${mix.complaint}`)
+
+  const rows: Array<Record<string, string>> = []
+  for (const type of ['success', 'bounce', 'complaint'] as const) {
+    const have = byType[type]
+    const want = mix[type] ?? 0
+    if (have >= want) continue
+    for (let n = have + 1; n <= want; n++) {
+      const seq = String(n).padStart(3, '0')
+      rows.push({
+        email: buildEmail(type, seq),
+        name: `Canary ${type} ${seq}`,
+        username: `canary-${type}-${seq}`,
+        client_id: clientId,
+        role: 'user',
+        access_level: 'member',
+      })
+    }
+  }
+  if (rows.length === 0) {
+    console.log(`  users: no new rows needed`)
+    return
   }
   const { error } = await supabase.from('profiles').insert(rows)
   if (error) throw error
-  console.log(`  users: inserted ${toCreate}`)
+  console.log(`  users: inserted ${rows.length}`)
+}
+
+function parseMix(raw: string | undefined): Record<RecipientType, number> {
+  // Format: "success:30,bounce:3,complaint:1". Missing keys default to 0.
+  const out: Record<RecipientType, number> = { success: 5, bounce: 0, complaint: 0 }
+  if (!raw) return out
+  // Reset defaults if user provides explicit mix
+  out.success = 0
+  for (const part of raw.split(',')) {
+    const [k, v] = part.split(':').map(s => s.trim())
+    if ((k === 'success' || k === 'bounce' || k === 'complaint') && !Number.isNaN(Number(v))) {
+      out[k] = Number(v)
+    }
+  }
+  return out
 }
 
 async function ensureAssessments(supabase: SupabaseClient, adminAuthId: string, target: number) {
@@ -221,11 +266,11 @@ async function ensureAssessments(supabase: SupabaseClient, adminAuthId: string, 
   console.log(`  assessments: inserted ${toCreate}`)
 }
 
-async function seed(supabase: SupabaseClient, users: number, assessments: number) {
+async function seed(supabase: SupabaseClient, mix: Record<RecipientType, number>, assessments: number) {
   console.log('\n[canary:seed] begin')
   const clientId = await ensureClient(supabase)
   const { authId: adminAuthId } = await ensureAdmin(supabase, clientId)
-  await ensureUsers(supabase, clientId, users)
+  await ensureUsers(supabase, clientId, mix)
   await ensureAssessments(supabase, adminAuthId, assessments)
 
   const { count: userCount } = await supabase
@@ -286,9 +331,10 @@ async function wave(
   expiresIso: string,
   withReminder: boolean,
   skipEmail: boolean,
+  includeTypes: Array<RecipientType | 'all'> = ['all'],
 ) {
   console.log('\n[canary:wave] begin')
-  console.log(`  app_url=${appUrl}  assessment=${assessmentIndex}  group_size=${groupSize}  expires=${expiresIso}  reminder=${withReminder}  skip_email=${skipEmail}`)
+  console.log(`  app_url=${appUrl}  assessment=${assessmentIndex}  group_size=${groupSize}  include_types=${includeTypes.join(',')}  expires=${expiresIso}  reminder=${withReminder}  skip_email=${skipEmail}`)
 
   const { data: client } = await supabase
     .from('clients')
@@ -304,11 +350,23 @@ async function wave(
     .like('email', `%@${SIMULATOR_DOMAIN}`)
     .neq('email', CANARY_ADMIN_EMAIL)
     .order('email')
-  if (!allUsers || allUsers.length < groupSize) {
-    throw new Error(`Need at least ${groupSize} canary users, have ${allUsers?.length ?? 0}`)
+
+  // Filter by include_types — lets one wave target only success addresses for a
+  // "healthy" survey demo, vs. another that includes bounce/complaint for a
+  // "concerning" survey. Default ['all'] keeps behavior backwards-compatible.
+  const allowAll = includeTypes.includes('all')
+  const filtered = (allUsers ?? []).filter(u => {
+    if (allowAll) return true
+    if (includeTypes.includes('success') && u.email.startsWith('success+canary-')) return true
+    if (includeTypes.includes('bounce') && u.email.startsWith('bounce+canary-')) return true
+    if (includeTypes.includes('complaint') && u.email.startsWith('complaint+canary-')) return true
+    return false
+  })
+  if (filtered.length < groupSize) {
+    throw new Error(`Need at least ${groupSize} canary users matching include_types=${includeTypes.join(',')}, have ${filtered.length}`)
   }
   // Random sample so sequential waves produce natural rater overlap
-  const shuffled = [...allUsers].sort(() => Math.random() - 0.5)
+  const shuffled = [...filtered].sort(() => Math.random() - 0.5)
   const users = shuffled.slice(0, groupSize)
 
   const { data: assessments } = await supabase
@@ -321,7 +379,25 @@ async function wave(
   }
   const assessment = assessments[assessmentIndex - 1]
   console.log(`  using assessment: "${assessment.title}" (${assessment.id.slice(0, 8)})`)
-  console.log(`  using users: ${users.map(u => u.email).join(', ')}`)
+  const mixCounts = users.map(u => u.email.split('+')[0]).reduce((acc, k) => { acc[k] = (acc[k] ?? 0) + 1; return acc }, {} as Record<string, number>)
+  console.log(`  user mix: ${JSON.stringify(mixCounts)}`)
+  console.log(`  using users: ${users.length} total`)
+
+  // Create a survey for this wave so the campaign dashboard can scope email_logs
+  // by survey via assignments.survey_id. Without this, batch-email rows are
+  // unjoinable in the dashboard.
+  const surveyName = `Canary wave ${new Date().toISOString().slice(0, 19)} (${includeTypes.join(',')})`
+  const { data: survey, error: surveyErr } = await supabase
+    .from('surveys')
+    .insert({
+      client_id: client.id,
+      assessment_id: assessment.id,
+      name: surveyName,
+    })
+    .select('id')
+    .single()
+  if (surveyErr) throw surveyErr
+  console.log(`  survey: created ${survey.id.slice(0, 8)} ("${surveyName}")`)
 
   const reminderFields = withReminder
     ? { reminder: true, next_reminder: new Date().toISOString(), reminder_frequency: '+1 day' }
@@ -329,6 +405,7 @@ async function wave(
   const rows = users.map(u => ({
     user_id: u.id,
     assessment_id: assessment.id,
+    survey_id: survey.id,
     expires: expiresIso,
     ...reminderFields,
   }))
@@ -467,6 +544,15 @@ async function teardown(supabase: SupabaseClient) {
     console.log(`  assignments deleted: ${count ?? 0}`)
   }
 
+  // Delete surveys created by waves under this client. Must come after assignments
+  // (which have FK to surveys via survey_id) but can come before assessments.
+  const { error: surveyErr, count: surveyCount } = await supabase
+    .from('surveys')
+    .delete({ count: 'exact' })
+    .eq('client_id', clientId)
+  if (surveyErr) throw surveyErr
+  console.log(`  surveys deleted: ${surveyCount ?? 0}`)
+
   const { error: assessError, count: assessCount } = await supabase
     .from('assessments')
     .delete({ count: 'exact' })
@@ -529,9 +615,12 @@ async function main() {
   const { env, supabase } = boot(envName)
 
   if (sub === 'seed') {
-    const users = Number(opts.users ?? 5)
+    // Backwards compatibility: --num=N still works; --mix=success:N,bounce:N,complaint:N takes priority.
+    const mix = opts.mix
+      ? parseMix(opts.mix)
+      : { success: Number(opts.num ?? opts.users ?? 5), bounce: 0, complaint: 0 }
     const assessments = Number(opts.assessments ?? 2)
-    await seed(supabase, users, assessments)
+    await seed(supabase, mix, assessments)
   } else if (sub === 'wave') {
     const anonKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     if (!anonKey) throw new Error('Missing NEXT_PUBLIC_SUPABASE_ANON_KEY in env file')
@@ -541,7 +630,9 @@ async function main() {
     const expires = opts.expires ?? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     const withReminder = 'reminder' in opts
     const skipEmail = 'skip-email' in opts
-    await wave(supabase, anonKey, env.NEXT_PUBLIC_SUPABASE_URL, appUrl, assessmentIndex, groupSize, expires, withReminder, skipEmail)
+    // include-types=success,bounce or include-types=all (default) — restricts which user emails participate.
+    const includeTypes = (opts['include-types'] ?? 'all').split(',').map((s: string) => s.trim()) as Array<RecipientType | 'all'>
+    await wave(supabase, anonKey, env.NEXT_PUBLIC_SUPABASE_URL, appUrl, assessmentIndex, groupSize, expires, withReminder, skipEmail, includeTypes)
   } else if (sub === 'reminders') {
     await reminders(supabase, env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY)
   } else {

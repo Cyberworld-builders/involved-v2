@@ -52,7 +52,7 @@ function copyToClipboard(text: string) {
   void navigator.clipboard.writeText(text)
 }
 
-export default function EmailDashboardClient() {
+export default function EmailDashboardClient({ onTraceRecipient }: { onTraceRecipient?: (recipient: string) => void } = {}) {
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
   const [emailType, setEmailType] = useState('')
@@ -263,7 +263,17 @@ export default function EmailDashboardClient() {
                         )}
                         {visibleColumns.includes('recipient_email') && (
                           <td className="whitespace-nowrap px-3 py-2 text-sm text-gray-900 sm:px-4">
-                            {row.recipient_email}
+                            {onTraceRecipient ? (
+                              <button
+                                onClick={() => onTraceRecipient(row.recipient_email)}
+                                className="text-indigo-600 hover:text-indigo-800 underline decoration-dotted text-left"
+                                title="View this recipient's timeline"
+                              >
+                                {row.recipient_email}
+                              </button>
+                            ) : (
+                              row.recipient_email
+                            )}
                           </td>
                         )}
                         {visibleColumns.includes('subject') && (
