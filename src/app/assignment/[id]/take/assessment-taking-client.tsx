@@ -384,12 +384,17 @@ export default function AssessmentTakingClient({
               </div>
             </div>
           ) : (
-            /* Fallback: buttons only if no insights table */
-            <div className="flex flex-wrap gap-2">
+            /* Fallback: buttons only if no insights table.
+             * Equal-width grid + min-height keeps every button the same shape
+             * regardless of label length, so the row doesn't go ragged or wrap. */
+            <div
+              className="grid gap-2"
+              style={{ gridTemplateColumns: `repeat(${fieldAnchors.length}, minmax(0, 1fr))` }}
+            >
               {fieldAnchors.map((anchor, index) => (
                 <label
                   key={anchor.id || index}
-                  className={`flex items-center justify-center px-4 py-6 border rounded-md cursor-pointer transition-colors ${
+                  className={`flex items-center justify-center px-3 min-h-20 border rounded-md cursor-pointer transition-colors ${
                     currentAnswer === index
                       ? 'bg-[#da7327] border-[#da7327] hover:bg-[#c8651f] text-white'
                       : 'border-gray-300 hover:bg-gray-50'
@@ -404,7 +409,9 @@ export default function AssessmentTakingClient({
                     className="sr-only"
                     aria-label={anchor.name || `Option ${index + 1}`}
                   />
-                  <span>{anchor.name || `Option ${index + 1}`}</span>
+                  <span className="text-center text-sm leading-snug break-words">
+                    {anchor.name || `Option ${index + 1}`}
+                  </span>
                 </label>
               ))}
             </div>
